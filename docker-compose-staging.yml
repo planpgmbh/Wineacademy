@@ -1,0 +1,70 @@
+networks:
+  proxy:
+    external: true
+  db_staging:
+    internal: true
+
+volumes:
+  db_staging_data:
+
+services:
+  db_staging:
+    image: postgres:15
+    container_name: wineacademy_db_staging
+    env_file:
+      - .env.staging
+    volumes:
+      - db_staging_data:/var/lib/postgresql/data
+    networks:
+      - db_staging
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend-staging:
+    build:
+      context: ./backend
+    container_name: wineacademy_backend_staging
+    command: ["npm", "run", "start"]
+    env_file:
+      - .env.staging
+    environment:
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+      - PORT=1337
+      - DATABASE_HOST=db_staging
+      - DATABASE_PORT=5432
+    depends_on:
+      db_staging:
+        condition: service_healthy
+    networks:
+      - db_staging
+      - proxy
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "proxy"
+      traefik.http.services.backend-staging.loadbalancer.server.port: "1337"
+      traefik.http.routers.backend-staging.rule: "Host(`wineacademy.plan-p.de`) && PathPrefix(`/api`)"
+      traefik.http.routers.backend-staging.entrypoints: "websecure"
+      traefik.http.routers.backend-staging.tls.certresolver: "http-resolver"
+      traefik.http.routers.backend-staging.middlewares: "backend-staging-stripprefix@docker"
+      traefik.http.middlewares.backend-staging-stripprefix.stripprefix.prefixes: "/api"
+
+  frontend-staging:
+    build:
+      context: ./frontend
+    container_name: wineacademy_frontend_staging
+    env_file:
+      - .env.staging
+    networks:
+      - proxy
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "proxy"
+      traefik.http.services.frontend-staging.loadbalancer.server.port: "3000"
+      traefik.http.routers.frontend-staging.rule: "Host(`wineacademy.plan-p.de`)"
+      traefik.http.routers.frontend-staging.entrypoints: "websecure"
+      traefik.http.routers.frontend-staging.tls.certresolver: "http-resolver"
+

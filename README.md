@@ -75,6 +75,24 @@ Routing (Traefik Labels in `docker-compose.yml`):
 - Frontend: `Host(wineacademy.de)` → Port 3000
 - Backend: `Host(wineacademy.de) && PathPrefix(/api)` → Port 1337 (mit StripPrefix `/api`)
 
+## Staging (wineacademy.plan-p.de)
+
+- Datei: `docker-compose-staging.yml`
+- Domain: `wineacademy.plan-p.de` (Traefik auf externem `proxy`‑Netz)
+- Eigene DB und Volume (`db_staging`, `db_staging_data`)
+
+Start:
+
+```
+cp .env.staging.example .env.staging
+docker compose -f docker-compose-staging.yml up -d --build
+```
+
+Routing (Traefik Labels in `docker-compose-staging.yml`):
+
+- Frontend: `Host(wineacademy.plan-p.de)` → Port 3000
+- Backend: `Host(wineacademy.plan-p.de) && PathPrefix(/api)` → Port 1337 (StripPrefix `/api`)
+
 ## Umgebungsvariablen (Auszug)
 
 - Strapi: `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET`
@@ -93,4 +111,3 @@ Weitere Details in `.env.example`.
 - Stripe Checkout + Webhook-Endpoint im Backend
 - LexOffice-Integration (Rechnung nach Zahlung + E-Mail-Versand)
 - SendGrid-Mailtemplates (Registrierung, Buchung, Zahlung, Rechnung)
-
