@@ -58,6 +58,8 @@ services:
     container_name: wineacademy_frontend
     env_file:
       - .env
+    environment:
+      - PORT=3000
     networks:
       - proxy
     labels:
@@ -67,4 +69,3 @@ services:
       traefik.http.routers.frontend.rule: "Host(`wineacademy.de`)"
       traefik.http.routers.frontend.entrypoints: "websecure"
       traefik.http.routers.frontend.tls.certresolver: "http-resolver"
-

@@ -121,3 +121,46 @@ Weitere Details in `.env.example`.
 - Stripe Checkout + Webhook-Endpoint im Backend
 - LexOffice-Integration (Rechnung nach Zahlung + E-Mail-Versand)
 - SendGrid-Mailtemplates (Registrierung, Buchung, Zahlung, Rechnung)
+
+## Server Infrastructure (Live & Staging)
+
+Dieser Abschnitt fasst die für Deployment relevanten Infrastruktur-Infos zusammen (Traefik, Netzwerke, Domains, Secrets, Commands).
+
+- Voraussetzungen:
+  - Traefik v3 läuft bereits am Server und ist mit externem Docker-Netz `proxy` verbunden.
+  - EntryPoint heißt `websecure`, CertResolver `http-resolver` (falls abweichend, Labels in Compose anpassen).
+  - DNS zeigt auf den Server: `wineacademy.de`, `wineacademy.plan-p.de` (Ports 80/443 offen).
+
+- Netzwerke & Routing:
+  - Extern: `proxy` (Traefik-facing). Intern: `db` (Prod), `db_staging` (Staging).
+  - Prod-Routing (siehe `docker-compose.yml` Labels):
+    - `Host(wineacademy.de)` → Frontend (Port 3000)
+    - `Host(wineacademy.de) && PathPrefix(/api)` → Backend (Port 1337) mit StripPrefix `/api`
+  - Staging-Routing (siehe `docker-compose-staging.yml` Labels):
+    - `Host(wineacademy.plan-p.de)` → Frontend (Port 3000)
+    - `Host(wineacademy.plan-p.de) && PathPrefix(/api)` → Backend (Port 1337) mit StripPrefix `/api`
+
+- Verzeichnisstruktur am Server (Beispiel):
+  - `/etc/docker/projects/wineacadamy/` enthält dieses Repo (Compose-Dateien, Dockerfiles, Code).
+
+- Wichtige Umgebungsvariablen:
+  - Frontend-Port ist in allen Compose-Dateien explizit auf `PORT=3000` gesetzt, damit Strapi-`PORT=1337` das Frontend nicht beeinflusst.
+  - Prod `.env`: `POSTGRES_*`, `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `ENCRYPTION_KEY`, `SENDGRID_API_KEY`, `EMAIL_FROM`, `LEXOFFICE_API_TOKEN`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_API_URL=https://wineacademy.de/api`, `API_INTERNAL_URL=http://backend:1337`.
+  - Staging `.env.staging`: analoge Variablen mit Staging-Werten und `NEXT_PUBLIC_API_URL=https://wineacademy.plan-p.de/api`, `API_INTERNAL_URL=http://backend-staging:1337`.
+
+- Deploy-Befehle:
+  - Staging: `cp .env.staging.example .env.staging && docker compose -f docker-compose-staging.yml up -d --build`
+  - Produktion: `cp .env.example .env` (mit Prod-Secrets füllen) und `docker compose up -d --build`
+
+- Health & Logs:
+  - Strapi Admin: `/admin` (z. B. Prod: `https://wineacademy.de/admin`, Staging: `https://wineacademy.plan-p.de/admin`)
+  - Logs: `docker compose [-f <compose>] logs -f backend|frontend|db*`
+
+- Backups (Postgres):
+  - Beispiel Dump: `docker exec <db-container> pg_dump -U $POSTGRES_USER $POSTGRES_DB > backup.sql`
+
+Weitere Details: `docs/server-infrastructure.md`
+
+Hinweise:
+- Im lokalen Dev ist `backend` ohne Auto-Reload konfiguriert (ruhige Admin-UI). Für HMR kann in `docker-compose-dev.yml` der Command wieder auf `npm run develop` gestellt werden.
+- Traefik-Labelnamen (`websecure`, `http-resolver`) bitte mit eurer Traefik-Konfiguration abgleichen und ggf. in den Compose-Dateien anpassen.
