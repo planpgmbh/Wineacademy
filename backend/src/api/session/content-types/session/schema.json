@@ -28,7 +28,7 @@
     "endDate": { "type": "datetime" },
     "locationText": { "type": "string", "required": true },
     "price": { "type": "decimal" },
-    "bookingUrl": { "type": "string" },
-    "seats": { "type": "integer" }
+    "seats": { "type": "integer" },
+    "bookingUrl": { "type": "string" }
   }
 }

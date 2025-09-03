@@ -16,6 +16,12 @@
     "slug": { "type": "uid", "targetField": "title", "required": true, "unique": true },
     "summary": { "type": "text" },
     "image": { "type": "media", "multiple": false },
+    "levels": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::training-level.training-level",
+      "mappedBy": "training"
+    },
     "courses": {
       "type": "relation",
       "relation": "oneToMany",

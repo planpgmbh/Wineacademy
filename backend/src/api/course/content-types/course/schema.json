@@ -17,12 +17,22 @@
     "summary": { "type": "text" },
     "content": { "type": "richtext" },
     "level": { "type": "string" },
+    "courseType": {
+      "type": "enumeration",
+      "enum": ["Masterclass", "Weinkurs", "Workshop"]
+    },
     "image": { "type": "media", "multiple": false },
     "seo": { "type": "component", "repeatable": false, "component": "common.seo" },
     "training": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::training.training",
+      "inversedBy": "courses"
+    },
+    "trainingLevel": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::training-level.training-level",
       "inversedBy": "courses"
     },
     "sessions": {
