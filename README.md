@@ -47,6 +47,8 @@ Eine professionelle Kurs- und Buchungsplattform für die Wine Academy Hamburg.
 cp .env.example .env
 ```
 
+Wichtig: Strapi-Secrets (APP_KEYS, ADMIN_JWT_SECRET, …) in `.env` leer lassen, damit die generierten Werte aus `backend/.env` genutzt werden.
+
 2) Services starten (erstes Mal mit Build):
 
 ```
@@ -59,6 +61,14 @@ docker compose -f docker-compose-dev.yml up -d --build
 - Next.js: `http://localhost:3000`
 
 Hinweis: In Dev nutzt das Frontend standardmäßig `NEXT_PUBLIC_API_URL=http://localhost:1337`.
+
+Erstanmeldung Strapi:
+- Beim ersten Aufruf von `/admin` wirst du aufgefordert, einen Admin‑Account anzulegen (E‑Mail + Passwort frei wählbar). Es gibt keine Default‑Zugangsdaten.
+
+Troubleshooting:
+- Backend startet nicht: prüfe, dass `.env` keine Strapi‑Secrets setzt (sie kommen aus `backend/.env`).
+- DB erreichbar: `docker compose -f docker-compose-dev.yml logs db_dev` (warte auf "database system is ready to accept connections").
+- Backend Logs: `docker compose -f docker-compose-dev.yml logs -f backend`.
 
 ## Produktion (mit Traefik)
 
