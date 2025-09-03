@@ -1,11 +1,11 @@
 {
   "kind": "collectionType",
-  "collectionName": "seminars",
+  "collectionName": "trainings",
   "info": {
-    "singularName": "seminar",
-    "pluralName": "seminars",
-    "displayName": "Seminar",
-    "description": "Seminar-Reihen wie WSET, Sensorik"
+    "singularName": "training",
+    "pluralName": "trainings",
+    "displayName": "Ausbildung",
+    "description": "Ausbildungsprogramme (z. B. WSET, Sommelier)"
   },
   "options": {
     "draftAndPublish": true
@@ -20,7 +20,7 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::course.course",
-      "mappedBy": "seminar"
+      "mappedBy": "training"
     }
   }
 }

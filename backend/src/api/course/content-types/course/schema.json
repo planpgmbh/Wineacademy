@@ -18,10 +18,10 @@
     "content": { "type": "richtext" },
     "level": { "type": "string" },
     "image": { "type": "media", "multiple": false },
-    "seminar": {
+    "training": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "api::seminar.seminar",
+      "target": "api::training.training",
       "inversedBy": "courses"
     },
     "sessions": {
@@ -32,4 +32,3 @@
     }
   }
 }
-
