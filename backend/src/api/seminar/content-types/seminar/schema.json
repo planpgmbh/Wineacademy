@@ -1,0 +1,27 @@
+{
+  "kind": "collectionType",
+  "collectionName": "seminars",
+  "info": {
+    "singularName": "seminar",
+    "pluralName": "seminars",
+    "displayName": "Seminar",
+    "description": "Seminar-Reihen wie WSET, Sensorik"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "slug": { "type": "uid", "targetField": "title", "required": true, "unique": true },
+    "summary": { "type": "text" },
+    "image": { "type": "media", "multiple": false },
+    "courses": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::course.course",
+      "mappedBy": "seminar"
+    }
+  }
+}
+

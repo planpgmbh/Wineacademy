@@ -1,0 +1,30 @@
+{
+  "kind": "collectionType",
+  "collectionName": "sessions",
+  "info": {
+    "singularName": "session",
+    "pluralName": "sessions",
+    "displayName": "Termin",
+    "description": "Buchbare Kurstermine"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "course": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::course.course",
+      "inversedBy": "sessions",
+      "required": true
+    },
+    "startDate": { "type": "datetime", "required": true },
+    "endDate": { "type": "datetime" },
+    "locationText": { "type": "string", "required": true },
+    "price": { "type": "decimal" },
+    "bookingUrl": { "type": "string" },
+    "seats": { "type": "integer" }
+  }
+}
+
