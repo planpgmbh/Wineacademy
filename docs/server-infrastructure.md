@@ -76,10 +76,10 @@ docker compose up -d --build
 Überprüfung:
 - Frontend Prod: https://wineacademy.de
 - Backend Prod: https://wineacademy.de/api
-- Admin Prod: https://wineacademy.de/admin
+- Admin Prod: https://wineacademy.de/api/admin
 - Frontend Staging: https://wineacademy.plan-p.de
 - Backend Staging: https://wineacademy.plan-p.de/api
-- Admin Staging: https://wineacademy.plan-p.de/admin
+- Admin Staging: https://wineacademy.plan-p.de/api/admin
 
 Logs & Status:
 ```bash
@@ -102,4 +102,3 @@ docker exec <db-container> pg_dump -U $POSTGRES_USER $POSTGRES_DB > backup.sql
 - Admin-UI Reloads vermeiden: In Dev nutzen wir `strapi start` ohne HMR; für Prod/Staging sowieso `start`.
 - Traefik-Resolver/EntryPoint passen nicht? Labels in `docker-compose*.yml` an eure Namen anpassen.
 - Zertifikate: Traefik-Logs prüfen und DNS/HTTP-Challenge je nach Setup sicherstellen.
-

@@ -6,6 +6,7 @@ networks:
 
 volumes:
   db_staging_data:
+  uploads_staging_data:
 
 services:
   db_staging:
@@ -39,6 +40,8 @@ services:
     depends_on:
       db_staging:
         condition: service_healthy
+    volumes:
+      - uploads_staging_data:/app/public/uploads
     networks:
       - db_staging
       - proxy
