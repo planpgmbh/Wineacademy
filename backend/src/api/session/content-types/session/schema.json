@@ -16,8 +16,13 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::course.course",
-      "inversedBy": "sessions",
-      "required": true
+      "inversedBy": "sessions"
+    },
+    "event": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::event.event",
+      "inversedBy": "sessions"
     },
     "startDate": { "type": "datetime", "required": true },
     "endDate": { "type": "datetime" },
@@ -27,4 +32,3 @@
     "seats": { "type": "integer" }
   }
 }
-
