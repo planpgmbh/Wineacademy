@@ -1,0 +1,70 @@
+networks:
+  proxy:
+    external: true
+  db:
+    internal: true
+
+volumes:
+  db_data:
+
+services:
+  db:
+    image: postgres:15
+    container_name: wineacademy_db
+    env_file:
+      - .env
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: wineacademy_backend
+    command: ["npm", "run", "start"]
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+      - PORT=1337
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - db
+      - proxy
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "proxy"
+      traefik.http.services.backend.loadbalancer.server.port: "1337"
+      traefik.http.routers.backend.rule: "Host(`wineacademy.de`) && PathPrefix(`/api`)"
+      traefik.http.routers.backend.entrypoints: "websecure"
+      traefik.http.routers.backend.tls.certresolver: "http-resolver"
+      traefik.http.routers.backend.middlewares: "backend-stripprefix@docker"
+      traefik.http.middlewares.backend-stripprefix.stripprefix.prefixes: "/api"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: wineacademy_frontend
+    env_file:
+      - .env
+    networks:
+      - proxy
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "proxy"
+      traefik.http.services.frontend.loadbalancer.server.port: "3000"
+      traefik.http.routers.frontend.rule: "Host(`wineacademy.de`)"
+      traefik.http.routers.frontend.entrypoints: "websecure"
+      traefik.http.routers.frontend.tls.certresolver: "http-resolver"
+

@@ -1,0 +1,48 @@
+services:
+  db_dev:
+    image: postgres:15
+    container_name: wineacademy_db_dev
+    env_file:
+      - .env
+    ports:
+      - "5433:5432"
+    volumes:
+      - db_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: wineacademy_backend_dev
+    command: ["npm", "run", "develop"]
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+      - DATABASE_HOST=db_dev
+      - DATABASE_PORT=5432
+    depends_on:
+      db_dev:
+        condition: service_healthy
+    ports:
+      - "1337:1337"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: wineacademy_frontend_dev
+    command: ["npm", "run", "dev"]
+    env_file:
+      - .env
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
+volumes:
+  db_dev_data:
+
