@@ -4,8 +4,8 @@
   "info": {
     "singularName": "session",
     "pluralName": "sessions",
-    "displayName": "Termin",
-    "description": "Buchbare Kurstermine"
+    "displayName": "Termine",
+    "description": "Buchbare Termine für Kurse/Events"
   },
   "options": {
     "draftAndPublish": true

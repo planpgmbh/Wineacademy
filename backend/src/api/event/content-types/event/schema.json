@@ -4,8 +4,8 @@
   "info": {
     "singularName": "event",
     "pluralName": "events",
-    "displayName": "Event",
-    "description": "Einmalige Formate (z. B. Weinabende)"
+    "displayName": "Events",
+    "description": "Events (z. B. Weinabende)"
   },
   "options": {
     "draftAndPublish": true
@@ -17,6 +17,7 @@
     "summary": { "type": "text" },
     "content": { "type": "richtext" },
     "image": { "type": "media", "multiple": false },
+    "seo": { "type": "component", "repeatable": false, "component": "common.seo" },
     "sessions": {
       "type": "relation",
       "relation": "oneToMany",
@@ -25,4 +26,3 @@
     }
   }
 }
-
