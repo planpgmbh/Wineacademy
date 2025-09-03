@@ -153,7 +153,7 @@ Dieser Abschnitt fasst die für Deployment relevanten Infrastruktur-Infos zusamm
   - Produktion: `cp .env.example .env` (mit Prod-Secrets füllen) und `docker compose up -d --build`
 
 - Health & Logs:
-  - Strapi Admin: extern über `/api/admin` erreichbar (z. B. Prod: `https://wineacademy.de/api/admin`, Staging: `https://wineacademy.plan-p.de/api/admin`)
+  - Strapi Admin: auch direkt über `/admin` erreichbar (z. B. Prod: `https://wineacademy.de/admin`, Staging: `https://wineacademy.plan-p.de/admin`).
   - Logs: `docker compose [-f <compose>] logs -f backend|frontend|db*`
 
 - Backups (Postgres):

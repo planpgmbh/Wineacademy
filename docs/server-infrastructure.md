@@ -76,10 +76,10 @@ docker compose up -d --build
 Überprüfung:
 - Frontend Prod: https://wineacademy.de
 - Backend Prod: https://wineacademy.de/api
-- Admin Prod: https://wineacademy.de/api/admin
+- Admin Prod: https://wineacademy.de/admin
 - Frontend Staging: https://wineacademy.plan-p.de
 - Backend Staging: https://wineacademy.plan-p.de/api
-- Admin Staging: https://wineacademy.plan-p.de/api/admin
+- Admin Staging: https://wineacademy.plan-p.de/admin
 
 Logs & Status:
 ```bash

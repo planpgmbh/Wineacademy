@@ -54,6 +54,10 @@ services:
       traefik.http.routers.backend.tls.certresolver: "http-resolver"
       traefik.http.routers.backend.middlewares: "backend-stripprefix@docker"
       traefik.http.middlewares.backend-stripprefix.stripprefix.prefixes: "/api"
+      # Serve Strapi Admin under /admin (no strip)
+      traefik.http.routers.backend-admin.rule: "Host(`wineacademy.de`) && PathPrefix(`/admin`)"
+      traefik.http.routers.backend-admin.entrypoints: "websecure"
+      traefik.http.routers.backend-admin.tls.certresolver: "http-resolver"
 
   frontend:
     build:
