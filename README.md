@@ -6,7 +6,7 @@ Eine professionelle Kurs- und Buchungsplattform für die Wine Academy Hamburg.
 
 - Backend: Strapi 4.x (Node.js), Datenbank: PostgreSQL 15
 - Frontend: Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS
-- Zahlungen: Stripe Checkout
+- Zahlungen: PayPal Checkout
 - Rechnungen: LexOffice API (automatisch nach erfolgreicher Zahlung)
 - E-Mail: SendGrid
 - Prod-Routing: Traefik (bestehendes `proxy` Netzwerk), `/` → Frontend, `/api` → Backend
@@ -108,7 +108,7 @@ Routing (Traefik Labels in `docker-compose-staging.yml`):
 - Strapi: `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET`
 - DB (Postgres): `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `DATABASE_*`
 - Next.js: `NEXT_PUBLIC_API_URL` (Prod: `https://wineacademy.de/api`)
-- Stripe: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+- PayPal: `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_MODE` (sandbox|live), `PAYPAL_WEBHOOK_ID`, `PAYPAL_CURRENCY` (z. B. `EUR`)
 - SendGrid: `SENDGRID_API_KEY`, `EMAIL_FROM`
 - LexOffice: `LEXOFFICE_API_TOKEN`
 
@@ -118,7 +118,7 @@ Weitere Details in `.env.example`.
 
 - Strapi-Projekt in `backend/` initialisieren (Content-Types: Course, Session, Booking, Voucher, Customer)
 - Next.js in `frontend/` initialisieren (App Router, Basis-Seiten)
-- Stripe Checkout + Webhook-Endpoint im Backend
+- PayPal Checkout + Webhook-Endpoint im Backend
 - LexOffice-Integration (Rechnung nach Zahlung + E-Mail-Versand)
 - SendGrid-Mailtemplates (Registrierung, Buchung, Zahlung, Rechnung)
 
@@ -145,7 +145,7 @@ Dieser Abschnitt fasst die für Deployment relevanten Infrastruktur-Infos zusamm
 
 - Wichtige Umgebungsvariablen:
   - Frontend-Port ist in allen Compose-Dateien explizit auf `PORT=3000` gesetzt, damit Strapi-`PORT=1337` das Frontend nicht beeinflusst.
-  - Prod `.env`: `POSTGRES_*`, `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `ENCRYPTION_KEY`, `SENDGRID_API_KEY`, `EMAIL_FROM`, `LEXOFFICE_API_TOKEN`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_API_URL=https://wineacademy.de/api`, `API_INTERNAL_URL=http://backend:1337`.
+  - Prod `.env`: `POSTGRES_*`, `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `ENCRYPTION_KEY`, `SENDGRID_API_KEY`, `EMAIL_FROM`, `LEXOFFICE_API_TOKEN`, `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_MODE`, `PAYPAL_WEBHOOK_ID`, `PAYPAL_CURRENCY`, `NEXT_PUBLIC_API_URL=https://wineacademy.de/api`, `API_INTERNAL_URL=http://backend:1337`.
   - Staging `.env.staging`: analoge Variablen mit Staging-Werten und `NEXT_PUBLIC_API_URL=https://wineacademy.plan-p.de/api`, `API_INTERNAL_URL=http://backend-staging:1337`.
 
 - Deploy-Befehle:
