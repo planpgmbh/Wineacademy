@@ -18,8 +18,7 @@ services:
     build:
       context: ./backend
     container_name: wineacademy_backend_dev
-    # Temporarily run without auto-reload to avoid admin page reload loops
-    command: ["npm", "run", "start"]
+    command: ["npm", "run", "dev"]
     env_file:
       - .env
     environment:

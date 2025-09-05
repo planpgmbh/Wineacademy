@@ -5,6 +5,8 @@
   "description": "A Strapi application",
   "scripts": {
     "build": "strapi build",
+    "prestart": "node scripts/copy-schemas.js",
+    "predev": "node scripts/copy-schemas.js",
     "console": "strapi console",
     "deploy": "strapi deploy",
     "dev": "strapi develop",

@@ -1,0 +1,47 @@
+{
+  "collectionName": "seminare",
+  "info": {
+    "singularName": "seminar",
+    "pluralName": "seminare",
+    "displayName": "Seminar",
+    "description": "Grundinformationen eines Seminars/Kurses"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "seminarname": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "seminarname",
+      "required": true
+    },
+    "kurzbeschreibung": {
+      "type": "text"
+    },
+    "beschreibung": {
+      "type": "richtext"
+    },
+    "infos": {
+      "type": "text"
+    },
+    "standardPreis": {
+      "type": "decimal",
+      "default": 0
+    },
+    "standardKapazitaetProTermin": { "type": "integer" },
+    "bild": {
+      "type": "media",
+      "allowedTypes": ["images"],
+      "multiple": false
+    },
+    "aktiv": {
+      "type": "boolean",
+      "default": true
+    }
+    
+  }
+}

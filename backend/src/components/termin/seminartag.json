@@ -1,0 +1,12 @@
+{
+  "collectionName": "components_termin_seminartag",
+  "info": {
+    "displayName": "Seminartag",
+    "description": "Ein Tag mit Start- und Endzeit"
+  },
+  "attributes": {
+    "datum": { "type": "date", "required": true },
+    "startzeit": { "type": "time", "required": true },
+    "endzeit": { "type": "time", "required": true }
+  }
+}

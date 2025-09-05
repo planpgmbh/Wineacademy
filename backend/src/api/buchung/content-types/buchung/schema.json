@@ -1,0 +1,57 @@
+{
+  "collectionName": "buchungen",
+  "info": {
+    "singularName": "buchung",
+    "pluralName": "buchungen",
+    "displayName": "Buchung",
+    "description": "Buchung für eine Session/Termin"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    
+    "vorname": {
+      "type": "string",
+      "required": true
+    },
+    "nachname": {
+      "type": "string",
+      "required": true
+    },
+    "email": {
+      "type": "email",
+      "required": true
+    },
+    "telefon": { "type": "string" },
+    "anzahl": {
+      "type": "integer",
+      "default": 1,
+      "min": 1
+    },
+    "preisProPlatz": {
+      "type": "decimal"
+    },
+    "gesamtpreis": {
+      "type": "decimal"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["offen", "bestaetigt", "storniert", "erstattet", "warteliste"],
+      "default": "offen"
+    },
+    "zahlungsmethode": {
+      "type": "enumeration",
+      "enum": ["ueberweisung", "karte", "paypal", "sonstiges"]
+    },
+    "zahlungsreferenz": { "type": "string" },
+    "gutscheincode": { "type": "string" },
+    "agbAkzeptiert": {
+      "type": "boolean",
+      "default": false
+    },
+    "notizen": {
+      "type": "text"
+    }
+  }
+}
