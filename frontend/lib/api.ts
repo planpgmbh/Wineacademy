@@ -1,4 +1,6 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1337';
+// Use internal URL on server (container network), public URL on client
+const SERVER_BASE = process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1337';
+const CLIENT_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1337';
 
 function joinUrl(base: string, path: string) {
   const b = base.replace(/\/$/, '');
@@ -7,7 +9,9 @@ function joinUrl(base: string, path: string) {
 }
 
 export async function fetchJSON<T>(path: string, init?: RequestInit): Promise<T> {
-  const url = joinUrl(API_BASE, path);
+  const isServer = typeof window === 'undefined';
+  const base = isServer ? SERVER_BASE : CLIENT_BASE;
+  const url = joinUrl(base, path);
   const res = await fetch(url, { ...init, next: { revalidate: 30 } });
   if (!res.ok) {
     const text = await res.text();
@@ -21,6 +25,8 @@ export type SeminarListItem = {
   seminarname: string;
   slug: string;
   kurzbeschreibung?: string;
+  beschreibung?: string;
+  infos?: string;
   standardPreis?: number;
   bild?: { url: string; alternativeText?: string } | null;
   termine?: Array<{
@@ -40,4 +46,3 @@ export async function getSeminare(): Promise<SeminarListItem[]> {
 export async function getSeminar(slug: string): Promise<SeminarListItem> {
   return fetchJSON<SeminarListItem>(`/public/seminare/${encodeURIComponent(slug)}`);
 }
-
