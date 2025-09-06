@@ -1,0 +1,24 @@
+{
+  "collectionName": "gutscheine",
+  "info": {
+    "singularName": "gutschein",
+    "pluralName": "gutscheine",
+    "displayName": "Gutschein",
+    "description": "Gutscheine mit Einmalnutzung"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "code": { "type": "string", "required": true, "unique": true },
+    "typ": { "type": "enumeration", "enum": ["betrag", "prozent"], "default": "betrag", "required": true },
+    "wert": { "type": "decimal", "required": true },
+    "aktiv": { "type": "boolean", "default": true },
+    "gueltigAb": { "type": "date" },
+    "gueltigBis": { "type": "date" },
+    "maxNutzung": { "type": "integer", "default": 1, "min": 1 },
+    "nutzungen": { "type": "integer", "default": 0, "min": 0 },
+    "bemerkung": { "type": "text" }
+  }
+}
+

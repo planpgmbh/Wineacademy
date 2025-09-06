@@ -1,0 +1,30 @@
+{
+  "collectionName": "kunden",
+  "info": {
+    "singularName": "kunde",
+    "pluralName": "kunden",
+    "displayName": "Kunde",
+    "description": "Kundendaten für Buchungen"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "vorname": { "type": "string", "required": true },
+    "nachname": { "type": "string", "required": true },
+    "email": { "type": "email", "required": true, "unique": true },
+    "telefon": { "type": "string" },
+    "strasse": { "type": "string" },
+    "plz": { "type": "string" },
+    "stadt": { "type": "string" },
+    "land": { "type": "string" },
+    "notizen": { "type": "text" },
+    "buchungen": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::buchung.buchung",
+      "mappedBy": "kunde"
+    }
+  }
+}
+

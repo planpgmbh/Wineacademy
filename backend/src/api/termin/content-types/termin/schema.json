@@ -10,6 +10,7 @@
     "draftAndPublish": true
   },
   "attributes": {
+    "titel": { "type": "string" },
     "tage": {
       "type": "component",
       "repeatable": true,
@@ -18,12 +19,30 @@
       "min": 1
     },
     
-    "kapazitaet": { "type": "integer", "required": true, "min": 1 },
+    "kapazitaet": { "type": "integer", "required": true, "min": 1, "default": 30 },
     "preis": { "type": "decimal" },
-    "status": {
+    "planungsstatus": {
       "type": "enumeration",
       "enum": ["geplant", "ausgebucht", "abgesagt"],
       "default": "geplant"
+    },
+    "seminar": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::seminar.seminar",
+      "inversedBy": "termine"
+    },
+    "ort": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::ort.ort",
+      "inversedBy": "termine"
+    },
+    "buchungen": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::buchung.buchung",
+      "mappedBy": "termin"
     }
   }
 }

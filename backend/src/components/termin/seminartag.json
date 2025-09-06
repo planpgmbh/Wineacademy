@@ -6,7 +6,7 @@
   },
   "attributes": {
     "datum": { "type": "date", "required": true },
-    "startzeit": { "type": "time", "required": true },
-    "endzeit": { "type": "time", "required": true }
+    "startzeit": { "type": "time", "required": true, "default": "10:00:00" },
+    "endzeit": { "type": "time", "required": true, "default": "17:00:00" }
   }
 }

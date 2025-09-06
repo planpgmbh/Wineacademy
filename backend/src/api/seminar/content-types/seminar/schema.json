@@ -41,6 +41,12 @@
     "aktiv": {
       "type": "boolean",
       "default": true
+    },
+    "termine": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::termin.termin",
+      "mappedBy": "seminar"
     }
     
   }

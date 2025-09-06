@@ -52,6 +52,18 @@
     },
     "notizen": {
       "type": "text"
+    },
+    "termin": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::termin.termin",
+      "inversedBy": "buchungen"
+    },
+    "kunde": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::kunde.kunde",
+      "inversedBy": "buchungen"
     }
   }
 }

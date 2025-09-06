@@ -32,6 +32,12 @@
     },
     "land": {
       "type": "string"
+    },
+    "termine": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::termin.termin",
+      "mappedBy": "ort"
     }
     
   }
