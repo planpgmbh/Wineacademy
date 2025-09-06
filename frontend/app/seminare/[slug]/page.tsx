@@ -93,7 +93,7 @@ export default async function SeminarDetailPage({ params }: Props) {
 
         {/* Sidebar: Termine */}
         <aside className="md:col-span-1">
-          <BookingSidebar termine={termine as unknown as any[]} fallbackPreis={seminar.standardPreis} />
+          <BookingSidebar termine={termine} fallbackPreis={seminar.standardPreis} />
         </aside>
       </div>
     </div>
