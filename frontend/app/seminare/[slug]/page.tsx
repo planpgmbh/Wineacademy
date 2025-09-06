@@ -1,5 +1,8 @@
 import { getSeminar } from '@/lib/api';
 import Link from 'next/link';
+import Image from 'next/image';
+import BookingSidebar from './BookingSidebar';
+import { mediaUrl } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,6 +41,7 @@ function terminDateLine(t: NonNullable<Awaited<ReturnType<typeof getSeminar>>['t
 export default async function SeminarDetailPage({ params }: Props) {
   const seminar = await getSeminar(params.slug);
   const termine = seminar.termine || [];
+  const bildUrl = mediaUrl(seminar.bild?.url);
   const nextTermin = termine[0];
 
   return (
@@ -53,6 +57,11 @@ export default async function SeminarDetailPage({ params }: Props) {
 
       {/* Header */}
       <header className="mb-6">
+        {bildUrl && (
+          <div className="mb-4 relative w-full aspect-[16/6] bg-gray-100 overflow-hidden rounded">
+            <Image src={bildUrl} alt={seminar.bild?.alternativeText || seminar.seminarname} fill priority sizes="100vw" className="object-cover" />
+          </div>
+        )}
         <h1 className="text-3xl font-semibold">{seminar.seminarname}</h1>
         {seminar.kurzbeschreibung && (
           <p className="text-gray-700 mt-2 max-w-3xl">{seminar.kurzbeschreibung}</p>
@@ -83,28 +92,7 @@ export default async function SeminarDetailPage({ params }: Props) {
 
         {/* Sidebar: Termine */}
         <aside className="md:col-span-1">
-          <div className="border rounded p-4 sticky top-6">
-            <h2 className="text-lg font-medium mb-3">Termine</h2>
-            {termine.length === 0 && <p className="text-sm text-gray-600">Keine Termine verfügbar.</p>}
-            <ul className="space-y-3">
-              {termine.map((t) => (
-                <li key={t.id} className="border rounded p-3 text-sm">
-                  <div className="font-medium text-gray-900">{terminDateLine(t)}</div>
-                  {t.ort && (
-                    <div className="text-gray-700 mt-1">
-                      {t.ort.standort || t.ort.veranstaltungsort || t.ort.stadt}
-                    </div>
-                  )}
-                  <div className="mt-2 flex items-center justify-between">
-                    <div className="text-gray-800">
-                      {typeof t.preis !== 'undefined' ? `${t.preis} €` : (typeof seminar.standardPreis !== 'undefined' ? `${seminar.standardPreis} €` : '')}
-                    </div>
-                    <button className="bg-black text-white px-3 py-1.5 rounded hover:bg-gray-800">Zur Buchung</button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <BookingSidebar termine={termine as unknown as any[]} fallbackPreis={seminar.standardPreis} />
         </aside>
       </div>
     </div>

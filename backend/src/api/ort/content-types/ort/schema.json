@@ -31,7 +31,10 @@
       "type": "string"
     },
     "land": {
-      "type": "string"
+      "type": "enumeration",
+      "enum": ["Deutschland"],
+      "default": "Deutschland",
+      "required": true
     },
     "termine": {
       "type": "relation",

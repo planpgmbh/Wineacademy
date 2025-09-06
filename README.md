@@ -2,10 +2,21 @@
 
 Eine professionelle Kurs- und Buchungsplattform für die Wine Academy Hamburg.
 
+## Projektzusammenfassung
+
+Die Plattform bildet Seminare/Kurse mit Terminen ab, ermöglicht Buchungen inkl. Online‑Zahlung und generiert Dokumente/Benachrichtigungen automatisch. Kernbausteine:
+
+- Inhalte & Daten: Strapi 5 (Seminare, Termine, Orte, Buchungen, Kunden, Gutscheine); Komponente „Seminartag“ (Datum, Start-/Endzeit)
+- Frontend: Next.js (App Router, Tailwind); Seiten für Liste/Detail, Buchungs‑Flow in Vorbereitung
+- Payments & Docs: PayPal (Checkout/Webhook), LexOffice (Rechnungen), SendGrid (E‑Mails)
+- Betrieb: Docker/Compose in Dev/Prod/Staging; Traefik routet `/` → Frontend und `/api` → Backend
+
+Für Agenten/KI: Das Backend stellt schlanke Public‑APIs bereit (`/api/public/seminare`, `/api/public/seminare/:slug`) mit genau den Feldern, die das Frontend rendert (Termine inkl. Tagen und Ort). Im Dev ist der Frontend‑Code bind‑gemountet, Änderungen sind ohne Image‑Rebuild sichtbar.
+
 ## Überblick
 
-- Backend: Strapi 4.x (Node.js), Datenbank: PostgreSQL 15
-- Frontend: Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS
+- Backend: Strapi 5.x (Node.js), Datenbank: PostgreSQL 15
+- Frontend: Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4
 - Zahlungen: PayPal Checkout
 - Rechnungen: LexOffice API (automatisch nach erfolgreicher Zahlung)
 - E-Mail: SendGrid
@@ -70,6 +81,66 @@ Troubleshooting:
 - DB erreichbar: `docker compose -f docker-compose-dev.yml logs db_dev` (warte auf "database system is ready to accept connections").
 - Backend Logs: `docker compose -f docker-compose-dev.yml logs -f backend`.
 
+### Docker Desktop (wichtig)
+
+- Verwende für dieses Projekt Docker Desktop als Engine/Kontext. Parallele Engines (z. B. Colima) führen zu doppelten Stacks und unterschiedlichen Datenständen auf denselben Ports.
+- Prüfen/setzen des Kontexts:
+  - `docker context ls`
+  - `docker context use desktop-linux`
+- Falls Colima aktiv ist: `colima stop`
+
+### Start/Stop – Kurzbefehle
+
+- Start Dev‑Stack: `docker compose -f docker-compose-dev.yml up -d`
+- Stoppen: `docker compose -f docker-compose-dev.yml down`
+- Stoppen inkl. Volumes (DB leeren): `docker compose -f docker-compose-dev.yml down -v`
+
+### Teil‑Services neu bauen (nur bei Bedarf)
+
+- Frontend: `docker compose -f docker-compose-dev.yml build --no-cache frontend && docker compose -f docker-compose-dev.yml up -d frontend`
+- Backend:  `docker compose -f docker-compose-dev.yml build --no-cache backend  && docker compose -f docker-compose-dev.yml up -d backend`
+
+## Development Workflow (empfohlen)
+
+- Starten (Dev): `docker compose -f docker-compose-dev.yml up -d`
+  - Frontend läuft im Dev‑Modus (Hot Reload), Code ist bind‑gemountet
+  - Backend (Strapi) im Develop‑Modus mit Auto‑Reload
+
+- Änderungen am Frontend: Browser‑Reload genügt; kein Rebuild nötig
+  - Bei unerwarteter Anzeige: Hard‑Reload (Cmd/Ctrl+Shift+R) oder privates Fenster
+
+- Images nur bei Bedarf neu bauen (Dockerfile/Build‑Änderungen):
+  - Frontend: `docker compose -f docker-compose-dev.yml build --no-cache frontend && docker compose -f docker-compose-dev.yml up -d frontend`
+  - Backend:  `docker compose -f docker-compose-dev.yml build --no-cache backend  && docker compose -f docker-compose-dev.yml up -d backend`
+
+- Seeds (nur einmalig zum Befüllen):
+  - `.env` temporär: `SEED=true` (optional `SEED_RESET=true`), dann starten
+  - Danach wieder deaktivieren (`SEED=false`) damit es nicht erneut läuft
+
+- API‑Basis im Frontend:
+  - SSR: `API_INTERNAL_URL=http://backend:1337`
+  - Browser: `NEXT_PUBLIC_API_URL=http://localhost:1337`
+
+- Troubleshooting:
+  - Alte Anzeige → Hard‑Reload, ggf. Frontend neu bauen/starten
+  - Admin‑Maske nach Schema‑Änderung → Content Manager „Configure“ → „Reset to default“
+  - Ports belegt → `lsof -i :1337` (oder `:3000`) prüfen
+  - Logs: `docker compose -f docker-compose-dev.yml logs -f frontend|backend`
+
+## Datenmodell (Kurzüberblick)
+
+- Content‑Types: Seminar, Termin (Planungsstatus, Preis, Kapazität), Ort, Buchung, Kunde, Gutschein
+- Komponente: `termin.seminartag` (Datum, Startzeit, Endzeit) – Defaultzeiten 10:00–17:00
+- Relationen: Seminar ↔ Termine (1:n), Termin → Ort (n:1), Buchung → Termin/Kunde (n:1)
+- Termin‑Titel: Wird bei leerem Titel automatisch als „YYYY‑DD‑MM – Seminar – Ort“ gesetzt
+
+## Öffentliche API (für das Frontend)
+
+- Liste: `GET /api/public/seminare` → aktive, veröffentlichte Seminare inkl. geplanter Termine
+- Detail: `GET /api/public/seminare/:slug` → Seminar mit Terminen (Tage, Ort, Preis)
+
+Hinweis: In Dev nutzt das Frontend `API_INTERNAL_URL` (SSR) und `NEXT_PUBLIC_API_URL` (CSR). Produktrouting via Traefik siehe unten.
+
 ## Produktion (mit Traefik)
 
 Voraussetzungen: Externes Traefik-Netz `proxy` existiert (z. B. auf dem Host bereits angelegt) und eine Domain (z. B. `wineacademy.de`). Passe die Labels in `docker-compose.yml` bei Bedarf an.
@@ -84,6 +155,19 @@ Routing (Traefik Labels in `docker-compose.yml`):
 
 - Frontend: `Host(wineacademy.de)` → Port 3000
 - Backend: `Host(wineacademy.de) && PathPrefix(/api)` → Port 1337 (mit StripPrefix `/api`)
+
+Staging/Live‑Checklist (ergänzend):
+- Domains: `wineacademy.de` (Prod), `wineacademy.plan-p.de` (Staging) in Traefik‑Labels hinterlegt und DNS zeigt auf Server
+- Frontend‑ENV:
+  - Prod: `NEXT_PUBLIC_API_URL=https://wineacademy.de/api`, `NEXT_PUBLIC_ASSETS_URL=https://wineacademy.de`
+  - Staging: `NEXT_PUBLIC_API_URL=https://wineacademy.plan-p.de/api`, `NEXT_PUBLIC_ASSETS_URL=https://wineacademy.plan-p.de`
+- Backend‑ENV:
+  - Prod: `API_INTERNAL_URL=http://backend:1337`
+  - Staging: `API_INTERNAL_URL=http://backend-staging:1337`
+- Strapi CORS/Hostname: `PUBLIC_URL` bzw. Strapi‑URL auf Domain setzen; CORS/Permissions erlauben die Frontend‑Origin
+- Next/Image: `frontend/next.config.ts` enthält Domains (`wineacademy.de`, `wineacademy.plan-p.de`) – bei neuen Domains ergänzen
+- Payments: PayPal `PAYPAL_MODE=sandbox` (Staging) / `live` (Prod), passende Webhook‑IDs
+- E‑Mail & LexOffice: Staging‑Keys getrennt von Prod nutzen
 
 ## Staging (wineacademy.plan-p.de)
 
@@ -102,6 +186,9 @@ Routing (Traefik Labels in `docker-compose-staging.yml`):
 
 - Frontend: `Host(wineacademy.plan-p.de)` → Port 3000
 - Backend: `Host(wineacademy.plan-p.de) && PathPrefix(/api)` → Port 1337 (StripPrefix `/api`)
+  
+Zusatz:
+- Staging `.env.staging` sollte `NEXT_PUBLIC_ASSETS_URL=https://wineacademy.plan-p.de` und `NEXT_PUBLIC_API_URL=https://wineacademy.plan-p.de/api` enthalten.
 
 ## Umgebungsvariablen (Auszug)
 
@@ -162,5 +249,14 @@ Dieser Abschnitt fasst die für Deployment relevanten Infrastruktur-Infos zusamm
 Weitere Details: `docs/server-infrastructure.md`
 
 Hinweise:
-- Im lokalen Dev ist `backend` ohne Auto-Reload konfiguriert (ruhige Admin-UI). Für HMR kann in `docker-compose-dev.yml` der Command wieder auf `npm run develop` gestellt werden.
-- Traefik-Labelnamen (`websecure`, `http-resolver`) bitte mit eurer Traefik-Konfiguration abgleichen und ggf. in den Compose-Dateien anpassen.
+- Im lokalen Dev läuft `backend` im Develop‑Modus (Auto‑Reload). Für eine ruhigere Admin‑UI kann alternativ `npm run start` genutzt werden.
+- Traefik-Labelnamen (`websecure`, `http-resolver`) bitte mit eurer Traefik‑Konfiguration abgleichen und ggf. in den Compose‑Dateien anpassen.
+
+## Weitere Doku
+
+- Frontend: `frontend/README.md` – Start/HMR, API‑Basen (SSR/CSR), Seiten, Bilder, Troubleshooting, Hinweise für Agenten/KI
+- Backend: `backend/README.md` – Datenmodell, Public‑APIs, Seeds, Lifecycles, Admin‑Hinweise, Logs
+
+### Für Agenten/KI – Init‑Snippet (zum Kopieren)
+
+> Lies und befolge zuerst diese Root‑`README.md` (Docker Desktop, Compose, Ports/Routing) und die README im relevanten Teilprojekt (`frontend/README.md` oder `backend/README.md`). Verwende Docker Desktop (Kontext `desktop-linux`). Starte über `docker compose -f docker-compose-dev.yml up -d <service>`. Nenne vor Änderungen einen kurzen Plan (2–5 Schritte) und die Befehle/Tests, die du ausführst. Halte dich an die Public‑APIs und die in den READMEs beschriebenen Konventionen (z. B. `planungsstatus`, API‑Basen SSR/CSR, `mediaUrl()` für Bilder).

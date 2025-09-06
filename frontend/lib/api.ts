@@ -2,6 +2,17 @@
 const SERVER_BASE = process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1337';
 const CLIENT_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1337';
 
+function stripApiSuffix(u: string) {
+  return u.replace(/\/?api\/?$/, '');
+}
+
+const SERVER_MEDIA_BASE = process.env.ASSETS_INTERNAL_URL
+  ? process.env.ASSETS_INTERNAL_URL
+  : stripApiSuffix(SERVER_BASE);
+const CLIENT_MEDIA_BASE = process.env.NEXT_PUBLIC_ASSETS_URL
+  ? process.env.NEXT_PUBLIC_ASSETS_URL
+  : stripApiSuffix(CLIENT_BASE);
+
 function joinUrl(base: string, path: string) {
   const b = base.replace(/\/$/, '');
   const p = path.startsWith('/') ? path : `/${path}`;
@@ -45,4 +56,13 @@ export async function getSeminare(): Promise<SeminarListItem[]> {
 
 export async function getSeminar(slug: string): Promise<SeminarListItem> {
   return fetchJSON<SeminarListItem>(`/public/seminare/${encodeURIComponent(slug)}`);
+}
+
+export function mediaUrl(path?: string): string | undefined {
+  if (!path) return undefined;
+  const isServer = typeof window === 'undefined';
+  // Server (Next/Image fetch) soll über interne URL gehen (z. B. http://backend:1337)
+  // Client (Browser) soll die öffentliche Basis sehen (z. B. http://localhost:1337)
+  const base = isServer ? SERVER_MEDIA_BASE : CLIENT_MEDIA_BASE;
+  return path.startsWith('http') ? path : `${base}${path}`;
 }
