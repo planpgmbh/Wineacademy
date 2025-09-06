@@ -23,11 +23,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+    <html lang="de">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <nav className="p-4 border-b">
+          <a href="/" className="mr-4 hover:underline">Home</a>
+          <a href="/seminare" className="hover:underline">Seminare</a>
+        </nav>
+        <main>{children}</main>
       </body>
     </html>
   );
