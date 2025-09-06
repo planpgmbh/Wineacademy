@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import BookingSidebar from './BookingSidebar';
 import { mediaUrl } from '@/lib/api';
+import type { SeminarListItem } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,7 +41,7 @@ function terminDateLine(t: NonNullable<Awaited<ReturnType<typeof getSeminar>>['t
 
 export default async function SeminarDetailPage({ params }: Props) {
   const seminar = await getSeminar(params.slug);
-  const termine = seminar.termine || [];
+  const termine = (seminar.termine ?? []) as NonNullable<SeminarListItem['termine']>;
   const bildUrl = mediaUrl(seminar.bild?.url);
   const nextTermin = termine[0];
 
