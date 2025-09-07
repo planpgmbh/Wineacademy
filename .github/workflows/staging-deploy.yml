@@ -23,8 +23,7 @@ jobs:
     steps:
       - name: Checkout (for reference only)
         uses: actions/checkout@v4
-
-      # nutzt DEINE bestehenden Repo-Secrets: SSH_HOST, SSH_USER, SSH_PRIVATE_KEY, SSH_PORT
+        
       - name: Prepare SSH key and known_hosts
         id: ssh
         shell: bash
