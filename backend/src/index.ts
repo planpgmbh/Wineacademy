@@ -58,7 +58,7 @@ export default {
           strasse: 'Am Sandtorkai 1',
           plz: '20457',
           stadt: 'Hamburg',
-          land: 'DE',
+          land: 'Deutschland',
           publishedAt: new Date().toISOString(),
         },
       });

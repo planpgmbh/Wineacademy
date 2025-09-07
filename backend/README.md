@@ -52,6 +52,13 @@ curl -s http://localhost:1337/api/public/seminare/einfuhrung-in-die-weinwelt | j
 ## Deployment (kurz)
 - Über Root‑Compose + Traefik: `/` → Frontend, `/api` → Backend (StripPrefix). Details siehe Projekt‑README.
 
+## Staging‑Readiness (Checkliste)
+- Server‑URL: Setze `PUBLIC_URL` in der Staging‑ENV auf die öffentliche Basis inkl. Pfadprefix, z. B. `https://wineacademy.plan-p.de/api`. Der Server liest diese URL (config/server.ts) und baut absolute Links korrekt.
+- Admin‑URL: Optional `ADMIN_PUBLIC_URL` setzen (Default `/admin`). In Staging bleibt das Admin‑Panel unter `https://wineacademy.plan-p.de/admin` erreichbar.
+- CORS: Optional `CORS_ORIGINS` als Liste setzen, z. B. `CORS_ORIGINS=['https://wineacademy.plan-p.de']`. Standard ist `*`.
+- Uploads/Routing: Stelle sicher, dass Traefik auch Uploads ausliefert. Entweder über `PathPrefix(/api)` + `StripPrefix` und Nutzung von `/api/uploads/...` im Frontend, oder über einen zusätzlichen Router für `PathPrefix(/uploads)` → Backend. Das Frontend erwartet standardmäßig `NEXT_PUBLIC_ASSETS_URL` (ohne `/api`).
+- Seeds: Für initiale Demodaten in Staging `SEED=true` (optional `SEED_RESET=true`) setzen, Stack starten, danach wieder deaktivieren, damit Seeds nicht erneut laufen.
+
 ## Für Agenten/KI
 - Bitte zuerst diese Datei vollständig lesen (Datenmodell, Public‑API, Seeds, Lifecycles) und anschließend die Root‑`README.md` (Docker Desktop, Compose, Ports/Routing).
 - Nur Public‑Endpoints erweitern oder konsumieren (`/api/public/seminare`, `/api/public/seminare/:slug`), keine Breaking Changes am Schema ohne View‑Reset‑Hinweis.
@@ -59,4 +66,28 @@ curl -s http://localhost:1337/api/public/seminare/einfuhrung-in-die-weinwelt | j
 
 ### Init‑Prompt (zum Kopieren)
 
-> Du arbeitest NUR am Backend in `backend/`. Lies und befolge zuerst `backend/README.md` (Datenmodell, Public‑APIs, Seeds, Lifecycles, Admin‑Hinweise) und die Root‑`README.md` (Docker Desktop, Compose, Ports/Routing). Starte/prüfe: `docker compose -f ../docker-compose-dev.yml up -d backend`. Nutze die Public‑Endpoints, keine direkten internen Services für das Frontend. Mache einen kurzen Plan (2–5 Schritte) und liste die Befehle/curl‑Tests, die du ausführst, bevor du Änderungen machst. Ziel: [hier Ziel einfügen].
+> Du arbeitest NUR am Backend in `backend/`. Lies und befolge zuerst `backend/README.md` (Datenmodell, Public‑APIs, Seeds, Lifecycles, Admin‑Hinweise) und die Root‑`README.md` (Docker Desktop, Compose, Ports/Routing). Starte/prüfe: `docker compose -f ../docker-compose-dev.yml up -d backend`. Nutze die Public‑Endpoints, keine direkten internen Services für das Frontend. Mache einen kurzen Plan (2–5 Schritte) und liste die Befehle/curl‑Tests, die du ausführst, bevor du Änderungen machst. Antworte immer in deutsch. Wenn das Backend aktuell nicht über Docker läuft, starte nun das Backend. 
+
+## Reset & Neuinstallation (kurz)
+
+- Lokal – Komplett zurücksetzen und neu seeden:
+  - Hinweis: `down -v` löscht auch das DB-Volume vollständig (frische DB beim nächsten Start)
+  - `docker compose -f ../docker-compose-dev.yml down -v`
+  - Optional nur DB-Reset (Schema leeren, ohne Container zu löschen):
+    - `docker compose -f ../docker-compose-dev.yml exec db_dev psql -U $POSTGRES_USER -d $POSTGRES_DB -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"`
+  - In `.env`: `SEED=true` (optional `SEED_RESET=true`)
+  - `docker compose -f ../docker-compose-dev.yml up -d --build backend`
+  - Prüfen: `docker compose -f ../docker-compose-dev.yml logs -f backend`
+  - Tests: `curl -s http://localhost:1337/api/public/seminare | jq '.[0]'`
+  - In `.env`: `SEED=false`/Variablen entfernen, dann: `docker compose -f ../docker-compose-dev.yml up -d backend`
+
+- Staging – Komplett zurücksetzen und neu seeden:
+  - Hinweis: `down -v` löscht auch das DB-Volume vollständig (frische DB und Uploads beim nächsten Start)
+  - `docker compose -f docker-compose-staging.yml down -v`
+  - Optional nur DB-Reset (Schema leeren, ohne Container zu löschen):
+    - `docker compose -f docker-compose-staging.yml exec db_staging psql -U $POSTGRES_USER -d $POSTGRES_DB -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"`
+  - In `.env.staging`: `SEED=true` (optional `SEED_RESET=true`), `PUBLIC_URL=https://wineacademy.plan-p.de/api`
+  - `docker compose -f docker-compose-staging.yml up -d --build`
+  - Prüfen: `docker compose -f docker-compose-staging.yml logs -f backend-staging`
+  - Tests: `curl -s https://wineacademy.plan-p.de/api/public/seminare | jq '.[0]'`
+  - In `.env.staging`: `SEED=false`/Variablen entfernen, dann: `docker compose -f docker-compose-staging.yml up -d backend-staging`
