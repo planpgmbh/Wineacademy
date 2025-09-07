@@ -19,20 +19,21 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PROJECT_DIR: ${{ secrets.STAGING_PROJECT_DIR || '/etc/docker/projects/wineacadamy' }}
+      FINGERPRINT: ${{ secrets.STAGING_SSH_FINGERPRINT }}
     steps:
       - name: Checkout (for context only)
         uses: actions/checkout@v4
 
       # Variante mit Fingerprint-Validierung (wenn Secret gesetzt)
       - name: Deploy via SSH (with host fingerprint)
-        if: ${{ secrets.STAGING_SSH_FINGERPRINT != '' }}
+        if: ${{ env.FINGERPRINT != '' }}
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.STAGING_SSH_HOST }}
           username: ${{ secrets.STAGING_SSH_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
           port: ${{ secrets.STAGING_SSH_PORT || 22 }}
-          host_fingerprint: ${{ secrets.STAGING_SSH_FINGERPRINT }}
+          host_fingerprint: ${{ env.FINGERPRINT }}
           script_stop: true
           script: |
             set -euo pipefail
@@ -55,7 +56,7 @@ jobs:
 
       # Fallback ohne Fingerprint (wenn kein Secret gesetzt)
       - name: Deploy via SSH
-        if: ${{ secrets.STAGING_SSH_FINGERPRINT == '' }}
+        if: ${{ env.FINGERPRINT == '' }}
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.STAGING_SSH_HOST }}
