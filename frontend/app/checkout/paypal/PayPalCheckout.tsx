@@ -9,9 +9,43 @@ type Props = {
   description?: string;
 };
 
+// Minimal typings for the PayPal SDK we use here
+type PayPalPurchaseUnit = {
+  amount: { currency_code: string; value: string };
+  description?: string;
+};
+
+type PayPalOrderActionsCreate = (input: {
+  purchase_units: PayPalPurchaseUnit[];
+}) => Promise<string> | string;
+
+type PayPalOrderActionsCaptureResult = {
+  id?: string;
+  payer?: { name?: { given_name?: string } };
+};
+
+type PayPalOrderActions = {
+  order: {
+    create: PayPalOrderActionsCreate;
+    capture: () => Promise<PayPalOrderActionsCaptureResult>;
+  };
+};
+
+type PayPalButtonsOptions = {
+  style?: Record<string, string>;
+  createOrder?: (data: unknown, actions: PayPalOrderActions) => Promise<string> | string;
+  onApprove?: (data: unknown, actions: PayPalOrderActions) => Promise<void> | void;
+  onError?: (err: unknown) => void;
+  onCancel?: () => void;
+};
+
+type PayPalButtons = (options: PayPalButtonsOptions) => {
+  render: (element: HTMLElement) => Promise<void>;
+};
+
 declare global {
   interface Window {
-    paypal?: any;
+    paypal?: { Buttons: PayPalButtons };
   }
 }
 
@@ -56,7 +90,7 @@ export default function PayPalCheckout({ clientId, amount, currency, description
       containerRef.current.innerHTML = '';
       window.paypal.Buttons({
         style: { layout: 'vertical', shape: 'rect', color: 'gold', label: 'paypal' },
-        createOrder: (_: any, actions: any) => {
+        createOrder: (_data, actions) => {
           return actions.order.create({
             purchase_units: [
               {
@@ -66,19 +100,19 @@ export default function PayPalCheckout({ clientId, amount, currency, description
             ],
           });
         },
-        onApprove: async (_data: any, actions: any) => {
+        onApprove: async (_data, actions) => {
           try {
             const details = await actions.order.capture();
             setStatus('approved');
             const id = details?.id || '';
             const payer = details?.payer?.name?.given_name || 'Kunde';
             setMessage(`Zahlung erfolgreich. Bestell-Nr.: ${id} – Danke, ${payer}!`);
-          } catch (e: any) {
+          } catch (e: unknown) {
             setStatus('error');
             setMessage('Fehler bei der Zahlungsbestätigung.');
           }
         },
-        onError: (err: any) => {
+        onError: (err: unknown) => {
           console.error('PayPal error', err);
           setStatus('error');
           setMessage('PayPal Fehler. Bitte erneut versuchen.');
@@ -103,4 +137,3 @@ export default function PayPalCheckout({ clientId, amount, currency, description
     </div>
   );
 }
-
