@@ -58,6 +58,15 @@ export default function PayPalCheckout({ clientId, amount, currency, description
   type PayPalButtonsInstance = ReturnType<PayPalButtons> & { close?: () => void };
   const buttonsRef = useRef<PayPalButtonsInstance | null>(null);
 
+  function extractErrorMessage(x: unknown): string | undefined {
+    if (typeof x === 'string') return x;
+    if (x && typeof x === 'object' && 'message' in x) {
+      const m = (x as { message?: unknown }).message;
+      return typeof m === 'string' ? m : undefined;
+    }
+    return undefined;
+  }
+
   useEffect(() => {
     let cancelled = false;
 
@@ -126,14 +135,14 @@ export default function PayPalCheckout({ clientId, amount, currency, description
             } catch (e: unknown) {
               console.error('PayPal capture error', e);
               setStatus('error');
-              const msg = e && typeof e === 'object' && 'message' in e ? String((e as any).message) : undefined;
+              const msg = extractErrorMessage(e);
               setMessage(msg || 'Fehler bei der Zahlungsbestätigung.');
             }
           },
           onError: (err: unknown) => {
             console.error('PayPal error', err);
             setStatus('error');
-            const msg = err && typeof err === 'object' && 'message' in err ? String((err as any).message) : undefined;
+            const msg = extractErrorMessage(err);
             setMessage(msg || 'PayPal Fehler. Bitte erneut versuchen.');
           },
           onCancel: () => {
@@ -146,7 +155,7 @@ export default function PayPalCheckout({ clientId, amount, currency, description
       } catch (e: unknown) {
         console.error('PayPal Buttons render exception', e);
         setStatus('error');
-        const msg = e && typeof e === 'object' && 'message' in e ? String((e as any).message) : undefined;
+        const msg = extractErrorMessage(e);
         setMessage(msg || 'Unbekannter Fehler beim Rendern der PayPal Buttons.');
       }
     }
