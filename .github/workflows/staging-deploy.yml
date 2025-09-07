@@ -1,16 +1,87 @@
-name: SSH Secret Diagnose
-on: { workflow_dispatch: {} }
+name: Staging - Deploy
+
+on:
+  push:
+    branches: [ "staging" ]
+  workflow_dispatch: {}
+
+concurrency:
+  group: staging-deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  DEPLOY_DIR: /etc/docker/projects/wineacadamy
 
 jobs:
-  diag:
+  deploy:
+    name: Deploy to Staging Server
     runs-on: ubuntu-latest
+
     steps:
-      - name: Check secret & Fingerprint (keine Ausgabe des Keys)
+      - name: Checkout (for reference only)
+        uses: actions/checkout@v4
+
+      # nutzt DEINE bestehenden Repo-Secrets: SSH_HOST, SSH_USER, SSH_PRIVATE_KEY, SSH_PORT
+      - name: Prepare SSH key and known_hosts
+        id: ssh
         shell: bash
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_KEY:  ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
         run: |
-          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
-            echo "❌ SSH_PRIVATE_KEY is EMPTY"; exit 1; fi
-          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > key.pem
-          chmod 600 key.pem
-          ssh-keygen -y -f key.pem > key.pub
-          ssh-keygen -lf key.pub
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_staging
+          chmod 600 ~/.ssh/id_staging
+          PORT=${SSH_PORT:-22}
+          ssh-keyscan -p "$PORT" "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "host=$SSH_HOST" >> $GITHUB_OUTPUT
+          echo "port=$PORT" >> $GITHUB_OUTPUT
+          echo "user=$SSH_USER" >> $GITHUB_OUTPUT
+
+      - name: SSH deploy (git fetch + hard reset + docker compose up)
+        shell: bash
+        env:
+          SSH_HOST: ${{ steps.ssh.outputs.host }}
+          SSH_PORT: ${{ steps.ssh.outputs.port }}
+          SSH_USER: ${{ steps.ssh.outputs.user }}
+        run: |
+          set -euo pipefail
+          REMOTE_DIR="$DEPLOY_DIR"
+          remote_cmd=$(cat <<'EOS'
+          set -e
+          echo "➡️  Using directory: __REMOTE_DIR__"
+          cd "__REMOTE_DIR__"
+
+          if [ ! -d .git ]; then
+            echo "❌ __REMOTE_DIR__ is not a git repo"; exit 2; fi
+
+          echo "➡️  Git fetch + hard reset to origin/staging"
+          git fetch origin --prune
+          git reset --hard origin/staging
+          git clean -fd
+
+          echo "➡️  Docker compose build + up (staging)"
+          docker compose -f docker-compose-staging.yml up -d --build
+
+          echo "➡️  Compose status"
+          docker compose -f docker-compose-staging.yml ps
+          EOS
+          )
+          remote_cmd=${remote_cmd//__REMOTE_DIR__/$REMOTE_DIR}
+          ssh -i ~/.ssh/id_staging -p "$SSH_PORT" -o StrictHostKeyChecking=yes "$SSH_USER@$SSH_HOST" "$remote_cmd"
+
+      - name: Health checks (optional)
+        shell: bash
+        env:
+          STAGING_BASE_URL: ${{ secrets.STAGING_BASE_URL }}
+        run: |
+          set -euo pipefail
+          BASE="${STAGING_BASE_URL:-https://wineacademy.plan-p.de}"
+          echo "Checking: $BASE"
+          curl -fsSLI --max-time 30 "$BASE" | head -n 1
