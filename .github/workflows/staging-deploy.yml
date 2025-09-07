@@ -75,12 +75,29 @@ jobs:
           remote_cmd=${remote_cmd//__REMOTE_DIR__/$REMOTE_DIR}
           ssh -i ~/.ssh/id_staging -p "$SSH_PORT" -o StrictHostKeyChecking=yes "$SSH_USER@$SSH_HOST" "$remote_cmd"
 
-      - name: Health checks (optional)
+      - name: Health checks (API + Admin)
         shell: bash
         env:
           STAGING_BASE_URL: ${{ secrets.STAGING_BASE_URL }}
         run: |
           set -euo pipefail
           BASE="${STAGING_BASE_URL:-https://wineacademy.plan-p.de}"
-          echo "Checking: $BASE"
-          curl -fsSLI --max-time 30 "$BASE" | head -n 1
+          api_url="$BASE/api/public/seminare"
+          admin_url="$BASE/admin"
+
+          echo "Checking API: $api_url"
+          # Wait/retry until API returns 200 (up to ~30s)
+          for i in {1..10}; do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 5 "$api_url" || echo 000)
+            if [ "$code" = "200" ]; then echo "API OK (200)"; break; fi
+            echo "API not ready (HTTP $code), retry $i/10"; sleep 3
+          done
+          [ "$code" = "200" ] || { echo "❌ API health check failed with $code"; exit 1; }
+
+          echo "Checking Admin: $admin_url"
+          # Accept 2xx or 3xx for Admin (login/assets/redirects)
+          admin_code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 10 "$admin_url" || echo 000)
+          case "$admin_code" in
+            2*|3*) echo "Admin OK ($admin_code)";;
+            *) echo "❌ Admin health check failed with $admin_code"; exit 1;;
+          esac
