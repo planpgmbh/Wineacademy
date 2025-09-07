@@ -1,0 +1,61 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches:
+      - staging
+  workflow_dispatch:
+
+concurrency:
+  group: staging-deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Update Staging Server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (for context only)
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_SSH_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          port: ${{ secrets.STAGING_SSH_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd /etc/docker/projects/wineacadamy
+            # Ensure correct branch
+            if git rev-parse --abbrev-ref HEAD >/dev/null 2>&1; then
+              git fetch --all --prune
+              git checkout staging
+              git pull --ff-only origin staging
+            else
+              echo "Git repository not initialized at path" >&2
+              exit 1
+            fi
+
+            # Optional: switch docker context if needed
+            docker context ls >/dev/null 2>&1 || true
+
+            # Rebuild and (re)start staging services
+            docker compose -f docker-compose-staging.yml up -d --build
+
+            # Show brief status
+            docker compose -f docker-compose-staging.yml ps
+
+      - name: Health check - Admin init
+        run: |
+          curl -fsS https://wineacademy.plan-p.de/admin/init | jq -e '.data.hasAdmin'
+
+      - name: Health check - Public API
+        run: |
+          curl -fsS https://wineacademy.plan-p.de/api/public/seminare | jq -e 'type == "array"'
+

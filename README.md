@@ -192,6 +192,17 @@ Routing (Traefik Labels in `docker-compose-staging.yml`):
 - Backend Uploads: `Host(wineacademy.plan-p.de) && PathPrefix(/uploads)` → Port 1337
 - Strapi Admin: `Host(wineacademy.plan-p.de) && PathPrefix(/admin)` → Port 1337
 - Admin/Plugin‑APIs: `PathPrefix(/content-manager|/content-type-builder|/i18n|/users-permissions|/email|/upload|/users)` → Port 1337
+
+### CI/CD – Automatisches Staging-Deploy
+
+- Workflow: `.github/workflows/staging-deploy.yml`
+- Trigger: Push auf Branch `staging` (oder manuell via Workflow Dispatch)
+- Voraussetzungen (GitHub Secrets im Repo):
+  - `STAGING_SSH_HOST` – Hostname/IP des Staging-Servers
+  - `STAGING_SSH_USER` – SSH-User (mit Rechten im Projektpfad und Docker)
+  - `STAGING_SSH_KEY` – Private SSH Key (PEM, ohne Passphrase)
+  - Optional: `STAGING_SSH_PORT` – Port (Default 22)
+- Verhalten: Server verbindet sich per SSH, führt `git pull` im Projektverzeichnis `/etc/docker/projects/wineacadamy` aus und startet `docker compose -f docker-compose-staging.yml up -d --build`. Anschließend Health-Checks gegen Admin und Public-API.
   
 Zusatz:
 - Staging `.env.staging` sollte `NEXT_PUBLIC_ASSETS_URL=https://wineacademy.plan-p.de` und `NEXT_PUBLIC_API_URL=https://wineacademy.plan-p.de/api` enthalten.
