@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from 'react';
 import type { SeminarListItem } from '@/lib/api';
+import Link from 'next/link';
 
 type Termin = NonNullable<NonNullable<SeminarListItem['termine']>[number]>;
 
@@ -30,8 +31,6 @@ function labelForTermin(t: Termin) {
   const place = t.ort?.standort || t.ort?.veranstaltungsort || t.ort?.stadt || '';
   return [range, place].filter(Boolean).join(' · ');
 }
-
-import Link from 'next/link';
 
 export default function BookingSidebar({ termine, fallbackPreis, slug }: { termine: NonNullable<SeminarListItem['termine']>; fallbackPreis?: number; slug: string }) {
   const options = useMemo(() => termine.map(t => ({ value: String(t.id), label: labelForTermin(t), data: t })), [termine]);
@@ -73,3 +72,4 @@ export default function BookingSidebar({ termine, fallbackPreis, slug }: { termi
     </div>
   );
 }
+

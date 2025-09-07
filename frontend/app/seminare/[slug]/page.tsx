@@ -1,13 +1,13 @@
 import { getSeminar } from '@/lib/api';
 import Link from 'next/link';
 import Image from 'next/image';
-import BookingSidebar from './BookingSidebar';
 import { mediaUrl } from '@/lib/api';
+import BookingSidebar from './BookingSidebar';
 import type { SeminarListItem } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
 
-type Props = { params: { slug: string } };
+type Props = { params: Promise<{ slug: string }> };
 
 function fmtTime(t?: string) {
   if (!t) return '';
@@ -40,7 +40,8 @@ function terminDateLine(t: NonNullable<Awaited<ReturnType<typeof getSeminar>>['t
 }
 
 export default async function SeminarDetailPage({ params }: Props) {
-  const seminar = await getSeminar(params.slug);
+  const { slug } = await params;
+  const seminar = await getSeminar(slug);
   const termine = (seminar.termine ?? []) as NonNullable<SeminarListItem['termine']>;
   const bildUrl = mediaUrl(seminar.bild?.url);
   const nextTermin = termine[0];
@@ -91,9 +92,9 @@ export default async function SeminarDetailPage({ params }: Props) {
           )}
         </article>
 
-        {/* Sidebar: Termine */}
+        {/* Sidebar: Terminwahl (Wunschtermin) */}
         <aside className="md:col-span-1">
-          <BookingSidebar slug={params.slug} termine={termine} fallbackPreis={seminar.standardPreis} />
+          <BookingSidebar slug={slug} termine={termine} fallbackPreis={seminar.standardPreis} />
         </aside>
       </div>
     </div>

@@ -15,23 +15,26 @@ function fmtDateISOToGerman(iso?: string) {
   return `${d}.${m}.${y}`;
 }
 
-export default async function CheckoutPage({ searchParams }: { searchParams?: Record<string, string | string[] | undefined> }) {
-  const slug = typeof searchParams?.seminar === 'string' ? searchParams!.seminar : '';
-  const terminIdStr = typeof searchParams?.terminId === 'string' ? searchParams!.terminId : '';
+export default async function CheckoutPage({ searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
+  const sp = (await searchParams) || {};
+  const slug = typeof sp.seminar === 'string' ? sp.seminar : '';
+  const terminIdStr = typeof sp.terminId === 'string' ? sp.terminId : '';
 
-  if (!slug || !terminIdStr) {
+  if (!slug) {
     return (
       <div className="mx-auto max-w-3xl p-6 space-y-4">
         <h1 className="text-2xl font-semibold">Checkout</h1>
-        <p className="text-gray-700">Es fehlen Parameter. Bitte wähle einen Termin erneut aus.</p>
+        <p className="text-gray-700">Es fehlt die Seminar‑Kennung. Bitte wähle ein Seminar aus.</p>
         <Link href="/seminare" className="text-blue-600 underline">Zur Seminarübersicht</Link>
       </div>
     );
   }
 
   const seminar = await getSeminar(slug);
-  const terminId = Number(terminIdStr);
-  const termin = (seminar.termine || []).find(t => t.id === terminId);
+  const terminId = terminIdStr ? Number(terminIdStr) : undefined;
+  const termin = terminId
+    ? (seminar.termine || []).find(t => t.id === terminId)
+    : (seminar.termine || [])[0];
   const preis = termin?.preis ?? seminar.standardPreis;
   const amount = typeof preis === 'number' ? preis.toFixed(2) : undefined;
   const bildUrl = mediaUrl(seminar.bild?.url);
@@ -111,4 +114,3 @@ export default async function CheckoutPage({ searchParams }: { searchParams?: Re
     </div>
   );
 }
-
