@@ -34,7 +34,7 @@ Für Agenten/KI: Das Backend stellt schlanke Public‑APIs bereit (`/api/public/
 
 - Strapi (Port 1337) + Postgres im internen DB-Netz
 - Next.js (Port 3000) im Proxy-Netz, Traefik leitet Host → Frontend
-- Traefik leitet `PathPrefix(/api)` → Backend und entfernt `/api` vor Weiterleitung
+- Traefik leitet `PathPrefix(/api)` → Backend (kein StripPrefix)
 
 ## Ordnerstruktur
 
@@ -154,7 +154,10 @@ docker compose up -d --build
 Routing (Traefik Labels in `docker-compose.yml`):
 
 - Frontend: `Host(wineacademy.de)` → Port 3000
-- Backend: `Host(wineacademy.de) && PathPrefix(/api)` → Port 1337 (mit StripPrefix `/api`)
+- Backend API: `Host(wineacademy.de) && PathPrefix(/api)` → Port 1337 (kein StripPrefix)
+- Backend Uploads: `Host(wineacademy.de) && PathPrefix(/uploads)` → Port 1337
+- Strapi Admin: `Host(wineacademy.de) && PathPrefix(/admin)` → Port 1337
+- Admin/Plugin‑APIs: `PathPrefix(/content-manager|/content-type-builder|/i18n|/users-permissions|/email|/upload|/users)` → Port 1337
 
 Staging/Live‑Checklist (ergänzend):
 - Domains: `wineacademy.de` (Prod), `wineacademy.plan-p.de` (Staging) in Traefik‑Labels hinterlegt und DNS zeigt auf Server
@@ -185,7 +188,10 @@ docker compose -f docker-compose-staging.yml up -d --build
 Routing (Traefik Labels in `docker-compose-staging.yml`):
 
 - Frontend: `Host(wineacademy.plan-p.de)` → Port 3000
-- Backend: `Host(wineacademy.plan-p.de) && PathPrefix(/api)` → Port 1337 (StripPrefix `/api`)
+- Backend API: `Host(wineacademy.plan-p.de) && PathPrefix(/api)` → Port 1337 (kein StripPrefix)
+- Backend Uploads: `Host(wineacademy.plan-p.de) && PathPrefix(/uploads)` → Port 1337
+- Strapi Admin: `Host(wineacademy.plan-p.de) && PathPrefix(/admin)` → Port 1337
+- Admin/Plugin‑APIs: `PathPrefix(/content-manager|/content-type-builder|/i18n|/users-permissions|/email|/upload|/users)` → Port 1337
   
 Zusatz:
 - Staging `.env.staging` sollte `NEXT_PUBLIC_ASSETS_URL=https://wineacademy.plan-p.de` und `NEXT_PUBLIC_API_URL=https://wineacademy.plan-p.de/api` enthalten.

@@ -50,13 +50,12 @@ curl -s http://localhost:1337/api/public/seminare/einfuhrung-in-die-weinwelt | j
 - Feldname `status` vermeiden (Kollision mit internem Publikationsstatus); wir nutzen `planungsstatus`.
 
 ## Deployment (kurz)
-- Über Root‑Compose + Traefik: `/` → Frontend, `/api` → Backend (StripPrefix). Details siehe Projekt‑README.
+- Über Root‑Compose + Traefik: `/` → Frontend, `/api` → Backend (kein StripPrefix), `/uploads` → Backend, `/admin` → Backend. Details siehe Projekt‑README.
 
-## Staging‑Readiness (Checkliste)
-- Server‑URL: Setze `PUBLIC_URL` in der Staging‑ENV auf die öffentliche Basis inkl. Pfadprefix, z. B. `https://wineacademy.plan-p.de/api`. Der Server liest diese URL (config/server.ts) und baut absolute Links korrekt.
+- Server‑URL: Setze `PUBLIC_URL` in der Staging‑ENV auf die öffentliche Basis ohne Pfadprefix, z. B. `https://wineacademy.plan-p.de`. Der Server liest diese URL (config/server.ts) und baut absolute Links korrekt.
 - Admin‑URL: Optional `ADMIN_PUBLIC_URL` setzen (Default `/admin`). In Staging bleibt das Admin‑Panel unter `https://wineacademy.plan-p.de/admin` erreichbar.
 - CORS: Optional `CORS_ORIGINS` als Liste setzen, z. B. `CORS_ORIGINS=['https://wineacademy.plan-p.de']`. Standard ist `*`.
-- Uploads/Routing: Stelle sicher, dass Traefik auch Uploads ausliefert. Entweder über `PathPrefix(/api)` + `StripPrefix` und Nutzung von `/api/uploads/...` im Frontend, oder über einen zusätzlichen Router für `PathPrefix(/uploads)` → Backend. Das Frontend erwartet standardmäßig `NEXT_PUBLIC_ASSETS_URL` (ohne `/api`).
+- Uploads/Routing: Kein StripPrefix. API unter `/api`, Uploads unter `/uploads`. Das Frontend erwartet `NEXT_PUBLIC_ASSETS_URL` ohne `/api`.
 - Seeds: Für initiale Demodaten in Staging `SEED=true` (optional `SEED_RESET=true`) setzen, Stack starten, danach wieder deaktivieren, damit Seeds nicht erneut laufen.
 
 ## Für Agenten/KI
@@ -86,7 +85,7 @@ curl -s http://localhost:1337/api/public/seminare/einfuhrung-in-die-weinwelt | j
   - `docker compose -f docker-compose-staging.yml down -v`
   - Optional nur DB-Reset (Schema leeren, ohne Container zu löschen):
     - `docker compose -f docker-compose-staging.yml exec db_staging psql -U $POSTGRES_USER -d $POSTGRES_DB -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"`
-  - In `.env.staging`: `SEED=true` (optional `SEED_RESET=true`), `PUBLIC_URL=https://wineacademy.plan-p.de/api`
+  - In `.env.staging`: `SEED=true` (optional `SEED_RESET=true`), `PUBLIC_URL=https://wineacademy.plan-p.de`
   - `docker compose -f docker-compose-staging.yml up -d --build`
   - Prüfen: `docker compose -f docker-compose-staging.yml logs -f backend-staging`
   - Tests: `curl -s https://wineacademy.plan-p.de/api/public/seminare | jq '.[0]'`
