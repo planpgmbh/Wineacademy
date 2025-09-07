@@ -52,8 +52,14 @@ services:
       traefik.http.routers.backend-staging.rule: "Host(`wineacademy.plan-p.de`) && PathPrefix(`/api`)"
       traefik.http.routers.backend-staging.entrypoints: "websecure"
       traefik.http.routers.backend-staging.tls.certresolver: "http-resolver"
-      traefik.http.routers.backend-staging.middlewares: "backend-staging-stripprefix@docker"
-      traefik.http.middlewares.backend-staging-stripprefix.stripprefix.prefixes: "/api"
+      # Admin/Plugin-APIs (JSON-Endpunkte für das Admin-Panel)
+      traefik.http.routers.backend-staging-adminapi.rule: "Host(`wineacademy.plan-p.de`) && (PathPrefix(`/content-manager`) || PathPrefix(`/content-type-builder`) || PathPrefix(`/i18n`) || PathPrefix(`/users-permissions`) || PathPrefix(`/email`) || PathPrefix(`/upload`) || PathPrefix(`/users`))"
+      traefik.http.routers.backend-staging-adminapi.entrypoints: "websecure"
+      traefik.http.routers.backend-staging-adminapi.tls.certresolver: "http-resolver"
+      # Serve uploads without /api prefix for frontend asset URLs
+      traefik.http.routers.backend-staging-uploads.rule: "Host(`wineacademy.plan-p.de`) && PathPrefix(`/uploads`)"
+      traefik.http.routers.backend-staging-uploads.entrypoints: "websecure"
+      traefik.http.routers.backend-staging-uploads.tls.certresolver: "http-resolver"
       # Serve Strapi Admin under /admin (no strip)
       traefik.http.routers.backend-staging-admin.rule: "Host(`wineacademy.plan-p.de`) && PathPrefix(`/admin`)"
       traefik.http.routers.backend-staging-admin.entrypoints: "websecure"
