@@ -1,0 +1,84 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches:
+      - staging
+  workflow_dispatch:
+
+concurrency:
+  group: staging-deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Update Staging Server
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_DIR: ${{ secrets.STAGING_PROJECT_DIR || '/etc/docker/projects/wineacadamy' }}
+    steps:
+      - name: Checkout (for context only)
+        uses: actions/checkout@v4
+
+      # Variante mit Fingerprint-Validierung (wenn Secret gesetzt)
+      - name: Deploy via SSH (with host fingerprint)
+        if: ${{ secrets.STAGING_SSH_FINGERPRINT != '' }}
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_SSH_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          port: ${{ secrets.STAGING_SSH_PORT || 22 }}
+          host_fingerprint: ${{ secrets.STAGING_SSH_FINGERPRINT }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd "$PROJECT_DIR"
+            # Mark repo as safe in case of shared ownership
+            git config --global --add safe.directory "$PROJECT_DIR"
+            # Ensure correct branch
+            git fetch --all --prune
+            git checkout staging
+            git pull --ff-only origin staging
+
+            # Optional: switch docker context if needed
+            docker context ls >/dev/null 2>&1 || true
+
+            # Rebuild and (re)start staging services
+            docker compose -f docker-compose-staging.yml up -d --build
+
+            # Show brief status
+            docker compose -f docker-compose-staging.yml ps
+
+      # Fallback ohne Fingerprint (wenn kein Secret gesetzt)
+      - name: Deploy via SSH
+        if: ${{ secrets.STAGING_SSH_FINGERPRINT == '' }}
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_SSH_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          port: ${{ secrets.STAGING_SSH_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd "$PROJECT_DIR"
+            git config --global --add safe.directory "$PROJECT_DIR"
+            git fetch --all --prune || true
+            git checkout staging || true
+            git pull --ff-only origin staging || true
+
+            docker context ls >/dev/null 2>&1 || true
+            docker compose -f docker-compose-staging.yml up -d --build
+            docker compose -f docker-compose-staging.yml ps
+
+      - name: Health check - Admin init
+        run: |
+          curl -fsS https://wineacademy.plan-p.de/admin/init | jq -e '.data.hasAdmin'
+
+      - name: Health check - Public API
+        run: |
+          curl -fsS https://wineacademy.plan-p.de/api/public/seminare | jq -e 'type == "array"'
