@@ -55,7 +55,8 @@ export default function PayPalCheckout({ clientId, amount, currency, description
   const [message, setMessage] = useState<string>("");
   const loadedRef = useRef(false);
   const renderedRef = useRef(false);
-  const buttonsRef = useRef<{ close?: () => void } | null>(null);
+  type PayPalButtonsInstance = ReturnType<PayPalButtons> & { close?: () => void };
+  const buttonsRef = useRef<PayPalButtonsInstance | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -103,9 +104,9 @@ export default function PayPalCheckout({ clientId, amount, currency, description
         renderedRef.current = true;
         setStatus('ready');
         containerRef.current.innerHTML = '';
-        const btns: any = window.paypal.Buttons({
+        const btns: PayPalButtonsInstance = window.paypal.Buttons({
           style: { layout: 'vertical', shape: 'rect', color: 'gold', label: 'paypal' },
-          createOrder: (_data: unknown, actions: any) => {
+          createOrder: (_data: unknown, actions: PayPalOrderActions) => {
             return actions.order.create({
               purchase_units: [
                 {
@@ -115,23 +116,25 @@ export default function PayPalCheckout({ clientId, amount, currency, description
               ],
             });
           },
-          onApprove: async (_data: unknown, actions: any) => {
+          onApprove: async (_data: unknown, actions: PayPalOrderActions) => {
             try {
-              const details = await actions.order.capture();
+              const details: PayPalOrderActionsCaptureResult = await actions.order.capture();
               setStatus('approved');
-              const id = (details as any)?.id || '';
-              const payer = (details as any)?.payer?.name?.given_name || 'Kunde';
+              const id = details?.id || '';
+              const payer = details?.payer?.name?.given_name || 'Kunde';
               setMessage(`Zahlung erfolgreich. Bestell-Nr.: ${id} – Danke, ${payer}!`);
-            } catch (e: any) {
+            } catch (e: unknown) {
               console.error('PayPal capture error', e);
               setStatus('error');
-              setMessage(e?.message || 'Fehler bei der Zahlungsbestätigung.');
+              const msg = e && typeof e === 'object' && 'message' in e ? String((e as any).message) : undefined;
+              setMessage(msg || 'Fehler bei der Zahlungsbestätigung.');
             }
           },
-          onError: (err: any) => {
+          onError: (err: unknown) => {
             console.error('PayPal error', err);
             setStatus('error');
-            setMessage(err?.message || 'PayPal Fehler. Bitte erneut versuchen.');
+            const msg = err && typeof err === 'object' && 'message' in err ? String((err as any).message) : undefined;
+            setMessage(msg || 'PayPal Fehler. Bitte erneut versuchen.');
           },
           onCancel: () => {
             setStatus('idle');
@@ -140,10 +143,11 @@ export default function PayPalCheckout({ clientId, amount, currency, description
         });
         buttonsRef.current = btns;
         btns.render(containerRef.current);
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error('PayPal Buttons render exception', e);
         setStatus('error');
-        setMessage(e?.message || 'Unbekannter Fehler beim Rendern der PayPal Buttons.');
+        const msg = e && typeof e === 'object' && 'message' in e ? String((e as any).message) : undefined;
+        setMessage(msg || 'Unbekannter Fehler beim Rendern der PayPal Buttons.');
       }
     }
 
