@@ -1,21 +1,16 @@
-name: Secret-Diagnose
+name: SSH Secret Diagnose
 on: { workflow_dispatch: {} }
 
 jobs:
   diag:
     runs-on: ubuntu-latest
-    # falls du Environment-Secrets nutzt, setze das Environment:
-    # environment: staging
     steps:
-      - name: Check secret presence and fingerprint
+      - name: Check secret & Fingerprint (keine Ausgabe des Keys)
         shell: bash
         run: |
           if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
-            echo "❌ SSH_PRIVATE_KEY is EMPTY"
-            exit 1
-          fi
-          echo "✅ SSH_PRIVATE_KEY exists (not printing it)."
-          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > key.tmp
-          chmod 600 key.tmp
-          ssh-keygen -y -f key.tmp > key.pub
+            echo "❌ SSH_PRIVATE_KEY is EMPTY"; exit 1; fi
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > key.pem
+          chmod 600 key.pem
+          ssh-keygen -y -f key.pem > key.pub
           ssh-keygen -lf key.pub
