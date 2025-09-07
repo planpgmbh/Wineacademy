@@ -1,7 +1,7 @@
 import { getSeminar, mediaUrl } from '@/lib/api';
 import Image from 'next/image';
 import Link from 'next/link';
-import PayPalCheckout from './paypal/PayPalCheckout';
+import CheckoutClient from './CheckoutClient';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,65 +52,34 @@ export default async function CheckoutPage({ searchParams }: { searchParams?: Pr
         <span className="text-gray-900">Checkout</span>
       </nav>
 
-      <h1 className="text-3xl font-semibold mb-4">Checkout</h1>
+      <h1 className="text-3xl font-semibold mb-4">Kasse</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <section className="md:col-span-2 space-y-4">
-          <div className="border rounded p-4 flex gap-4">
-            {bildUrl && (
-              <div className="relative w-40 h-28 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
-                <Image src={bildUrl} alt={seminar.bild?.alternativeText || seminar.seminarname} fill className="object-cover" />
-              </div>
-            )}
-            <div>
-              <h2 className="text-lg font-medium">{seminar.seminarname}</h2>
-              {termin ? (
-                <p className="text-sm text-gray-700 mt-1">
-                  Termin: {fmtDateISOToGerman(termin.tage?.[0]?.datum)} {termin.tage?.[0]?.startzeit && `· ${fmtTime(termin.tage?.[0]?.startzeit)}–${fmtTime(termin.tage?.[0]?.endzeit)} Uhr`}
-                </p>
-              ) : (
-                <p className="text-sm text-gray-700 mt-1">Termin nicht gefunden.</p>
-              )}
-            </div>
+      {/* Hero-Zeile mit Seminarbild + Titel */}
+      <div className="border rounded p-4 mb-6 flex gap-4">
+        {bildUrl && (
+          <div className="relative w-40 h-28 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
+            <Image src={bildUrl} alt={seminar.bild?.alternativeText || seminar.seminarname} fill className="object-cover" />
           </div>
-
-          <div className="border rounded p-4">
-            <h3 className="text-md font-medium mb-2">Zahlung</h3>
-            {!amount ? (
-              <p className="text-sm text-gray-700">Kein Preis verfügbar – bitte wähle einen anderen Termin.</p>
-            ) : clientId ? (
-              <PayPalCheckout
-                clientId={clientId}
-                mode={mode}
-                amount={amount}
-                currency="EUR"
-                description={`${seminar.seminarname}${termin ? ` – Termin ${fmtDateISOToGerman(termin.tage?.[0]?.datum)}` : ''}`}
-              />
-            ) : (
-              <div className="text-sm text-gray-700">
-                PayPal Client-ID fehlt. Bitte `PAYPAL_CLIENT_ID` in `.env` setzen (Sandbox wird empfohlen) und Frontend neu starten.
-              </div>
-            )}
-          </div>
-        </section>
-
-        <aside className="md:col-span-1">
-          <div className="border rounded p-4">
-            <h3 className="text-md font-medium mb-3">Zusammenfassung</h3>
-            <div className="text-sm text-gray-800 flex justify-between">
-              <span>Zwischensumme</span>
-              <span>{amount ? `${amount} €` : '–'}</span>
-            </div>
-            <div className="text-sm text-gray-800 flex justify-between mt-1">
-              <span>Gesamt</span>
-              <span className="font-medium">{amount ? `${amount} €` : '–'}</span>
-            </div>
-          </div>
-          <div className="mt-3 text-xs text-gray-600">
-            Hinweis: Testzahlung via PayPal Sandbox. Dies ist eine Demo ohne Buchungsanlage.
-          </div>
-        </aside>
+        )}
+        <div>
+          <h2 className="text-lg font-medium">{seminar.seminarname}</h2>
+          {termin ? (
+            <p className="text-sm text-gray-700 mt-1">
+              Termin: {fmtDateISOToGerman(termin.tage?.[0]?.datum)} {termin.tage?.[0]?.startzeit && `· ${fmtTime(termin.tage?.[0]?.startzeit)}–${fmtTime(termin.tage?.[0]?.endzeit)} Uhr`}
+            </p>
+          ) : (
+            <p className="text-sm text-gray-700 mt-1">Termin nicht gefunden.</p>
+          )}
+        </div>
       </div>
+
+      <CheckoutClient
+        seminarName={seminar.seminarname}
+        terminLabel={termin ? `Termin ${fmtDateISOToGerman(termin.tage?.[0]?.datum)}` : undefined}
+        amount={amount}
+        paypalClientId={clientId || undefined}
+        paypalMode={mode}
+      />
     </div>
   );
 }
