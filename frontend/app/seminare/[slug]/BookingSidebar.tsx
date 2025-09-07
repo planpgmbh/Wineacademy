@@ -31,7 +31,9 @@ function labelForTermin(t: Termin) {
   return [range, place].filter(Boolean).join(' · ');
 }
 
-export default function BookingSidebar({ termine, fallbackPreis }: { termine: NonNullable<SeminarListItem['termine']>; fallbackPreis?: number }) {
+import Link from 'next/link';
+
+export default function BookingSidebar({ termine, fallbackPreis, slug }: { termine: NonNullable<SeminarListItem['termine']>; fallbackPreis?: number; slug: string }) {
   const options = useMemo(() => termine.map(t => ({ value: String(t.id), label: labelForTermin(t), data: t })), [termine]);
   const [selected, setSelected] = useState(options[0]?.value || '');
   const current = useMemo(() => options.find(o => o.value === selected)?.data, [options, selected]);
@@ -60,9 +62,12 @@ export default function BookingSidebar({ termine, fallbackPreis }: { termine: No
           {typeof current?.kapazitaet !== 'undefined' && (
             <div className="mt-1 text-xs text-gray-600">Kapazität: {current.kapazitaet}</div>
           )}
-          <button className="mt-4 w-full bg-black text-white px-3 py-2 rounded hover:bg-gray-800 text-sm">
+          <Link
+            href={`/checkout?seminar=${encodeURIComponent(slug)}&terminId=${encodeURIComponent(selected)}`}
+            className="mt-4 w-full inline-block text-center bg-black text-white px-3 py-2 rounded hover:bg-gray-800 text-sm"
+          >
             Zur Buchung
-          </button>
+          </Link>
         </>
       )}
     </div>
