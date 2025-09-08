@@ -1,3 +1,7 @@
+### Init‑Prompt (zum Kopieren)
+
+> Du arbeitest NUR am Backend in `backend/`. Lies und befolge zuerst `backend/README.md` (Datenmodell, Public‑APIs, Seeds, Lifecycles, Admin‑Hinweise) und die Root‑`README.md` (Docker Desktop, Compose, Ports/Routing). Starte/prüfe: `docker compose -f ../docker-compose-dev.yml up -d backend`. Nutze die Public‑Endpoints, keine direkten internen Services für das Frontend. Mache einen kurzen Plan (2–5 Schritte) und liste die Befehle/curl‑Tests, die du ausführst, bevor du Änderungen machst. Wenn das Backend aktuell nicht über Docker läuft, starte das Backend. Wenn du eine Änderung am backend vorgenommen hast öffne die seite bei mir im browser. Antworte immer in deutsch.
+
 # Backend (Strapi 5) – Wine Academy
 
 Zweck: Headless‑CMS und API für Seminare, Termine, Buchungen, Orte, Kunden, Gutscheine. Stellt schlanke Public‑Endpoints für das Frontend bereit und verwaltet Admin‑Workflows.
@@ -63,10 +67,6 @@ curl -s http://localhost:1337/api/public/seminare/einfuhrung-in-die-weinwelt | j
 - Nur Public‑Endpoints erweitern oder konsumieren (`/api/public/seminare`, `/api/public/seminare/:slug`), keine Breaking Changes am Schema ohne View‑Reset‑Hinweis.
 - Feld `planungsstatus` statt `status` verwenden.
 
-### Init‑Prompt (zum Kopieren)
-
-> Du arbeitest NUR am Backend in `backend/`. Lies und befolge zuerst `backend/README.md` (Datenmodell, Public‑APIs, Seeds, Lifecycles, Admin‑Hinweise) und die Root‑`README.md` (Docker Desktop, Compose, Ports/Routing). Starte/prüfe: `docker compose -f ../docker-compose-dev.yml up -d backend`. Nutze die Public‑Endpoints, keine direkten internen Services für das Frontend. Mache einen kurzen Plan (2–5 Schritte) und liste die Befehle/curl‑Tests, die du ausführst, bevor du Änderungen machst. Antworte immer in deutsch. Wenn das Backend aktuell nicht über Docker läuft, starte nun das Backend. 
-
 ## Reset & Neuinstallation (kurz)
 
 - Lokal – Komplett zurücksetzen und neu seeden:
@@ -90,3 +90,51 @@ curl -s http://localhost:1337/api/public/seminare/einfuhrung-in-die-weinwelt | j
   - Prüfen: `docker compose -f docker-compose-staging.yml logs -f backend-staging`
   - Tests: `curl -s https://wineacademy.plan-p.de/api/public/seminare | jq '.[0]'`
   - In `.env.staging`: `SEED=false`/Variablen entfernen, dann: `docker compose -f docker-compose-staging.yml up -d backend-staging`
+
+## Erweiterung: Buchungen mit Teilnehmerdaten
+
+- Neuer Public‑Endpoint: `POST /api/public/buchungen` → legt eine Buchung mit Teilnehmerliste an (auth: false).
+- Teilnehmer je Buchung: Vorname, Nachname, E‑Mail, Geburtstag (Pflicht); WSET® Candidate Number, Besondere Bedürfnisse (optional).
+- Firmenbuchungen: `rechnungstyp=firma` + Felder `firmenname`, `rechnungsEmail`, `strasse`, `plz`, `stadt`, `land` (validiert im Lifecycle).
+- Lifecycle Buchung: setzt `anzahl = teilnehmer.length`, `preisProPlatz` (Default Terminpreis), `gesamtpreis = preisProPlatz × anzahl`.
+
+Beispiele:
+
+```
+# Privatbuchung (1 Teilnehmer)
+curl -s -X POST http://localhost:1337/api/public/buchungen \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "terminId": 49,
+    "rechnungstyp": "privat",
+    "vorname": "Max",
+    "nachname": "Muster",
+    "email": "max@example.com",
+    "teilnehmer": [
+      { "vorname": "Max", "nachname": "Muster", "email": "max@example.com", "geburtstag": "1990-01-01" }
+    ],
+    "agbAkzeptiert": true
+  }' | jq
+
+# Firmenbuchung (2 Teilnehmer)
+curl -s -X POST http://localhost:1337/api/public/buchungen \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "terminId": 49,
+    "rechnungstyp": "firma",
+    "firmenname": "ACME GmbH",
+    "rechnungsEmail": "buchhaltung@acme.de",
+    "strasse": "Hafenstr. 1",
+    "plz": "20457",
+    "stadt": "Hamburg",
+    "land": "DE",
+    "vorname": "Eva",
+    "nachname": "Einkauf",
+    "email": "eva@acme.de",
+    "teilnehmer": [
+      { "vorname": "Anna", "nachname": "Meyer", "email": "anna@acme.de", "geburtstag": "1992-05-12", "wsetCandidateNumber": "12345" },
+      { "vorname": "Tom", "nachname": "Becker", "email": "tom@acme.de", "geburtstag": "1988-11-30", "besondereBeduerfnisse": "barrierefreier Zugang" }
+    ],
+    "agbAkzeptiert": true
+  }' | jq
+```

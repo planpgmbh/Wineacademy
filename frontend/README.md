@@ -2,6 +2,10 @@ Frontend (Next.js) – Wine Academy
 
 Zweck: Öffentliche Seiten für Seminare (Liste/Detail) und künftig Buchungs‑Flow. Liest Daten aus der Strapi‑Public‑API.
 
+### Init‑Prompt (zum Kopieren)
+
+> Du arbeitest NUR am Frontend in `frontend/`. Lies und befolge zuerst `frontend/README.md` (Start/HMR, API‑Basen SSR/CSR, Seiten, Bilder, Troubleshooting) und die Root‑`README.md` (Docker Desktop, Compose, Ports). Starte/prüfe: `docker compose -f ../docker-compose-dev.yml up -d frontend`. Verwende SSR‑Basis `API_INTERNAL_URL=http://backend:1337` und CSR‑Basis `NEXT_PUBLIC_API_URL=http://localhost:1337`. Bilder baue mit `mediaUrl()` (ohne `/api`). Nutze nur Public‑Endpoints (`/api/public/seminare`, `/api/public/seminare/:slug`). Mache einen kurzen Plan (2–5 Schritte) und liste die Befehle, die du ausführst, bevor du Änderungen machst. Wenn du gemacht hast, möchte ich, dass du mir ein Browserfenster öffnest, wo man direkt die Enderung im Frontend sehen kann. Immer in Deutsch antworten. 
+
 ## Stack & Ports
 - Next.js 15 (App Router), React 19, Tailwind 4
 - Dev‑Port: 3000 → `http://localhost:3000`
@@ -53,7 +57,3 @@ Zweck: Öffentliche Seiten für Seminare (Liste/Detail) und künftig Buchungs‑
 - Nur Public‑Endpoints (`/api/public/...`) konsumieren.
 - SSR/CSR‑Basen nicht mischen (siehe `lib/api.ts`).
 - Termin‑Feld heißt `planungsstatus` (nicht `status`).
-
-### Init‑Prompt (zum Kopieren)
-
-> Du arbeitest NUR am Frontend in `frontend/`. Lies und befolge zuerst `frontend/README.md` (Start/HMR, API‑Basen SSR/CSR, Seiten, Bilder, Troubleshooting) und die Root‑`README.md` (Docker Desktop, Compose, Ports). Starte/prüfe: `docker compose -f ../docker-compose-dev.yml up -d frontend`. Verwende SSR‑Basis `API_INTERNAL_URL=http://backend:1337` und CSR‑Basis `NEXT_PUBLIC_API_URL=http://localhost:1337`. Bilder baue mit `mediaUrl()` (ohne `/api`). Nutze nur Public‑Endpoints (`/api/public/seminare`, `/api/public/seminare/:slug`). Mache einen kurzen Plan (2–5 Schritte) und liste die Befehle, die du ausführst, bevor du Änderungen machst. Wenn du gemacht hast, möchte ich, dass du mir ein Browserfenster öffnest, wo man direkt die Enderung im Frontend sehen kann. Immer in Deutsch antworten. 

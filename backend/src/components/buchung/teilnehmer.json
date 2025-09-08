@@ -1,0 +1,16 @@
+{
+  "collectionName": "components_buchung_teilnehmer",
+  "info": {
+    "displayName": "Teilnehmer",
+    "description": "Teilnehmerdaten für eine Buchung"
+  },
+  "attributes": {
+    "vorname": { "type": "string", "required": true },
+    "nachname": { "type": "string", "required": true },
+    "email": { "type": "email", "required": true },
+    "geburtstag": { "type": "date", "required": true },
+    "wsetCandidateNumber": { "type": "string" },
+    "besondereBeduerfnisse": { "type": "text" }
+  }
+}
+

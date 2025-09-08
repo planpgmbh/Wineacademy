@@ -11,6 +11,25 @@
   },
   "attributes": {
     
+    "rechnungstyp": {
+      "type": "enumeration",
+      "enum": ["privat", "firma"],
+      "default": "privat"
+    },
+    "firmenname": { "type": "string" },
+    "ustId": { "type": "string" },
+    "rechnungsEmail": { "type": "email" },
+    "strasse": { "type": "string" },
+    "plz": { "type": "string" },
+    "stadt": { "type": "string" },
+    "land": { "type": "string" },
+    
+    "teilnehmer": {
+      "type": "component",
+      "repeatable": true,
+      "component": "buchung.teilnehmer",
+      "min": 1
+    },
     "vorname": {
       "type": "string",
       "required": true

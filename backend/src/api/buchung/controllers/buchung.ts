@@ -1,0 +1,69 @@
+import { factories } from '@strapi/strapi';
+
+export default factories.createCoreController('api::buchung.buchung', ({ strapi }) => ({
+  async publicCreate(ctx) {
+    const body = ctx.request.body as any;
+    if (!body || typeof body !== 'object') return ctx.badRequest('Ungültiger Payload');
+
+    try {
+      // Minimal-Validierung hier; Detailvalidierung in Lifecycles
+      if (!body.terminId && !body.termin) return ctx.badRequest('terminId fehlt');
+      const terminId = body.terminId || body.termin;
+      const termin = await strapi.db.query('api::termin.termin').findOne({
+        where: { id: terminId },
+        select: ['id', 'preis'],
+      });
+      if (!termin) return ctx.badRequest('Ungültiger Termin');
+
+      // Teilnehmer-Validierung (auf Rohdatenebene, bevor Strapi Komponenten normalisiert)
+      if (!Array.isArray(body.teilnehmer) || body.teilnehmer.length < 1) {
+        return ctx.badRequest('Mindestens ein Teilnehmer erforderlich');
+      }
+      for (const [i, t] of body.teilnehmer.entries()) {
+        if (!t?.vorname?.trim()) return ctx.badRequest(`Teilnehmer[${i}]: Vorname fehlt`);
+        if (!t?.nachname?.trim()) return ctx.badRequest(`Teilnehmer[${i}]: Nachname fehlt`);
+        if (!t?.email?.trim()) return ctx.badRequest(`Teilnehmer[${i}]: E-Mail fehlt`);
+        if (!t?.geburtstag) return ctx.badRequest(`Teilnehmer[${i}]: Geburtstag fehlt`);
+      }
+
+      const payload = {
+        vorname: body.vorname,
+        nachname: body.nachname,
+        email: body.email,
+        telefon: body.telefon,
+        rechnungstyp: body.rechnungstyp || 'privat',
+        firmenname: body.firmenname,
+        ustId: body.ustId,
+        rechnungsEmail: body.rechnungsEmail,
+        strasse: body.strasse,
+        plz: body.plz,
+        stadt: body.stadt,
+        land: body.land,
+        teilnehmer: body.teilnehmer,
+        termin: termin.id,
+        preisProPlatz: body.preisProPlatz ?? termin.preis,
+        anzahl: body.teilnehmer.length,
+        gesamtpreis: (body.preisProPlatz ?? termin.preis) * body.teilnehmer.length,
+        gutscheincode: body.gutscheincode,
+        agbAkzeptiert: !!body.agbAkzeptiert,
+        notizen: body.notizen,
+      } as any;
+
+      const created = await strapi.entityService.create('api::buchung.buchung', {
+        data: payload,
+      });
+
+      ctx.body = {
+        id: created.id,
+        terminId: termin.id,
+        anzahl: created.anzahl,
+        preisProPlatz: created.preisProPlatz,
+        gesamtpreis: created.gesamtpreis,
+        status: created.status,
+      };
+    } catch (err: any) {
+      strapi.log.error('[publicCreate Buchung] Fehler', err);
+      return ctx.badRequest(err?.message || 'Buchung fehlgeschlagen');
+    }
+  },
+}));
