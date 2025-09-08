@@ -1,6 +1,6 @@
 Frontend (Next.js) – Wine Academy
 
-Zweck: Öffentliche Seiten für Seminare (Liste/Detail) und künftig Buchungs‑Flow. Liest Daten aus der Strapi‑Public‑API.
+Zweck: Öffentliche Seiten für Seminare (Liste/Detail) und mehrstufiger Buchungs‑Flow (Checkout). Liest Daten aus der Strapi‑Public‑API.
 
 ### Init‑Prompt (zum Kopieren)
 
@@ -20,6 +20,7 @@ Zweck: Öffentliche Seiten für Seminare (Liste/Detail) und künftig Buchungs‑
 - Endpoints (vom Backend bereitgestellt):
   - Liste: `GET /api/public/seminare`
   - Detail: `GET /api/public/seminare/:slug`
+  - Buchung anlegen: `POST /api/public/buchungen` (Public)
 - Client: `lib/api.ts` wählt automatisch die richtige Basis (SSR/CSR) und hängt `/api` an.
   - Bilder/Assets: `lib/api.ts` baut Medien‑URLs über die API‑Basis ohne `/api`‑Suffix.
     - Optional konfigurierbar per `NEXT_PUBLIC_ASSETS_URL` (Browser) und `ASSETS_INTERNAL_URL` (SSR)
@@ -27,10 +28,13 @@ Zweck: Öffentliche Seiten für Seminare (Liste/Detail) und künftig Buchungs‑
 ## Seiten
 - `/seminare` – Karten: Name, Kurzbeschreibung, „ab Preis“, nächster Termin, Ort, CTA „Details“
 - `/seminare/[slug]` – Hero‑Bild, Titel, Kurzbeschreibung, Beschreibung/Infos, rechts Buchungs‑Sidebar:
-  - Dropdown „Wunschtermin wählen“ (Terminauswahl)
-  - Preis (Terminpreis oder Standardpreis)
-  - Kapazität
-  - CTA „Zur Buchung“ (Stub)
+  - Ort‑Filter → Terminauswahl, Teilnehmeranzahl (+/−), dynamischer Preis
+  - CTA „Weiter zur Buchung“ führt in den Checkout
+- `/checkout` – Mehrstufiger Checkout (Wizard):
+  - Schritt 1: Rechnungsart (privat/firma), Kontakt, ggf. Firmendaten
+  - Schritt 2: Teilnehmende (nur Vorname/Nachname Pflicht; E‑Mail/Geburtstag optional)
+  - Schritt 3: Übersicht links, Zahlung rechts (PayPal‑Buttons, AGB‑Check, Gesamtsumme)
+  - Schritt 4: Abschluss mit serverseitigen Summen und ID
 
 <!-- Temporäre Testseite `/buchung-test` entfernt -->
 
@@ -54,6 +58,7 @@ Zweck: Öffentliche Seiten für Seminare (Liste/Detail) und künftig Buchungs‑
 - Alte Anzeige → Browser Hard‑Reload (Cmd/Ctrl+Shift+R). Bei Image‑Betrieb: Rebuild wie oben.
 - SSR 500 → `API_INTERNAL_URL` prüfen (Container‑Name `backend:1337`).
 - Bild fehlt → Seminar hat kein Bild oder Domain nicht freigeschaltet (siehe `next.config.ts`).
+ - PayPal‑Buttons fehlen → Ad/Tracking‑Blocker für `localhost` deaktivieren; AGB werden erst beim Klick validiert.
 
 ## Für Agenten/KI
 - Nur Public‑Endpoints (`/api/public/...`) konsumieren.

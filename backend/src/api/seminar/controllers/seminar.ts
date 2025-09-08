@@ -20,7 +20,9 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
         },
         orderBy: { id: 'asc' },
       });
-      result.push({ ...s, termine });
+      const fallbackBild = { url: '/favicon.png', alternativeText: 'Weinseminar – Testbild' } as any;
+      const sWithBild = { ...(s as any), bild: (s as any).bild ?? fallbackBild };
+      result.push({ ...sWithBild, termine });
     }
 
     ctx.body = result;
@@ -54,6 +56,8 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
       },
       orderBy: { id: 'asc' },
     });
-    ctx.body = { ...seminar, termine };
+    const fallbackBild = { url: '/favicon.png', alternativeText: 'Weinseminar – Testbild' } as any;
+    const withBild = { ...(seminar as any), bild: (seminar as any).bild ?? fallbackBild };
+    ctx.body = { ...withBild, termine };
   },
 }));

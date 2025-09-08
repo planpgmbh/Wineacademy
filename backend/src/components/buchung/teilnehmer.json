@@ -7,10 +7,9 @@
   "attributes": {
     "vorname": { "type": "string", "required": true },
     "nachname": { "type": "string", "required": true },
-    "email": { "type": "email", "required": true },
-    "geburtstag": { "type": "date", "required": true },
+    "email": { "type": "email" },
+    "geburtstag": { "type": "date" },
     "wsetCandidateNumber": { "type": "string" },
     "besondereBeduerfnisse": { "type": "text" }
   }
 }
-

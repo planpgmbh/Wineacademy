@@ -96,7 +96,7 @@ curl -s http://localhost:1337/api/public/seminare/einfuhrung-in-die-weinwelt | j
 ## Erweiterung: Buchungen mit Teilnehmerdaten
 
 - Neuer Public‑Endpoint: `POST /api/public/buchungen` → legt eine Buchung mit Teilnehmerliste an (auth: false).
-- Teilnehmer je Buchung: Vorname, Nachname, E‑Mail, Geburtstag (Pflicht); WSET® Candidate Number, Besondere Bedürfnisse (optional).
+- Teilnehmer je Buchung: Vorname, Nachname (Pflicht); E‑Mail, Geburtstag (optional); WSET® Candidate Number, Besondere Bedürfnisse (optional).
 - Firmenbuchungen: `rechnungstyp=firma` + Felder `firmenname`, `rechnungsEmail`, `strasse`, `plz`, `stadt`, `land` (validiert im Lifecycle).
 - Lifecycle Buchung: setzt `anzahl = teilnehmer.length` und berechnet Brutto/Netto/Steuer:
   - Felder: `mitMwst` (bool), `steuerSatz`, `preisBrutto`, `preisNetto`, `steuerBetrag`, `gesamtpreisBrutto`, `gesamtpreisNetto`, `gesamtsteuerBetrag`.
@@ -147,4 +147,27 @@ curl -s -X POST http://localhost:1337/api/public/buchungen \
     ],
     "agbAkzeptiert": true
   }' | jq
+```
+
+## PayPal Webhook (Zahlungsbestätigung)
+
+- Route: `POST /webhooks/paypal` (auth: false)
+- Verifiziert die Signatur via PayPal‑API `v1/notifications/verify-webhook-signature` und verarbeitet nur verifizierte Events.
+- Event `PAYMENT.CAPTURE.COMPLETED`: Sucht eine Buchung mit `zahlungsreferenz`/Capture‑ID und setzt `status='bezahlt'`, `zahlungsmethode='paypal'`.
+
+ENV‑Variablen (z. B. in `.env` oder Compose):
+
+```
+PAYPAL_MODE=sandbox            # oder live
+PAYPAL_CLIENT_ID=...
+PAYPAL_CLIENT_SECRET=...
+PAYPAL_WEBHOOK_ID=...
+```
+
+Test (ohne Signaturprüfung):
+
+```
+curl -s -X POST http://localhost:1337/webhooks/paypal \
+  -H 'Content-Type: application/json' \
+  -d '{"event_type":"PAYMENT.CAPTURE.COMPLETED","resource":{"id":"WH-TEST-12345"}}'
 ```

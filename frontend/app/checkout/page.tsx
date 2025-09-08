@@ -2,6 +2,7 @@ import { getSeminar, mediaUrl } from '@/lib/api';
 import Image from 'next/image';
 import Link from 'next/link';
 import CheckoutClient from './CheckoutClient';
+import PayPalProvider from './paypal/PayPalProvider';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,13 +74,16 @@ export default async function CheckoutPage({ searchParams }: { searchParams?: Pr
         </div>
       </div>
 
-      <CheckoutClient
-        seminarName={seminar.seminarname}
-        terminLabel={termin ? `Termin ${fmtDateISOToGerman(termin.tage?.[0]?.datum)}` : undefined}
-        amount={amount}
-        paypalClientId={clientId || undefined}
-        paypalMode={mode}
-      />
+      <PayPalProvider clientId={clientId} currency="EUR" intent="capture">
+        <CheckoutClient
+          seminarName={seminar.seminarname}
+          terminLabel={termin ? `Termin ${fmtDateISOToGerman(termin.tage?.[0]?.datum)}` : undefined}
+          amount={amount}
+          terminId={termin?.id}
+          paypalClientId={clientId || undefined}
+          paypalMode={mode}
+        />
+      </PayPalProvider>
     </div>
   );
 }

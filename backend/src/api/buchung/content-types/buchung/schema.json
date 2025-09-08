@@ -64,7 +64,7 @@
     },
     "status": {
       "type": "enumeration",
-      "enum": ["offen", "bestaetigt", "storniert", "erstattet", "warteliste"],
+      "enum": ["offen", "bezahlt", "bestaetigt", "storniert", "erstattet", "warteliste"],
       "default": "offen"
     },
     "zahlungsmethode": {

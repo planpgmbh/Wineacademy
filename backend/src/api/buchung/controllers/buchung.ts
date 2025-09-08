@@ -22,8 +22,7 @@ export default factories.createCoreController('api::buchung.buchung', ({ strapi 
       for (const [i, t] of body.teilnehmer.entries()) {
         if (!t?.vorname?.trim()) return ctx.badRequest(`Teilnehmer[${i}]: Vorname fehlt`);
         if (!t?.nachname?.trim()) return ctx.badRequest(`Teilnehmer[${i}]: Nachname fehlt`);
-        if (!t?.email?.trim()) return ctx.badRequest(`Teilnehmer[${i}]: E-Mail fehlt`);
-        if (!t?.geburtstag) return ctx.badRequest(`Teilnehmer[${i}]: Geburtstag fehlt`);
+        // E-Mail und Geburtstag sind optional; Formatprüfungen bei Bedarf später
       }
 
       const payload = {
@@ -52,6 +51,19 @@ export default factories.createCoreController('api::buchung.buchung', ({ strapi 
         agbAkzeptiert: !!body.agbAkzeptiert,
         notizen: body.notizen,
       } as any;
+
+      // Zahlungsinformationen (optional)
+      if (body.paypalCaptureId) {
+        payload.zahlungsreferenz = String(body.paypalCaptureId);
+        payload.zahlungsmethode = 'paypal';
+      } else if (body.zahlungsreferenz) {
+        payload.zahlungsreferenz = String(body.zahlungsreferenz);
+      }
+      if (body.zahlungsmethode) payload.zahlungsmethode = body.zahlungsmethode;
+      // Status: wenn vom Client 'bezahlt' gemeldet (z. B. nach PayPal), auf 'bezahlt' setzen; sonst offen
+      if (body.status === 'bezahlt' || body.paid === true || body.paymentApproved === true) {
+        payload.status = 'bezahlt';
+      }
 
       const created = await strapi.entityService.create('api::buchung.buchung', {
         data: payload,
