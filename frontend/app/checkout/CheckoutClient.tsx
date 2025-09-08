@@ -59,7 +59,6 @@ export default function CheckoutClient({ seminarName, terminLabel, amount, termi
 
   // Schritt 3 – Übersicht + Zahlung + AGB, Absenden
   const [agbAkzeptiert, setAgbAkzeptiert] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [paying, setPaying] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [paymentApproved, setPaymentApproved] = useState(false);
@@ -74,7 +73,7 @@ export default function CheckoutClient({ seminarName, terminLabel, amount, termi
   const summaryTitle = `${seminarName}${terminLabel ? ` – ${terminLabel}` : ''}`;
   const pricePerPerson = useMemo(() => (amount ? Number(amount) : undefined), [amount]);
   const totalAmount = useMemo(() => (pricePerPerson ? (pricePerPerson * teilnehmer.length) : undefined), [pricePerPerson, teilnehmer.length]);
-  const effectivePaypalClientId = paypalClientId && paypalClientId.trim().length > 0 ? paypalClientId : 'sb';
+  // Hinweis: PayPal-Client-ID wird außerhalb dieser Komponente konfiguriert
 
   // URL auf aktuellen Step synchronisieren (Deep-Link, Back/Forward)
   useEffect(() => {
@@ -83,7 +82,7 @@ export default function CheckoutClient({ seminarName, terminLabel, amount, termi
       current.set('step', String(step));
       router.replace(`?${current.toString()}`);
     }
-  }, [step]);
+  }, [step, router, sp]);
 
   // Utils
   // Teilnehmeranzahl ist fix (kommt aus der Auswahl), kein Hinzufügen/Entfernen in Schritt 2
@@ -129,7 +128,29 @@ export default function CheckoutClient({ seminarName, terminLabel, amount, termi
   };
   const goBack = () => setStep(s => Math.max(1, s - 1));
 
-  const anzahl = teilnehmer.length;
+  // Anzahl ergibt sich implizit aus teilnehmer.length
+
+  // Hilfsfunktionen
+  const errorMessage = (e: unknown, fallback: string) => {
+    if (typeof e === 'object' && e && 'message' in e) {
+      const msg = (e as { message?: unknown }).message;
+      if (typeof msg === 'string') return msg;
+    }
+    return fallback;
+  };
+
+  const extractPaypalCaptureId = (details: unknown): string | null => {
+    try {
+      const d = details as {
+        purchase_units?: Array<{
+          payments?: { captures?: Array<{ id?: string }> }
+        }>;
+      };
+      return d.purchase_units?.[0]?.payments?.captures?.[0]?.id ?? null;
+    } catch {
+      return null;
+    }
+  };
 
   const onSubmit = async () => {
     const errs = validateStep(3);
@@ -139,7 +160,6 @@ export default function CheckoutClient({ seminarName, terminLabel, amount, termi
       setSubmitError('Ungültiger oder fehlender Termin. Bitte zurück zur Seminarseite.');
       return;
     }
-    setSubmitting(true);
     setSubmitError(null);
     try {
       const payload: Record<string, unknown> = {
@@ -186,10 +206,8 @@ export default function CheckoutClient({ seminarName, terminLabel, amount, termi
       params.set('step', '4');
       router.replace(`?${params.toString()}`);
     } catch (e: unknown) {
-      const msg = (typeof e === 'object' && e && 'message' in e) ? String((e as any).message) : 'Unbekannter Fehler';
-      setSubmitError(msg);
+      setSubmitError(errorMessage(e, 'Unbekannter Fehler'));
     } finally {
-      setSubmitting(false);
       setPaying(false);
     }
   };
@@ -532,19 +550,20 @@ export default function CheckoutClient({ seminarName, terminLabel, amount, termi
                             intent: 'CAPTURE'
                           });
                         }}
-                        onApprove={async (data, actions) => {
+                        onApprove={async (_data, actions) => {
                           try {
                             setPaying(true);
+                            if (!actions.order) throw new Error('Order actions nicht verfügbar');
                             const details = await actions.order.capture();
                             setPaymentApproved(true);
                             try {
                               // Capture-ID aus Details extrahieren
-                              const cap = (details as any)?.purchase_units?.[0]?.payments?.captures?.[0]?.id;
-                              if (cap) setPaypalCaptureId(String(cap));
+                              const cap = extractPaypalCaptureId(details);
+                              if (cap) setPaypalCaptureId(cap);
                             } catch {}
                             await onSubmit();
                           } catch (e) {
-                            setSubmitError((typeof e === 'object' && e && 'message' in e) ? String((e as any).message) : 'PayPal Fehler');
+                            setSubmitError(errorMessage(e, 'PayPal Fehler'));
                             // Auch bei Fehlern nach PayPal die Abschlussseite zeigen, damit der Flow nicht hängen bleibt
                             setStep(4);
                             const params = new URLSearchParams(sp?.toString());
@@ -553,7 +572,7 @@ export default function CheckoutClient({ seminarName, terminLabel, amount, termi
                           }
                         }}
                         onError={(e) => {
-                          setSubmitError((typeof e === 'object' && e && 'message' in e) ? String((e as any).message) : 'PayPal Fehler');
+                          setSubmitError(errorMessage(e, 'PayPal Fehler'));
                         }}
                       />
                     ) : (
