@@ -29,10 +29,10 @@ Zweck: Öffentliche Seiten für Seminare (Liste/Detail) und künftig Buchungs‑
   - CTA „Zur Buchung“ (Stub)
 
 ## Bilder
-- `next.config.ts` erlaubt Medien von localhost:1337 und `wineacademy.de`/`wineacademy.plan-p.de` (für Strapi‑Uploads).
+- `next.config.ts` erlaubt Medien von localhost:1337 und `wineacademymain.plan-p.de`/`wineacademy.plan-p.de` (für Strapi‑Uploads).
  - Für neue Domains (z. B. weitere Staging/Preview) in `images.remotePatterns` ergänzen.
  - Setze je Umgebung:
-   - Browser: `NEXT_PUBLIC_ASSETS_URL` (z. B. `https://wineacademy.de`)
+   - Browser: `NEXT_PUBLIC_ASSETS_URL` (z. B. `https://wineacademymain.plan-p.de`)
    - SSR: `ASSETS_INTERNAL_URL` (z. B. `http://backend:1337`)
 
 ## Styling

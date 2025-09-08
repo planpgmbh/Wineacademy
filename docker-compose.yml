@@ -49,21 +49,25 @@ services:
       traefik.enable: "true"
       traefik.docker.network: "proxy"
       traefik.http.services.backend.loadbalancer.server.port: "1337"
-      traefik.http.routers.backend.rule: "Host(`wineacademy.de`) && PathPrefix(`/api`)"
+      traefik.http.routers.backend.rule: "Host(`wineacademymain.plan-p.de`) && PathPrefix(`/api`)"
       traefik.http.routers.backend.entrypoints: "websecure"
       traefik.http.routers.backend.tls.certresolver: "http-resolver"
+      traefik.http.routers.backend.priority: "100"
       # Serve uploads without /api prefix for frontend asset URLs
-      traefik.http.routers.backend-uploads.rule: "Host(`wineacademy.de`) && PathPrefix(`/uploads`)"
+      traefik.http.routers.backend-uploads.rule: "Host(`wineacademymain.plan-p.de`) && PathPrefix(`/uploads`)"
       traefik.http.routers.backend-uploads.entrypoints: "websecure"
       traefik.http.routers.backend-uploads.tls.certresolver: "http-resolver"
+      traefik.http.routers.backend-uploads.priority: "100"
       # Admin/Plugin APIs used by the Strapi admin
-      traefik.http.routers.backend-adminapi.rule: "Host(`wineacademy.de`) && (PathPrefix(`/content-manager`) || PathPrefix(`/content-type-builder`) || PathPrefix(`/i18n`) || PathPrefix(`/users-permissions`) || PathPrefix(`/email`) || PathPrefix(`/upload`) || PathPrefix(`/users`))"
+      traefik.http.routers.backend-adminapi.rule: "Host(`wineacademymain.plan-p.de`) && (PathPrefix(`/content-manager`) || PathPrefix(`/content-type-builder`) || PathPrefix(`/i18n`) || PathPrefix(`/users-permissions`) || PathPrefix(`/email`) || PathPrefix(`/upload`) || PathPrefix(`/users`))"
       traefik.http.routers.backend-adminapi.entrypoints: "websecure"
       traefik.http.routers.backend-adminapi.tls.certresolver: "http-resolver"
+      traefik.http.routers.backend-adminapi.priority: "100"
       # Serve Strapi Admin under /admin (no strip)
-      traefik.http.routers.backend-admin.rule: "Host(`wineacademy.de`) && PathPrefix(`/admin`)"
+      traefik.http.routers.backend-admin.rule: "Host(`wineacademymain.plan-p.de`) && PathPrefix(`/admin`)"
       traefik.http.routers.backend-admin.entrypoints: "websecure"
       traefik.http.routers.backend-admin.tls.certresolver: "http-resolver"
+      traefik.http.routers.backend-admin.priority: "100"
 
   frontend:
     build:
@@ -79,6 +83,7 @@ services:
       traefik.enable: "true"
       traefik.docker.network: "proxy"
       traefik.http.services.frontend.loadbalancer.server.port: "3000"
-      traefik.http.routers.frontend.rule: "Host(`wineacademy.de`)"
+      traefik.http.routers.frontend.rule: "Host(`wineacademymain.plan-p.de`)"
       traefik.http.routers.frontend.entrypoints: "websecure"
       traefik.http.routers.frontend.tls.certresolver: "http-resolver"
+      traefik.http.routers.frontend.priority: "1"

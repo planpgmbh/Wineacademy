@@ -143,7 +143,7 @@ Hinweis: In Dev nutzt das Frontend `API_INTERNAL_URL` (SSR) und `NEXT_PUBLIC_API
 
 ## Produktion (mit Traefik)
 
-Voraussetzungen: Externes Traefik-Netz `proxy` existiert (z. B. auf dem Host bereits angelegt) und eine Domain (z. B. `wineacademy.de`). Passe die Labels in `docker-compose.yml` bei Bedarf an.
+Voraussetzungen: Externes Traefik-Netz `proxy` existiert (z. B. auf dem Host bereits angelegt) und eine Domain (z. B. `wineacademymain.plan-p.de`). Passe die Labels in `docker-compose.yml` bei Bedarf an.
 
 Start:
 
@@ -153,22 +153,22 @@ docker compose up -d --build
 
 Routing (Traefik Labels in `docker-compose.yml`):
 
-- Frontend: `Host(wineacademy.de)` → Port 3000
-- Backend API: `Host(wineacademy.de) && PathPrefix(/api)` → Port 1337 (kein StripPrefix)
-- Backend Uploads: `Host(wineacademy.de) && PathPrefix(/uploads)` → Port 1337
-- Strapi Admin: `Host(wineacademy.de) && PathPrefix(/admin)` → Port 1337
+- Frontend: `Host(wineacademymain.plan-p.de)` → Port 3000
+- Backend API: `Host(wineacademymain.plan-p.de) && PathPrefix(/api)` → Port 1337 (kein StripPrefix)
+- Backend Uploads: `Host(wineacademymain.plan-p.de) && PathPrefix(/uploads)` → Port 1337
+- Strapi Admin: `Host(wineacademymain.plan-p.de) && PathPrefix(/admin)` → Port 1337
 - Admin/Plugin‑APIs: `PathPrefix(/content-manager|/content-type-builder|/i18n|/users-permissions|/email|/upload|/users)` → Port 1337
 
 Staging/Live‑Checklist (ergänzend):
-- Domains: `wineacademy.de` (Prod), `wineacademy.plan-p.de` (Staging) in Traefik‑Labels hinterlegt und DNS zeigt auf Server
+- Domains: `wineacademymain.plan-p.de` (Prod), `wineacademy.plan-p.de` (Staging) in Traefik‑Labels hinterlegt und DNS zeigt auf Server
 - Frontend‑ENV:
-  - Prod: `NEXT_PUBLIC_API_URL=https://wineacademy.de/api`, `NEXT_PUBLIC_ASSETS_URL=https://wineacademy.de`
+  - Prod: `NEXT_PUBLIC_API_URL=https://wineacademymain.plan-p.de/api`, `NEXT_PUBLIC_ASSETS_URL=https://wineacademymain.plan-p.de`
   - Staging: `NEXT_PUBLIC_API_URL=https://wineacademy.plan-p.de/api`, `NEXT_PUBLIC_ASSETS_URL=https://wineacademy.plan-p.de`
 - Backend‑ENV:
   - Prod: `API_INTERNAL_URL=http://backend:1337`
   - Staging: `API_INTERNAL_URL=http://backend-staging:1337`
 - Strapi CORS/Hostname: `PUBLIC_URL` bzw. Strapi‑URL auf Domain setzen; CORS/Permissions erlauben die Frontend‑Origin
-- Next/Image: `frontend/next.config.ts` enthält Domains (`wineacademy.de`, `wineacademy.plan-p.de`) – bei neuen Domains ergänzen
+- Next/Image: `frontend/next.config.ts` enthält Domains (`wineacademymain.plan-p.de`, `wineacademy.plan-p.de`) – bei neuen Domains ergänzen
 - Payments: PayPal `PAYPAL_MODE=sandbox` (Staging) / `live` (Prod), passende Webhook‑IDs
 - E‑Mail & LexOffice: Staging‑Keys getrennt von Prod nutzen
 
@@ -211,7 +211,7 @@ Zusatz:
 
 - Strapi: `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET`
 - DB (Postgres): `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `DATABASE_*`
-- Next.js: `NEXT_PUBLIC_API_URL` (Prod: `https://wineacademy.de/api`)
+- Next.js: `NEXT_PUBLIC_API_URL` (Prod: `https://wineacademymain.plan-p.de/api`)
 - PayPal: `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_MODE` (sandbox|live), `PAYPAL_WEBHOOK_ID`, `PAYPAL_CURRENCY` (z. B. `EUR`)
 - SendGrid: `SENDGRID_API_KEY`, `EMAIL_FROM`
 - LexOffice: `LEXOFFICE_API_TOKEN`
@@ -233,13 +233,13 @@ Dieser Abschnitt fasst die für Deployment relevanten Infrastruktur-Infos zusamm
 - Voraussetzungen:
   - Traefik v3 läuft bereits am Server und ist mit externem Docker-Netz `proxy` verbunden.
   - EntryPoint heißt `websecure`, CertResolver `http-resolver` (falls abweichend, Labels in Compose anpassen).
-  - DNS zeigt auf den Server: `wineacademy.de`, `wineacademy.plan-p.de` (Ports 80/443 offen).
+  - DNS zeigt auf den Server: `wineacademymain.plan-p.de`, `wineacademy.plan-p.de` (Ports 80/443 offen).
 
 - Netzwerke & Routing:
   - Extern: `proxy` (Traefik-facing). Intern: `db` (Prod), `db_staging` (Staging).
   - Prod-Routing (siehe `docker-compose.yml` Labels):
-    - `Host(wineacademy.de)` → Frontend (Port 3000)
-    - `Host(wineacademy.de) && PathPrefix(/api)` → Backend (Port 1337) mit StripPrefix `/api`
+    - `Host(wineacademymain.plan-p.de)` → Frontend (Port 3000)
+    - `Host(wineacademymain.plan-p.de) && PathPrefix(/api)` → Backend (Port 1337) mit StripPrefix `/api`
   - Staging-Routing (siehe `docker-compose-staging.yml` Labels):
     - `Host(wineacademy.plan-p.de)` → Frontend (Port 3000)
     - `Host(wineacademy.plan-p.de) && PathPrefix(/api)` → Backend (Port 1337) mit StripPrefix `/api`
@@ -249,7 +249,7 @@ Dieser Abschnitt fasst die für Deployment relevanten Infrastruktur-Infos zusamm
 
 - Wichtige Umgebungsvariablen:
   - Frontend-Port ist in allen Compose-Dateien explizit auf `PORT=3000` gesetzt, damit Strapi-`PORT=1337` das Frontend nicht beeinflusst.
-  - Prod `.env`: `POSTGRES_*`, `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `ENCRYPTION_KEY`, `SENDGRID_API_KEY`, `EMAIL_FROM`, `LEXOFFICE_API_TOKEN`, `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_MODE`, `PAYPAL_WEBHOOK_ID`, `PAYPAL_CURRENCY`, `NEXT_PUBLIC_API_URL=https://wineacademy.de/api`, `API_INTERNAL_URL=http://backend:1337`.
+  - Prod `.env`: `POSTGRES_*`, `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `ENCRYPTION_KEY`, `SENDGRID_API_KEY`, `EMAIL_FROM`, `LEXOFFICE_API_TOKEN`, `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_MODE`, `PAYPAL_WEBHOOK_ID`, `PAYPAL_CURRENCY`, `NEXT_PUBLIC_API_URL=https://wineacademymain.plan-p.de/api`, `API_INTERNAL_URL=http://backend:1337`.
   - Staging `.env.staging`: analoge Variablen mit Staging-Werten und `NEXT_PUBLIC_API_URL=https://wineacademy.plan-p.de/api`, `API_INTERNAL_URL=http://backend-staging:1337`.
 
 - Deploy-Befehle:
@@ -257,7 +257,7 @@ Dieser Abschnitt fasst die für Deployment relevanten Infrastruktur-Infos zusamm
   - Produktion: `cp .env.example .env` (mit Prod-Secrets füllen) und `docker compose up -d --build`
 
 - Health & Logs:
-  - Strapi Admin: auch direkt über `/admin` erreichbar (z. B. Prod: `https://wineacademy.de/admin`, Staging: `https://wineacademy.plan-p.de/admin`).
+  - Strapi Admin: auch direkt über `/admin` erreichbar (z. B. Prod: `https://wineacademymain.plan-p.de/admin`, Staging: `https://wineacademy.plan-p.de/admin`).
   - Logs: `docker compose [-f <compose>] logs -f backend|frontend|db*`
 
 - Backups (Postgres):

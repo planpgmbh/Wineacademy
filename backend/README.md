@@ -43,7 +43,7 @@ curl -s http://localhost:1337/api/public/seminare/einfuhrung-in-die-weinwelt | j
 - DB: `DATABASE_*` (Host über Compose gesetzt)
 - Admin/Keys: `APP_KEYS`, `JWT_SECRET`, … (in Dev vom `backend/.env` generiert)
 - Interne API‑Basis für Frontend‑SSR: `API_INTERNAL_URL` (Root‑`.env`, z. B. `http://backend:1337`)
- - Öffentliche URL/Hosts: `PUBLIC_URL`/Strapi‑URL auf Domain setzen; CORS für Frontend‑Origin (`wineacademy.de` bzw. `wineacademy.plan-p.de`) erlauben
+ - Öffentliche URL/Hosts: `PUBLIC_URL`/Strapi‑URL auf Domain setzen; CORS für Frontend‑Origin (`wineacademymain.plan-p.de` bzw. `wineacademy.plan-p.de`) erlauben
 
 ## Admin‑Hinweise
 - Nach Schema‑Änderungen ggf. Content‑Manager → Configure → „Reset to default“, damit neue Felder (z. B. `planungsstatus`) in der Maske sind.
