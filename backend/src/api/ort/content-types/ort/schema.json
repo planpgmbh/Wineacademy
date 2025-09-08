@@ -1,0 +1,47 @@
+{
+  "collectionName": "orte",
+  "info": {
+    "singularName": "ort",
+    "pluralName": "orte",
+    "displayName": "Ort",
+    "description": "Veranstaltungsort oder Online"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "standort": {
+      "type": "string",
+      "required": true
+    },
+    "typ": {
+      "type": "enumeration",
+      "enum": ["vorort", "online"],
+      "default": "vorort",
+      "required": true
+    },
+    "veranstaltungsort": { "type": "string" },
+    "strasse": {
+      "type": "string"
+    },
+    "plz": {
+      "type": "string"
+    },
+    "stadt": {
+      "type": "string"
+    },
+    "land": {
+      "type": "enumeration",
+      "enum": ["Deutschland"],
+      "default": "Deutschland",
+      "required": true
+    },
+    "termine": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::termin.termin",
+      "mappedBy": "ort"
+    }
+    
+  }
+}

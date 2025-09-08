@@ -1,4 +1,7 @@
 export default ({ env }) => ({
+  // Falls die App unter einem Pfadprefix läuft (z. B. /api), bleibt das Admin-Panel
+  // unter /admin erreichbar. Optional via ENV überschreibbar.
+  url: env('ADMIN_PUBLIC_URL', '/admin'),
   auth: {
     secret: env('ADMIN_JWT_SECRET'),
   },

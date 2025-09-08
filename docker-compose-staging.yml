@@ -6,6 +6,7 @@ networks:
 
 volumes:
   db_staging_data:
+  uploads_staging_data:
 
 services:
   db_staging:
@@ -39,6 +40,8 @@ services:
     depends_on:
       db_staging:
         condition: service_healthy
+    volumes:
+      - uploads_staging_data:/app/public/uploads
     networks:
       - db_staging
       - proxy
@@ -49,8 +52,18 @@ services:
       traefik.http.routers.backend-staging.rule: "Host(`wineacademy.plan-p.de`) && PathPrefix(`/api`)"
       traefik.http.routers.backend-staging.entrypoints: "websecure"
       traefik.http.routers.backend-staging.tls.certresolver: "http-resolver"
-      traefik.http.routers.backend-staging.middlewares: "backend-staging-stripprefix@docker"
-      traefik.http.middlewares.backend-staging-stripprefix.stripprefix.prefixes: "/api"
+      # Admin/Plugin-APIs (JSON-Endpunkte für das Admin-Panel)
+      traefik.http.routers.backend-staging-adminapi.rule: "Host(`wineacademy.plan-p.de`) && (PathPrefix(`/content-manager`) || PathPrefix(`/content-type-builder`) || PathPrefix(`/i18n`) || PathPrefix(`/users-permissions`) || PathPrefix(`/email`) || PathPrefix(`/upload`) || PathPrefix(`/users`))"
+      traefik.http.routers.backend-staging-adminapi.entrypoints: "websecure"
+      traefik.http.routers.backend-staging-adminapi.tls.certresolver: "http-resolver"
+      # Serve uploads without /api prefix for frontend asset URLs
+      traefik.http.routers.backend-staging-uploads.rule: "Host(`wineacademy.plan-p.de`) && PathPrefix(`/uploads`)"
+      traefik.http.routers.backend-staging-uploads.entrypoints: "websecure"
+      traefik.http.routers.backend-staging-uploads.tls.certresolver: "http-resolver"
+      # Serve Strapi Admin under /admin (no strip)
+      traefik.http.routers.backend-staging-admin.rule: "Host(`wineacademy.plan-p.de`) && PathPrefix(`/admin`)"
+      traefik.http.routers.backend-staging-admin.entrypoints: "websecure"
+      traefik.http.routers.backend-staging-admin.tls.certresolver: "http-resolver"
 
   frontend-staging:
     build:
@@ -58,6 +71,8 @@ services:
     container_name: wineacademy_frontend_staging
     env_file:
       - .env.staging
+    environment:
+      - PORT=3000
     networks:
       - proxy
     labels:
@@ -67,4 +82,3 @@ services:
       traefik.http.routers.frontend-staging.rule: "Host(`wineacademy.plan-p.de`)"
       traefik.http.routers.frontend-staging.entrypoints: "websecure"
       traefik.http.routers.frontend-staging.tls.certresolver: "http-resolver"
-

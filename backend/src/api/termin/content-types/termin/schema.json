@@ -1,0 +1,48 @@
+{
+  "collectionName": "termine",
+  "info": {
+    "singularName": "termin",
+    "pluralName": "termine",
+    "displayName": "Termin",
+    "description": "Seminar-Termin mit mehreren Tagen (Datum, Start- und Endzeit)"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "titel": { "type": "string" },
+    "tage": {
+      "type": "component",
+      "repeatable": true,
+      "component": "termin.seminartag",
+      "required": true,
+      "min": 1
+    },
+    
+    "kapazitaet": { "type": "integer", "required": true, "min": 1, "default": 30 },
+    "preis": { "type": "decimal" },
+    "planungsstatus": {
+      "type": "enumeration",
+      "enum": ["geplant", "ausgebucht", "abgesagt"],
+      "default": "geplant"
+    },
+    "seminar": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::seminar.seminar",
+      "inversedBy": "termine"
+    },
+    "ort": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::ort.ort",
+      "inversedBy": "termine"
+    },
+    "buchungen": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::buchung.buchung",
+      "mappedBy": "termin"
+    }
+  }
+}
