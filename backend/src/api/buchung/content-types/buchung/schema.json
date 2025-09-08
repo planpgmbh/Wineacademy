@@ -30,6 +30,14 @@
       "component": "buchung.teilnehmer",
       "min": 1
     },
+    "mitMwst": { "type": "boolean", "default": true },
+    "steuerSatz": { "type": "decimal" },
+    "preisBrutto": { "type": "decimal" },
+    "preisNetto": { "type": "decimal" },
+    "steuerBetrag": { "type": "decimal" },
+    "gesamtpreisBrutto": { "type": "decimal" },
+    "gesamtpreisNetto": { "type": "decimal" },
+    "gesamtsteuerBetrag": { "type": "decimal" },
     "vorname": {
       "type": "string",
       "required": true

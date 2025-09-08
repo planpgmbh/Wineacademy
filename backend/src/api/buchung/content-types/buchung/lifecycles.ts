@@ -26,24 +26,66 @@ const ensureFirmaFieldsIfNeeded = (data: any) => {
   }
 };
 
+const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+
 const computeAnzahlUndPreis = async (data: any) => {
   const teilnehmer = data.teilnehmer as Teilnehmer[];
   const anzahl = Array.isArray(teilnehmer) ? teilnehmer.length : 0;
   if (anzahl < 1) throw new Error('Mindestens ein Teilnehmer ist erforderlich');
   data.anzahl = anzahl;
 
-  // preisProPlatz: falls nicht gesetzt, vom Termin ziehen
-  if (data.termin && (data.preisProPlatz === undefined || data.preisProPlatz === null)) {
-    // @ts-ignore strapi global
+  // Konfiguration
+  const defaultVat = Number(process.env.VAT_RATE ?? 19);
+  const pricesIncludeVat = String(process.env.PRICES_INCLUDE_VAT ?? 'true') === 'true';
+
+  // Eingabequellen priorisieren: preisBrutto -> preisNetto -> termin.preis (als Brutto, wenn pricesIncludeVat=true)
+  let preisBrutto: number | undefined = data.preisBrutto != null ? Number(data.preisBrutto) : undefined;
+  let preisNetto: number | undefined = data.preisNetto != null ? Number(data.preisNetto) : undefined;
+
+  // Fallback von termin.preis
+  if (preisBrutto == null && preisNetto == null && data.termin) {
     const termin = await (strapi as any).db.query('api::termin.termin').findOne({ where: { id: data.termin }, select: ['preis'] });
-    if (termin?.preis !== undefined && termin?.preis !== null) data.preisProPlatz = termin.preis;
+    if (termin?.preis != null) {
+      if (pricesIncludeVat) preisBrutto = Number(termin.preis);
+      else preisNetto = Number(termin.preis);
+    }
   }
 
-  if (data.preisProPlatz !== undefined && data.preisProPlatz !== null) {
-    const p = Number(data.preisProPlatz);
-    data.preisProPlatz = p;
-    data.gesamtpreis = p * anzahl;
+  // MwSt-Entscheidung
+  const mitMwst = data.mitMwst !== undefined ? !!data.mitMwst : true;
+  let steuerSatz = Number(data.steuerSatz != null ? data.steuerSatz : defaultVat);
+  if (!mitMwst) steuerSatz = 0;
+  data.mitMwst = mitMwst;
+  data.steuerSatz = steuerSatz;
+
+  // Brutto/Netto berechnen
+  if (mitMwst) {
+    if (preisBrutto == null && preisNetto != null) preisBrutto = round2(preisNetto * (1 + steuerSatz / 100));
+    if (preisNetto == null && preisBrutto != null) preisNetto = round2(preisBrutto / (1 + steuerSatz / 100));
+  } else {
+    if (preisNetto == null && preisBrutto != null) preisNetto = preisBrutto; // ohne MwSt: brutto==netto
+    if (preisBrutto == null && preisNetto != null) preisBrutto = preisNetto;
   }
+
+  // Falls noch immer undefiniert, Fehler
+  if (preisBrutto == null || preisNetto == null) throw new Error('Preis (brutto oder netto) erforderlich');
+
+  const steuerBetrag = round2(mitMwst ? preisBrutto - preisNetto : 0);
+  const gesamtpreisBrutto = round2(preisBrutto * anzahl);
+  const gesamtpreisNetto = round2(preisNetto * anzahl);
+  const gesamtsteuerBetrag = round2(steuerBetrag * anzahl);
+
+  // Setze neue Felder
+  data.preisBrutto = preisBrutto;
+  data.preisNetto = preisNetto;
+  data.steuerBetrag = steuerBetrag;
+  data.gesamtpreisBrutto = gesamtpreisBrutto;
+  data.gesamtpreisNetto = gesamtpreisNetto;
+  data.gesamtsteuerBetrag = gesamtsteuerBetrag;
+
+  // Legacy-Felder weiter bedienen (für Abwärtskompatibilität)
+  data.preisProPlatz = preisBrutto;
+  data.gesamtpreis = gesamtpreisBrutto;
 };
 
 const beforeCreate = async (event: any) => {

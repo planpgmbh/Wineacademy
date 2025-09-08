@@ -41,9 +41,13 @@ export default factories.createCoreController('api::buchung.buchung', ({ strapi 
         land: body.land,
         teilnehmer: body.teilnehmer,
         termin: termin.id,
-        preisProPlatz: body.preisProPlatz ?? termin.preis,
-        anzahl: body.teilnehmer.length,
-        gesamtpreis: (body.preisProPlatz ?? termin.preis) * body.teilnehmer.length,
+        // MwSt/Preiseingaben
+        mitMwst: body.mitMwst,
+        steuerSatz: body.steuerSatz,
+        preisBrutto: body.preisBrutto,
+        preisNetto: body.preisNetto,
+        // legacy-Kompatibilität, falls Frontend noch preisProPlatz sendet
+        preisProPlatz: body.preisProPlatz,
         gutscheincode: body.gutscheincode,
         agbAkzeptiert: !!body.agbAkzeptiert,
         notizen: body.notizen,
@@ -57,8 +61,14 @@ export default factories.createCoreController('api::buchung.buchung', ({ strapi 
         id: created.id,
         terminId: termin.id,
         anzahl: created.anzahl,
-        preisProPlatz: created.preisProPlatz,
-        gesamtpreis: created.gesamtpreis,
+        mitMwst: created.mitMwst,
+        steuerSatz: created.steuerSatz,
+        preisBrutto: created.preisBrutto,
+        preisNetto: created.preisNetto,
+        steuerBetrag: created.steuerBetrag,
+        gesamtpreisBrutto: created.gesamtpreisBrutto,
+        gesamtpreisNetto: created.gesamtpreisNetto,
+        gesamtsteuerBetrag: created.gesamtsteuerBetrag,
         status: created.status,
       };
     } catch (err: any) {

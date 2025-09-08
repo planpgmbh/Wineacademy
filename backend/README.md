@@ -2,6 +2,8 @@
 
 > Du arbeitest NUR am Backend in `backend/`. Lies und befolge zuerst `backend/README.md` (Datenmodell, Public‑APIs, Seeds, Lifecycles, Admin‑Hinweise) und die Root‑`README.md` (Docker Desktop, Compose, Ports/Routing). Starte/prüfe: `docker compose -f ../docker-compose-dev.yml up -d backend`. Nutze die Public‑Endpoints, keine direkten internen Services für das Frontend. Mache einen kurzen Plan (2–5 Schritte) und liste die Befehle/curl‑Tests, die du ausführst, bevor du Änderungen machst. Wenn das Backend aktuell nicht über Docker läuft, starte das Backend. Wenn du eine Änderung am backend vorgenommen hast öffne die seite bei mir im browser. Antworte immer in deutsch.
 
+Ziel:
+
 # Backend (Strapi 5) – Wine Academy
 
 Zweck: Headless‑CMS und API für Seminare, Termine, Buchungen, Orte, Kunden, Gutscheine. Stellt schlanke Public‑Endpoints für das Frontend bereit und verwaltet Admin‑Workflows.
@@ -96,7 +98,10 @@ curl -s http://localhost:1337/api/public/seminare/einfuhrung-in-die-weinwelt | j
 - Neuer Public‑Endpoint: `POST /api/public/buchungen` → legt eine Buchung mit Teilnehmerliste an (auth: false).
 - Teilnehmer je Buchung: Vorname, Nachname, E‑Mail, Geburtstag (Pflicht); WSET® Candidate Number, Besondere Bedürfnisse (optional).
 - Firmenbuchungen: `rechnungstyp=firma` + Felder `firmenname`, `rechnungsEmail`, `strasse`, `plz`, `stadt`, `land` (validiert im Lifecycle).
-- Lifecycle Buchung: setzt `anzahl = teilnehmer.length`, `preisProPlatz` (Default Terminpreis), `gesamtpreis = preisProPlatz × anzahl`.
+- Lifecycle Buchung: setzt `anzahl = teilnehmer.length` und berechnet Brutto/Netto/Steuer:
+  - Felder: `mitMwst` (bool), `steuerSatz`, `preisBrutto`, `preisNetto`, `steuerBetrag`, `gesamtpreisBrutto`, `gesamtpreisNetto`, `gesamtsteuerBetrag`.
+  - Eingabe bevorzugt als Brutto (`preisBrutto`), alternativ Netto (`preisNetto`). Ohne MwSt: `mitMwst=false` → Steuer = 0.
+  - ENV Defaults: `VAT_RATE=19` (Standard), `PRICES_INCLUDE_VAT=true` (Terminpreis als Brutto interpretiert).
 
 Beispiele:
 
@@ -107,6 +112,9 @@ curl -s -X POST http://localhost:1337/api/public/buchungen \
   -d '{
     "terminId": 49,
     "rechnungstyp": "privat",
+    "mitMwst": true,
+    "steuerSatz": 19,
+    "preisBrutto": 119,
     "vorname": "Max",
     "nachname": "Muster",
     "email": "max@example.com",
@@ -122,6 +130,8 @@ curl -s -X POST http://localhost:1337/api/public/buchungen \
   -d '{
     "terminId": 49,
     "rechnungstyp": "firma",
+    "mitMwst": false,
+    "preisBrutto": 100,
     "firmenname": "ACME GmbH",
     "rechnungsEmail": "buchhaltung@acme.de",
     "strasse": "Hafenstr. 1",
