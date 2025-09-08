@@ -198,14 +198,26 @@ Routing (Traefik Labels in `docker-compose-staging.yml`):
 - Workflow: `.github/workflows/staging-deploy.yml`
 - Trigger: Push auf Branch `staging` (oder manuell via Workflow Dispatch)
 - Voraussetzungen (GitHub Secrets im Repo):
-  - `STAGING_SSH_HOST` – Hostname/IP des Staging-Servers
-  - `STAGING_SSH_USER` – SSH-User (mit Rechten im Projektpfad und Docker)
-  - `STAGING_SSH_KEY` – Private SSH Key (PEM, ohne Passphrase)
-  - Optional: `STAGING_SSH_PORT` – Port (Default 22)
-- Verhalten: Server verbindet sich per SSH, führt `git pull` im Projektverzeichnis `/etc/docker/projects/wineacadamy` aus und startet `docker compose -f docker-compose-staging.yml up -d --build`. Anschließend Health-Checks gegen Admin und Public-API.
+  - `SSH_HOST` – Hostname/IP des Staging-Servers
+  - `SSH_USER` – SSH-User (mit Rechten im Projektpfad und Docker)
+  - `SSH_PRIVATE_KEY` – Private SSH Key (PEM, ohne Passphrase)
+  - Optional: `SSH_PORT` – Port (Default 22)
+- Verhalten: Server verbindet sich per SSH, führt `git fetch` + `git reset --hard origin/staging` im Projektverzeichnis `/etc/docker/projects/wineacadamy` aus und startet `docker compose -f docker-compose-staging.yml up -d --build`. Anschließend Health-Checks gegen Admin und Public-API.
   
 Zusatz:
 - Staging `.env.staging` sollte `NEXT_PUBLIC_ASSETS_URL=https://wineacademy.plan-p.de` und `NEXT_PUBLIC_API_URL=https://wineacademy.plan-p.de/api` enthalten.
+
+### CI/CD – Automatisches Production-Deploy
+
+- Workflow: `.github/workflows/production-deploy.yml`
+- Trigger: Push auf Branch `main` (oder manuell via Workflow Dispatch)
+- Voraussetzungen (GitHub Secrets im Repo):
+  - `SSH_HOST` – Hostname/IP des Produktions-Servers
+  - `SSH_USER` – SSH-User (mit Rechten im Projektpfad und Docker)
+  - `SSH_PRIVATE_KEY` – Private SSH Key (PEM, ohne Passphrase)
+  - Optional: `SSH_PORT` – Port (Default 22)
+  - Optional: `PRODUCTION_BASE_URL` – Basis-URL für Health-Checks (Default `https://wineacademymain.plan-p.de`)
+- Verhalten: Server verbindet sich per SSH, führt `git fetch` + `git reset --hard origin/main` im Projektverzeichnis `/etc/docker/projects/wineacadamy` aus und startet `docker compose up -d --build`. Anschließend Health-Checks gegen Admin und Public-API.
 
 ## Umgebungsvariablen (Auszug)
 
@@ -276,4 +288,6 @@ Hinweise:
 
 ### Für Agenten/KI – Init‑Snippet (zum Kopieren)
 
-> Lies und befolge zuerst diese Root‑`README.md` (Docker Desktop, Compose, Ports/Routing) und die README im relevanten Teilprojekt (`frontend/README.md` oder `backend/README.md`). Verwende Docker Desktop (Kontext `desktop-linux`). Starte über `docker compose -f docker-compose-dev.yml up -d <service>`. Nenne vor Änderungen einen kurzen Plan (2–5 Schritte) und die Befehle/Tests, die du ausführst. Halte dich an die Public‑APIs und die in den READMEs beschriebenen Konventionen (z. B. `planungsstatus`, API‑Basen SSR/CSR, `mediaUrl()` für Bilder)
+> Lies und befolge zuerst diese Root‑`README.md` (Docker Desktop, Compose, Ports/Routing) und die README im relevanten Teilprojekt (`frontend/README.md` oder `backend/README.md`). Verwende Docker Desktop (Kontext `desktop-linux`). Starte über `docker compose -f docker-compose-dev.yml up -d <service>`. Nenne vor Änderungen einen kurzen Plan (2–5 Schritte) und die Befehle/Tests, die du ausführst. Halte dich an die Public‑APIs und die in den READMEs beschriebenen Konventionen (z. B. `planungsstatus`, API‑Basen SSR/CSR, `mediaUrl()` für Bilder) Antworte immer in Deutsch.
+
+Ziel: 

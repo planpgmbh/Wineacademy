@@ -1,0 +1,103 @@
+name: Production - Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: {}
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  DEPLOY_DIR: /etc/docker/projects/wineacadamy
+
+jobs:
+  deploy:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (for reference only)
+        uses: actions/checkout@v4
+
+      - name: Prepare SSH key and known_hosts
+        id: ssh
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_KEY:  ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_prod
+          chmod 600 ~/.ssh/id_prod
+          PORT=${SSH_PORT:-22}
+          ssh-keyscan -p "$PORT" "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "host=$SSH_HOST" >> $GITHUB_OUTPUT
+          echo "port=$PORT" >> $GITHUB_OUTPUT
+          echo "user=$SSH_USER" >> $GITHUB_OUTPUT
+
+      - name: SSH deploy (git fetch + hard reset + docker compose up)
+        shell: bash
+        env:
+          SSH_HOST: ${{ steps.ssh.outputs.host }}
+          SSH_PORT: ${{ steps.ssh.outputs.port }}
+          SSH_USER: ${{ steps.ssh.outputs.user }}
+        run: |
+          set -euo pipefail
+          REMOTE_DIR="$DEPLOY_DIR"
+          remote_cmd=$(cat <<'EOS'
+          set -e
+          echo "➡️  Using directory: __REMOTE_DIR__"
+          cd "__REMOTE_DIR__"
+
+          if [ ! -d .git ]; then
+            echo "❌ __REMOTE_DIR__ is not a git repo"; exit 2; fi
+
+          echo "➡️  Git fetch + hard reset to origin/main"
+          git fetch origin --prune
+          git reset --hard origin/main
+          git clean -fd
+
+          echo "➡️  Docker compose build + up (production)"
+          docker compose up -d --build
+
+          echo "➡️  Compose status"
+          docker compose ps
+          EOS
+          )
+          remote_cmd=${remote_cmd//__REMOTE_DIR__/$REMOTE_DIR}
+          ssh -i ~/.ssh/id_prod -p "$SSH_PORT" -o StrictHostKeyChecking=yes "$SSH_USER@$SSH_HOST" "$remote_cmd"
+
+      - name: Health checks (API + Admin)
+        shell: bash
+        env:
+          PRODUCTION_BASE_URL: ${{ secrets.PRODUCTION_BASE_URL }}
+        run: |
+          set -euo pipefail
+          BASE="${PRODUCTION_BASE_URL:-https://wineacademymain.plan-p.de}"
+          api_url="$BASE/api/public/seminare"
+          admin_url="$BASE/admin"
+
+          echo "Checking API: $api_url"
+          # Wait/retry until API returns 200 (up to ~30s)
+          for i in {1..10}; do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 5 "$api_url" || echo 000)
+            if [ "$code" = "200" ]; then echo "API OK (200)"; break; fi
+            echo "API not ready (HTTP $code), retry $i/10"; sleep 3
+          done
+          [ "$code" = "200" ] || { echo "❌ API health check failed with $code"; exit 1; }
+
+          echo "Checking Admin: $admin_url"
+          # Accept 2xx or 3xx for Admin (login/assets/redirects)
+          admin_code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 10 "$admin_url" || echo 000)
+          case "$admin_code" in
+            2*|3*) echo "Admin OK ($admin_code)";;
+            *) echo "❌ Admin health check failed with $admin_code"; exit 1;;
+          esac
