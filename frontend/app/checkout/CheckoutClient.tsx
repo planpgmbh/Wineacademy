@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { SeminarListItem } from '@/lib/api';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
@@ -22,9 +22,11 @@ type Props = {
   initialAnzahl?: number;
   seminar: SeminarListItem | null;
   termin: TerminItem | null;
+  paypalClientId: string;
+  paypalCurrency?: string;
 };
 
-export default function CheckoutClient({ initialStep = 1, initialSlug, initialTerminId, initialAnzahl = 1, seminar, termin }: Props) {
+export default function CheckoutClient({ initialStep = 1, initialSlug, initialTerminId, initialAnzahl = 1, seminar, termin, paypalClientId, paypalCurrency = 'EUR' }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const search = useSearchParams();
@@ -54,6 +56,24 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
   const zwischensumme = useMemo(() => Number((einzelpreis * anzahl).toFixed(2)), [einzelpreis, anzahl]);
   const steuerSchaetzung = useMemo(() => Number(((zwischensumme / 1.19) * 0.19).toFixed(2)), [zwischensumme]);
   const gesamt = zwischensumme; // Preise sind im Backend standardmäßig brutto; hier Anzeige als Brutto
+
+  type BookingPayload = {
+    terminId?: number;
+    rechnungstyp: 'privat' | 'firma';
+    vorname: string;
+    nachname: string;
+    email?: string;
+    firmenname?: string;
+    rechnungsEmail?: string;
+    strasse?: string;
+    plz?: string;
+    stadt?: string;
+    land?: string;
+    teilnehmer: Array<{ vorname: string; nachname: string }>;
+    agbAkzeptiert: boolean;
+    gutscheincode?: string;
+    paypalCaptureId?: string;
+  };
 
   const updateQuery = (nextStep: number) => {
     const qs = new URLSearchParams(search?.toString());
@@ -188,9 +208,47 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
                 <input type="checkbox" checked={agb} onChange={(e) => setAgb(e.target.checked)} />
                 Ich akzeptiere die AGB.
               </label>
-              <div className="p-3 border rounded bg-gray-50 text-sm">
-                PayPal‑Buttons werden hier eingebunden. Aktuell ist der Online‑Checkout deaktiviert; diese Ansicht dient dem Layout und der Navigation.
-              </div>
+              <PayPalSection
+                enabled={agb && !!paypalClientId}
+                clientId={paypalClientId}
+                currency={paypalCurrency}
+                amount={gesamt}
+                customId={`${initialSlug || 'seminar'}|${initialTerminId || ''}|${anzahl}`}
+                onApprove={async (captureId) => {
+                  // Nach erfolgreichem Capture Buchung im Backend anlegen
+                  try {
+                    const payload: BookingPayload = {
+                      terminId: initialTerminId,
+                      rechnungstyp,
+                      vorname: adresse.vorname,
+                      nachname: adresse.nachname,
+                      email: rechnungstyp === 'privat' ? adresse.email : undefined,
+                      firmenname: rechnungstyp === 'firma' ? adresse.firmenname : undefined,
+                      rechnungsEmail: rechnungstyp === 'firma' ? adresse.rechnungsEmail : undefined,
+                      strasse: rechnungstyp === 'firma' ? adresse.strasse : undefined,
+                      plz: rechnungstyp === 'firma' ? adresse.plz : undefined,
+                      stadt: rechnungstyp === 'firma' ? adresse.stadt : undefined,
+                      land: rechnungstyp === 'firma' ? adresse.land : undefined,
+                      teilnehmer: teilnehmer.map(t => ({ vorname: t.vorname, nachname: t.nachname })),
+                      agbAkzeptiert: true,
+                      gutscheincode: undefined,
+                      paypalCaptureId: captureId,
+                    };
+                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/public/buchungen`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(payload),
+                    });
+                    const json = await res.json();
+                    if (!res.ok) throw new Error(json?.error?.message || 'Buchung fehlgeschlagen');
+                    // Erfolg: weiterleiten
+                    window.location.href = `/checkout/erfolg?buchungId=${encodeURIComponent(json.id)}&betrag=${encodeURIComponent(gesamt.toFixed(2))}`;
+                  } catch (e) {
+                    console.error(e);
+                    window.location.href = `/checkout/abbruch?grund=${encodeURIComponent((e as Error)?.message || 'Fehler')}`;
+                  }
+                }}
+              />
               <div className="flex justify-between">
                 <button onClick={goPrev} className="inline-flex items-center rounded-md border px-4 py-2 text-sm">Zurück</button>
                 <button disabled className="inline-flex items-center rounded-md bg-black text-white px-4 py-2 text-sm disabled:opacity-50" title="Wird demnächst aktiviert">
@@ -273,6 +331,96 @@ function Row({ label, value }: { label: string; value: string }) {
     <div className="flex justify-between">
       <span className="text-gray-600">{label}</span>
       <span>{value}</span>
+    </div>
+  );
+}
+
+declare global {
+  interface Window {
+    paypal?: {
+      Buttons: (opts: PayPalButtonsOptions) => { render: (selector: string) => void };
+    };
+  }
+}
+
+type PayPalButtonsOptions = {
+  style?: Record<string, unknown>;
+  createOrder: (data: unknown, actions: { order: { create: (args: Record<string, unknown>) => Promise<string> | string } }) => Promise<string> | string;
+  onApprove: (data: unknown, actions: { order: { capture: () => Promise<PayPalCaptureDetails> } }) => void;
+  onError?: (err: unknown) => void;
+  onCancel?: () => void;
+};
+
+type PayPalCaptureDetails = {
+  purchase_units?: Array<{
+    payments?: { captures?: Array<{ id?: string }> };
+  }>;
+};
+
+function PayPalSection({ enabled, clientId, currency, amount, customId, onApprove }: { enabled: boolean; clientId: string; currency: string; amount: number; customId: string; onApprove: (captureId: string) => void }) {
+  const [error, setError] = useState<string | null>(null);
+
+  // SDK Script laden und Buttons mounten
+  useEffect(() => {
+    if (!enabled) return;
+    setError(null);
+    const sdkId = `pp-sdk-${clientId}-${currency}`;
+    if (!document.getElementById(sdkId)) {
+      const s = document.createElement('script');
+      s.id = sdkId;
+      s.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=${encodeURIComponent(currency)}&intent=capture`;
+      s.async = true;
+      document.head.appendChild(s);
+    }
+    const iv = setInterval(() => {
+      if (window.paypal?.Buttons) {
+        clearInterval(iv);
+        try {
+          window.paypal!.Buttons({
+            style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
+            createOrder: (_data, actions) => {
+              return actions.order.create({
+                intent: 'CAPTURE',
+                purchase_units: [
+                  { amount: { currency_code: currency, value: amount.toFixed(2) }, custom_id: customId },
+                ],
+                application_context: { shipping_preference: 'NO_SHIPPING' },
+              });
+            },
+            onApprove: async (_data, actions) => {
+              try {
+                const details = await actions.order.capture();
+                const capId = details?.purchase_units?.[0]?.payments?.captures?.[0]?.id;
+                if (!capId) throw new Error('Keine Capture-ID erhalten');
+                onApprove(String(capId));
+              } catch (e) {
+                setError(e instanceof Error ? e.message : 'Fehler beim Capture');
+              }
+            },
+            onError: (err) => {
+              setError(err instanceof Error ? err.message : 'PayPal-Fehler');
+            },
+            onCancel: () => {
+              window.location.href = '/checkout/abbruch?grund=abgebrochen';
+            },
+          }).render('#paypal-buttons');
+        } catch (e) {
+          setError(e instanceof Error ? e.message : 'PayPal-Initialisierung fehlgeschlagen');
+        }
+      }
+    }, 150);
+    return () => clearInterval(iv);
+  }, [enabled, clientId, currency, amount, customId, onApprove]);
+
+  if (!enabled) {
+    return (
+      <div className="p-3 border rounded bg-gray-50 text-sm">Bitte AGB akzeptieren, um die PayPal‑Zahlung zu starten.</div>
+    );
+  }
+  return (
+    <div className="space-y-2">
+      {error && <div className="text-sm text-red-600">{error}</div>}
+      <div id="paypal-buttons"></div>
     </div>
   );
 }

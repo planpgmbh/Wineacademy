@@ -19,6 +19,8 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Sea
 
   let seminar: SeminarListItem | null = null;
   let termin: TerminItem | null = null;
+  const paypalClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || process.env.PAYPAL_CLIENT_ID || '';
+  const paypalCurrency = process.env.NEXT_PUBLIC_PAYPAL_CURRENCY || 'EUR';
 
   if (slug && Number.isFinite(terminId)) {
     try {
@@ -42,6 +44,8 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Sea
           initialAnzahl={anzahl}
           seminar={seminar}
           termin={termin}
+          paypalClientId={paypalClientId}
+          paypalCurrency={paypalCurrency}
         />
       </div>
     </div>
