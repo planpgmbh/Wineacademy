@@ -49,13 +49,15 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
     Array.from({ length: Math.max(1, initialAnzahl) }, (_, i) => ({ vorname: i === 0 ? adresse.vorname || '' : '', nachname: i === 0 ? adresse.nachname || '' : '' }))
   );
   const [gutscheincode, setGutscheincode] = useState('');
+  const [promo, setPromo] = useState<{ valid: boolean; discount: number; totalBrutto: number } | null>(null);
   const [agb, setAgb] = useState(false);
 
   const einzelpreis = Number(termin?.preis || 0);
   const anzahl = teilnehmer.length || 1;
   const zwischensumme = useMemo(() => Number((einzelpreis * anzahl).toFixed(2)), [einzelpreis, anzahl]);
+  const gesamtAnzeige = promo?.valid ? promo.totalBrutto : zwischensumme;
   const steuerSchaetzung = useMemo(() => Number(((zwischensumme / 1.19) * 0.19).toFixed(2)), [zwischensumme]);
-  const gesamt = zwischensumme; // Preise sind im Backend standardmäßig brutto; hier Anzeige als Brutto
+  const gesamt = gesamtAnzeige; // Preise sind im Backend standardmäßig brutto; hier Anzeige als Brutto
 
   type BookingPayload = {
     terminId?: number;
@@ -268,10 +270,28 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
             <label className="text-sm font-medium">Gutscheincode</label>
             <div className="mt-1 flex gap-2">
               <input value={gutscheincode} onChange={(e) => setGutscheincode(e.target.value)} placeholder="Code eingeben" className="w-full rounded border px-3 py-2 text-sm" />
-              <button className="px-3 py-2 border rounded text-sm" disabled>
+              <button className="px-3 py-2 border rounded text-sm" onClick={async () => {
+                if (!initialTerminId) return;
+                try {
+                  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/public/gutscheine/validate`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ terminId: initialTerminId, anzahl, gutscheincode }),
+                  });
+                  const json = await res.json();
+                  if (json?.valid) setPromo({ valid: true, discount: Number(json.rabatt?.betragBrutto || 0), totalBrutto: Number(json.total?.gesamtpreisBrutto || zwischensumme) });
+                  else setPromo({ valid: false, discount: 0, totalBrutto: zwischensumme });
+                } catch (_) {
+                  setPromo(null);
+                }
+              }}>
                 Prüfen
               </button>
             </div>
+            {promo && (
+              <div className={`mt-1 text-xs ${promo.valid ? 'text-green-700' : 'text-red-600'}`}>
+                {promo.valid ? `Rabatt berücksichtigt: −${promo.discount.toFixed(2)} €` : 'Code ungültig'}
+              </div>
+            )}
           </div>
           <div className="divide-y border rounded">
             <div className="p-4 text-sm">
@@ -287,10 +307,11 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
             <div className="p-4 text-sm space-y-1">
               <Row label="Zwischensumme" value={`${zwischensumme.toFixed(2)} €`} />
               <Row label="Steuer (geschätzt)" value={`${steuerSchaetzung.toFixed(2)} €`} />
+              {promo?.valid && <Row label="Rabatt" value={`−${promo.discount.toFixed(2)} €`} />}
             </div>
             <div className="p-4 text-sm flex justify-between font-semibold">
               <span>Gesamt</span>
-              <span>{gesamt.toFixed(2)} €</span>
+              <span>{gesamtAnzeige.toFixed(2)} €</span>
             </div>
           </div>
         </div>

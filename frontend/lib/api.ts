@@ -68,3 +68,17 @@ export function mediaUrl(path?: string): string | undefined {
   const base = isServer ? SERVER_MEDIA_BASE : CLIENT_MEDIA_BASE;
   return path.startsWith('http') ? path : `${base}${path}`;
 }
+
+export type PublicBuchung = {
+  id: number;
+  status: string;
+  zahlungsmethode?: string | null;
+  anzahl: number;
+  gesamtpreisBrutto: number;
+  gesamtpreisNetto?: number;
+  gesamtsteuerBetrag?: number;
+};
+
+export async function getBuchungPublic(id: number): Promise<PublicBuchung> {
+  return fetchJSON<PublicBuchung>(`/public/buchungen/${id}`);
+}
