@@ -1,6 +1,6 @@
 Frontend (Next.js) – Wine Academy
 
-Zweck: Öffentliche Seiten für Seminare (Liste/Detail) und mehrstufiger Buchungs‑Flow (Checkout). Liest Daten aus der Strapi‑Public‑API.
+Zweck: Öffentliche Seiten für Seminare (Liste/Detail). Liest Daten aus der Strapi‑Public‑API. Der frühere Online‑Checkout ist aktuell deaktiviert.
 
 ### Init‑Prompt (zum Kopieren)
 
@@ -28,13 +28,8 @@ Zweck: Öffentliche Seiten für Seminare (Liste/Detail) und mehrstufiger Buchung
 ## Seiten
 - `/seminare` – Karten: Name, Kurzbeschreibung, „ab Preis“, nächster Termin, Ort, CTA „Details“
 - `/seminare/[slug]` – Hero‑Bild, Titel, Kurzbeschreibung, Beschreibung/Infos, rechts Buchungs‑Sidebar:
-  - Ort‑Filter → Terminauswahl, Teilnehmeranzahl (+/−), dynamischer Preis
-  - CTA „Weiter zur Buchung“ führt in den Checkout
-- `/checkout` – Mehrstufiger Checkout (Wizard):
-  - Schritt 1: Rechnungsart (privat/firma), Kontakt, ggf. Firmendaten
-  - Schritt 2: Teilnehmende (nur Vorname/Nachname Pflicht; E‑Mail/Geburtstag optional)
-  - Schritt 3: Übersicht links, Zahlung rechts (PayPal‑Buttons, AGB‑Check, Gesamtsumme)
-  - Schritt 4: Abschluss mit serverseitigen Summen und ID
+  - Ort‑Filter → Terminauswahl, Teilnehmeranzahl (+/−), Preisanzeige
+  - Hinweis: „Online‑Checkout derzeit nicht verfügbar“ (Button deaktiviert)
 
 <!-- Temporäre Testseite `/buchung-test` entfernt -->
 
@@ -58,7 +53,7 @@ Zweck: Öffentliche Seiten für Seminare (Liste/Detail) und mehrstufiger Buchung
 - Alte Anzeige → Browser Hard‑Reload (Cmd/Ctrl+Shift+R). Bei Image‑Betrieb: Rebuild wie oben.
 - SSR 500 → `API_INTERNAL_URL` prüfen (Container‑Name `backend:1337`).
 - Bild fehlt → Seminar hat kein Bild oder Domain nicht freigeschaltet (siehe `next.config.ts`).
- - PayPal‑Buttons fehlen → Ad/Tracking‑Blocker für `localhost` deaktivieren; AGB werden erst beim Klick validiert.
+- Checkout/PayPal: Der Online‑Checkout ist aktuell deaktiviert. Hinweise zum künftigen Checkout (Custom ID, return_url/cancel_url, serverseitiger Abschluss) stehen in `backend/README.md`.
 
 ## Für Agenten/KI
 - Nur Public‑Endpoints (`/api/public/...`) konsumieren.

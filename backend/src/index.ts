@@ -61,12 +61,12 @@ export default {
           land: 'Deutschland',
         },
         {
-          standort: 'Weinschule Berlin',
+          standort: 'Weinschule Mannheim',
           typ: 'vorort',
           veranstaltungsort: 'Prenzlauer Berg Atelier',
           strasse: 'Kastanienallee 25',
           plz: '10435',
-          stadt: 'Berlin',
+          stadt: 'Mannheim',
           land: 'Deutschland',
         },
         {

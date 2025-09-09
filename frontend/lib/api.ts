@@ -15,8 +15,10 @@ const CLIENT_MEDIA_BASE = process.env.NEXT_PUBLIC_ASSETS_URL
 
 function joinUrl(base: string, path: string) {
   const b = base.replace(/\/$/, '');
+  const hasApi = /\/api$/i.test(b);
+  const apiBase = hasApi ? b : `${b}/api`;
   const p = path.startsWith('/') ? path : `/${path}`;
-  return `${b}/api${p}`; // Strapi routes are under /api
+  return `${apiBase}${p}`; // Strapi routes are under /api
 }
 
 export async function fetchJSON<T>(path: string, init?: RequestInit): Promise<T> {

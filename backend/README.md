@@ -93,67 +93,52 @@ curl -s http://localhost:1337/api/public/seminare/einfuhrung-in-die-weinwelt | j
   - Tests: `curl -s https://wineacademy.plan-p.de/api/public/seminare | jq '.[0]'`
   - In `.env.staging`: `SEED=false`/Variablen entfernen, dann: `docker compose -f docker-compose-staging.yml up -d backend-staging`
 
-## Erweiterung: Buchungen mit Teilnehmerdaten
+## Buchungen (Public‑Endpoint)
 
-- Neuer Public‑Endpoint: `POST /api/public/buchungen` → legt eine Buchung mit Teilnehmerliste an (auth: false).
-- Teilnehmer je Buchung: Vorname, Nachname (Pflicht); E‑Mail, Geburtstag (optional); WSET® Candidate Number, Besondere Bedürfnisse (optional).
-- Firmenbuchungen: `rechnungstyp=firma` + Felder `firmenname`, `rechnungsEmail`, `strasse`, `plz`, `stadt`, `land` (validiert im Lifecycle).
-- Lifecycle Buchung: setzt `anzahl = teilnehmer.length` und berechnet Brutto/Netto/Steuer:
-  - Felder: `mitMwst` (bool), `steuerSatz`, `preisBrutto`, `preisNetto`, `steuerBetrag`, `gesamtpreisBrutto`, `gesamtpreisNetto`, `gesamtsteuerBetrag`.
-  - Eingabe bevorzugt als Brutto (`preisBrutto`), alternativ Netto (`preisNetto`). Ohne MwSt: `mitMwst=false` → Steuer = 0.
-  - ENV Defaults: `VAT_RATE=19` (Standard), `PRICES_INCLUDE_VAT=true` (Terminpreis als Brutto interpretiert).
+- Route: `POST /api/public/buchungen` (auth: false)
+- Pflichtfelder:
+  - `terminId` (Integer; muss auf einen geplanten, veröffentlichten Termin zeigen)
+  - `rechnungstyp` (`privat` | `firma`)
+  - `vorname`, `nachname`, `email`
+  - `teilnehmer`: Array von Personen (Pflicht: `vorname`, `nachname`; optional: `email`, `geburtstag`, `wsetCandidateNumber`, `besondereBeduerfnisse`)
+  - `agbAkzeptiert`: boolean
+- Firmenfelder (nur bei `rechnungstyp=firma` erforderlich): `firmenname`, `rechnungsEmail`, `strasse`, `plz`, `stadt`, `land`
+- Abgeleitete Felder:
+  - `anzahl` wird serverseitig strikt aus `teilnehmer.length` berechnet (eingehende `anzahl` wird ignoriert).
+  - Preise/MwSt werden serverseitig berechnet; Client darf keine Preisfelder setzen. Grundlage ist der Terminpreis.
+    - Hinweis: Es gibt Seminare ohne MwSt. (`mitMwst=false`). Die Steuerlogik (Satz/Brutto/Netto) wird im Backend bestimmt.
+- PayPal (optional):
+  - `paypalCaptureId`: Wenn vorhanden, wird die Capture serverseitig verifiziert (Status=COMPLETED, `currency_code='EUR'`, Betrag = Terminpreis × `anzahl`). Nur dann wird `status='bezahlt'` gesetzt.
+  - `paypalOrderId`: Alternativ kann eine Order‑ID übergeben werden. Die Order wird serverseitig gelesen; `custom_id` sollte `"<slug>|<terminId>|<anzahl>"` enthalten, um Termin/Anzahl sicher zuzuordnen. Die Buchung bleibt ohne Capture vorerst `status='offen'` und wird durch Webhook bestätigt.
 
-Beispiele:
-
+Beispiel (Privat, 1 TN, ohne PayPal):
 ```
-# Privatbuchung (1 Teilnehmer)
 curl -s -X POST http://localhost:1337/api/public/buchungen \
   -H 'Content-Type: application/json' \
   -d '{
     "terminId": 49,
     "rechnungstyp": "privat",
-    "mitMwst": true,
-    "steuerSatz": 19,
-    "preisBrutto": 119,
     "vorname": "Max",
     "nachname": "Muster",
     "email": "max@example.com",
-    "teilnehmer": [
-      { "vorname": "Max", "nachname": "Muster", "email": "max@example.com", "geburtstag": "1990-01-01" }
-    ],
+    "teilnehmer": [ { "vorname": "Max", "nachname": "Muster" } ],
     "agbAkzeptiert": true
-  }' | jq
-
-# Firmenbuchung (2 Teilnehmer)
-curl -s -X POST http://localhost:1337/api/public/buchungen \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "terminId": 49,
-    "rechnungstyp": "firma",
-    "mitMwst": false,
-    "preisBrutto": 100,
-    "firmenname": "ACME GmbH",
-    "rechnungsEmail": "buchhaltung@acme.de",
-    "strasse": "Hafenstr. 1",
-    "plz": "20457",
-    "stadt": "Hamburg",
-    "land": "DE",
-    "vorname": "Eva",
-    "nachname": "Einkauf",
-    "email": "eva@acme.de",
-    "teilnehmer": [
-      { "vorname": "Anna", "nachname": "Meyer", "email": "anna@acme.de", "geburtstag": "1992-05-12", "wsetCandidateNumber": "12345" },
-      { "vorname": "Tom", "nachname": "Becker", "email": "tom@acme.de", "geburtstag": "1988-11-30", "besondereBeduerfnisse": "barrierefreier Zugang" }
-    ],
-    "agbAkzeptiert": true
-  }' | jq
+  }'
 ```
 
-## PayPal Webhook (Zahlungsbestätigung)
+## PayPal Checkout & Webhook
 
-- Route: `POST /webhooks/paypal` (auth: false)
-- Verifiziert die Signatur via PayPal‑API `v1/notifications/verify-webhook-signature` und verarbeitet nur verifizierte Events.
-- Event `PAYMENT.CAPTURE.COMPLETED`: Sucht eine Buchung mit `zahlungsreferenz`/Capture‑ID und setzt `status='bezahlt'`, `zahlungsmethode='paypal'`.
+- Webhook‑Route: `POST /api/public/paypal/webhook` (auth: false)
+- Verifikation: Signatur via `v1/notifications/verify-webhook-signature` (ENV `PAYPAL_WEBHOOK_ID`). Nicht verifizierte Events werden ignoriert (200, `verified=false`).
+- Verarbeitung `PAYMENT.CAPTURE.COMPLETED`:
+  - Ermittelt `captureId` aus `resource`.
+  - Sucht Buchung per `zahlungsreferenz`/`paypalCaptureId`.
+  - Betrag/Währung werden gegen die Buchung geprüft (`EUR`, Betrag==Gesamtsumme). Nur dann `status='bezahlt'`, `zahlungsmethode='paypal'`.
+
+Frontend/Checkout‑Hinweise (falls wieder aktiviert):
+- PayPal‑Order sollte `custom_id` setzen: `"<slug>|<terminId>|<anzahl>"`.
+- `return_url`/`cancel_url` mit allen Query‑Parametern setzen, damit bei Redirect (z. B. „Guthaben“) Termin/Anzahl erhalten bleiben.
+- Nach Rückkehr kann mit `paypalOrderId` + gesichertem Draft ein serverseitiger Abschluss ausgelöst werden.
 
 ENV‑Variablen (z. B. in `.env` oder Compose):
 

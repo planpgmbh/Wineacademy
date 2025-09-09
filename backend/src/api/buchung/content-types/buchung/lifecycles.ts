@@ -9,8 +9,18 @@ type Teilnehmer = {
   besondereBeduerfnisse?: string;
 };
 
-const ensureTeilnehmerArray = (teilnehmer: any[]) => {
-  if (!Array.isArray(teilnehmer) || teilnehmer.length < 1) {
+const getTeilnehmerList = (raw: any): any[] => {
+  if (Array.isArray(raw)) return raw;
+  if (raw && typeof raw === 'object') {
+    if (Array.isArray((raw as any).set)) return (raw as any).set;
+    if (Array.isArray((raw as any).create)) return (raw as any).create;
+  }
+  return [];
+};
+
+const ensureTeilnehmerArray = (teilnehmer: any) => {
+  const list = getTeilnehmerList(teilnehmer);
+  if (!Array.isArray(list) || list.length < 1) {
     throw new Error('Mindestens ein Teilnehmer ist erforderlich');
   }
 };
@@ -29,7 +39,7 @@ const ensureFirmaFieldsIfNeeded = (data: any) => {
 const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
 const computeAnzahlUndPreis = async (data: any) => {
-  const teilnehmer = data.teilnehmer as Teilnehmer[];
+  const teilnehmer = getTeilnehmerList(data.teilnehmer) as Teilnehmer[];
   const anzahl = Array.isArray(teilnehmer) ? teilnehmer.length : 0;
   if (anzahl < 1) throw new Error('Mindestens ein Teilnehmer ist erforderlich');
   data.anzahl = anzahl;

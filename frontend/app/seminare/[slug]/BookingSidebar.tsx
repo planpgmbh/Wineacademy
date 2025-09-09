@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from 'react';
 import type { SeminarListItem } from '@/lib/api';
-import Link from 'next/link';
+// Checkout entfernt – kein Link mehr erforderlich
 import { useEffect } from 'react';
 
 type Termin = NonNullable<NonNullable<SeminarListItem['termine']>[number]>;
@@ -110,13 +110,13 @@ export default function BookingSidebar({ termine, fallbackPreis, slug }: { termi
             <div className="mt-1 text-xs text-gray-600">Kapazität: {current.kapazitaet}</div>
           )}
 
-          <Link
-            href={`/checkout?seminar=${encodeURIComponent(slug)}&terminId=${encodeURIComponent(selectedTerminId)}&anzahl=${encodeURIComponent(String(anzahl))}`}
-            className="mt-5 w-full inline-block text-center bg-black text-white px-4 py-2.5 rounded-lg hover:bg-gray-900 text-sm"
+          <button
+            className="mt-5 w-full inline-block text-center bg-gray-300 text-gray-700 px-4 py-2.5 rounded-lg cursor-not-allowed text-sm"
+            disabled
+            title="Der Online‑Checkout ist derzeit deaktiviert."
           >
-            Weiter zur Buchung
-          </Link>
-          <div className="mt-2 text-[11px] text-gray-500 text-center">Preise pro Person · Endpreis im Checkout</div>
+            Online‑Checkout derzeit nicht verfügbar
+          </button>
         </>
       )}
     </div>

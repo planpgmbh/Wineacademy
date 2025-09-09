@@ -98,12 +98,25 @@ export default factories.createCoreController('api::buchung.buchung', ({ strapi 
                 { paypalCaptureId: captureId } as any,
               ] as any,
             },
-            select: ['id', 'status'],
+            select: ['id', 'status', 'gesamtpreisBrutto'],
           });
           if (existing) {
-            await strapi.entityService.update('api::buchung.buchung', existing.id, {
-              data: { status: 'bezahlt', zahlungsmethode: 'paypal', zahlungsreferenz: captureId },
-            });
+            // Betrag/Währung aus Webhook prüfen
+            const amt = body?.resource?.amount;
+            const ccy = amt?.currency_code || amt?.currencyCode || null;
+            const valStr = amt?.value || amt?.amount || null;
+            const val = valStr ? Number(valStr) : NaN;
+            const expected = typeof existing.gesamtpreisBrutto === 'number' ? Number(existing.gesamtpreisBrutto) : undefined;
+
+            if (ccy !== 'EUR') {
+              strapi.log.warn(`[paypal webhook] Currency mismatch for capture ${captureId}: ${ccy}!=EUR`);
+            } else if (typeof expected === 'number' && Number.isFinite(val) && Math.abs(val - expected) <= 0.01) {
+              await strapi.entityService.update('api::buchung.buchung', existing.id, {
+                data: { status: 'bezahlt', zahlungsmethode: 'paypal', zahlungsreferenz: captureId },
+              });
+            } else {
+              strapi.log.warn(`[paypal webhook] Amount mismatch for capture ${captureId}: received=${valStr} expected=${expected}`);
+            }
           }
         }
       }
