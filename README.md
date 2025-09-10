@@ -7,11 +7,12 @@ Eine professionelle Kurs- und Buchungsplattform für die Wine Academy Hamburg.
 Die Plattform bildet Seminare/Kurse mit Terminen ab, ermöglicht Buchungen inkl. Online‑Zahlung und generiert Dokumente/Benachrichtigungen automatisch. Kernbausteine:
 
 - Inhalte & Daten: Strapi 5 (Seminare, Termine, Orte, Buchungen, Kunden, Gutscheine); Komponente „Seminartag“ (Datum, Start-/Endzeit)
-- Frontend: Next.js (App Router, Tailwind); Seiten für Liste/Detail (Checkout derzeit deaktiviert)
+- Frontend: Next.js (App Router, Tailwind); Seiten für Liste/Detail + TEST‑Checkout (PayPal‑Sandbox)
 - Payments & Docs: PayPal (Checkout/Webhook; serverseitige Capture‑Prüfung + Webhook mit Signatur/Betrag/Währung), LexOffice (Rechnungen), SendGrid (E‑Mails)
 - Betrieb: Docker/Compose in Dev/Prod/Staging; Traefik routet `/` → Frontend und `/api` → Backend
 
 Für Agenten/KI: Das Backend stellt schlanke Public‑APIs bereit (`/api/public/seminare`, `/api/public/seminare/:slug`, `POST /api/public/buchungen`). `anzahl` wird serverseitig strikt aus `teilnehmer.length` abgeleitet; Preise/MwSt werden im Backend berechnet (einige Seminare ohne MwSt). PayPal‑Captures werden serverseitig verifiziert; der Webhook prüft Signatur + Betrag/Währung.
+Zusätzlich vorhanden: `POST /api/public/gutscheine/validate` (Rabatte) und `GET /api/public/buchungen/:id` (QA‑Lesen, minimal).
 
 ## Überblick
 
@@ -230,13 +231,23 @@ Zusatz:
 
 Weitere Details in `.env.example`.
 
+## Hinweise zum TEST‑Checkout (PayPal Sandbox)
+
+- Dieses Frontend‑Checkout ist ein Testdesign und wird später ersetzt. Für Entwickler wichtig:
+  - Browser nutzt same‑origin `/api/...` für Calls (robust gegenüber falsch gesetzten Basen).
+  - PayPal `custom_id` wird als `<slug>|<terminId>|<anzahl>` gesetzt.
+  - Abschluss nur serverseitig: Nach `actions.order.capture()` wird `POST /api/public/buchungen` mit `paypalCaptureId` aufgerufen; das Backend verifiziert die Capture (EUR, Betrag inkl. Rabatt).
+  - Gutscheine: `POST /api/public/gutscheine/validate` für Vorschau; in der Buchung wird Rabatt berücksichtigt.
+  - Webhook: `POST /api/public/paypal/webhook` (Signaturprüfung). Registrierung in der PayPal‑App (gleiche Client‑ID) empfohlen; `PAYPAL_WEBHOOK_ID` muss passen.
+- ENV (Staging/Prod):
+  - Backend: `PAYPAL_MODE=sandbox|live`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`.
+  - Frontend: `NEXT_PUBLIC_PAYPAL_CLIENT_ID` (öffentlich; entspricht der App‑Client‑ID).
+
 ## Nächste Schritte
 
-- Strapi-Projekt in `backend/` initialisieren (Content-Types: Course, Session, Booking, Voucher, Customer)
-- Next.js in `frontend/` initialisieren (App Router, Basis-Seiten)
-- PayPal Checkout + Webhook-Endpoint im Backend
-- LexOffice-Integration (Rechnung nach Zahlung + E-Mail-Versand)
-- SendGrid-Mailtemplates (Registrierung, Buchung, Zahlung, Rechnung)
+- LexOffice‑Rechnung und SendGrid‑E‑Mails nach Zahlung (Prod‑Flows)
+- CORS‑Härtung (nur erlaubte Origins)
+- Idempotenz‑Guard (Capture‑ID nur einmal buchen)
 
 ## Server Infrastructure (Live & Staging)
 

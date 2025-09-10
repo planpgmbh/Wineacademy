@@ -1,6 +1,6 @@
 Frontend (Next.js) – Wine Academy
 
-Zweck: Öffentliche Seiten für Seminare (Liste/Detail). Liest Daten aus der Strapi‑Public‑API. Der frühere Online‑Checkout ist aktuell deaktiviert.
+Zweck: Öffentliche Seiten für Seminare (Liste/Detail) sowie ein TEST‑Checkout‑Flow für die PayPal‑Sandbox. Das aktuelle Checkout‑UI ist bewusst minimal und wird später ersetzt. Diese Datei beschreibt, wie der PayPal‑Checkout im Test funktioniert und welche ENV/Flows zu beachten sind.
 
 ### Init‑Prompt (zum Kopieren)
 
@@ -20,16 +20,26 @@ Zweck: Öffentliche Seiten für Seminare (Liste/Detail). Liest Daten aus der Str
 - Endpoints (vom Backend bereitgestellt):
   - Liste: `GET /api/public/seminare`
   - Detail: `GET /api/public/seminare/:slug`
-  - Buchung anlegen: `POST /api/public/buchungen` (Public)
+  - Buchung anlegen: `POST /api/public/buchungen`
+  - Gutscheincode prüfen: `POST /api/public/gutscheine/validate`
+  - Buchung minimal lesen (für Erfolg/QA): `GET /api/public/buchungen/:id`
 - Client: `lib/api.ts` wählt automatisch die richtige Basis (SSR/CSR) und hängt `/api` an.
   - Bilder/Assets: `lib/api.ts` baut Medien‑URLs über die API‑Basis ohne `/api`‑Suffix.
     - Optional konfigurierbar per `NEXT_PUBLIC_ASSETS_URL` (Browser) und `ASSETS_INTERNAL_URL` (SSR)
 
 ## Seiten
 - `/seminare` – Karten: Name, Kurzbeschreibung, „ab Preis“, nächster Termin, Ort, CTA „Details“
-- `/seminare/[slug]` – Hero‑Bild, Titel, Kurzbeschreibung, Beschreibung/Infos, rechts Buchungs‑Sidebar:
-  - Ort‑Filter → Terminauswahl, Teilnehmeranzahl (+/−), Preisanzeige
-  - Hinweis: „Online‑Checkout derzeit nicht verfügbar“ (Button deaktiviert)
+- `/seminare/[slug]` – Detail mit Hero‑Bild, Beschreibungen und Buchungs‑Sidebar (Termin/Ort/Teilnehmer)
+- `/checkout` – TEST‑Checkout mit 5 Schritten:
+  1) Rechnungsadresse (privat/firma)
+  2) Teilnehmende (Liste, +/−)
+  3) Bestellübersicht (nummerierte Teilnehmendenliste, AGB + Datenschutz, Button „Jetzt bezahlen“)
+  4) Bezahlen (PayPal‑Buttons sichtbar; Klick blockt ohne AGB/Formular)
+  5) Bezahlung erfolgreich (Buchungsnummer + Betrag)
+
+Aufruf: `/checkout?slug=<slug>&terminId=<id>&anzahl=<n>` – die Query wird bei Schrittwechsel fortgeschrieben.
+
+Hinweis: UI ist nur für Sandbox‑Tests gedacht und wird später ersetzt.
 
 <!-- Temporäre Testseite `/buchung-test` entfernt -->
 
@@ -49,13 +59,26 @@ Zweck: Öffentliche Seiten für Seminare (Liste/Detail). Liest Daten aus der Str
   `docker compose -f ../docker-compose-dev.yml build --no-cache frontend && docker compose -f ../docker-compose-dev.yml up -d frontend`
 - Logs: `docker compose -f ../docker-compose-dev.yml logs -f frontend`
 
+## PayPal Checkout (Sandbox)
+- Public Client‑ID: `NEXT_PUBLIC_PAYPAL_CLIENT_ID` muss gesetzt sein (sie ist öffentlich; kein Geheimnis).
+- Backend‑ENV: `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_MODE=sandbox`, `PAYPAL_WEBHOOK_ID` (empfohlen).
+- Buttons erscheinen in Schritt 4 immer; AGB/Formular werden beim Klick geprüft.
+- Client nutzt same‑origin `/api/...` für Requests (robust gegen Basis‑URL‑Fehler).
+- `custom_id` in der Order wird intern als `<slug>|<terminId>|<anzahl>` gesetzt.
+- Rabatt: bei gültigem Gutschein werden Gesamtbetrag/Expected‑Capture serverseitig rabattiert.
+
 ## Troubleshooting
 - Alte Anzeige → Browser Hard‑Reload (Cmd/Ctrl+Shift+R). Bei Image‑Betrieb: Rebuild wie oben.
 - SSR 500 → `API_INTERNAL_URL` prüfen (Container‑Name `backend:1337`).
 - Bild fehlt → Seminar hat kein Bild oder Domain nicht freigeschaltet (siehe `next.config.ts`).
-- Checkout/PayPal: Der Online‑Checkout ist aktuell deaktiviert. Hinweise zum künftigen Checkout (Custom ID, return_url/cancel_url, serverseitiger Abschluss) stehen in `backend/README.md`.
+- Checkout/PayPal: Falls Buttons fehlen → Hard‑Reload, Private Window, Ad‑Blocker prüfen. Client‑ID prüfen.
+- 404/HTML nach Zahlung → Requests müssen auf `/api/...` gehen (im Code umgesetzt). 
 
 ## Für Agenten/KI
 - Nur Public‑Endpoints (`/api/public/...`) konsumieren.
 - SSR/CSR‑Basen nicht mischen (siehe `lib/api.ts`).
 - Termin‑Feld heißt `planungsstatus` (nicht `status`).
+- Dieses Checkout‑UI ist Test‑only. Bei einer Neuentwicklung unbedingt beibehalten:
+  - Same‑origin `/api` für Browser‑Calls
+  - `custom_id` mit `<slug>|<terminId>|<anzahl>`
+  - Nach PayPal‑Capture immer serverseitig buchen (Capture verifizieren, `status='bezahlt'`).

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import type { SeminarListItem } from '@/lib/api';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
@@ -50,7 +51,16 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
   );
   const [gutscheincode, setGutscheincode] = useState('');
   const [promo, setPromo] = useState<{ valid: boolean; discount: number; totalBrutto: number } | null>(null);
-  const [agb, setAgb] = useState(false);
+  const [successInfo, setSuccessInfo] = useState<{ id: number; amount: number } | null>(null);
+  const [datenschutz, setDatenschutz] = useState(false);
+  // Auf Wunsch vorab angehakt
+  const [agb, setAgb] = useState(true);
+
+  // API-Basis: same-origin '/api' im Browser, ENV-Fallback serverseitig
+  const apiBase = useMemo(() => {
+    if (typeof window !== 'undefined') return `${window.location.origin}/api`;
+    return process.env.NEXT_PUBLIC_API_URL || '';
+  }, []);
 
   const einzelpreis = Number(termin?.preis || 0);
   const anzahl = teilnehmer.length || 1;
@@ -108,6 +118,10 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
     }
     if (s === 2) {
       return teilnehmer.length > 0 && teilnehmer.every((t) => t.vorname && t.nachname);
+    }
+    if (s === 3) {
+      // Vor Zahlung beide Häkchen verlangen
+      return agb && datenschutz;
     }
     if (s === 4) {
       return agb;
@@ -198,8 +212,37 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
                   {einzelpreis.toFixed(2)} € × {anzahl}
                 </div>
               </div>
+              {/* Teilnehmerliste – kompakt, nummeriert */}
+              <div className="mt-3">
+                <div className="font-medium mb-1">Teilnehmende</div>
+                {teilnehmer.length === 0 ? (
+                  <div className="text-gray-500">Keine Teilnehmenden eingetragen.</div>
+                ) : (
+                  <div className="divide-y border rounded">
+                    {teilnehmer.map((t, i) => (
+                      <div key={i} className="flex items-center justify-between p-3">
+                        <div className="flex items-center gap-3">
+                          <div className="size-6 rounded-full bg-gray-100 border flex items-center justify-center text-xs font-medium">{i + 1}</div>
+                          <div className="text-gray-800 font-medium">{t.vorname} {t.nachname}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {/* Rechtliches */}
+              <div className="mt-3 space-y-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={agb} onChange={(e) => setAgb(e.target.checked)} />
+                  Ich akzeptiere die <a href="/agb" className="underline" target="_blank" rel="noreferrer">Allgemeinen Geschäftsbedingungen</a>.
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={datenschutz} onChange={(e) => setDatenschutz(e.target.checked)} />
+                  Ich habe die <a href="/datenschutz" className="underline" target="_blank" rel="noreferrer">Datenschutzerklärung</a> gelesen und akzeptiere sie.
+                </label>
+              </div>
               <div className="pt-3 mt-3 border-t flex justify-end">
-                <button onClick={goNext} className="inline-flex items-center rounded-md bg-black text-white px-4 py-2 text-sm">Weiter</button>
+                <button onClick={goNext} disabled={!validate(3)} className="inline-flex items-center rounded-md bg-black text-white px-4 py-2 text-sm disabled:opacity-50">Jetzt bezahlen</button>
               </div>
             </div>
           </StepBlock>
@@ -210,12 +253,17 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
                 <input type="checkbox" checked={agb} onChange={(e) => setAgb(e.target.checked)} />
                 Ich akzeptiere die AGB.
               </label>
+              {!validate(1) || !validate(2) ? (
+                <div className="text-xs text-red-600">Bitte Rechnungsadresse und Teilnehmer vollständig ausfüllen.</div>
+              ) : null}
               <PayPalSection
-                enabled={agb && !!paypalClientId}
+                enabled={!!paypalClientId}
                 clientId={paypalClientId}
                 currency={paypalCurrency}
                 amount={gesamt}
                 customId={`${initialSlug || 'seminar'}|${initialTerminId || ''}|${anzahl}`}
+                requireAgb={agb}
+                requireValid={validate(1) && validate(2)}
                 onApprove={async (captureId) => {
                   // Nach erfolgreichem Capture Buchung im Backend anlegen
                   try {
@@ -233,29 +281,52 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
                       land: rechnungstyp === 'firma' ? adresse.land : undefined,
                       teilnehmer: teilnehmer.map(t => ({ vorname: t.vorname, nachname: t.nachname })),
                       agbAkzeptiert: true,
-                      gutscheincode: undefined,
+                      gutscheincode: promo?.valid ? gutscheincode : undefined,
                       paypalCaptureId: captureId,
                     };
-                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/public/buchungen`, {
+                    const tId = initialTerminId || termin?.id;
+                    const res = await fetch(`${apiBase}/public/buchungen`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify(payload),
+                      body: JSON.stringify({ ...payload, terminId: tId }),
                     });
-                    const json = await res.json();
-                    if (!res.ok) throw new Error(json?.error?.message || 'Buchung fehlgeschlagen');
-                    // Erfolg: weiterleiten
-                    window.location.href = `/checkout/erfolg?buchungId=${encodeURIComponent(json.id)}&betrag=${encodeURIComponent(gesamt.toFixed(2))}`;
+                    const ctype = res.headers.get('content-type') || '';
+                    const isJson = ctype.includes('application/json');
+                    const json = isJson ? await res.json() : null;
+                    if (!res.ok) {
+                      const text = !isJson ? await res.text() : '';
+                      throw new Error((json && (json.error?.message || json.message)) || `API ${res.status}: ${text?.slice(0,160)}`);
+                    }
+                    // Erfolg: interner Schritt 5 "Bezahlung erfolgreich"
+                    setSuccessInfo({ id: Number(json.id), amount: gesamt });
+                    setStep(5);
+                    updateQuery(5);
                   } catch (e) {
                     console.error(e);
                     window.location.href = `/checkout/abbruch?grund=${encodeURIComponent((e as Error)?.message || 'Fehler')}`;
                   }
                 }}
               />
-              <div className="flex justify-between">
+              <div className="flex justify-start">
                 <button onClick={goPrev} className="inline-flex items-center rounded-md border px-4 py-2 text-sm">Zurück</button>
-                <button disabled className="inline-flex items-center rounded-md bg-black text-white px-4 py-2 text-sm disabled:opacity-50" title="Wird demnächst aktiviert">
-                  Zahlung starten
-                </button>
+              </div>
+            </div>
+          </StepBlock>
+
+          {/* Schritt 5: Bezahlung erfolgreich */}
+          <StepBlock index={5} title="Bezahlung erfolgreich" active={step === 5} onHeaderClick={() => setStep(5)}>
+            <div className="space-y-3 text-sm">
+              <div className="p-4 border rounded bg-green-50">
+                <div className="text-green-700 font-medium">Zahlung erfolgreich</div>
+                <div className="mt-1 text-green-800">Vielen Dank! Ihre Buchung wurde erfasst.</div>
+              </div>
+              <div className="border rounded p-4 bg-white">
+                <div>Buchungsnummer: <span className="font-medium">{successInfo?.id ?? '–'}</span></div>
+                <div>Gesamtbetrag: <span className="font-medium">{successInfo ? successInfo.amount.toFixed(2) : gesamt.toFixed(2)} €</span></div>
+              </div>
+              <div className="flex gap-3">
+                <Link href="/seminare" className="inline-flex items-center rounded-md bg-black text-white px-4 py-2 text-sm">Zurück zu den Seminaren</Link>
+                <Link href="/" className="inline-flex items-center rounded-md border px-4 py-2 text-sm">Startseite</Link>
               </div>
             </div>
           </StepBlock>
@@ -271,16 +342,17 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
             <div className="mt-1 flex gap-2">
               <input value={gutscheincode} onChange={(e) => setGutscheincode(e.target.value)} placeholder="Code eingeben" className="w-full rounded border px-3 py-2 text-sm" />
               <button className="px-3 py-2 border rounded text-sm" onClick={async () => {
-                if (!initialTerminId) return;
+                const tId = initialTerminId || termin?.id;
+                if (!tId) return;
                 try {
-                  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/public/gutscheine/validate`, {
+                  const res = await fetch(`${apiBase}/public/gutscheine/validate`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ terminId: initialTerminId, anzahl, gutscheincode }),
+                    body: JSON.stringify({ terminId: tId, anzahl, gutscheincode }),
                   });
                   const json = await res.json();
                   if (json?.valid) setPromo({ valid: true, discount: Number(json.rabatt?.betragBrutto || 0), totalBrutto: Number(json.total?.gesamtpreisBrutto || zwischensumme) });
                   else setPromo({ valid: false, discount: 0, totalBrutto: zwischensumme });
-                } catch (_) {
+                } catch {
                   setPromo(null);
                 }
               }}>
@@ -364,10 +436,13 @@ declare global {
   }
 }
 
+type PayPalOnClickActions = { resolve: () => void; reject: () => void };
+
 type PayPalButtonsOptions = {
   style?: Record<string, unknown>;
   createOrder: (data: unknown, actions: { order: { create: (args: Record<string, unknown>) => Promise<string> | string } }) => Promise<string> | string;
   onApprove: (data: unknown, actions: { order: { capture: () => Promise<PayPalCaptureDetails> } }) => void;
+  onClick?: (data: unknown, actions: PayPalOnClickActions) => void;
   onError?: (err: unknown) => void;
   onCancel?: () => void;
 };
@@ -378,7 +453,7 @@ type PayPalCaptureDetails = {
   }>;
 };
 
-function PayPalSection({ enabled, clientId, currency, amount, customId, onApprove }: { enabled: boolean; clientId: string; currency: string; amount: number; customId: string; onApprove: (captureId: string) => void }) {
+function PayPalSection({ enabled, clientId, currency, amount, customId, requireAgb, requireValid, onApprove }: { enabled: boolean; clientId: string; currency: string; amount: number; customId: string; requireAgb: boolean; requireValid: boolean; onApprove: (captureId: string) => void }) {
   const [error, setError] = useState<string | null>(null);
 
   // SDK Script laden und Buttons mounten
@@ -397,8 +472,17 @@ function PayPalSection({ enabled, clientId, currency, amount, customId, onApprov
       if (window.paypal?.Buttons) {
         clearInterval(iv);
         try {
+          const mount = document.getElementById('paypal-buttons');
+          if (mount) mount.innerHTML = '';
           window.paypal!.Buttons({
             style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
+            onClick: (_data, actions: PayPalOnClickActions) => {
+              if (!requireValid || !requireAgb) {
+                alert('Bitte Formular vervollständigen und AGB akzeptieren.');
+                return actions.reject();
+              }
+              return actions.resolve();
+            },
             createOrder: (_data, actions) => {
               return actions.order.create({
                 intent: 'CAPTURE',
@@ -431,7 +515,7 @@ function PayPalSection({ enabled, clientId, currency, amount, customId, onApprov
       }
     }, 150);
     return () => clearInterval(iv);
-  }, [enabled, clientId, currency, amount, customId, onApprove]);
+  }, [enabled, clientId, currency, amount, customId, onApprove, requireAgb, requireValid]);
 
   if (!enabled) {
     return (

@@ -35,6 +35,11 @@ Zweck: Headless‑CMS und API für Seminare, Termine, Buchungen, Orte, Kunden, G
 - GET `/api/public/seminare/:slug` → Detail eines Seminars
   - Routen/Controller: `src/api/seminar/routes/public.ts`, `src/api/seminar/controllers/seminar.ts`
 
+Ergänzende Public‑Endpoints (Checkout/Test):
+- POST `/api/public/buchungen` → Buchung anlegen (optional mit `paypalCaptureId`)
+- POST `/api/public/gutscheine/validate` → Gutschein prüfen und Totale (brutto) berechnen
+- GET  `/api/public/buchungen/:id` → Buchung minimal lesen (Status/Summen)
+
 Beispieltests:
 ```
 curl -s http://localhost:1337/api/public/seminare | jq '.[0]'
@@ -108,7 +113,7 @@ curl -s http://localhost:1337/api/public/seminare/einfuhrung-in-die-weinwelt | j
   - Preise/MwSt werden serverseitig berechnet; Client darf keine Preisfelder setzen. Grundlage ist der Terminpreis.
     - Hinweis: Es gibt Seminare ohne MwSt. (`mitMwst=false`). Die Steuerlogik (Satz/Brutto/Netto) wird im Backend bestimmt.
 - PayPal (optional):
-  - `paypalCaptureId`: Wenn vorhanden, wird die Capture serverseitig verifiziert (Status=COMPLETED, `currency_code='EUR'`, Betrag = Terminpreis × `anzahl`). Nur dann wird `status='bezahlt'` gesetzt.
+  - `paypalCaptureId`: Wenn vorhanden, wird die Capture serverseitig verifiziert (Status=COMPLETED, `currency_code='EUR'`, Betrag = Terminpreis × `anzahl` abzüglich Rabatt). Nur dann wird `status='bezahlt'` gesetzt und `zahlungsmethode='paypal'` gespeichert.
   - `paypalOrderId`: Alternativ kann eine Order‑ID übergeben werden. Die Order wird serverseitig gelesen; `custom_id` sollte `"<slug>|<terminId>|<anzahl>"` enthalten, um Termin/Anzahl sicher zuzuordnen. Die Buchung bleibt ohne Capture vorerst `status='offen'` und wird durch Webhook bestätigt.
 
 Beispiel (Privat, 1 TN, ohne PayPal):
@@ -133,7 +138,12 @@ curl -s -X POST http://localhost:1337/api/public/buchungen \
 - Verarbeitung `PAYMENT.CAPTURE.COMPLETED`:
   - Ermittelt `captureId` aus `resource`.
   - Sucht Buchung per `zahlungsreferenz`/`paypalCaptureId`.
-  - Betrag/Währung werden gegen die Buchung geprüft (`EUR`, Betrag==Gesamtsumme). Nur dann `status='bezahlt'`, `zahlungsmethode='paypal'`.
+  - Betrag/Währung werden gegen die Buchung geprüft (`EUR`, Betrag==Gesamtsumme inkl. Rabatt). Nur dann `status='bezahlt'`, `zahlungsmethode='paypal'`.
+
+Hinweise für Integration/Robustheit:
+- Browser erstellt eine Order und führt `actions.order.capture()` aus; der Abschluss erfolgt IMMER serverseitig über `POST /api/public/buchungen` mit `paypalCaptureId`.
+- Für Fallbacks (Tab geschlossen, Netzwerk) Webhook auf die App registrieren (gleiche Client‑ID wie im Checkout) und `PAYPAL_WEBHOOK_ID` setzen.
+- Idempotenz empfohlen: Capture‑ID (`zahlungsreferenz`) nur einmal verbuchen (Unique‑Constraint/Guard).
 
 Frontend/Checkout‑Hinweise (falls wieder aktiviert):
 - PayPal‑Order sollte `custom_id` setzen: `"<slug>|<terminId>|<anzahl>"`.

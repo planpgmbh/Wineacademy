@@ -19,7 +19,8 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Sea
 
   let seminar: SeminarListItem | null = null;
   let termin: TerminItem | null = null;
-  const paypalClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || process.env.PAYPAL_CLIENT_ID || '';
+  // Bevorzugt die serverseitige PAYPAL_CLIENT_ID (zuverlässig im Container gesetzt)
+  const paypalClientId = process.env.PAYPAL_CLIENT_ID || process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || '';
   const paypalCurrency = process.env.NEXT_PUBLIC_PAYPAL_CURRENCY || 'EUR';
 
   if (slug && Number.isFinite(terminId)) {
