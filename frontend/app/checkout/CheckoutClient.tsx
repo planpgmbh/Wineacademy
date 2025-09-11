@@ -53,6 +53,15 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
   const [gutscheincode, setGutscheincode] = useState('');
   const [promo, setPromo] = useState<{ valid: boolean; discount: number; totalBrutto: number } | null>(null);
   const [successInfo, setSuccessInfo] = useState<{ id: number; amount: number } | null>(null);
+  const [successBuchung, setSuccessBuchung] = useState<{
+    id: number;
+    status: string;
+    zahlungsmethode?: string | null;
+    anzahl: number;
+    gesamtpreisBrutto: number;
+    gesamtpreisNetto?: number;
+    gesamtsteuerBetrag?: number;
+  } | null>(null);
   const [datenschutz, setDatenschutz] = useState(false);
   const [newsletter, setNewsletter] = useState(false);
   // Auf Wunsch vorab angehakt
@@ -74,10 +83,10 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
   const anzahl = teilnehmer.length || 1;
   const zwischensumme = useMemo(() => Number((einzelpreis * anzahl).toFixed(2)), [einzelpreis, anzahl]);
   const gesamtAnzeige = promo?.valid ? promo.totalBrutto : zwischensumme;
-  const steuerSchaetzung = useMemo(() => {
-    const mwst = seminar?.mitMwst !== false; // default: true
-    return mwst ? Number(((zwischensumme / 1.19) * 0.19).toFixed(2)) : 0;
-  }, [zwischensumme, seminar?.mitMwst]);
+  const mwstAktiv = seminar?.mitMwst !== false; // default: true (MwSt aktiv), false = ohne MwSt
+  // Netto/MwSt auf Basis der aktuellen Anzeige (inkl. Rabatt)
+  const nettoAnzeige = useMemo(() => (mwstAktiv ? Number((gesamtAnzeige / 1.19).toFixed(2)) : Number(gesamtAnzeige.toFixed(2))), [mwstAktiv, gesamtAnzeige]);
+  const steuerAnzeige = useMemo(() => (mwstAktiv ? Number((gesamtAnzeige - nettoAnzeige).toFixed(2)) : 0), [mwstAktiv, gesamtAnzeige, nettoAnzeige]);
   const gesamt = gesamtAnzeige; // Preise sind im Backend standardmäßig brutto; hier Anzeige als Brutto
 
   type BookingPayload = {
@@ -86,7 +95,9 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
     vorname: string;
     nachname: string;
     email?: string;
+    telefon?: string;
     firmenname?: string;
+    ustId?: string;
     rechnungsEmail?: string;
     strasse?: string;
     plz?: string;
@@ -127,7 +138,8 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
       if (rechnungstyp === 'privat') {
         return !!adresse.vorname && !!adresse.nachname && !!adresse.email;
       }
-      return !!adresse.firmenname && !!adresse.rechnungsEmail && !!adresse.strasse && !!adresse.plz && !!adresse.stadt && !!adresse.land;
+      // Firma: zusätzlich Vorname/Nachname der Kontaktperson verlangen (Frontend-Pflicht)
+      return !!adresse.firmenname && !!adresse.vorname && !!adresse.nachname && !!adresse.rechnungsEmail && !!adresse.strasse && !!adresse.plz && !!adresse.stadt && !!adresse.land;
     }
     if (s === 2) {
       return teilnehmer.length > 0 && teilnehmer.every((t) => t.vorname && t.nachname);
@@ -301,12 +313,15 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
                       vorname: adresse.vorname,
                       nachname: adresse.nachname,
                       email: rechnungstyp === 'privat' ? adresse.email : undefined,
+                      telefon: adresse.telefon || undefined,
                       firmenname: rechnungstyp === 'firma' ? adresse.firmenname : undefined,
+                      ustId: rechnungstyp === 'firma' ? adresse.ustId : undefined,
                       rechnungsEmail: rechnungstyp === 'firma' ? adresse.rechnungsEmail : undefined,
-                      strasse: rechnungstyp === 'firma' ? adresse.strasse : undefined,
-                      plz: rechnungstyp === 'firma' ? adresse.plz : undefined,
-                      stadt: rechnungstyp === 'firma' ? adresse.stadt : undefined,
-                      land: rechnungstyp === 'firma' ? adresse.land : undefined,
+                      // Adresse immer mitsenden (privat optional, firma Pflicht)
+                      strasse: adresse.strasse || undefined,
+                      plz: adresse.plz || undefined,
+                      stadt: adresse.stadt || undefined,
+                      land: adresse.land || undefined,
                       teilnehmer: teilnehmer.map(t => ({
                         vorname: t.vorname,
                         nachname: t.nachname,
@@ -335,7 +350,16 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
                       throw new Error((json && (json.error?.message || json.message)) || `API ${res.status}: ${text?.slice(0,160)}`);
                     }
                     // Erfolg: interner Schritt 5 "Bezahlung erfolgreich"
-                    setSuccessInfo({ id: Number(json.id), amount: gesamt });
+                    const newId = Number(json.id);
+                    setSuccessInfo({ id: newId, amount: gesamt });
+                    // Totale aus dem Backend nachladen (inkl. MwSt-/Netto-Breakdown)
+                    try {
+                      const sumRes = await fetch(`${apiBase}/public/buchungen/${newId}`);
+                      if (sumRes.ok) {
+                        const sumJson = await sumRes.json();
+                        setSuccessBuchung(sumJson);
+                      }
+                    } catch {}
                     setStep(5);
                     updateQuery(5);
                   } catch (e) {
@@ -365,11 +389,32 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
                 <ul className="list-disc pl-5 text-gray-800">
                   {teilnehmer.map((t, i) => (<li key={i}>{t.vorname} {t.nachname}{t.email?` · ${t.email}`:''}</li>))}
                 </ul>
-                <div className="pt-2 border-t mt-2 flex justify-between"><span>Gesamt</span><span className="font-medium">{(successInfo ? successInfo.amount : gesamt).toFixed(2)} €</span></div>
+                {/* Summen aus Backend (falls verfügbar), sonst Fallback */}
+                <div className="pt-2 border-t mt-2 space-y-1">
+                  {successBuchung?.gesamtpreisNetto != null && successBuchung?.gesamtsteuerBetrag != null ? (
+                    <>
+                      <div className="flex justify-between"><span>Netto</span><span>{successBuchung.gesamtpreisNetto.toFixed(2)} €</span></div>
+                      <div className="flex justify-between"><span>MwSt</span><span>{successBuchung.gesamtsteuerBetrag.toFixed(2)} €</span></div>
+                      <div className="flex justify-between font-medium"><span>Gesamt (inkl. MwSt)</span><span>{successBuchung.gesamtpreisBrutto.toFixed(2)} €</span></div>
+                    </>
+                  ) : (
+                    <div className="flex justify-between font-medium"><span>Gesamt</span><span>{(successInfo ? successInfo.amount : gesamt).toFixed(2)} €</span></div>
+                  )}
+                </div>
               </div>
               <div className="border rounded p-4 bg-white">
                 <div>Buchungsnummer: <span className="font-medium">{successInfo?.id ?? '–'}</span></div>
-                <div>Gesamtbetrag: <span className="font-medium">{successInfo ? successInfo.amount.toFixed(2) : gesamt.toFixed(2)} €</span></div>
+                {successBuchung ? (
+                  <>
+                    {successBuchung.gesamtsteuerBetrag && successBuchung.gesamtsteuerBetrag > 0 ? (
+                      <div>Gesamtbetrag (inkl. MwSt): <span className="font-medium">{successBuchung.gesamtpreisBrutto.toFixed(2)} €</span></div>
+                    ) : (
+                      <div>Gesamtbetrag (ohne MwSt): <span className="font-medium">{successBuchung.gesamtpreisBrutto.toFixed(2)} €</span></div>
+                    )}
+                  </>
+                ) : (
+                  <div>Gesamtbetrag: <span className="font-medium">{successInfo ? successInfo.amount.toFixed(2) : gesamt.toFixed(2)} €</span></div>
+                )}
               </div>
               <div className="flex gap-3">
                 <Link href="/seminare" className="inline-flex items-center rounded-md bg-black text-white px-4 py-2 text-sm">Zurück zu den Seminaren</Link>
@@ -425,13 +470,16 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
             </div>
             <div className="p-4 text-sm space-y-1">
               <Row label="Zwischensumme" value={`${zwischensumme.toFixed(2)} €`} />
-              {seminar?.mitMwst !== false && (
-                <Row label="Steuer (geschätzt)" value={`${steuerSchaetzung.toFixed(2)} €`} />
-              )}
               {promo?.valid && <Row label="Rabatt" value={`−${promo.discount.toFixed(2)} €`} />}
+              {mwstAktiv && (
+                <>
+                  <Row label="Netto (geschätzt)" value={`${nettoAnzeige.toFixed(2)} €`} />
+                  <Row label="MwSt (geschätzt)" value={`${steuerAnzeige.toFixed(2)} €`} />
+                </>
+              )}
             </div>
             <div className="p-4 text-sm flex justify-between font-semibold">
-              <span>Gesamt</span>
+              <span>{mwstAktiv ? 'Gesamt (inkl. MwSt)' : 'Gesamt (ohne MwSt)'}</span>
               <span>{gesamtAnzeige.toFixed(2)} €</span>
             </div>
           </div>
