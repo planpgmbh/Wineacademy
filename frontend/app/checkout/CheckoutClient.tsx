@@ -193,13 +193,13 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
                   <TextInput className="sm:col-span-2" label="Firmenname*" value={adresse.firmenname} onChange={(v) => setAdresse({ ...adresse, firmenname: v })} />
                   <TextInput label="Vorname*" value={adresse.vorname} onChange={(v) => setAdresse({ ...adresse, vorname: v })} />
                   <TextInput label="Nachname*" value={adresse.nachname} onChange={(v) => setAdresse({ ...adresse, nachname: v })} />
-                  <TextInput className="sm:col-span-2" label="USt‑ID" value={adresse.ustId} onChange={(v) => setAdresse({ ...adresse, ustId: v })} />
                   <TextInput className="sm:col-span-2" label="Straße*" value={adresse.strasse} onChange={(v) => setAdresse({ ...adresse, strasse: v })} />
                   <TextInput label="PLZ*" value={adresse.plz} onChange={(v) => setAdresse({ ...adresse, plz: v })} />
                   <TextInput label="Stadt*" value={adresse.stadt} onChange={(v) => setAdresse({ ...adresse, stadt: v })} />
                   <TextInput label="Land*" value={adresse.land} onChange={(v) => setAdresse({ ...adresse, land: v })} />
                   <TextInput className="sm:col-span-2" label="Rechnungs‑E‑Mail*" type="email" value={adresse.rechnungsEmail} onChange={(v) => setAdresse({ ...adresse, rechnungsEmail: v })} />
                   <TextInput className="sm:col-span-2" label="Telefon" value={adresse.telefon} onChange={(v) => setAdresse({ ...adresse, telefon: v })} />
+                  <TextInput className="sm:col-span-2" label="USt‑ID" value={adresse.ustId} onChange={(v) => setAdresse({ ...adresse, ustId: v })} />
                 </>
               )}
             </div>
