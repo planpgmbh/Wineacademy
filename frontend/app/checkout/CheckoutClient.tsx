@@ -395,27 +395,14 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
                     <>
                       <div className="flex justify-between"><span>Netto</span><span>{successBuchung.gesamtpreisNetto.toFixed(2)} €</span></div>
                       <div className="flex justify-between"><span>MwSt</span><span>{successBuchung.gesamtsteuerBetrag.toFixed(2)} €</span></div>
-                      <div className="flex justify-between font-medium"><span>Gesamt (inkl. MwSt)</span><span>{successBuchung.gesamtpreisBrutto.toFixed(2)} €</span></div>
+                      <div className="flex justify-between font-semibold"><span>Gesamt (inkl. MwSt)</span><span>{successBuchung.gesamtpreisBrutto.toFixed(2)} €</span></div>
                     </>
                   ) : (
-                    <div className="flex justify-between font-medium"><span>Gesamt</span><span>{(successInfo ? successInfo.amount : gesamt).toFixed(2)} €</span></div>
+                    <div className="flex justify-between font-semibold"><span>Gesamt</span><span>{(successInfo ? successInfo.amount : gesamt).toFixed(2)} €</span></div>
                   )}
                 </div>
               </div>
-              <div className="border rounded p-4 bg-white">
-                <div>Buchungsnummer: <span className="font-medium">{successInfo?.id ?? '–'}</span></div>
-                {successBuchung ? (
-                  <>
-                    {successBuchung.gesamtsteuerBetrag && successBuchung.gesamtsteuerBetrag > 0 ? (
-                      <div>Gesamtbetrag (inkl. MwSt): <span className="font-medium">{successBuchung.gesamtpreisBrutto.toFixed(2)} €</span></div>
-                    ) : (
-                      <div>Gesamtbetrag (ohne MwSt): <span className="font-medium">{successBuchung.gesamtpreisBrutto.toFixed(2)} €</span></div>
-                    )}
-                  </>
-                ) : (
-                  <div>Gesamtbetrag: <span className="font-medium">{successInfo ? successInfo.amount.toFixed(2) : gesamt.toFixed(2)} €</span></div>
-                )}
-              </div>
+              {/* Zusätzliche Box (Buchungsnummer/Gesamtbetrag) entfernt auf Wunsch */}
               <div className="flex gap-3">
                 <Link href="/seminare" className="inline-flex items-center rounded-md bg-black text-white px-4 py-2 text-sm">Zurück zu den Seminaren</Link>
                 <Link href="/" className="inline-flex items-center rounded-md border px-4 py-2 text-sm">Startseite</Link>
@@ -473,8 +460,8 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
               {promo?.valid && <Row label="Rabatt" value={`−${promo.discount.toFixed(2)} €`} />}
               {mwstAktiv && (
                 <>
-                  <Row label="Netto (geschätzt)" value={`${nettoAnzeige.toFixed(2)} €`} />
-                  <Row label="MwSt (geschätzt)" value={`${steuerAnzeige.toFixed(2)} €`} />
+                  <Row label="Netto" value={`${nettoAnzeige.toFixed(2)} €`} />
+                  <Row label="MwSt" value={`${steuerAnzeige.toFixed(2)} €`} />
                 </>
               )}
             </div>
