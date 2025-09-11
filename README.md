@@ -114,9 +114,8 @@ Troubleshooting:
   - Frontend: `docker compose -f docker-compose-dev.yml build --no-cache frontend && docker compose -f docker-compose-dev.yml up -d frontend`
   - Backend:  `docker compose -f docker-compose-dev.yml build --no-cache backend  && docker compose -f docker-compose-dev.yml up -d backend`
 
-- Seeds (nur einmalig zum Befüllen):
-  - `.env` temporär: `SEED=true` (optional `SEED_RESET=true`), dann starten
-  - Danach wieder deaktivieren (`SEED=false`) damit es nicht erneut läuft
+- Seeding & Reset:
+  - Bitte `docs/SEEDING.md` folgen (Schritt‑für‑Schritt: Kategorien → Orte → Seminare → Termine mit Verknüpfungen).
 
 - API‑Basis im Frontend:
   - SSR: `API_INTERNAL_URL=http://backend:1337`
@@ -295,10 +294,10 @@ Hinweise:
 ## Weitere Doku
 
 - Frontend: `frontend/README.md` – Start/HMR, API‑Basen (SSR/CSR), Seiten, Bilder, Troubleshooting, Hinweise für Agenten/KI
-- Backend: `backend/README.md` – Datenmodell, Public‑APIs, Seeds, Lifecycles, Admin‑Hinweise, Logs
+- Backend: `backend/README.md` – Datenmodell, Public‑APIs, Lifecycles, Admin‑Hinweise, Logs (Seeding/Reset: `docs/Reset_and_filldb.md`)
 
 ### Für Agenten/KI – Init‑Snippet (zum Kopieren)
 
-> Lies und befolge zuerst diese Root‑`README.md` (Docker Desktop, Compose, Ports/Routing) und die README im relevanten Teilprojekt (`frontend/README.md` oder `backend/README.md`). Verwende Docker Desktop (Kontext `desktop-linux`). Starte über `docker compose -f docker-compose-dev.yml up -d <service>`. Nenne vor Änderungen einen kurzen Plan (2–5 Schritte) und die Befehle/Tests, die du ausführst. Halte dich an die Public‑APIs und die in den READMEs beschriebenen Konventionen (z. B. `planungsstatus`, API‑Basen SSR/CSR, `mediaUrl()` für Bilder) Antworte immer in Deutsch.
+Aufgabe:
 
-Ziel: 
+Deine Rolle: Lies und befolge zuerst diese Root‑`README.md` (Docker Desktop, Compose, Ports/Routing) und die README im relevanten Teilprojekt (`frontend/README.md` oder `backend/README.md`). Verwende Docker Desktop (Kontext `desktop-linux`). Starte über `docker compose -f docker-compose-dev.yml up -d <service>`. Nenne vor Änderungen einen kurzen Plan (2–5 Schritte) und die Befehle/Tests, die du ausführst. Halte dich an die Public‑APIs und die in den READMEs beschriebenen Konventionen (z. B. `planungsstatus`, API‑Basen SSR/CSR, `mediaUrl()` für Bilder) Antworte immer in Deutsch.

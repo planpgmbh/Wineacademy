@@ -32,6 +32,7 @@
       "type": "decimal",
       "default": 0
     },
+    "mitMwst": { "type": "boolean", "default": true },
     "standardKapazitaetProTermin": { "type": "integer" },
     "bild": {
       "type": "media",
@@ -48,6 +49,12 @@
       "target": "api::termin.termin",
       "mappedBy": "seminar"
     }
-    
+    ,
+    "kategorien": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::kategorie.kategorie",
+      "inversedBy": "seminare"
+    }
   }
 }

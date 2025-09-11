@@ -14,10 +14,21 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
       const code = String(body?.gutscheincode || '').trim();
       if (!Number.isFinite(terminId)) return ctx.badRequest('Ungültiger Termin');
 
-      const termin = await strapi.db.query('api::termin.termin').findOne({ where: { id: terminId }, select: ['preis'] });
-      if (!termin || !Number.isFinite(Number(termin.preis))) return ctx.badRequest('Ungültiger Termin');
+      // Termin lesen; falls kein Preis gesetzt ist (z. B. historisch), auf Seminar.standardPreis zurückfallen
+      let stueck = 0;
+      const termin = await strapi.db.query('api::termin.termin').findOne({
+        where: { id: terminId },
+        select: ['preis'],
+        populate: { seminar: { select: ['standardPreis'] } },
+      });
+      if (!termin) return ctx.badRequest('Ungültiger Termin');
+      stueck = Number(termin.preis);
+      if (!Number.isFinite(stueck) || stueck <= 0) {
+        const std = Number((termin as any)?.seminar?.standardPreis);
+        if (Number.isFinite(std) && std > 0) stueck = std;
+      }
+      if (!Number.isFinite(stueck) || stueck <= 0) return ctx.badRequest('Ungültiger Termin');
 
-      const stueck = Number(termin.preis);
       const origTotal = round2(stueck * anzahl);
 
       let rabatt = 0;
@@ -40,7 +51,19 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
         });
       }
 
-      const v = await strapi.db.query('api::gutschein.gutschein').findOne({ where: { code }, select: ['typ', 'wert', 'aktiv', 'gueltigAb', 'gueltigBis'] });
+      // Code fallunabhängig (case-insensitive) prüfen
+      const codeUpper = code.toUpperCase();
+      const codeLower = code.toLowerCase();
+      const v = await strapi.db.query('api::gutschein.gutschein').findOne({
+        where: {
+          $or: [
+            { code },
+            { code: codeUpper },
+            { code: codeLower },
+          ] as any,
+        },
+        select: ['typ', 'wert', 'aktiv', 'gueltigAb', 'gueltigBis'],
+      });
       const today = new Date().toISOString().slice(0, 10);
       const isActive = !!v?.aktiv && (!v.gueltigAb || v.gueltigAb <= today) && (!v.gueltigBis || v.gueltigBis >= today);
       if (!v || !isActive) {
@@ -74,4 +97,3 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
     }
   },
 }));
-

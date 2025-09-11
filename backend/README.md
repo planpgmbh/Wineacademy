@@ -1,8 +1,8 @@
 ### Init‑Prompt (zum Kopieren)
 
-> Du arbeitest NUR am Backend in `backend/`. Lies und befolge zuerst `backend/README.md` (Datenmodell, Public‑APIs, Seeds, Lifecycles, Admin‑Hinweise) und die Root‑`README.md` (Docker Desktop, Compose, Ports/Routing). Starte/prüfe: `docker compose -f ../docker-compose-dev.yml up -d backend`. Nutze die Public‑Endpoints, keine direkten internen Services für das Frontend. Mache einen kurzen Plan (2–5 Schritte) und liste die Befehle/curl‑Tests, die du ausführst, bevor du Änderungen machst. Wenn das Backend aktuell nicht über Docker läuft, starte das Backend. Wenn du eine Änderung am backend vorgenommen hast öffne die seite bei mir im browser. Antworte immer in deutsch.
+Aufgabe:
 
-Ziel:
+Deine Rolle: Du arbeitest NUR am Backend in `backend/`. Lies und befolge zuerst `backend/README.md` (Datenmodell, Public‑APIs, Lifecycles, Admin‑Hinweise) und die Root‑`README.md` (Docker Desktop, Compose, Ports/Routing). Für Seeding/Reset befolge `docs/Reset_and_filldb.md`. Starte/prüfe: `docker compose -f ../docker-compose-dev.yml up -d backend`. oder `docker compose -f ../docker-compose-staging.yml up -d backend` Nutze die Public‑Endpoints, keine direkten internen Services für das Frontend. Mache einen kurzen Plan und liste die Befehle/curl‑Tests, die du ausführst, bevor du Änderungen machst. Wenn das Backend aktuell nicht über Docker läuft, starte das Backend. Wenn du eine Änderung am backend vorgenommen hast öffne die seite bei mir im browser. Antworte immer in deutsch. 
 
 # Backend (Strapi 5) – Wine Academy
 
@@ -22,7 +22,7 @@ Zweck: Headless‑CMS und API für Seminare, Termine, Buchungen, Orte, Kunden, G
   - Seminar (Name, Slug, Beschreibungen, Bild, Standardpreis, aktiv)
   - Termin (titel, planungsstatus: geplant/ausgebucht/abgesagt, preis, kapazitaet, tage[], seminar, ort)
   - Ort (Standort/Adresse/Typ)
-  - Buchung (Kundendaten, anzahl, preise, status)
+- Buchung (Kundendaten, anzahl, preise, buchungsstatus)
   - Kunde, Gutschein
 - Komponente: `termin.seminartag` (datum, startzeit, endzeit) – Defaultzeiten: 10:00–17:00
 - Relationen: Seminar ↔ Termine (1:n), Termin → Ort (n:1), Buchung → Termin/Kunde (n:1)
@@ -46,9 +46,10 @@ curl -s http://localhost:1337/api/public/seminare | jq '.[0]'
 curl -s http://localhost:1337/api/public/seminare/einfuhrung-in-die-weinwelt | jq
 ```
 
-## Seeds
-- Einmalig befüllen: in Root‑`.env` `SEED=true` (optional `SEED_RESET=true`) setzen und Stack starten.
-- Danach wieder auf `false`/entfernen, damit Seeds nicht erneut laufen.
+## Seeding & Reset
+– Für das Befüllen/Zurücksetzen der Datenbank folge der Schritt‑für‑Schritt‑Anleitung in `../docs/Reset_and_filldb.md`.
+- Wichtig für Agenten/KI: Wenn du „Seed‑Prozess starten“ oder „Datenbank zurücksetzen“ liest, öffne `docs/Reset_and_filldb.md` und führe die dort beschriebenen Schritte aus.
+- Admin: Beim ersten Start wird automatisch ein Admin angelegt, falls keiner existiert (Standard: Email `philipp@plan-p.de`, Name `Philipp`, Passwort `AdRnuh1`).
 
 ## Umgebungsvariablen (Auszug)
 - DB: `DATABASE_*` (Host über Compose gesetzt)
@@ -58,7 +59,7 @@ curl -s http://localhost:1337/api/public/seminare/einfuhrung-in-die-weinwelt | j
 
 ## Admin‑Hinweise
 - Nach Schema‑Änderungen ggf. Content‑Manager → Configure → „Reset to default“, damit neue Felder (z. B. `planungsstatus`) in der Maske sind.
-- Feldname `status` vermeiden (Kollision mit internem Publikationsstatus); wir nutzen `planungsstatus`.
+- Feldname `status` vermeiden (Kollision mit internem Publikationsstatus); wir nutzen `planungsstatus` (Termin) bzw. `buchungsstatus` (Buchung).
 
 ## Deployment (kurz)
 - Über Root‑Compose + Traefik: `/` → Frontend, `/api` → Backend (kein StripPrefix), `/uploads` → Backend, `/admin` → Backend. Details siehe Projekt‑README.
@@ -67,36 +68,13 @@ curl -s http://localhost:1337/api/public/seminare/einfuhrung-in-die-weinwelt | j
 - Admin‑URL: Optional `ADMIN_PUBLIC_URL` setzen (Default `/admin`). In Staging bleibt das Admin‑Panel unter `https://wineacademy.plan-p.de/admin` erreichbar.
 - CORS: Optional `CORS_ORIGINS` als Liste setzen, z. B. `CORS_ORIGINS=['https://wineacademy.plan-p.de']`. Standard ist `*`.
 - Uploads/Routing: Kein StripPrefix. API unter `/api`, Uploads unter `/uploads`. Das Frontend erwartet `NEXT_PUBLIC_ASSETS_URL` ohne `/api`.
-- Seeds: Für initiale Demodaten in Staging `SEED=true` (optional `SEED_RESET=true`) setzen, Stack starten, danach wieder deaktivieren, damit Seeds nicht erneut laufen.
+- Seeds: Nicht mehr über ENV‑Flags. Bitte `docs/Reset_and_filldb.md` befolgen.
 
 ## Für Agenten/KI
-- Bitte zuerst diese Datei vollständig lesen (Datenmodell, Public‑API, Seeds, Lifecycles) und anschließend die Root‑`README.md` (Docker Desktop, Compose, Ports/Routing).
+- Bitte zuerst diese Datei vollständig lesen (Datenmodell, Public‑API, Lifecycles) und anschließend die Root‑`README.md` (Docker Desktop, Compose, Ports/Routing).
+- Seeding/Reset immer gemäß `docs/Reset_and_filldb.md` durchführen (kein Autoseed).
 - Nur Public‑Endpoints erweitern oder konsumieren (`/api/public/seminare`, `/api/public/seminare/:slug`), keine Breaking Changes am Schema ohne View‑Reset‑Hinweis.
 - Feld `planungsstatus` statt `status` verwenden.
-
-## Reset & Neuinstallation (kurz)
-
-- Lokal – Komplett zurücksetzen und neu seeden:
-  - Hinweis: `down -v` löscht auch das DB-Volume vollständig (frische DB beim nächsten Start)
-  - `docker compose -f ../docker-compose-dev.yml down -v`
-  - Optional nur DB-Reset (Schema leeren, ohne Container zu löschen):
-    - `docker compose -f ../docker-compose-dev.yml exec db_dev psql -U $POSTGRES_USER -d $POSTGRES_DB -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"`
-  - In `.env`: `SEED=true` (optional `SEED_RESET=true`)
-  - `docker compose -f ../docker-compose-dev.yml up -d --build backend`
-  - Prüfen: `docker compose -f ../docker-compose-dev.yml logs -f backend`
-  - Tests: `curl -s http://localhost:1337/api/public/seminare | jq '.[0]'`
-  - In `.env`: `SEED=false`/Variablen entfernen, dann: `docker compose -f ../docker-compose-dev.yml up -d backend`
-
-- Staging – Komplett zurücksetzen und neu seeden:
-  - Hinweis: `down -v` löscht auch das DB-Volume vollständig (frische DB und Uploads beim nächsten Start)
-  - `docker compose -f docker-compose-staging.yml down -v`
-  - Optional nur DB-Reset (Schema leeren, ohne Container zu löschen):
-    - `docker compose -f docker-compose-staging.yml exec db_staging psql -U $POSTGRES_USER -d $POSTGRES_DB -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"`
-  - In `.env.staging`: `SEED=true` (optional `SEED_RESET=true`), `PUBLIC_URL=https://wineacademy.plan-p.de`
-  - `docker compose -f docker-compose-staging.yml up -d --build`
-  - Prüfen: `docker compose -f docker-compose-staging.yml logs -f backend-staging`
-  - Tests: `curl -s https://wineacademy.plan-p.de/api/public/seminare | jq '.[0]'`
-  - In `.env.staging`: `SEED=false`/Variablen entfernen, dann: `docker compose -f docker-compose-staging.yml up -d backend-staging`
 
 ## Buchungen (Public‑Endpoint)
 

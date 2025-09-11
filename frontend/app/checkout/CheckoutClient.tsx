@@ -40,6 +40,7 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
     email: '',
     telefon: '',
     firmenname: '',
+    ustId: '',
     rechnungsEmail: '',
     strasse: '',
     plz: '',
@@ -53,6 +54,7 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
   const [promo, setPromo] = useState<{ valid: boolean; discount: number; totalBrutto: number } | null>(null);
   const [successInfo, setSuccessInfo] = useState<{ id: number; amount: number } | null>(null);
   const [datenschutz, setDatenschutz] = useState(false);
+  const [newsletter, setNewsletter] = useState(false);
   // Auf Wunsch vorab angehakt
   const [agb, setAgb] = useState(true);
 
@@ -62,11 +64,20 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
     return process.env.NEXT_PUBLIC_API_URL || '';
   }, []);
 
-  const einzelpreis = Number(termin?.preis || 0);
+  const einzelpreis = useMemo(() => {
+    const tp = termin?.preis;
+    if (typeof tp === 'number' && Number.isFinite(tp)) return Number(tp);
+    const sp = seminar?.standardPreis;
+    if (typeof sp === 'number' && Number.isFinite(Number(sp))) return Number(sp);
+    return 0;
+  }, [termin?.preis, seminar?.standardPreis]);
   const anzahl = teilnehmer.length || 1;
   const zwischensumme = useMemo(() => Number((einzelpreis * anzahl).toFixed(2)), [einzelpreis, anzahl]);
   const gesamtAnzeige = promo?.valid ? promo.totalBrutto : zwischensumme;
-  const steuerSchaetzung = useMemo(() => Number(((zwischensumme / 1.19) * 0.19).toFixed(2)), [zwischensumme]);
+  const steuerSchaetzung = useMemo(() => {
+    const mwst = seminar?.mitMwst !== false; // default: true
+    return mwst ? Number(((zwischensumme / 1.19) * 0.19).toFixed(2)) : 0;
+  }, [zwischensumme, seminar?.mitMwst]);
   const gesamt = gesamtAnzeige; // Preise sind im Backend standardmäßig brutto; hier Anzeige als Brutto
 
   type BookingPayload = {
@@ -83,7 +94,9 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
     land?: string;
     teilnehmer: Array<{ vorname: string; nachname: string }>;
     agbAkzeptiert: boolean;
+    datenschutzGelesen?: boolean;
     gutscheincode?: string;
+    newsletterOptIn?: boolean;
     paypalCaptureId?: string;
   };
 
@@ -152,18 +165,29 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <TextInput label="Vorname*" value={adresse.vorname} onChange={(v) => setAdresse({ ...adresse, vorname: v })} />
-              <TextInput label="Nachname*" value={adresse.nachname} onChange={(v) => setAdresse({ ...adresse, nachname: v })} />
-              <TextInput className="sm:col-span-2" label="E‑Mail*" type="email" value={adresse.email} onChange={(v) => setAdresse({ ...adresse, email: v })} hidden={rechnungstyp === 'firma'} />
-              {/* Firmenfelder */}
-              {rechnungstyp === 'firma' && (
+              {rechnungstyp === 'privat' ? (
+                <>
+                  <TextInput label="Vorname*" value={adresse.vorname} onChange={(v) => setAdresse({ ...adresse, vorname: v })} />
+                  <TextInput label="Nachname*" value={adresse.nachname} onChange={(v) => setAdresse({ ...adresse, nachname: v })} />
+                  <TextInput className="sm:col-span-2" label="Straße" value={adresse.strasse} onChange={(v) => setAdresse({ ...adresse, strasse: v })} />
+                  <TextInput label="PLZ" value={adresse.plz} onChange={(v) => setAdresse({ ...adresse, plz: v })} />
+                  <TextInput label="Stadt" value={adresse.stadt} onChange={(v) => setAdresse({ ...adresse, stadt: v })} />
+                  <TextInput label="Land" value={adresse.land} onChange={(v) => setAdresse({ ...adresse, land: v })} />
+                  <TextInput className="sm:col-span-2" label="E‑Mail*" type="email" value={adresse.email} onChange={(v) => setAdresse({ ...adresse, email: v })} />
+                  <TextInput className="sm:col-span-2" label="Telefon" value={adresse.telefon} onChange={(v) => setAdresse({ ...adresse, telefon: v })} />
+                </>
+              ) : (
                 <>
                   <TextInput className="sm:col-span-2" label="Firmenname*" value={adresse.firmenname} onChange={(v) => setAdresse({ ...adresse, firmenname: v })} />
-                  <TextInput className="sm:col-span-2" label="Rechnungs‑E‑Mail*" type="email" value={adresse.rechnungsEmail} onChange={(v) => setAdresse({ ...adresse, rechnungsEmail: v })} />
+                  <TextInput label="Vorname*" value={adresse.vorname} onChange={(v) => setAdresse({ ...adresse, vorname: v })} />
+                  <TextInput label="Nachname*" value={adresse.nachname} onChange={(v) => setAdresse({ ...adresse, nachname: v })} />
+                  <TextInput className="sm:col-span-2" label="USt‑ID" value={adresse.ustId} onChange={(v) => setAdresse({ ...adresse, ustId: v })} />
                   <TextInput className="sm:col-span-2" label="Straße*" value={adresse.strasse} onChange={(v) => setAdresse({ ...adresse, strasse: v })} />
                   <TextInput label="PLZ*" value={adresse.plz} onChange={(v) => setAdresse({ ...adresse, plz: v })} />
                   <TextInput label="Stadt*" value={adresse.stadt} onChange={(v) => setAdresse({ ...adresse, stadt: v })} />
                   <TextInput label="Land*" value={adresse.land} onChange={(v) => setAdresse({ ...adresse, land: v })} />
+                  <TextInput className="sm:col-span-2" label="Rechnungs‑E‑Mail*" type="email" value={adresse.rechnungsEmail} onChange={(v) => setAdresse({ ...adresse, rechnungsEmail: v })} />
+                  <TextInput className="sm:col-span-2" label="Telefon" value={adresse.telefon} onChange={(v) => setAdresse({ ...adresse, telefon: v })} />
                 </>
               )}
             </div>
@@ -180,7 +204,11 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
                 <div key={i} className="grid grid-cols-1 sm:grid-cols-3 gap-3 border rounded p-3">
                   <TextInput label="Vorname*" value={t.vorname} onChange={(v) => setTeilnehmerField(i, 'vorname', v)} />
                   <TextInput label="Nachname*" value={t.nachname} onChange={(v) => setTeilnehmerField(i, 'nachname', v)} />
-                  <div className="flex items-end">
+                  <TextInput label="E‑Mail" type="email" value={t.email || ''} onChange={(v) => setTeilnehmerField(i, 'email', v)} />
+                  <TextInput label="Geburtstag" type="date" value={t.geburtstag || ''} onChange={(v) => setTeilnehmerField(i, 'geburtstag', v)} />
+                  <TextInput label="WSET Nummer (falls vorhanden)" value={t.wsetCandidateNumber || ''} onChange={(v) => setTeilnehmerField(i, 'wsetCandidateNumber', v)} />
+                  <TextInput className="sm:col-span-3" label="Besondere Bedürfnisse" value={t.besondereBeduerfnisse || ''} onChange={(v) => setTeilnehmerField(i, 'besondereBeduerfnisse', v)} />
+                  <div className="sm:col-span-3 flex items-end justify-end">
                     <button onClick={() => removeTeilnehmer(i)} className="text-sm px-3 py-2 border rounded hover:bg-gray-50 disabled:opacity-40" disabled={teilnehmer.length === 1}>
                       Entfernen
                     </button>
@@ -240,6 +268,10 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
                   <input type="checkbox" checked={datenschutz} onChange={(e) => setDatenschutz(e.target.checked)} />
                   Ich habe die <a href="/datenschutz" className="underline" target="_blank" rel="noreferrer">Datenschutzerklärung</a> gelesen und akzeptiere sie.
                 </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} />
+                  Newsletter anmelden (optional)
+                </label>
               </div>
               <div className="pt-3 mt-3 border-t flex justify-end">
                 <button onClick={goNext} disabled={!validate(3)} className="inline-flex items-center rounded-md bg-black text-white px-4 py-2 text-sm disabled:opacity-50">Jetzt bezahlen</button>
@@ -249,10 +281,6 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
 
           <StepBlock index={4} title="Bezahlen" active={step === 4} onHeaderClick={() => setStep(4)}>
             <div className="space-y-3">
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={agb} onChange={(e) => setAgb(e.target.checked)} />
-                Ich akzeptiere die AGB.
-              </label>
               {!validate(1) || !validate(2) ? (
                 <div className="text-xs text-red-600">Bitte Rechnungsadresse und Teilnehmer vollständig ausfüllen.</div>
               ) : null}
@@ -279,9 +307,18 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
                       plz: rechnungstyp === 'firma' ? adresse.plz : undefined,
                       stadt: rechnungstyp === 'firma' ? adresse.stadt : undefined,
                       land: rechnungstyp === 'firma' ? adresse.land : undefined,
-                      teilnehmer: teilnehmer.map(t => ({ vorname: t.vorname, nachname: t.nachname })),
+                      teilnehmer: teilnehmer.map(t => ({
+                        vorname: t.vorname,
+                        nachname: t.nachname,
+                        email: t.email || undefined,
+                        geburtstag: t.geburtstag || undefined,
+                        wsetCandidateNumber: t.wsetCandidateNumber || undefined,
+                        besondereBeduerfnisse: t.besondereBeduerfnisse || undefined,
+                      })),
                       agbAkzeptiert: true,
+                      datenschutzGelesen: datenschutz,
                       gutscheincode: promo?.valid ? gutscheincode : undefined,
+                      newsletterOptIn: newsletter,
                       paypalCaptureId: captureId,
                     };
                     const tId = initialTerminId || termin?.id;
@@ -316,9 +353,19 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
           {/* Schritt 5: Bezahlung erfolgreich */}
           <StepBlock index={5} title="Bezahlung erfolgreich" active={step === 5} onHeaderClick={() => setStep(5)}>
             <div className="space-y-3 text-sm">
-              <div className="p-4 border rounded bg-green-50">
-                <div className="text-green-700 font-medium">Zahlung erfolgreich</div>
-                <div className="mt-1 text-green-800">Vielen Dank! Ihre Buchung wurde erfasst.</div>
+              <div className="p-4 border rounded bg-gray-50">
+                <div className="text-gray-800 font-medium">Zahlung erfolgreich</div>
+                <div className="mt-1 text-gray-700">Vielen Dank! Ihre Buchung wurde erfasst.</div>
+              </div>
+              {/* Bestellübersicht vollständig */}
+              <div className="border rounded p-4 bg-white text-sm space-y-2">
+                <div className="font-medium">Bestellung</div>
+                <div className="flex justify-between"><span>{seminar?.seminarname || 'Seminar'}</span><span>{anzahl} × {einzelpreis.toFixed(2)} €</span></div>
+                <div className="text-gray-700">Teilnehmende:</div>
+                <ul className="list-disc pl-5 text-gray-800">
+                  {teilnehmer.map((t, i) => (<li key={i}>{t.vorname} {t.nachname}{t.email?` · ${t.email}`:''}</li>))}
+                </ul>
+                <div className="pt-2 border-t mt-2 flex justify-between"><span>Gesamt</span><span className="font-medium">{(successInfo ? successInfo.amount : gesamt).toFixed(2)} €</span></div>
               </div>
               <div className="border rounded p-4 bg-white">
                 <div>Buchungsnummer: <span className="font-medium">{successInfo?.id ?? '–'}</span></div>
@@ -378,7 +425,9 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
             </div>
             <div className="p-4 text-sm space-y-1">
               <Row label="Zwischensumme" value={`${zwischensumme.toFixed(2)} €`} />
-              <Row label="Steuer (geschätzt)" value={`${steuerSchaetzung.toFixed(2)} €`} />
+              {seminar?.mitMwst !== false && (
+                <Row label="Steuer (geschätzt)" value={`${steuerSchaetzung.toFixed(2)} €`} />
+              )}
               {promo?.valid && <Row label="Rabatt" value={`−${promo.discount.toFixed(2)} €`} />}
             </div>
             <div className="p-4 text-sm flex justify-between font-semibold">
@@ -395,11 +444,12 @@ export default function CheckoutClient({ initialStep = 1, initialSlug, initialTe
 function StepBlock({ index, title, active, children, onHeaderClick }: { index: number; title: string; active: boolean; children?: React.ReactNode; onHeaderClick?: () => void }) {
   return (
     <div className="relative">
-      <div className="flex items-center gap-3 cursor-pointer" onClick={onHeaderClick}>
+      <div className="flex items-center gap-3" onClick={onHeaderClick}>
         <div className={`size-7 rounded-full border flex items-center justify-center text-sm ${active ? 'bg-black text-white border-black' : 'bg-white text-gray-700'}`}>{index}</div>
         <div className="text-lg font-medium">{title}</div>
       </div>
-      <div className={`mt-3 border rounded ${active ? 'p-4 bg-white' : 'p-0 bg-transparent'}`}>{active ? children : <div className="h-12 flex items-center px-4 text-sm text-gray-500">Klicken, um zu öffnen</div>}</div>
+      {active && <div className="mt-3 border rounded p-4 bg-white">{children}</div>}
+      <div className="my-6 border-t" />
     </div>
   );
 }

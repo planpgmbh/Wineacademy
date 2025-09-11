@@ -98,7 +98,7 @@ export default factories.createCoreController('api::buchung.buchung', ({ strapi 
                 { paypalCaptureId: captureId } as any,
               ] as any,
             },
-            select: ['id', 'status', 'gesamtpreisBrutto'],
+            select: ['id', 'buchungsstatus', 'status', 'gesamtpreisBrutto'],
           });
           if (existing) {
             // Betrag/Währung aus Webhook prüfen
@@ -112,7 +112,7 @@ export default factories.createCoreController('api::buchung.buchung', ({ strapi 
               strapi.log.warn(`[paypal webhook] Currency mismatch for capture ${captureId}: ${ccy}!=EUR`);
             } else if (typeof expected === 'number' && Number.isFinite(val) && Math.abs(val - expected) <= 0.01) {
               await strapi.entityService.update('api::buchung.buchung', existing.id, {
-                data: { status: 'bezahlt', zahlungsmethode: 'paypal', zahlungsreferenz: captureId },
+                data: { buchungsstatus: 'bezahlt', zahlungsmethode: 'paypal', zahlungsreferenz: captureId } as any,
               });
             } else {
               strapi.log.warn(`[paypal webhook] Amount mismatch for capture ${captureId}: received=${valStr} expected=${expected}`);

@@ -10,9 +10,16 @@ export default factories.createCoreController('api::buchung.buchung', ({ strapi 
       const rec = await knex('buchungen').where({ id }).first();
       if (!rec) return ctx.notFound('Nicht gefunden');
       const get = (k: string) => (rec[k] != null ? rec[k] : rec[k.replace(/[A-Z]/g, (m) => '_' + m.toLowerCase())]);
+      const getAny = (keys: string[]) => {
+        for (const k of keys) {
+          const v = get(k);
+          if (v !== undefined) return v;
+        }
+        return undefined;
+      };
       ctx.body = {
         id: rec.id,
-        status: get('status'),
+        status: getAny(['buchungsstatus', 'status']),
         zahlungsmethode: get('zahlungsmethode'),
         anzahl: get('anzahl'),
         gesamtpreisBrutto: get('gesamtpreisBrutto'),
@@ -104,23 +111,43 @@ export default factories.createCoreController('api::buchung.buchung', ({ strapi 
       }
 
       // Gutschein prüfen (optional) – berechne Rabatt und optionalen Preis-Override pro Platz
+      const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
       const anz = teilnehmerAnzahl || (Array.isArray(body.teilnehmer) ? body.teilnehmer.length : 1);
       const voucherCode = typeof body.gutscheincode === 'string' && body.gutscheincode.trim() ? String(body.gutscheincode.trim()) : null;
       let rabattBrutto = 0;
       let preisBruttoOverride: number | undefined = undefined;
       if (voucherCode) {
         try {
-          const v = await strapi.db.query('api::gutschein.gutschein').findOne({ where: { code: voucherCode }, select: ['code', 'typ', 'wert', 'aktiv', 'gueltigAb', 'gueltigBis'] });
+          // Gutschein-Code fallunabhängig (case-insensitive) finden
+          const cUpper = voucherCode.toUpperCase();
+          const cLower = voucherCode.toLowerCase();
+          const v = await strapi.db
+            .query('api::gutschein.gutschein')
+            .findOne({
+              where: { $or: [{ code: voucherCode }, { code: cUpper }, { code: cLower }] as any },
+              select: ['code', 'typ', 'wert', 'aktiv', 'gueltigAb', 'gueltigBis'],
+            });
           const today = new Date().toISOString().slice(0, 10);
           const isActive = !!v?.aktiv && (!v.gueltigAb || v.gueltigAb <= today) && (!v.gueltigBis || v.gueltigBis >= today);
           if (v && isActive) {
-            const stueck = Number(termin.preis) || 0;
-            const total = stueck * anz;
-            if (v.typ === 'betrag') rabattBrutto = Math.min(Number(v.wert) || 0, total);
-            else rabattBrutto = Math.max(0, Math.round(((total * (Number(v.wert) || 0) / 100) + Number.EPSILON) * 100) / 100);
+            let stueck = Number(termin.preis);
+            if (!Number.isFinite(stueck) || stueck <= 0) {
+              // Fallback: Standardpreis des Seminars verwenden, falls Terminpreis leer ist
+              try {
+                const t = await strapi.db.query('api::termin.termin').findOne({
+                  where: { id: terminId },
+                  select: ['id'],
+                  populate: { seminar: { select: ['standardPreis'] } },
+                });
+                stueck = Number((t as any)?.seminar?.standardPreis) || 0;
+              } catch {}
+            }
+            const origTotal = round2(stueck * anz);
+            if ((v as any).typ === 'betrag') rabattBrutto = Math.min(Number((v as any).wert) || 0, origTotal);
+            else rabattBrutto = round2(origTotal * ((Number((v as any).wert) || 0) / 100));
             if (rabattBrutto > 0 && anz > 0) {
-              const neuTotal = Math.max(0, total - rabattBrutto);
-              preisBruttoOverride = Math.round(((neuTotal / anz) + Number.EPSILON) * 100) / 100;
+              const neuTotal = round2(Math.max(0, origTotal - rabattBrutto));
+              preisBruttoOverride = round2(neuTotal / anz);
             }
           }
         } catch {}
@@ -147,6 +174,8 @@ export default factories.createCoreController('api::buchung.buchung', ({ strapi 
         // Preise/MwSt werden serverseitig berechnet; keine Übernahme aus dem Client
         gutscheincode: body.gutscheincode,
         agbAkzeptiert: !!body.agbAkzeptiert,
+        datenschutzGelesen: !!body.datenschutzGelesen,
+        newsletterOptIn: !!body.newsletterOptIn,
         notizen: body.notizen,
       } as any;
 
@@ -165,6 +194,35 @@ export default factories.createCoreController('api::buchung.buchung', ({ strapi 
         termin: termin.id,
       } as any;
 
+      // Kunde ermitteln/erstellen und direkt verknüpfen (statt erst im Lifecycle)
+      try {
+        const emailForCustomer: string | undefined = baseData.rechnungstyp === 'firma'
+          ? (baseData.rechnungsEmail || baseData.email)
+          : baseData.email;
+        if (emailForCustomer) {
+          const existingCustomer = await (strapi as any).db.query('api::kunde.kunde').findOne({ where: { email: emailForCustomer }, select: ['id'] });
+          let kundeId = existingCustomer?.id as number | undefined;
+          if (!kundeId) {
+            const createdCustomer = await (strapi as any).entityService.create('api::kunde.kunde', {
+              data: {
+                vorname: baseData.vorname || '—',
+                nachname: baseData.nachname || (baseData.rechnungstyp === 'firma' ? (baseData.firmenname || '—') : '—'),
+                email: emailForCustomer,
+                telefon: baseData.telefon,
+                strasse: baseData.strasse,
+                plz: baseData.plz,
+                stadt: baseData.stadt,
+                land: baseData.land,
+              },
+            });
+            kundeId = createdCustomer.id;
+          }
+          if (kundeId) payload.kunde = kundeId;
+        }
+      } catch (e) {
+        try { strapi.log.warn(`[publicCreate Buchung] Kunde-Verknüpfung übersprungen: ${(e as any)?.message || e}`); } catch {}
+      }
+
       // Zahlungsinformationen (optional)
       if (body.paypalCaptureId) {
         payload.zahlungsreferenz = String(body.paypalCaptureId);
@@ -173,6 +231,8 @@ export default factories.createCoreController('api::buchung.buchung', ({ strapi 
         payload.zahlungsreferenz = String(body.zahlungsreferenz);
       }
       if (body.zahlungsmethode) payload.zahlungsmethode = body.zahlungsmethode;
+      // Fallback: Status immer initial auf 'offen' setzen; bei erfolgreicher Verifikation unten auf 'bezahlt' aktualisieren
+      if (!payload.buchungsstatus) payload.buchungsstatus = 'offen';
       // Status nur nach serverseitiger Prüfung setzen (weiter unten)
 
       // PayPal-Verifikation: entweder Capture-ID aus Client oder wir erwarten PayPal-Order-Capture nach Redirect
@@ -209,8 +269,20 @@ export default factories.createCoreController('api::buchung.buchung', ({ strapi 
           const cap = (await capRes.json()) as { status?: string; amount?: { value?: string; currency_code?: string } };
           if ((cap.status || '').toUpperCase() !== 'COMPLETED') throw new Error('PayPal Capture nicht abgeschlossen');
           if ((cap.amount?.currency_code || '').toUpperCase() !== 'EUR') throw new Error('PayPal Währung nicht EUR');
-          let expected = Number(termin.preis) * anz;
-          if (rabattBrutto > 0) expected = Math.max(0, expected - rabattBrutto);
+          // Erwarteten Betrag exakt wie im Gutschein-Validator runden/berechnen
+          let stueck = Number(termin.preis);
+          if (!Number.isFinite(stueck) || stueck <= 0) {
+            try {
+              const t = await strapi.db.query('api::termin.termin').findOne({
+                where: { id: terminId },
+                select: ['id'],
+                populate: { seminar: { select: ['standardPreis'] } },
+              });
+              stueck = Number((t as any)?.seminar?.standardPreis) || 0;
+            } catch {}
+          }
+          const origTotal = round2(stueck * anz);
+          const expected = round2(Math.max(0, origTotal - (rabattBrutto > 0 ? rabattBrutto : 0)));
           const capValue = cap.amount?.value ? Number(cap.amount.value) : NaN;
           if (!Number.isFinite(capValue) || Math.abs(capValue - expected) > 0.01) throw new Error('PayPal Capture-Betrag weicht ab');
           verifiedPaid = true;
@@ -219,7 +291,7 @@ export default factories.createCoreController('api::buchung.buchung', ({ strapi 
         }
       }
 
-      if (verifiedPaid) payload.status = 'bezahlt';
+      if (verifiedPaid) payload.buchungsstatus = 'bezahlt';
 
       try { strapi.log.info('[publicCreate Buchung] payload=' + JSON.stringify(payload)); } catch {}
       let created: any;
@@ -242,7 +314,7 @@ export default factories.createCoreController('api::buchung.buchung', ({ strapi 
         gesamtpreisBrutto: created.gesamtpreisBrutto,
         gesamtpreisNetto: created.gesamtpreisNetto,
         gesamtsteuerBetrag: created.gesamtsteuerBetrag,
-        status: created.status,
+        status: (created as any).buchungsstatus ?? (created as any).status,
       };
     } catch (err: any) {
       strapi.log.error('[publicCreate Buchung] Fehler', err);

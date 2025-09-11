@@ -10,6 +10,7 @@
     "draftAndPublish": false
   },
   "attributes": {
+    "titel": { "type": "string" },
     
     "rechnungstyp": {
       "type": "enumeration",
@@ -62,7 +63,7 @@
     "gesamtpreis": {
       "type": "decimal"
     },
-    "status": {
+    "buchungsstatus": {
       "type": "enumeration",
       "enum": ["offen", "bezahlt", "bestaetigt", "storniert", "erstattet", "warteliste"],
       "default": "offen"
@@ -74,6 +75,14 @@
     "zahlungsreferenz": { "type": "string" },
     "gutscheincode": { "type": "string" },
     "agbAkzeptiert": {
+      "type": "boolean",
+      "default": false
+    },
+    "datenschutzGelesen": {
+      "type": "boolean",
+      "default": false
+    },
+    "newsletterOptIn": {
       "type": "boolean",
       "default": false
     },

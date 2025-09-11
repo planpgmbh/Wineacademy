@@ -17,8 +17,7 @@
       "component": "termin.seminartag",
       "required": true,
       "min": 1
-    },
-    
+    }, 
     "kapazitaet": { "type": "integer", "required": true, "min": 1, "default": 30 },
     "preis": { "type": "decimal" },
     "planungsstatus": {

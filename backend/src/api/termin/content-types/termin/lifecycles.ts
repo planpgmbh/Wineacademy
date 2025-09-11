@@ -1,48 +1,123 @@
-// Einfache Logik: Wenn der Titel leer ist, setze ihn auf das früheste "datum" aus den "tage"-Komponenten
-const setTitelIfEmpty = async (id: number) => {
-  if (!id) return;
-  const rec = await strapi.db.query('api::termin.termin').findOne({
-    where: { id },
-    populate: { tage: true, seminar: true, ort: true },
-  });
-  const current = (rec as any)?.titel as string | undefined;
-  if (current && String(current).trim() !== '') return;
+// Termin Lifecycles: setzt bei Erstellung fehlenden Preis auf Seminar.standardPreis
 
-  const tage = Array.isArray((rec as any)?.tage) ? (rec as any).tage : [];
-  if (!tage.length) return;
-
-  const norm = tage
-    .filter(Boolean)
-    .map((t: any) => ({ datum: t?.datum, startzeit: (t?.startzeit || '00:00:00').slice(0, 8) }))
-    .filter((t: any) => t.datum);
-  if (!norm.length) return;
-  norm.sort((a: any, b: any) => (a.datum + 'T' + a.startzeit).localeCompare(b.datum + 'T' + b.startzeit));
-  const firstDate = norm[0].datum as string;
-  if (!firstDate) return;
-
-  // Datum von YYYY-MM-DD in YYYY-DD-MM umstellen
-  const [y, m, d] = firstDate.split('-');
-  const ydm = [y, d, m].filter(Boolean).join('-');
-
-  const seminarName = (rec as any)?.seminar?.seminarname as string | undefined;
-  const ort = (rec as any)?.ort as any | undefined;
-  const ortName = (ort?.standort || ort?.veranstaltungsort || ort?.stadt) as string | undefined;
-
-  const parts = [ydm, seminarName, ortName].filter((v) => v && String(v).trim() !== '');
-  const titel = parts.join(' – ');
-
-  await strapi.db.query('api::termin.termin').update({ where: { id }, data: { titel } });
+const toNumberOrUndefined = (v: any): number | undefined => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : undefined;
 };
 
-const lifecycles = {
-  async afterCreate(event: any) {
-    const id = event?.result?.id as number | undefined;
-    if (id) await setTitelIfEmpty(id);
-  },
-  async afterUpdate(event: any) {
-    const id = (event?.result?.id as number | undefined) || (event?.params?.where as any)?.id;
-    if (id) await setTitelIfEmpty(id);
-  },
+const extractId = (rel: any): number | undefined => {
+  if (rel == null) return undefined;
+  if (typeof rel === 'number') return rel;
+  if (typeof rel === 'object') {
+    const c = (rel as any).connect;
+    if (typeof c === 'number') return c;
+    if (Array.isArray(c) && c.length > 0 && typeof c[0] === 'number') return c[0];
+    if (typeof (rel as any).id === 'number') return (rel as any).id;
+  }
+  return undefined;
 };
 
-export default lifecycles;
+function formatDate(d: string | Date | undefined) {
+  if (!d) return '';
+  const dt = typeof d === 'string' ? new Date(d) : d;
+  if (!dt || isNaN(dt.getTime())) return '';
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth() + 1).padStart(2, '0');
+  const day = String(dt.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// Kurzformat für Titel: DD-MM-YY
+function formatDateShort(d: string | Date | undefined) {
+  if (!d) return '';
+  const dt = typeof d === 'string' ? new Date(d) : d;
+  if (!dt || isNaN(dt.getTime())) return '';
+  const yy = String(dt.getFullYear()).slice(-2);
+  const mm = String(dt.getMonth() + 1).padStart(2, '0');
+  const dd = String(dt.getDate()).padStart(2, '0');
+  return `${dd}-${mm}-${yy}`;
+}
+
+const buildTitel = async (data: any) => {
+  try {
+    const tage = Array.isArray(data.tage) ? data.tage : [];
+    const first = tage[0];
+    const dateStr = formatDateShort(first?.datum);
+    const seminarId = extractId(data.seminar);
+    const ortId = extractId(data.ort);
+    let seminarName: string | undefined = undefined;
+    let ortName: string | undefined = undefined;
+    if (seminarId) {
+      const s = await (strapi as any).db.query('api::seminar.seminar').findOne({ where: { id: seminarId }, select: ['seminarname'] });
+      seminarName = s?.seminarname;
+    }
+    if (ortId) {
+      const o = await (strapi as any).db.query('api::ort.ort').findOne({ where: { id: ortId }, select: ['standort'] });
+      ortName = o?.standort;
+    }
+    const parts = [dateStr, seminarName, ortName].filter(Boolean);
+    if (parts.length > 0) return parts.join(' | ');
+  } catch {}
+  return undefined;
+};
+
+const buildTageUebersicht = (data: any) => {
+  try {
+    const tage = Array.isArray(data.tage) ? data.tage : [];
+    if (tage.length === 0) return undefined;
+    const parts = tage.map((t: any) => {
+      const d = formatDate(t?.datum);
+      const von = (t?.startzeit || '').toString().slice(0, 5);
+      const bis = (t?.endzeit || '').toString().slice(0, 5);
+      return von && bis ? `${d} ${von}–${bis}` : d;
+    });
+    return parts.join(', ');
+  } catch {
+    return undefined;
+  }
+};
+
+const beforeCreate = async (event: any) => {
+  const { data } = event.params;
+  // Wenn kein Preis gesetzt ist, Standardpreis des verknüpften Seminars kopieren
+  const hasPreis = data.preis != null && data.preis !== '';
+  const seminarId = extractId(data.seminar);
+  if (!hasPreis && seminarId) {
+    const sem = await (strapi as any).db
+      .query('api::seminar.seminar')
+      .findOne({ where: { id: seminarId }, select: ['standardPreis'] });
+    const std = toNumberOrUndefined(sem?.standardPreis);
+    if (std != null) data.preis = std;
+  }
+  // Titel/Tage-Übersicht generieren, falls leer
+  if (!data.titel || String(data.titel).trim() === '') {
+    const t = await buildTitel(data);
+    if (t) data.titel = t;
+  }
+  const u = buildTageUebersicht(data);
+  if (u) data.tageUebersicht = u;
+};
+
+const beforeUpdate = async (event: any) => {
+  const { data, where } = event.params;
+  // Nur falls explizit leer gesetzt wird und Seminar vorhanden ist
+  const willBeLeer = data.preis === null || data.preis === '' || data.preis === undefined;
+  const seminarId = extractId(data.seminar);
+  if (willBeLeer && seminarId) {
+    const sem = await (strapi as any).db.query('api::seminar.seminar').findOne({ where: { id: seminarId }, select: ['standardPreis'] });
+    const std = toNumberOrUndefined(sem?.standardPreis);
+    if (std != null) data.preis = std;
+  }
+  // Titel/Tage-Übersicht bei Änderungen ggf. neu setzen
+  if (!data.titel || String(data.titel).trim() === '') {
+    const t = await buildTitel(data);
+    if (t) data.titel = t;
+  }
+  const u = buildTageUebersicht(data);
+  if (u) data.tageUebersicht = u;
+};
+
+export default {
+  beforeCreate,
+  beforeUpdate,
+};

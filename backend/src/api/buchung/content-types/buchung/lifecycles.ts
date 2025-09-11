@@ -53,11 +53,21 @@ const computeAnzahlUndPreis = async (data: any) => {
   let preisNetto: number | undefined = data.preisNetto != null ? Number(data.preisNetto) : undefined;
 
   // Fallback von termin.preis
-  if (preisBrutto == null && preisNetto == null && data.termin) {
-    const termin = await (strapi as any).db.query('api::termin.termin').findOne({ where: { id: data.termin }, select: ['preis'] });
-    if (termin?.preis != null) {
-      if (pricesIncludeVat) preisBrutto = Number(termin.preis);
-      else preisNetto = Number(termin.preis);
+  if (data.termin) {
+    const termin = await (strapi as any).db.query('api::termin.termin').findOne({
+      where: { id: data.termin },
+      select: ['preis'],
+      populate: { seminar: { select: ['mitMwst', 'standardPreis'] } },
+    });
+    // MwSt-Flag vom Seminar übernehmen, wenn nicht explizit gesetzt
+    if (data.mitMwst === undefined && termin?.seminar && typeof termin.seminar.mitMwst === 'boolean') {
+      data.mitMwst = !!termin.seminar.mitMwst;
+    }
+    // Preis-Fallback: Terminpreis → Seminar.standardPreis
+    const basisPreis = (termin?.preis != null) ? Number(termin.preis) : (termin?.seminar?.standardPreis != null ? Number(termin.seminar.standardPreis) : undefined);
+    if (basisPreis != null) {
+      if (pricesIncludeVat) preisBrutto = basisPreis;
+      else preisNetto = basisPreis;
     }
   }
 
@@ -113,7 +123,59 @@ const beforeUpdate = async (event: any) => {
   await computeAnzahlUndPreis(data);
 };
 
+const afterCreate = async (event: any) => {
+  const rec = event?.result;
+  if (!rec) return;
+  try {
+    // Bereits verknüpft → nichts tun
+    if (rec.kunde) return;
+    const email: string | undefined = rec.rechnungstyp === 'firma' ? (rec.rechnungsEmail || rec.email) : rec.email;
+    if (!email) return;
+    // Kunde suchen
+    const existing = await (strapi as any).db.query('api::kunde.kunde').findOne({ where: { email }, select: ['id'] });
+    let kundeId = existing?.id;
+    if (!kundeId) {
+      const created = await (strapi as any).entityService.create('api::kunde.kunde', {
+        data: {
+          vorname: rec.vorname || '—',
+          nachname: rec.nachname || (rec.rechnungstyp === 'firma' ? (rec.firmenname || '—') : '—'),
+          email,
+          telefon: rec.telefon,
+          strasse: rec.strasse,
+          plz: rec.plz,
+          stadt: rec.stadt,
+          land: rec.land,
+        },
+      });
+      kundeId = created.id;
+    }
+    if (kundeId) {
+      await (strapi as any).entityService.update('api::buchung.buchung', rec.id, { data: { kunde: kundeId } });
+    }
+  } catch (e) {
+    (strapi as any).log?.warn?.(`[buchung.afterCreate] Kunde-Verknüpfung übersprungen: ${(e as any)?.message || e}`);
+  }
+
+  // Titel automatisch setzen, wenn leer: "ID | VORNAME NACHNAME"
+  try {
+    const hasTitel = rec.titel && String(rec.titel).trim() !== '';
+    if (!hasTitel && rec.id) {
+      const parts = [
+        String(rec.id),
+        '|',
+        String(rec.vorname || '').toUpperCase().trim(),
+        String(rec.nachname || '').toUpperCase().trim(),
+      ].filter((p) => p !== '');
+      const titel = `${parts[0]} | ${[parts[2], parts[3]].filter(Boolean).join(' ')}`;
+      await (strapi as any).entityService.update('api::buchung.buchung', rec.id, { data: { titel } });
+    }
+  } catch (e) {
+    (strapi as any).log?.warn?.(`[buchung.afterCreate] Titel-Setzung übersprungen: ${(e as any)?.message || e}`);
+  }
+};
+
 export default {
   beforeCreate,
   beforeUpdate,
+  afterCreate,
 };

@@ -1,0 +1,24 @@
+{
+  "collectionName": "kategorien",
+  "info": {
+    "singularName": "kategorie",
+    "pluralName": "kategorien",
+    "displayName": "Kategorie",
+    "description": "Seminarkategorien (Mehrfachzuordnung möglich)"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "titel": { "type": "string", "required": true },
+    "beschreibung": { "type": "text" },
+    "bild": { "type": "media", "allowedTypes": ["images"], "multiple": false },
+    "seminare": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::seminar.seminar",
+      "mappedBy": "kategorien"
+    }
+  }
+}
+

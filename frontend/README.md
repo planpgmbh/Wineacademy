@@ -4,14 +4,16 @@ Zweck: Öffentliche Seiten für Seminare (Liste/Detail) sowie ein TEST‑Checkou
 
 ### Init‑Prompt (zum Kopieren)
 
-> Du arbeitest NUR am Frontend in `frontend/`. Lies und befolge zuerst `frontend/README.md` (Start/HMR, API‑Basen SSR/CSR, Seiten, Bilder, Troubleshooting) und die Root‑`README.md` (Docker Desktop, Compose, Ports). Starte/prüfe: `docker compose -f ../docker-compose-dev.yml up -d frontend`. Verwende SSR‑Basis `API_INTERNAL_URL=http://backend:1337` und CSR‑Basis `NEXT_PUBLIC_API_URL=http://localhost:1337`. Bilder baue mit `mediaUrl()` (ohne `/api`). Nutze nur Public‑Endpoints (`/api/public/seminare`, `/api/public/seminare/:slug`). Mache einen kurzen Plan (2–5 Schritte) und liste die Befehle, die du ausführst, bevor du Änderungen machst. Wenn du gemacht hast, möchte ich, dass du mir ein Browserfenster öffnest, wo man direkt die Enderung im Frontend sehen kann. Immer in Deutsch antworten. 
+Aufgabe:
+
+Deine Rolle: Du arbeitest NUR am Frontend in `frontend/`. Lies und befolge zuerst `frontend/README.md` (Start/HMR, API‑Basen SSR/CSR, Seiten, Bilder, Troubleshooting) und die Root‑`README.md` (Docker Desktop, Compose, Ports). Starte/prüfe: `docker compose -f ../docker-compose-dev.yml up -d frontend` oder `docker compose -f ../docker-compose-stageing.yml up -d frontend`. Verwende SSR‑Basis `API_INTERNAL_URL=http://backend:1337` und CSR‑Basis `NEXT_PUBLIC_API_URL=http://localhost:1337`. Bilder baue mit `mediaUrl()` (ohne `/api`). Nutze nur Public‑Endpoints (`/api/public/seminare`, `/api/public/seminare/:slug`). Mache einen kurzen Plan (2–5 Schritte) und liste die Befehle, die du ausführst, bevor du Änderungen machst. Wenn du gemacht hast, möchte ich, dass du mir ein Browserfenster öffnest, wo man direkt die Enderung im Frontend sehen kann. Immer in Deutsch antworten. 
 
 ## Stack & Ports
 - Next.js 15 (App Router), React 19, Tailwind 4
 - Dev‑Port: 3000 → `http://localhost:3000`
 
 ## Start (Dev)
-- Über Root‑Compose: `docker compose -f ../docker-compose-dev.yml up -d frontend`
+- Über Root‑Compose: `docker compose -f ../docker-compose-dev.yml up -d frontend` oder docker compose -f ../docker-compose-stageing.yml up -d frontend
 - Der Ordner `frontend/` ist in den Container gemountet; `next dev` läuft mit Hot Reload. Änderungen sind ohne Image‑Rebuild sichtbar.
 
 ## API‑Konfiguration
@@ -56,7 +58,7 @@ Hinweis: UI ist nur für Sandbox‑Tests gedacht und wird später ersetzt.
 ## Build/Rebuild (selten nötig)
 - Dev genügt: `up -d frontend`
 - Falls Dockerfile/Build geändert: 
-  `docker compose -f ../docker-compose-dev.yml build --no-cache frontend && docker compose -f ../docker-compose-dev.yml up -d frontend`
+  `docker compose -f ../docker-compose-dev.yml build --no-cache frontend && docker compose -f ../docker-compose-dev.yml up -d frontend` oder docker compose -f ../docker-compose-stageing.yml up -d frontend
 - Logs: `docker compose -f ../docker-compose-dev.yml logs -f frontend`
 
 ## PayPal Checkout (Sandbox)

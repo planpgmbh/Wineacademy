@@ -397,6 +397,8 @@ export interface ApiBuchungBuchung extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    datenschutzGelesen: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
     email: Schema.Attribute.Email & Schema.Attribute.Required;
     firmenname: Schema.Attribute.String;
     gesamtpreis: Schema.Attribute.Decimal;
@@ -414,6 +416,8 @@ export interface ApiBuchungBuchung extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     mitMwst: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     nachname: Schema.Attribute.String & Schema.Attribute.Required;
+    newsletterOptIn: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
     notizen: Schema.Attribute.Text;
     plz: Schema.Attribute.String;
     preisBrutto: Schema.Attribute.Decimal;
@@ -504,6 +508,38 @@ export interface ApiGutscheinGutschein extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     wert: Schema.Attribute.Decimal & Schema.Attribute.Required;
+  };
+}
+
+export interface ApiKategorieKategorie extends Struct.CollectionTypeSchema {
+  collectionName: 'kategorien';
+  info: {
+    description: 'Seminarkategorien (Mehrfachzuordnung m\u00F6glich)';
+    displayName: 'Kategorie';
+    pluralName: 'kategorien';
+    singularName: 'kategorie';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    beschreibung: Schema.Attribute.Text;
+    bild: Schema.Attribute.Media<'images'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::kategorie.kategorie'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    seminare: Schema.Attribute.Relation<'manyToMany', 'api::seminar.seminar'>;
+    titel: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -600,6 +636,10 @@ export interface ApiSeminarSeminar extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     infos: Schema.Attribute.Text;
+    kategorien: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::kategorie.kategorie'
+    >;
     kurzbeschreibung: Schema.Attribute.Text;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -607,6 +647,7 @@ export interface ApiSeminarSeminar extends Struct.CollectionTypeSchema {
       'api::seminar.seminar'
     > &
       Schema.Attribute.Private;
+    mitMwst: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     publishedAt: Schema.Attribute.DateTime;
     seminarname: Schema.Attribute.String & Schema.Attribute.Required;
     slug: Schema.Attribute.UID<'seminarname'> & Schema.Attribute.Required;
@@ -666,6 +707,9 @@ export interface ApiTerminTermin extends Struct.CollectionTypeSchema {
         },
         number
       >;
+    tageUebersicht: Schema.Attribute.String &
+      Schema.Attribute.Private &
+      Schema.Attribute.Configurable;
     titel: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1184,6 +1228,7 @@ declare module '@strapi/strapi' {
       'admin::user': AdminUser;
       'api::buchung.buchung': ApiBuchungBuchung;
       'api::gutschein.gutschein': ApiGutscheinGutschein;
+      'api::kategorie.kategorie': ApiKategorieKategorie;
       'api::kunde.kunde': ApiKundeKunde;
       'api::ort.ort': ApiOrtOrt;
       'api::seminar.seminar': ApiSeminarSeminar;

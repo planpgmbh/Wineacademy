@@ -4,7 +4,7 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
   async publicList(ctx) {
     const seminars = await strapi.db.query('api::seminar.seminar').findMany({
       where: { aktiv: true, publishedAt: { $not: null } },
-      select: ['id', 'seminarname', 'slug', 'kurzbeschreibung', 'standardPreis'],
+      select: ['id', 'seminarname', 'slug', 'kurzbeschreibung', 'standardPreis', 'mitMwst'],
       populate: { bild: { select: ['url', 'alternativeText'] } },
       orderBy: { seminarname: 'asc' },
     });
@@ -40,6 +40,7 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
         'beschreibung',
         'infos',
         'standardPreis',
+        'mitMwst',
       ],
       populate: { bild: { select: ['url', 'alternativeText'] } },
       limit: 1,

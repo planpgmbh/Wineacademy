@@ -41,6 +41,7 @@ export type SeminarListItem = {
   beschreibung?: string;
   infos?: string;
   standardPreis?: number;
+  mitMwst?: boolean;
   bild?: { url: string; alternativeText?: string } | null;
   termine?: Array<{
     id: number;
