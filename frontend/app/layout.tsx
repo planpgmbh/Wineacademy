@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { CartProvider } from '@/lib/cart-context';
+import CartSidebar from '@/components/cart/CartSidebar';
+import CartToggle from '@/components/cart/CartToggle';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,11 +29,19 @@ export default function RootLayout({
   return (
     <html lang="de">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <nav className="p-4 border-b">
-          <Link href="/" className="mr-4 hover:underline">Home</Link>
-          <Link href="/seminare" className="hover:underline">Seminare</Link>
-        </nav>
-        <main>{children}</main>
+        <CartProvider>
+          <nav className="flex items-center justify-between border-b px-6 py-4">
+            <div className="space-x-4 text-sm">
+              <Link href="/" className="hover:underline">Home</Link>
+              <Link href="/seminare" className="hover:underline">Seminare</Link>
+              <Link href="/produkte" className="hover:underline">Produkte</Link>
+              <Link href="/gutschein" className="hover:underline">Gutschein</Link>
+            </div>
+            <CartToggle />
+          </nav>
+          <main>{children}</main>
+          <CartSidebar />
+        </CartProvider>
       </body>
     </html>
   );

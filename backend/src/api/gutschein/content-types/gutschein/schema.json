@@ -4,21 +4,29 @@
     "singularName": "gutschein",
     "pluralName": "gutscheine",
     "displayName": "Gutschein",
-    "description": "Gutscheine mit Einmalnutzung"
+    "description": "Gutschein-Templates und generierte Codes"
   },
   "options": {
     "draftAndPublish": false
   },
   "attributes": {
-    "code": { "type": "string", "required": true, "unique": true },
-    "typ": { "type": "enumeration", "enum": ["betrag", "prozent"], "default": "betrag", "required": true },
-    "wert": { "type": "decimal", "required": true },
+    "titel": { "type": "string", "required": true },
+    "istTemplate": { "type": "boolean", "default": false },
+    "beschreibung": { "type": "text" },
+    "bild": { "type": "media", "allowedTypes": ["images"], "multiple": false },
+    "code": { "type": "string", "unique": true },
+    "betrag": { "type": "decimal" },
+    "minBetrag": { "type": "decimal" },
+    "maxBetrag": { "type": "decimal" },
     "aktiv": { "type": "boolean", "default": true },
-    "gueltigAb": { "type": "date" },
-    "gueltigBis": { "type": "date" },
-    "maxNutzung": { "type": "integer", "default": 1, "min": 1 },
-    "nutzungen": { "type": "integer", "default": 0, "min": 0 },
-    "bemerkung": { "type": "text" }
+    "eingeloest": { "type": "boolean", "default": false },
+    "eingeloestAm": { "type": "datetime" },
+    "bestellung": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::bestellung.bestellung",
+      "inversedBy": "gutscheine"
+    }
   }
 }
 

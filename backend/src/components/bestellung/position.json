@@ -1,0 +1,29 @@
+{
+  "collectionName": "components_bestellung_positionen",
+  "info": {
+    "displayName": "Position",
+    "description": "Warenkorbposition einer Bestellung"
+  },
+  "attributes": {
+    "typ": { "type": "enumeration", "enum": ["seminar", "produkt", "gutschein"], "default": "produkt" },
+    "titel": { "type": "string", "required": true },
+    "beschreibung": { "type": "text" },
+    "produkt": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::produkt.produkt"
+    },
+    "termin": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::termin.termin"
+    },
+    "menge": { "type": "integer", "default": 1, "min": 1 },
+    "einzelpreisNetto": { "type": "decimal" },
+    "einzelpreisBrutto": { "type": "decimal" },
+    "steuerSatz": { "type": "decimal" },
+    "summeNetto": { "type": "decimal" },
+    "summeBrutto": { "type": "decimal" },
+    "summeSteuer": { "type": "decimal" }
+  }
+}

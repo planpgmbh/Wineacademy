@@ -2,10 +2,9 @@ export default {
   routes: [
     {
       method: 'GET',
-      path: '/public/buchungen/:id',
-      handler: 'buchung.publicGet',
+      path: '/public/bestellungen/:id',
+      handler: 'bestellung.publicGet',
       config: { auth: false },
     },
   ],
 };
-

@@ -94,7 +94,7 @@ export default async function SeminarDetailPage({ params }: Props) {
 
         {/* Sidebar: Terminwahl (Wunschtermin) */}
         <aside className="md:col-span-1">
-          <BookingSidebar slug={slug} termine={termine} fallbackPreis={seminar.standardPreis} />
+          <BookingSidebar termine={termine} fallbackPreis={seminar.standardPreis} seminarTitle={seminar.seminarname} mitMwst={seminar.mitMwst} />
         </aside>
       </div>
     </div>

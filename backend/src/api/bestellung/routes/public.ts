@@ -2,10 +2,9 @@ export default {
   routes: [
     {
       method: 'POST',
-      path: '/public/buchungen',
-      handler: 'buchung.publicCreate',
+      path: '/public/bestellungen',
+      handler: 'bestellung.publicCreate',
       config: { auth: false },
     },
   ],
 };
-

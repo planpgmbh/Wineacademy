@@ -1,616 +1,469 @@
 "use client";
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import type { SeminarListItem } from '@/lib/api';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import PayPalButtons from '@/components/payments/PayPalButtons';
+import { postBestellung } from '@/lib/api';
+import { useCart, TeilnehmerForm, CartItem } from '@/lib/cart-context';
 
-type Teilnehmer = {
+type Rechnungstyp = 'privat' | 'firma';
+type PaymentMethod = 'rechnung' | 'paypal';
+
+type BillingState = {
+  rechnungstyp: Rechnungstyp;
   vorname: string;
   nachname: string;
-  email?: string;
-  geburtstag?: string;
-  wsetCandidateNumber?: string;
-  besondereBeduerfnisse?: string;
+  email: string;
+  telefon?: string;
+  firmenname?: string;
+  ustId?: string;
+  rechnungsEmail?: string;
+  strasse?: string;
+  plz?: string;
+  stadt?: string;
+  land?: string;
 };
 
-type TerminItem = NonNullable<SeminarListItem['termine']>[number];
+type TeilnehmerMap = Record<string, TeilnehmerForm[]>;
 
 type Props = {
-  initialStep?: number;
-  initialSlug?: string;
-  initialTerminId?: number;
-  initialAnzahl?: number;
-  seminar: SeminarListItem | null;
-  termin: TerminItem | null;
-  paypalClientId: string;
+  paypalClientId?: string;
   paypalCurrency?: string;
 };
 
-export default function CheckoutClient({ initialStep = 1, initialSlug, initialTerminId, initialAnzahl = 1, seminar, termin, paypalClientId, paypalCurrency = 'EUR' }: Props) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const search = useSearchParams();
+type SubmitOptions = {
+  mode?: PaymentMethod;
+  paypalCaptureId?: string;
+  paypalOrderId?: string;
+};
 
-  const [step, setStep] = useState(Math.min(4, Math.max(1, initialStep)));
-  const [rechnungstyp, setRechnungstyp] = useState<'privat' | 'firma'>('privat');
-  const [adresse, setAdresse] = useState({
+type PositionPayload = {
+  typ: CartItem['type'];
+  titel?: string;
+  beschreibung?: string;
+  produktId?: number;
+  terminId?: number;
+  menge: number;
+  betrag?: number;
+};
+
+export default function CheckoutClient({ paypalClientId, paypalCurrency = 'EUR' }: Props) {
+  const { items, clear } = useCart();
+  const resolvedPaypalClientId = useMemo(
+    () => paypalClientId || process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || '',
+    [paypalClientId]
+  );
+  const [participants, setParticipants] = useState<TeilnehmerMap>({});
+  const [billing, setBilling] = useState<BillingState>({
+    rechnungstyp: 'privat',
     vorname: '',
     nachname: '',
     email: '',
-    telefon: '',
-    firmenname: '',
-    ustId: '',
-    rechnungsEmail: '',
-    strasse: '',
-    plz: '',
-    stadt: '',
     land: 'Deutschland',
   });
-  const [teilnehmer, setTeilnehmer] = useState<Teilnehmer[]>(
-    Array.from({ length: Math.max(1, initialAnzahl) }, (_, i) => ({ vorname: i === 0 ? adresse.vorname || '' : '', nachname: i === 0 ? adresse.nachname || '' : '' }))
-  );
-  const [gutscheincode, setGutscheincode] = useState('');
-  const [promo, setPromo] = useState<{ valid: boolean; discount: number; totalBrutto: number } | null>(null);
-  const [successInfo, setSuccessInfo] = useState<{ id: number; amount: number } | null>(null);
-  const [successBuchung, setSuccessBuchung] = useState<{
-    id: number;
-    status: string;
-    zahlungsmethode?: string | null;
-    anzahl: number;
-    gesamtpreisBrutto: number;
-    gesamtpreisNetto?: number;
-    gesamtsteuerBetrag?: number;
-  } | null>(null);
-  const [datenschutz, setDatenschutz] = useState(false);
   const [newsletter, setNewsletter] = useState(false);
-  // Auf Wunsch vorab angehakt
-  const [agb, setAgb] = useState(true);
-
-  // API-Basis: same-origin '/api' im Browser, ENV-Fallback serverseitig
-  const apiBase = useMemo(() => {
-    if (typeof window !== 'undefined') return `${window.location.origin}/api`;
-    return process.env.NEXT_PUBLIC_API_URL || '';
-  }, []);
-
-  const einzelpreis = useMemo(() => {
-    const tp = termin?.preis;
-    if (typeof tp === 'number' && Number.isFinite(tp)) return Number(tp);
-    const sp = seminar?.standardPreis;
-    if (typeof sp === 'number' && Number.isFinite(Number(sp))) return Number(sp);
-    return 0;
-  }, [termin?.preis, seminar?.standardPreis]);
-  const anzahl = teilnehmer.length || 1;
-  const zwischensumme = useMemo(() => Number((einzelpreis * anzahl).toFixed(2)), [einzelpreis, anzahl]);
-  const gesamtAnzeige = promo?.valid ? promo.totalBrutto : zwischensumme;
-  const mwstAktiv = seminar?.mitMwst !== false; // default: true (MwSt aktiv), false = ohne MwSt
-  // Netto/MwSt auf Basis der aktuellen Anzeige (inkl. Rabatt)
-  const nettoAnzeige = useMemo(() => (mwstAktiv ? Number((gesamtAnzeige / 1.19).toFixed(2)) : Number(gesamtAnzeige.toFixed(2))), [mwstAktiv, gesamtAnzeige]);
-  const steuerAnzeige = useMemo(() => (mwstAktiv ? Number((gesamtAnzeige - nettoAnzeige).toFixed(2)) : 0), [mwstAktiv, gesamtAnzeige, nettoAnzeige]);
-  const gesamt = gesamtAnzeige; // Preise sind im Backend standardmäßig brutto; hier Anzeige als Brutto
-
-  type BookingPayload = {
-    terminId?: number;
-    rechnungstyp: 'privat' | 'firma';
-    vorname: string;
-    nachname: string;
-    email?: string;
-    telefon?: string;
-    firmenname?: string;
-    ustId?: string;
-    rechnungsEmail?: string;
-    strasse?: string;
-    plz?: string;
-    stadt?: string;
-    land?: string;
-    teilnehmer: Array<{ vorname: string; nachname: string }>;
-    agbAkzeptiert: boolean;
-    datenschutzGelesen?: boolean;
-    gutscheincode?: string;
-    newsletterOptIn?: boolean;
-    paypalCaptureId?: string;
-  };
-
-  const updateQuery = (nextStep: number) => {
-    const qs = new URLSearchParams(search?.toString());
-    if (initialSlug) qs.set('slug', initialSlug);
-    if (initialTerminId) qs.set('terminId', String(initialTerminId));
-    qs.set('anzahl', String(anzahl));
-    qs.set('step', String(nextStep));
-    router.replace(`${pathname}?${qs.toString()}`);
-  };
-
-  const goNext = () => {
-    const next = Math.min(4, step + 1);
-    if (validate(step)) {
-      setStep(next);
-      updateQuery(next);
-    }
-  };
-  const goPrev = () => {
-    const prev = Math.max(1, step - 1);
-    setStep(prev);
-    updateQuery(prev);
-  };
-
-  function validate(s: number): boolean {
-    if (s === 1) {
-      if (rechnungstyp === 'privat') {
-        return !!adresse.vorname && !!adresse.nachname && !!adresse.email;
-      }
-      // Firma: zusätzlich Vorname/Nachname der Kontaktperson verlangen (Frontend-Pflicht)
-      return !!adresse.firmenname && !!adresse.vorname && !!adresse.nachname && !!adresse.rechnungsEmail && !!adresse.strasse && !!adresse.plz && !!adresse.stadt && !!adresse.land;
-    }
-    if (s === 2) {
-      return teilnehmer.length > 0 && teilnehmer.every((t) => t.vorname && t.nachname);
-    }
-    if (s === 3) {
-      // Vor Zahlung beide Häkchen verlangen
-      return agb && datenschutz;
-    }
-    if (s === 4) {
-      return agb;
-    }
-    return true;
-  }
-
-  const addTeilnehmer = () => setTeilnehmer((arr) => [...arr, { vorname: '', nachname: '' }]);
-  const removeTeilnehmer = (idx: number) => setTeilnehmer((arr) => (arr.length > 1 ? arr.filter((_, i) => i !== idx) : arr));
-  const setTeilnehmerField = (idx: number, key: keyof Teilnehmer, val: string) =>
-    setTeilnehmer((arr) => arr.map((t, i) => (i === idx ? { ...t, [key]: val } : t)));
-
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Linke Spalte: Steps + aktive Form */}
-      <div className="lg:col-span-2">
-        <div className="space-y-4">
-          <StepBlock index={1} title="Rechnungsadresse" active={step === 1} onHeaderClick={() => setStep(1)}>
-            {/* Rechnungsadresse Formular */}
-            <div className="mb-4">
-              <div className="flex gap-4">
-                <label className={`px-3 py-2 border rounded cursor-pointer ${rechnungstyp === 'privat' ? 'bg-gray-100 border-gray-600' : ''}`}>
-                  <input type="radio" className="mr-2" checked={rechnungstyp === 'privat'} onChange={() => setRechnungstyp('privat')} /> Privat
-                </label>
-                <label className={`px-3 py-2 border rounded cursor-pointer ${rechnungstyp === 'firma' ? 'bg-gray-100 border-gray-600' : ''}`}>
-                  <input type="radio" className="mr-2" checked={rechnungstyp === 'firma'} onChange={() => setRechnungstyp('firma')} /> Firma
-                </label>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {rechnungstyp === 'privat' ? (
-                <>
-                  <TextInput label="Vorname*" value={adresse.vorname} onChange={(v) => setAdresse({ ...adresse, vorname: v })} />
-                  <TextInput label="Nachname*" value={adresse.nachname} onChange={(v) => setAdresse({ ...adresse, nachname: v })} />
-                  <TextInput className="sm:col-span-2" label="Straße" value={adresse.strasse} onChange={(v) => setAdresse({ ...adresse, strasse: v })} />
-                  <TextInput label="PLZ" value={adresse.plz} onChange={(v) => setAdresse({ ...adresse, plz: v })} />
-                  <TextInput label="Stadt" value={adresse.stadt} onChange={(v) => setAdresse({ ...adresse, stadt: v })} />
-                  <TextInput label="Land" value={adresse.land} onChange={(v) => setAdresse({ ...adresse, land: v })} />
-                  <TextInput className="sm:col-span-2" label="E‑Mail*" type="email" value={adresse.email} onChange={(v) => setAdresse({ ...adresse, email: v })} />
-                  <TextInput className="sm:col-span-2" label="Telefon" value={adresse.telefon} onChange={(v) => setAdresse({ ...adresse, telefon: v })} />
-                </>
-              ) : (
-                <>
-                  <TextInput className="sm:col-span-2" label="Firmenname*" value={adresse.firmenname} onChange={(v) => setAdresse({ ...adresse, firmenname: v })} />
-                  <TextInput label="Vorname*" value={adresse.vorname} onChange={(v) => setAdresse({ ...adresse, vorname: v })} />
-                  <TextInput label="Nachname*" value={adresse.nachname} onChange={(v) => setAdresse({ ...adresse, nachname: v })} />
-                  <TextInput className="sm:col-span-2" label="Straße*" value={adresse.strasse} onChange={(v) => setAdresse({ ...adresse, strasse: v })} />
-                  <TextInput label="PLZ*" value={adresse.plz} onChange={(v) => setAdresse({ ...adresse, plz: v })} />
-                  <TextInput label="Stadt*" value={adresse.stadt} onChange={(v) => setAdresse({ ...adresse, stadt: v })} />
-                  <TextInput label="Land*" value={adresse.land} onChange={(v) => setAdresse({ ...adresse, land: v })} />
-                  <TextInput className="sm:col-span-2" label="Rechnungs‑E‑Mail*" type="email" value={adresse.rechnungsEmail} onChange={(v) => setAdresse({ ...adresse, rechnungsEmail: v })} />
-                  <TextInput className="sm:col-span-2" label="Telefon" value={adresse.telefon} onChange={(v) => setAdresse({ ...adresse, telefon: v })} />
-                  <TextInput className="sm:col-span-2" label="USt‑ID" value={adresse.ustId} onChange={(v) => setAdresse({ ...adresse, ustId: v })} />
-                </>
-              )}
-            </div>
-            <div className="mt-6 flex justify-end gap-3">
-              <button onClick={goNext} className="inline-flex items-center rounded-md bg-black text-white px-4 py-2 text-sm disabled:opacity-50" disabled={!validate(1)}>
-                Weiter
-              </button>
-            </div>
-          </StepBlock>
-
-          <StepBlock index={2} title="Teilnehmer" active={step === 2} onHeaderClick={() => setStep(2)}>
-            <div className="space-y-4">
-              {teilnehmer.map((t, i) => (
-                <div key={i} className="grid grid-cols-1 sm:grid-cols-3 gap-3 border rounded p-3">
-                  <TextInput label="Vorname*" value={t.vorname} onChange={(v) => setTeilnehmerField(i, 'vorname', v)} />
-                  <TextInput label="Nachname*" value={t.nachname} onChange={(v) => setTeilnehmerField(i, 'nachname', v)} />
-                  <TextInput label="E‑Mail" type="email" value={t.email || ''} onChange={(v) => setTeilnehmerField(i, 'email', v)} />
-                  <TextInput label="Geburtstag" type="date" value={t.geburtstag || ''} onChange={(v) => setTeilnehmerField(i, 'geburtstag', v)} />
-                  <TextInput label="WSET Nummer (falls vorhanden)" value={t.wsetCandidateNumber || ''} onChange={(v) => setTeilnehmerField(i, 'wsetCandidateNumber', v)} />
-                  <TextInput className="sm:col-span-3" label="Besondere Bedürfnisse" value={t.besondereBeduerfnisse || ''} onChange={(v) => setTeilnehmerField(i, 'besondereBeduerfnisse', v)} />
-                  <div className="sm:col-span-3 flex items-end justify-end">
-                    <button onClick={() => removeTeilnehmer(i)} className="text-sm px-3 py-2 border rounded hover:bg-gray-50 disabled:opacity-40" disabled={teilnehmer.length === 1}>
-                      Entfernen
-                    </button>
-                  </div>
-                </div>
-              ))}
-              <div>
-                <button onClick={addTeilnehmer} className="text-sm px-3 py-2 border rounded hover:bg-gray-50">
-                  + Teilnehmer hinzufügen
-                </button>
-              </div>
-            </div>
-            <div className="mt-6 flex justify-between">
-              <button onClick={goPrev} className="inline-flex items-center rounded-md border px-4 py-2 text-sm">Zurück</button>
-              <button onClick={goNext} className="inline-flex items-center rounded-md bg-black text-white px-4 py-2 text-sm" disabled={!validate(2)}>
-                Weiter
-              </button>
-            </div>
-          </StepBlock>
-
-          <StepBlock index={3} title="Bestellübersicht" active={step === 3} onHeaderClick={() => setStep(3)}>
-            <div className="text-sm space-y-2">
-              <div className="flex justify-between">
-                <div>
-                  <div className="font-medium">{seminar?.seminarname || 'Seminar'}</div>
-                  {termin?.ort?.standort && <div className="text-gray-500">{termin.ort.standort}</div>}
-                </div>
-                <div>
-                  {einzelpreis.toFixed(2)} € × {anzahl}
-                </div>
-              </div>
-              {/* Teilnehmerliste – kompakt, nummeriert */}
-              <div className="mt-3">
-                <div className="font-medium mb-1">Teilnehmende</div>
-                {teilnehmer.length === 0 ? (
-                  <div className="text-gray-500">Keine Teilnehmenden eingetragen.</div>
-                ) : (
-                  <div className="divide-y border rounded">
-                    {teilnehmer.map((t, i) => (
-                      <div key={i} className="flex items-center justify-between p-3">
-                        <div className="flex items-center gap-3">
-                          <div className="size-6 rounded-full bg-gray-100 border flex items-center justify-center text-xs font-medium">{i + 1}</div>
-                          <div className="text-gray-800 font-medium">{t.vorname} {t.nachname}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              {/* Rechtliches */}
-              <div className="mt-3 space-y-2">
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={agb} onChange={(e) => setAgb(e.target.checked)} />
-                  Ich akzeptiere die <a href="/agb" className="underline" target="_blank" rel="noreferrer">Allgemeinen Geschäftsbedingungen</a>.
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={datenschutz} onChange={(e) => setDatenschutz(e.target.checked)} />
-                  Ich habe die <a href="/datenschutz" className="underline" target="_blank" rel="noreferrer">Datenschutzerklärung</a> gelesen und akzeptiere sie.
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} />
-                  Newsletter anmelden (optional)
-                </label>
-              </div>
-              <div className="pt-3 mt-3 border-t flex justify-end">
-                <button onClick={goNext} disabled={!validate(3)} className="inline-flex items-center rounded-md bg-black text-white px-4 py-2 text-sm disabled:opacity-50">Jetzt bezahlen</button>
-              </div>
-            </div>
-          </StepBlock>
-
-          <StepBlock index={4} title="Bezahlen" active={step === 4} onHeaderClick={() => setStep(4)}>
-            <div className="space-y-3">
-              {!validate(1) || !validate(2) ? (
-                <div className="text-xs text-red-600">Bitte Rechnungsadresse und Teilnehmer vollständig ausfüllen.</div>
-              ) : null}
-              <PayPalSection
-                enabled={!!paypalClientId}
-                clientId={paypalClientId}
-                currency={paypalCurrency}
-                amount={gesamt}
-                customId={`${initialSlug || 'seminar'}|${initialTerminId || ''}|${anzahl}`}
-                requireAgb={agb}
-                requireValid={validate(1) && validate(2)}
-                onApprove={async (captureId) => {
-                  // Nach erfolgreichem Capture Buchung im Backend anlegen
-                  try {
-                    const payload: BookingPayload = {
-                      terminId: initialTerminId,
-                      rechnungstyp,
-                      vorname: adresse.vorname,
-                      nachname: adresse.nachname,
-                      email: rechnungstyp === 'privat' ? adresse.email : undefined,
-                      telefon: adresse.telefon || undefined,
-                      firmenname: rechnungstyp === 'firma' ? adresse.firmenname : undefined,
-                      ustId: rechnungstyp === 'firma' ? adresse.ustId : undefined,
-                      rechnungsEmail: rechnungstyp === 'firma' ? adresse.rechnungsEmail : undefined,
-                      // Adresse immer mitsenden (privat optional, firma Pflicht)
-                      strasse: adresse.strasse || undefined,
-                      plz: adresse.plz || undefined,
-                      stadt: adresse.stadt || undefined,
-                      land: adresse.land || undefined,
-                      teilnehmer: teilnehmer.map(t => ({
-                        vorname: t.vorname,
-                        nachname: t.nachname,
-                        email: t.email || undefined,
-                        geburtstag: t.geburtstag || undefined,
-                        wsetCandidateNumber: t.wsetCandidateNumber || undefined,
-                        besondereBeduerfnisse: t.besondereBeduerfnisse || undefined,
-                      })),
-                      agbAkzeptiert: true,
-                      datenschutzGelesen: datenschutz,
-                      gutscheincode: promo?.valid ? gutscheincode : undefined,
-                      newsletterOptIn: newsletter,
-                      paypalCaptureId: captureId,
-                    };
-                    const tId = initialTerminId || termin?.id;
-                    const res = await fetch(`${apiBase}/public/buchungen`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ ...payload, terminId: tId }),
-                    });
-                    const ctype = res.headers.get('content-type') || '';
-                    const isJson = ctype.includes('application/json');
-                    const json = isJson ? await res.json() : null;
-                    if (!res.ok) {
-                      const text = !isJson ? await res.text() : '';
-                      throw new Error((json && (json.error?.message || json.message)) || `API ${res.status}: ${text?.slice(0,160)}`);
-                    }
-                    // Erfolg: interner Schritt 5 "Bezahlung erfolgreich"
-                    const newId = Number(json.id);
-                    setSuccessInfo({ id: newId, amount: gesamt });
-                    // Totale aus dem Backend nachladen (inkl. MwSt-/Netto-Breakdown)
-                    try {
-                      const sumRes = await fetch(`${apiBase}/public/buchungen/${newId}`);
-                      if (sumRes.ok) {
-                        const sumJson = await sumRes.json();
-                        setSuccessBuchung(sumJson);
-                      }
-                    } catch {}
-                    setStep(5);
-                    updateQuery(5);
-                  } catch (e) {
-                    console.error(e);
-                    window.location.href = `/checkout/abbruch?grund=${encodeURIComponent((e as Error)?.message || 'Fehler')}`;
-                  }
-                }}
-              />
-              <div className="flex justify-start">
-                <button onClick={goPrev} className="inline-flex items-center rounded-md border px-4 py-2 text-sm">Zurück</button>
-              </div>
-            </div>
-          </StepBlock>
-
-          {/* Schritt 5: Bezahlung erfolgreich */}
-          <StepBlock index={5} title="Bezahlung erfolgreich" active={step === 5} onHeaderClick={() => setStep(5)}>
-            <div className="space-y-3 text-sm">
-              <div className="p-4 border rounded bg-gray-50">
-                <div className="text-gray-800 font-medium">Zahlung erfolgreich</div>
-                <div className="mt-1 text-gray-700">Vielen Dank! Ihre Buchung wurde erfasst.</div>
-              </div>
-              {/* Bestellübersicht vollständig */}
-              <div className="border rounded p-4 bg-white text-sm space-y-2">
-                <div className="font-medium">Bestellung</div>
-                <div className="flex justify-between"><span>{seminar?.seminarname || 'Seminar'}</span><span>{anzahl} × {einzelpreis.toFixed(2)} €</span></div>
-                <div className="text-gray-700">Teilnehmende:</div>
-                <ul className="list-disc pl-5 text-gray-800">
-                  {teilnehmer.map((t, i) => (<li key={i}>{t.vorname} {t.nachname}{t.email?` · ${t.email}`:''}</li>))}
-                </ul>
-                {/* Summen aus Backend (falls verfügbar), sonst Fallback */}
-                <div className="pt-2 border-t mt-2 space-y-1">
-                  {successBuchung?.gesamtpreisNetto != null && successBuchung?.gesamtsteuerBetrag != null ? (
-                    <>
-                      <div className="flex justify-between"><span>Netto</span><span>{successBuchung.gesamtpreisNetto.toFixed(2)} €</span></div>
-                      <div className="flex justify-between"><span>MwSt</span><span>{successBuchung.gesamtsteuerBetrag.toFixed(2)} €</span></div>
-                      <div className="flex justify-between font-semibold"><span>Gesamt (inkl. MwSt)</span><span>{successBuchung.gesamtpreisBrutto.toFixed(2)} €</span></div>
-                    </>
-                  ) : (
-                    <div className="flex justify-between font-semibold"><span>Gesamt</span><span>{(successInfo ? successInfo.amount : gesamt).toFixed(2)} €</span></div>
-                  )}
-                </div>
-              </div>
-              {/* Zusätzliche Box (Buchungsnummer/Gesamtbetrag) entfernt auf Wunsch */}
-              <div className="flex gap-3">
-                <Link href="/seminare" className="inline-flex items-center rounded-md bg-black text-white px-4 py-2 text-sm">Zurück zu den Seminaren</Link>
-                <Link href="/" className="inline-flex items-center rounded-md border px-4 py-2 text-sm">Startseite</Link>
-              </div>
-            </div>
-          </StepBlock>
-        </div>
-      </div>
-
-      {/* Rechte Spalte: Übersicht */}
-      <aside className="lg:col-span-1">
-        <div className="sticky top-6">
-          <div className="text-xl font-semibold mb-4">Übersicht</div>
-          <div className="mb-4">
-            <label className="text-sm font-medium">Gutscheincode</label>
-            <div className="mt-1 flex gap-2">
-              <input value={gutscheincode} onChange={(e) => setGutscheincode(e.target.value)} placeholder="Code eingeben" className="w-full rounded border px-3 py-2 text-sm" />
-              <button className="px-3 py-2 border rounded text-sm" onClick={async () => {
-                const tId = initialTerminId || termin?.id;
-                if (!tId) return;
-                try {
-                  const res = await fetch(`${apiBase}/public/gutscheine/validate`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ terminId: tId, anzahl, gutscheincode }),
-                  });
-                  const json = await res.json();
-                  if (json?.valid) setPromo({ valid: true, discount: Number(json.rabatt?.betragBrutto || 0), totalBrutto: Number(json.total?.gesamtpreisBrutto || zwischensumme) });
-                  else setPromo({ valid: false, discount: 0, totalBrutto: zwischensumme });
-                } catch {
-                  setPromo(null);
-                }
-              }}>
-                Prüfen
-              </button>
-            </div>
-            {promo && (
-              <div className={`mt-1 text-xs ${promo.valid ? 'text-green-700' : 'text-red-600'}`}>
-                {promo.valid ? `Rabatt berücksichtigt: −${promo.discount.toFixed(2)} €` : 'Code ungültig'}
-              </div>
-            )}
-          </div>
-          <div className="divide-y border rounded">
-            <div className="p-4 text-sm">
-              <div className="font-medium mb-2">Warenkorb</div>
-              <div className="flex justify-between">
-                <div>
-                  {seminar?.seminarname || 'Seminar'}
-                  <div className="text-gray-500">{anzahl} × {einzelpreis.toFixed(2)} €</div>
-                </div>
-                <div className="font-medium">{zwischensumme.toFixed(2)} €</div>
-              </div>
-            </div>
-            <div className="p-4 text-sm space-y-1">
-              <Row label="Zwischensumme" value={`${zwischensumme.toFixed(2)} €`} />
-              {promo?.valid && <Row label="Rabatt" value={`−${promo.discount.toFixed(2)} €`} />}
-              {mwstAktiv && (
-                <>
-                  <Row label="Netto" value={`${nettoAnzeige.toFixed(2)} €`} />
-                  <Row label="MwSt" value={`${steuerAnzeige.toFixed(2)} €`} />
-                </>
-              )}
-            </div>
-            <div className="p-4 text-sm flex justify-between font-semibold">
-              <span>{mwstAktiv ? 'Gesamt (inkl. MwSt)' : 'Gesamt (ohne MwSt)'}</span>
-              <span>{gesamtAnzeige.toFixed(2)} €</span>
-            </div>
-          </div>
-        </div>
-      </aside>
-    </div>
-  );
-}
-
-function StepBlock({ index, title, active, children, onHeaderClick }: { index: number; title: string; active: boolean; children?: React.ReactNode; onHeaderClick?: () => void }) {
-  return (
-    <div className="relative">
-      <div className="flex items-center gap-3" onClick={onHeaderClick}>
-        <div className={`size-7 rounded-full border flex items-center justify-center text-sm ${active ? 'bg-black text-white border-black' : 'bg-white text-gray-700'}`}>{index}</div>
-        <div className="text-lg font-medium">{title}</div>
-      </div>
-      {active && <div className="mt-3 border rounded p-4 bg-white">{children}</div>}
-      <div className="my-6 border-t" />
-    </div>
-  );
-}
-
-function TextInput({ label, value, onChange, type = 'text', className = '', hidden = false }: { label: string; value: string; onChange: (v: string) => void; type?: string; className?: string; hidden?: boolean }) {
-  if (hidden) return null;
-  return (
-    <label className={`block ${className}`}>
-      <span className="text-sm font-medium">{label}</span>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded border px-3 py-2 text-sm"
-      />
-    </label>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between">
-      <span className="text-gray-600">{label}</span>
-      <span>{value}</span>
-    </div>
-  );
-}
-
-declare global {
-  interface Window {
-    paypal?: {
-      Buttons: (opts: PayPalButtonsOptions) => { render: (selector: string) => void };
-    };
-  }
-}
-
-type PayPalOnClickActions = { resolve: () => void; reject: () => void };
-
-type PayPalButtonsOptions = {
-  style?: Record<string, unknown>;
-  createOrder: (data: unknown, actions: { order: { create: (args: Record<string, unknown>) => Promise<string> | string } }) => Promise<string> | string;
-  onApprove: (data: unknown, actions: { order: { capture: () => Promise<PayPalCaptureDetails> } }) => void;
-  onClick?: (data: unknown, actions: PayPalOnClickActions) => void;
-  onError?: (err: unknown) => void;
-  onCancel?: () => void;
-};
-
-type PayPalCaptureDetails = {
-  purchase_units?: Array<{
-    payments?: { captures?: Array<{ id?: string }> };
-  }>;
-};
-
-function PayPalSection({ enabled, clientId, currency, amount, customId, requireAgb, requireValid, onApprove }: { enabled: boolean; clientId: string; currency: string; amount: number; customId: string; requireAgb: boolean; requireValid: boolean; onApprove: (captureId: string) => void }) {
+  const [agb, setAgb] = useState(false);
+  const [datenschutz, setDatenschutz] = useState(false);
+  const [zahlungsmethode, setZahlungsmethode] = useState<PaymentMethod>('rechnung');
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paypalError, setPaypalError] = useState<string | null>(null);
+  const [paypalReady, setPaypalReady] = useState(false);
+  const [success, setSuccess] = useState<{ id: number; status: string; bestellnummer?: string | null } | null>(null);
 
-  // SDK Script laden und Buttons mounten
   useEffect(() => {
-    if (!enabled) return;
-    setError(null);
-    const sdkId = `pp-sdk-${clientId}-${currency}`;
-    if (!document.getElementById(sdkId)) {
-      const s = document.createElement('script');
-      s.id = sdkId;
-      s.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=${encodeURIComponent(currency)}&intent=capture`;
-      s.async = true;
-      document.head.appendChild(s);
-    }
-    const iv = setInterval(() => {
-      if (window.paypal?.Buttons) {
-        clearInterval(iv);
-        try {
-          const mount = document.getElementById('paypal-buttons');
-          if (mount) mount.innerHTML = '';
-          window.paypal!.Buttons({
-            style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
-            onClick: (_data, actions: PayPalOnClickActions) => {
-              if (!requireValid || !requireAgb) {
-                alert('Bitte Formular vervollständigen und AGB akzeptieren.');
-                return actions.reject();
-              }
-              return actions.resolve();
-            },
-            createOrder: (_data, actions) => {
-              return actions.order.create({
-                intent: 'CAPTURE',
-                purchase_units: [
-                  { amount: { currency_code: currency, value: amount.toFixed(2) }, custom_id: customId },
-                ],
-                application_context: { shipping_preference: 'NO_SHIPPING' },
-              });
-            },
-            onApprove: async (_data, actions) => {
-              try {
-                const details = await actions.order.capture();
-                const capId = details?.purchase_units?.[0]?.payments?.captures?.[0]?.id;
-                if (!capId) throw new Error('Keine Capture-ID erhalten');
-                onApprove(String(capId));
-              } catch (e) {
-                setError(e instanceof Error ? e.message : 'Fehler beim Capture');
-              }
-            },
-            onError: (err) => {
-              setError(err instanceof Error ? err.message : 'PayPal-Fehler');
-            },
-            onCancel: () => {
-              window.location.href = '/checkout/abbruch?grund=abgebrochen';
-            },
-          }).render('#paypal-buttons');
-        } catch (e) {
-          setError(e instanceof Error ? e.message : 'PayPal-Initialisierung fehlgeschlagen');
+    setParticipants((prev) => {
+      const next: TeilnehmerMap = { ...prev };
+      for (const item of items) {
+        if (item.type !== 'seminar') {
+          delete next[item.id];
+          continue;
         }
+        const existing = next[item.id] || [];
+        const targetLength = Math.max(1, item.menge);
+        const resized = [...existing];
+        while (resized.length < targetLength) resized.push({ vorname: '', nachname: '', terminId: item.terminId });
+        if (resized.length > targetLength) resized.length = targetLength;
+        next[item.id] = resized.map((p) => ({ ...p, terminId: item.terminId }));
       }
-    }, 150);
-    return () => clearInterval(iv);
-  }, [enabled, clientId, currency, amount, customId, onApprove, requireAgb, requireValid]);
+      return next;
+    });
+  }, [items]);
 
-  if (!enabled) {
+  useEffect(() => {
+    if (zahlungsmethode === 'rechnung') {
+      setPaypalError(null);
+    } else {
+      setError(null);
+    }
+  }, [zahlungsmethode]);
+
+  const totalBrutto = useMemo(() => items.reduce((sum, item) => sum + item.preisBrutto * item.menge, 0), [items]);
+  const paypalCustomId = useMemo(() => {
+    const payload = {
+      t: Date.now(),
+      items: items.map((item) => ({ type: item.type, ref: item.terminId ?? item.produktId, qty: item.menge })),
+    };
+    try {
+      return btoa(JSON.stringify(payload)).slice(0, 80);
+    } catch {
+      return `WA-${Date.now()}`;
+    }
+  }, [items]);
+
+  useEffect(() => {
+    setPaypalReady(false);
+  }, [paypalClientId, paypalCurrency, totalBrutto, paypalCustomId, zahlungsmethode]);
+
+  const handleParticipantChange = (itemId: string, idx: number, key: keyof TeilnehmerForm, value: string) => {
+    setParticipants((prev) => {
+      const copy = { ...prev };
+      const list = [...(copy[itemId] || [])];
+      if (!list[idx]) list[idx] = { vorname: '', nachname: '', terminId: items.find((item) => item.id === itemId)?.terminId } as TeilnehmerForm;
+      list[idx] = { ...list[idx], [key]: value };
+      copy[itemId] = list;
+      return copy;
+    });
+  };
+
+  const validate = useCallback((mode: PaymentMethod) => {
+    if (items.length === 0) return 'Warenkorb ist leer';
+    if (!billing.vorname?.trim() || !billing.nachname?.trim() || !billing.email?.trim()) return 'Bitte Rechnungsadresse vollständig ausfüllen';
+    if (billing.rechnungstyp === 'firma') {
+      const required = ['firmenname', 'rechnungsEmail', 'strasse', 'plz', 'stadt', 'land'] as const;
+      for (const key of required) {
+        if (!billing[key]?.toString().trim()) return `Feld "${key}" ist erforderlich`;
+      }
+    }
+    for (const item of items) {
+      if (item.type !== 'seminar') continue;
+      const list = participants[item.id] || [];
+      if (list.length !== item.menge) return 'Teilnehmerzahl stimmt nicht mit der Menge überein';
+      for (const [i, teilnehmer] of list.entries()) {
+        if (!teilnehmer.vorname?.trim()) return `Teilnehmer ${i + 1} benötigt einen Vornamen`;
+        if (!teilnehmer.nachname?.trim()) return `Teilnehmer ${i + 1} benötigt einen Nachnamen`;
+      }
+    }
+    if (!agb || !datenschutz) return 'Bitte AGB und Datenschutz bestätigen';
+    if (mode === 'paypal' && !resolvedPaypalClientId) return 'PayPal ist derzeit nicht verfügbar';
+    return null;
+  }, [items, billing, participants, agb, datenschutz, resolvedPaypalClientId]);
+
+  const validateAndReport = useCallback((mode: PaymentMethod) => {
+    const validationError = validate(mode);
+    if (validationError) {
+      if (mode === 'paypal') setPaypalError(validationError);
+      else setError(validationError);
+      return false;
+    }
+    if (mode === 'paypal') setPaypalError(null);
+    else setError(null);
+    return true;
+  }, [validate]);
+
+  const submitOrder = useCallback(async ({ mode, paypalCaptureId, paypalOrderId }: SubmitOptions = {}) => {
+    const paymentMode: PaymentMethod = paypalCaptureId ? 'paypal' : mode ?? zahlungsmethode;
+    if (!validateAndReport(paymentMode)) return;
+
+    setSubmitting(true);
+    try {
+      const positionen: PositionPayload[] = items.map((item) => {
+        const base: PositionPayload = {
+          typ: item.type,
+          titel: item.titel,
+          beschreibung: item.beschreibung,
+          produktId: item.produktId,
+          terminId: item.terminId,
+          menge: item.menge,
+        };
+        if (item.type === 'gutschein') {
+          base.betrag = item.preisBrutto;
+        }
+        return base;
+      });
+      const buchungen = items
+        .filter((item) => item.type === 'seminar')
+        .flatMap((item) => (participants[item.id] || []).map((person) => ({
+          ...person,
+          terminId: item.terminId,
+        })));
+
+      const payload = {
+        positionen,
+        buchungen,
+        gutscheinBetrag: 0,
+        rechnungstyp: billing.rechnungstyp,
+        vorname: billing.vorname,
+        nachname: billing.nachname,
+        email: billing.email,
+        telefon: billing.telefon,
+        firmenname: billing.firmenname,
+        ustId: billing.ustId,
+        rechnungsEmail: billing.rechnungsEmail,
+        strasse: billing.strasse,
+        plz: billing.plz,
+        stadt: billing.stadt,
+        land: billing.land,
+        agbAkzeptiert: agb,
+        datenschutzGelesen: datenschutz,
+        newsletterOptIn: newsletter,
+        zahlungsmethode: paymentMode,
+        paypalCaptureId,
+        paypalOrderId,
+      };
+
+      const result = await postBestellung(payload);
+      setSuccess({ id: result.id, status: result.status, bestellnummer: result.bestellnummer });
+      clear();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Bestellung fehlgeschlagen';
+      if (paymentMode === 'paypal') setPaypalError(msg);
+      else setError(msg);
+    } finally {
+      setSubmitting(false);
+    }
+  }, [validateAndReport, items, participants, billing, agb, datenschutz, newsletter, clear, zahlungsmethode]);
+
+  const ensurePayPalValid = useCallback(() => validateAndReport('paypal'), [validateAndReport]);
+
+  if (success) {
     return (
-      <div className="p-3 border rounded bg-gray-50 text-sm">Bitte AGB akzeptieren, um die PayPal‑Zahlung zu starten.</div>
+      <div className="mx-auto max-w-3xl space-y-6 px-6 py-16 text-center">
+        <h1 className="text-3xl font-semibold">Vielen Dank!</h1>
+        <p className="text-sm text-gray-600">
+          Ihre Bestellung <strong>{success.bestellnummer || `#${success.id}`}</strong> wurde mit Status <strong>{success.status}</strong> gespeichert. Sie erhalten in Kürze eine Bestätigung per E-Mail.
+        </p>
+        <Link href="/seminare" className="inline-block rounded bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-gray-900">
+          Zurück zu den Seminaren
+        </Link>
+      </div>
     );
   }
+
   return (
-    <div className="space-y-2">
-      {error && <div className="text-sm text-red-600">{error}</div>}
-      <div id="paypal-buttons"></div>
+    <div className="mx-auto max-w-4xl space-y-8 px-6 py-10">
+      <header>
+        <h1 className="text-3xl font-semibold">Checkout</h1>
+        <p className="mt-2 text-sm text-gray-600">Prüfen Sie Ihre Angaben und schließen Sie die Bestellung ab.</p>
+      </header>
+
+      <section className="rounded-xl border p-4 shadow-sm">
+        <h2 className="text-lg font-semibold">Warenkorb</h2>
+        {items.length === 0 ? (
+          <p className="mt-3 text-sm text-gray-600">Der Warenkorb ist leer.</p>
+        ) : (
+          <ul className="mt-3 space-y-3 text-sm">
+            {items.map((item) => (
+              <li key={item.id} className="flex items-start justify-between border-b pb-3 last:border-none">
+                <div>
+                  <p className="font-medium">{item.titel}</p>
+                  {item.terminLabel && <p className="text-xs text-gray-500">{item.terminLabel}</p>}
+                  {item.beschreibung && <p className="text-xs text-gray-500">{item.beschreibung}</p>}
+                </div>
+                <div className="text-right">
+                  <p>{item.menge}× {item.preisBrutto.toFixed(2)} €</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="mt-4 flex items-center justify-between text-sm font-medium">
+          <span>Gesamt</span>
+          <span>{totalBrutto.toFixed(2)} €</span>
+        </div>
+      </section>
+
+      {items.some((item) => item.type === 'seminar') && (
+        <section className="rounded-xl border p-4 shadow-sm">
+          <h2 className="text-lg font-semibold">Teilnehmerdaten</h2>
+          {items.filter((item) => item.type === 'seminar').map((item) => (
+            <div key={item.id} className="mt-4 space-y-3">
+              <h3 className="text-sm font-medium">{item.titel}</h3>
+              {(participants[item.id] || []).map((teilnehmer, idx) => (
+                <div key={idx} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <label className="text-xs font-medium text-gray-600">
+                    Vorname*
+                    <input
+                      value={teilnehmer.vorname || ''}
+                      onChange={(e) => handleParticipantChange(item.id, idx, 'vorname', e.target.value)}
+                      className="mt-1 w-full rounded border px-2 py-1 text-sm"
+                    />
+                  </label>
+                  <label className="text-xs font-medium text-gray-600">
+                    Nachname*
+                    <input
+                      value={teilnehmer.nachname || ''}
+                      onChange={(e) => handleParticipantChange(item.id, idx, 'nachname', e.target.value)}
+                      className="mt-1 w-full rounded border px-2 py-1 text-sm"
+                    />
+                  </label>
+                  <label className="text-xs font-medium text-gray-600">
+                    E-Mail
+                    <input
+                      value={teilnehmer.email || ''}
+                      onChange={(e) => handleParticipantChange(item.id, idx, 'email', e.target.value)}
+                      className="mt-1 w-full rounded border px-2 py-1 text-sm"
+                    />
+                  </label>
+                  <label className="text-xs font-medium text-gray-600">
+                    WSET Nr.
+                    <input
+                      value={teilnehmer.wsetCandidateNumber || ''}
+                      onChange={(e) => handleParticipantChange(item.id, idx, 'wsetCandidateNumber', e.target.value)}
+                      className="mt-1 w-full rounded border px-2 py-1 text-sm"
+                    />
+                  </label>
+                  <label className="sm:col-span-2 text-xs font-medium text-gray-600">
+                    Besondere Bedürfnisse
+                    <textarea
+                      value={teilnehmer.besondereBeduerfnisse || ''}
+                      onChange={(e) => handleParticipantChange(item.id, idx, 'besondereBeduerfnisse', e.target.value)}
+                      className="mt-1 w-full rounded border px-2 py-1 text-sm"
+                      rows={2}
+                    />
+                  </label>
+                </div>
+              ))}
+            </div>
+          ))}
+        </section>
+      )}
+
+      <section className="rounded-xl border p-4 shadow-sm space-y-4">
+        <h2 className="text-lg font-semibold">Rechnungsadresse</h2>
+        <div className="flex gap-4 text-sm">
+          <label className={`flex items-center gap-2 rounded border px-3 py-2 ${billing.rechnungstyp === 'privat' ? 'bg-gray-100 border-gray-600' : ''}`}>
+            <input type="radio" checked={billing.rechnungstyp === 'privat'} onChange={() => setBilling({ ...billing, rechnungstyp: 'privat' })} /> Privat
+          </label>
+          <label className={`flex items-center gap-2 rounded border px-3 py-2 ${billing.rechnungstyp === 'firma' ? 'bg-gray-100 border-gray-600' : ''}`}>
+            <input type="radio" checked={billing.rechnungstyp === 'firma'} onChange={() => setBilling({ ...billing, rechnungstyp: 'firma' })} /> Firma
+          </label>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {billing.rechnungstyp === 'firma' && (
+            <label className="sm:col-span-2 text-xs font-medium text-gray-600">
+              Firmenname*
+              <input value={billing.firmenname || ''} onChange={(e) => setBilling({ ...billing, firmenname: e.target.value })} className="mt-1 w-full rounded border px-2 py-1 text-sm" />
+            </label>
+          )}
+          <label className="text-xs font-medium text-gray-600">
+            Vorname*
+            <input value={billing.vorname} onChange={(e) => setBilling({ ...billing, vorname: e.target.value })} className="mt-1 w-full rounded border px-2 py-1 text-sm" />
+          </label>
+          <label className="text-xs font-medium text-gray-600">
+            Nachname*
+            <input value={billing.nachname} onChange={(e) => setBilling({ ...billing, nachname: e.target.value })} className="mt-1 w-full rounded border px-2 py-1 text-sm" />
+          </label>
+          <label className="sm:col-span-2 text-xs font-medium text-gray-600">
+            Straße
+            <input value={billing.strasse || ''} onChange={(e) => setBilling({ ...billing, strasse: e.target.value })} className="mt-1 w-full rounded border px-2 py-1 text-sm" />
+          </label>
+          <label className="text-xs font-medium text-gray-600">
+            PLZ
+            <input value={billing.plz || ''} onChange={(e) => setBilling({ ...billing, plz: e.target.value })} className="mt-1 w-full rounded border px-2 py-1 text-sm" />
+          </label>
+          <label className="text-xs font-medium text-gray-600">
+            Stadt
+            <input value={billing.stadt || ''} onChange={(e) => setBilling({ ...billing, stadt: e.target.value })} className="mt-1 w-full rounded border px-2 py-1 text-sm" />
+          </label>
+          <label className="text-xs font-medium text-gray-600">
+            Land
+            <input value={billing.land || ''} onChange={(e) => setBilling({ ...billing, land: e.target.value })} className="mt-1 w-full rounded border px-2 py-1 text-sm" />
+          </label>
+          <label className="sm:col-span-2 text-xs font-medium text-gray-600">
+            E-Mail*
+            <input value={billing.email} onChange={(e) => setBilling({ ...billing, email: e.target.value })} className="mt-1 w-full rounded border px-2 py-1 text-sm" />
+          </label>
+          {billing.rechnungstyp === 'firma' && (
+            <label className="sm:col-span-2 text-xs font-medium text-gray-600">
+              Rechnungs-E-Mail*
+              <input value={billing.rechnungsEmail || ''} onChange={(e) => setBilling({ ...billing, rechnungsEmail: e.target.value })} className="mt-1 w-full rounded border px-2 py-1 text-sm" />
+            </label>
+          )}
+          <label className="sm:col-span-2 text-xs font-medium text-gray-600">
+            Telefon
+            <input value={billing.telefon || ''} onChange={(e) => setBilling({ ...billing, telefon: e.target.value })} className="mt-1 w-full rounded border px-2 py-1 text-sm" />
+          </label>
+        </div>
+      </section>
+
+      <section className="rounded-xl border p-4 shadow-sm space-y-3">
+        <h2 className="text-lg font-semibold">Zahlung</h2>
+        <label className="flex items-center gap-3 text-sm">
+          <input type="radio" checked={zahlungsmethode === 'rechnung'} onChange={() => setZahlungsmethode('rechnung')} />
+          <span>Auf Rechnung (Zahlung nach Rechnungseingang)</span>
+        </label>
+        <div>
+          <label className={`flex items-center gap-3 text-sm ${paypalClientId ? '' : 'opacity-50'}`}>
+            <input
+              type="radio"
+              checked={zahlungsmethode === 'paypal'}
+              onChange={() => resolvedPaypalClientId && setZahlungsmethode('paypal')}
+              disabled={!resolvedPaypalClientId}
+            />
+            <span>PayPal, Lastschrift oder Karte</span>
+          </label>
+          <p className="ml-6 mt-1 text-xs text-gray-500">
+            Die PayPal-Option umfasst Zahlung über PayPal-Konto, Debit-/Kreditkarten sowie deutsche Bankeinzugsmethoden.
+          </p>
+        </div>
+      </section>
+
+      {zahlungsmethode === 'paypal' && (
+        <section className="rounded-xl border p-4 shadow-sm space-y-3">
+          <h2 className="text-lg font-semibold">PayPal</h2>
+          <p className="text-sm text-gray-600">Zu zahlender Betrag: {totalBrutto.toFixed(2)} €</p>
+          <p className="text-xs text-gray-500">Sie können PayPal, Debit-/Kreditkarten oder Bankeinzug nutzen.</p>
+          <div className="mt-3 space-y-2">
+          {resolvedPaypalClientId ? (
+              <>
+                {!paypalReady && <div className="text-xs text-gray-500">PayPal wird geladen…</div>}
+                <PayPalButtons
+                  clientId={resolvedPaypalClientId}
+                  currency={paypalCurrency}
+                  amount={totalBrutto}
+                  customId={paypalCustomId}
+                  disabled={submitting}
+                  onValidate={ensurePayPalValid}
+                  onApprove={({ captureId, orderId }) => submitOrder({ mode: 'paypal', paypalCaptureId: captureId, paypalOrderId: orderId })}
+                  onError={(msg) => setPaypalError(msg)}
+                  onReady={() => setPaypalReady(true)}
+                />
+              </>
+            ) : (
+              <div className="rounded border border-dashed p-3 text-sm text-gray-500">PayPal ist momentan nicht verfügbar.</div>
+            )}
+          </div>
+          {paypalError && <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{paypalError}</div>}
+        </section>
+      )}
+
+      <section className="rounded-xl border p-4 shadow-sm space-y-3 text-sm">
+        <label className="flex items-center gap-2">
+          <input type="checkbox" checked={agb} onChange={(e) => setAgb(e.target.checked)} />
+          <span>Ich akzeptiere die AGB.</span>
+        </label>
+        <label className="flex items-center gap-2">
+          <input type="checkbox" checked={datenschutz} onChange={(e) => setDatenschutz(e.target.checked)} />
+          <span>Ich habe die Datenschutzhinweise gelesen.</span>
+        </label>
+        <label className="flex items-center gap-2 text-xs text-gray-600">
+          <input type="checkbox" checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} />
+          <span>Newsletter erhalten</span>
+        </label>
+      </section>
+
+      {error && <div className="rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+
+      {zahlungsmethode === 'rechnung' && (
+        <button
+          onClick={() => submitOrder({ mode: 'rechnung' })}
+          disabled={submitting}
+          className="w-full rounded bg-black px-4 py-3 text-sm font-semibold text-white hover:bg-gray-900 disabled:opacity-40"
+        >
+          {submitting ? 'Bestellung wird übermittelt…' : 'Bestellung abschließen'}
+        </button>
+      )}
     </div>
   );
 }

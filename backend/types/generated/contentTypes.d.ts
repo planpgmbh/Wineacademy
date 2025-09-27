@@ -373,10 +373,83 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiBestellungBestellung extends Struct.CollectionTypeSchema {
+  collectionName: 'bestellungen';
+  info: {
+    description: 'Bestellung mit Warenkorb-Positionen und Rechnungsdaten';
+    displayName: 'Bestellung';
+    pluralName: 'bestellungen';
+    singularName: 'bestellung';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    agbAkzeptiert: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    bestellstatus: Schema.Attribute.Enumeration<
+      ['offen', 'bezahlt', 'storniert']
+    > &
+      Schema.Attribute.DefaultTo<'offen'>;
+    buchungen: Schema.Attribute.Relation<'oneToMany', 'api::buchung.buchung'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    datenschutzGelesen: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    email: Schema.Attribute.Email & Schema.Attribute.Required;
+    firmenname: Schema.Attribute.String;
+    gutscheinBetrag: Schema.Attribute.Decimal;
+    gutscheinCode: Schema.Attribute.String;
+    gutscheine: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::gutschein.gutschein'
+    >;
+    kunde: Schema.Attribute.Relation<'manyToOne', 'api::kunde.kunde'>;
+    land: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::bestellung.bestellung'
+    > &
+      Schema.Attribute.Private;
+    nachname: Schema.Attribute.String & Schema.Attribute.Required;
+    newsletterOptIn: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    notizen: Schema.Attribute.Text;
+    paypalOrderId: Schema.Attribute.String;
+    plz: Schema.Attribute.String;
+    positionen: Schema.Attribute.Component<'bestellung.position', true>;
+    publishedAt: Schema.Attribute.DateTime;
+    rechnungsEmail: Schema.Attribute.Email;
+    rechnungstyp: Schema.Attribute.Enumeration<['privat', 'firma']> &
+      Schema.Attribute.DefaultTo<'privat'>;
+    stadt: Schema.Attribute.String;
+    strasse: Schema.Attribute.String;
+    summePositionenBrutto: Schema.Attribute.Decimal;
+    summePositionenNetto: Schema.Attribute.Decimal;
+    summeSteuer: Schema.Attribute.Decimal;
+    telefon: Schema.Attribute.String;
+    titel: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    ustId: Schema.Attribute.String;
+    vorname: Schema.Attribute.String & Schema.Attribute.Required;
+    waehrung: Schema.Attribute.String & Schema.Attribute.DefaultTo<'EUR'>;
+    zahlungsmethode: Schema.Attribute.Enumeration<
+      ['rechnung', 'paypal', 'karte', 'ueberweisung', 'sonstiges']
+    >;
+    zahlungsreferenz: Schema.Attribute.String;
+    zuZahlenBrutto: Schema.Attribute.Decimal;
+    zuZahlenNetto: Schema.Attribute.Decimal;
+    zuZahlenSteuer: Schema.Attribute.Decimal;
+  };
+}
+
 export interface ApiBuchungBuchung extends Struct.CollectionTypeSchema {
   collectionName: 'buchungen';
   info: {
-    description: 'Buchung f\u00FCr eine Session/Termin';
+    description: 'Teilnehmerdaten zu einem Seminartermin innerhalb einer Bestellung';
     displayName: 'Buchung';
     pluralName: 'buchungen';
     singularName: 'buchung';
@@ -385,81 +458,41 @@ export interface ApiBuchungBuchung extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
-    agbAkzeptiert: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
-    anzahl: Schema.Attribute.Integer &
-      Schema.Attribute.SetMinMax<
-        {
-          min: 1;
-        },
-        number
-      > &
-      Schema.Attribute.DefaultTo<1>;
+    anmerkungen: Schema.Attribute.Text;
+    besondereBeduerfnisse: Schema.Attribute.Text;
+    bestellung: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::bestellung.bestellung'
+    >;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    datenschutzGelesen: Schema.Attribute.Boolean &
-      Schema.Attribute.DefaultTo<false>;
-    email: Schema.Attribute.Email & Schema.Attribute.Required;
-    firmenname: Schema.Attribute.String;
-    gesamtpreis: Schema.Attribute.Decimal;
-    gesamtpreisBrutto: Schema.Attribute.Decimal;
-    gesamtpreisNetto: Schema.Attribute.Decimal;
-    gesamtsteuerBetrag: Schema.Attribute.Decimal;
-    gutscheincode: Schema.Attribute.String;
-    kunde: Schema.Attribute.Relation<'manyToOne', 'api::kunde.kunde'>;
-    land: Schema.Attribute.String;
+    email: Schema.Attribute.Email;
+    geburtstag: Schema.Attribute.Date;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::buchung.buchung'
     > &
       Schema.Attribute.Private;
-    mitMwst: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     nachname: Schema.Attribute.String & Schema.Attribute.Required;
-    newsletterOptIn: Schema.Attribute.Boolean &
-      Schema.Attribute.DefaultTo<false>;
-    notizen: Schema.Attribute.Text;
-    plz: Schema.Attribute.String;
     preisBrutto: Schema.Attribute.Decimal;
     preisNetto: Schema.Attribute.Decimal;
-    preisProPlatz: Schema.Attribute.Decimal;
     publishedAt: Schema.Attribute.DateTime;
-    rechnungsEmail: Schema.Attribute.Email;
-    rechnungstyp: Schema.Attribute.Enumeration<['privat', 'firma']> &
-      Schema.Attribute.DefaultTo<'privat'>;
-    stadt: Schema.Attribute.String;
-    status: Schema.Attribute.Enumeration<
-      ['offen', 'bezahlt', 'bestaetigt', 'storniert', 'erstattet', 'warteliste']
-    > &
-      Schema.Attribute.DefaultTo<'offen'>;
-    steuerBetrag: Schema.Attribute.Decimal;
     steuerSatz: Schema.Attribute.Decimal;
-    strasse: Schema.Attribute.String;
-    teilnehmer: Schema.Attribute.Component<'buchung.teilnehmer', true> &
-      Schema.Attribute.SetMinMax<
-        {
-          min: 1;
-        },
-        number
-      >;
-    telefon: Schema.Attribute.String;
     termin: Schema.Attribute.Relation<'manyToOne', 'api::termin.termin'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    ustId: Schema.Attribute.String;
     vorname: Schema.Attribute.String & Schema.Attribute.Required;
-    zahlungsmethode: Schema.Attribute.Enumeration<
-      ['ueberweisung', 'karte', 'paypal', 'sonstiges']
-    >;
-    zahlungsreferenz: Schema.Attribute.String;
+    wsetCandidateNumber: Schema.Attribute.String;
   };
 }
 
 export interface ApiGutscheinGutschein extends Struct.CollectionTypeSchema {
   collectionName: 'gutscheine';
   info: {
-    description: 'Gutscheine mit Einmalnutzung';
+    description: 'Gutschein-Templates und generierte Codes';
     displayName: 'Gutschein';
     pluralName: 'gutscheine';
     singularName: 'gutschein';
@@ -469,45 +502,33 @@ export interface ApiGutscheinGutschein extends Struct.CollectionTypeSchema {
   };
   attributes: {
     aktiv: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
-    bemerkung: Schema.Attribute.Text;
-    code: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.Unique;
+    beschreibung: Schema.Attribute.Text;
+    bestellung: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::bestellung.bestellung'
+    >;
+    betrag: Schema.Attribute.Decimal;
+    bild: Schema.Attribute.Media<'images'>;
+    code: Schema.Attribute.String & Schema.Attribute.Unique;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    gueltigAb: Schema.Attribute.Date;
-    gueltigBis: Schema.Attribute.Date;
+    eingeloest: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    eingeloestAm: Schema.Attribute.DateTime;
+    istTemplate: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::gutschein.gutschein'
     > &
       Schema.Attribute.Private;
-    maxNutzung: Schema.Attribute.Integer &
-      Schema.Attribute.SetMinMax<
-        {
-          min: 1;
-        },
-        number
-      > &
-      Schema.Attribute.DefaultTo<1>;
-    nutzungen: Schema.Attribute.Integer &
-      Schema.Attribute.SetMinMax<
-        {
-          min: 0;
-        },
-        number
-      > &
-      Schema.Attribute.DefaultTo<0>;
+    maxBetrag: Schema.Attribute.Decimal;
+    minBetrag: Schema.Attribute.Decimal;
     publishedAt: Schema.Attribute.DateTime;
-    typ: Schema.Attribute.Enumeration<['betrag', 'prozent']> &
-      Schema.Attribute.Required &
-      Schema.Attribute.DefaultTo<'betrag'>;
+    titel: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    wert: Schema.Attribute.Decimal & Schema.Attribute.Required;
   };
 }
 
@@ -546,7 +567,7 @@ export interface ApiKategorieKategorie extends Struct.CollectionTypeSchema {
 export interface ApiKundeKunde extends Struct.CollectionTypeSchema {
   collectionName: 'kunden';
   info: {
-    description: 'Kundendaten f\u00FCr Buchungen';
+    description: 'Kundendaten f\u00FCr Bestellungen';
     displayName: 'Kunde';
     pluralName: 'kunden';
     singularName: 'kunde';
@@ -555,7 +576,10 @@ export interface ApiKundeKunde extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
-    buchungen: Schema.Attribute.Relation<'oneToMany', 'api::buchung.buchung'>;
+    bestellungen: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::bestellung.bestellung'
+    >;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -614,6 +638,46 @@ export interface ApiOrtOrt extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     veranstaltungsort: Schema.Attribute.String;
+  };
+}
+
+export interface ApiProduktProdukt extends Struct.CollectionTypeSchema {
+  collectionName: 'produkte';
+  info: {
+    description: 'Shop-Produkt (z. B. Buch, Gutschein)';
+    displayName: 'Produkt';
+    pluralName: 'produkte';
+    singularName: 'produkt';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    aktiv: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    beschreibung: Schema.Attribute.RichText;
+    bild: Schema.Attribute.Media<'images'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    istGutschein: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    kurzbeschreibung: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::produkt.produkt'
+    > &
+      Schema.Attribute.Private;
+    mitMwst: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    preisBrutto: Schema.Attribute.Decimal;
+    preisNetto: Schema.Attribute.Decimal;
+    publishedAt: Schema.Attribute.DateTime;
+    slug: Schema.Attribute.UID<'titel'> & Schema.Attribute.Required;
+    steuerSatz: Schema.Attribute.Decimal;
+    titel: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    waehrung: Schema.Attribute.String & Schema.Attribute.DefaultTo<'EUR'>;
   };
 }
 
@@ -707,9 +771,6 @@ export interface ApiTerminTermin extends Struct.CollectionTypeSchema {
         },
         number
       >;
-    tageUebersicht: Schema.Attribute.String &
-      Schema.Attribute.Private &
-      Schema.Attribute.Configurable;
     titel: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1226,11 +1287,13 @@ declare module '@strapi/strapi' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
+      'api::bestellung.bestellung': ApiBestellungBestellung;
       'api::buchung.buchung': ApiBuchungBuchung;
       'api::gutschein.gutschein': ApiGutscheinGutschein;
       'api::kategorie.kategorie': ApiKategorieKategorie;
       'api::kunde.kunde': ApiKundeKunde;
       'api::ort.ort': ApiOrtOrt;
+      'api::produkt.produkt': ApiProduktProdukt;
       'api::seminar.seminar': ApiSeminarSeminar;
       'api::termin.termin': ApiTerminTermin;
       'plugin::content-releases.release': PluginContentReleasesRelease;

@@ -1,8 +1,7 @@
 "use client";
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import type { SeminarListItem } from '@/lib/api';
-import Link from 'next/link';
-import { useEffect } from 'react';
+import { useCart } from '@/lib/cart-context';
 
 type Termin = NonNullable<NonNullable<SeminarListItem['termine']>[number]>;
 
@@ -35,7 +34,10 @@ function ortLabel(t: Termin) {
   return t.ort?.stadt || t.ort?.standort || t.ort?.veranstaltungsort || 'Ort n/a';
 }
 
-export default function BookingSidebar({ termine, fallbackPreis, slug }: { termine: NonNullable<SeminarListItem['termine']>; fallbackPreis?: number; slug: string }) {
+const defaultVat = Number(process.env.NEXT_PUBLIC_DEFAULT_VAT || '19');
+
+export default function BookingSidebar({ termine, fallbackPreis, seminarTitle, mitMwst }: { termine: NonNullable<SeminarListItem['termine']>; fallbackPreis?: number; seminarTitle: string; mitMwst?: boolean }) {
+  const { addItem } = useCart();
   const allOrte = useMemo(() => {
     const labels = Array.from(new Set((termine || []).map(ortLabel)));
     return labels;
@@ -51,13 +53,31 @@ export default function BookingSidebar({ termine, fallbackPreis, slug }: { termi
   const [anzahl, setAnzahl] = useState(1);
   const priceSingle = current?.preis ?? fallbackPreis ?? 0;
   const total = typeof priceSingle === 'number' ? priceSingle * anzahl : undefined;
+  const steuerSatz = mitMwst === false ? 0 : defaultVat;
 
   // Falls Ort wechselt und bisheriger Termin nicht mehr existiert, auf ersten Termin setzen
   useEffect(() => {
-    if (terminOptions.length > 0 && !terminOptions.find(o => o.value === selectedTerminId)) {
+    if (terminOptions.length > 0 && !terminOptions.some(o => o.value === selectedTerminId)) {
       setSelectedTerminId(terminOptions[0].value);
     }
-  }, [selectedOrt, terminOptions.map(o => o.value).join(',' )]);
+  }, [terminOptions, selectedTerminId]);
+
+  const handleAddToCart = () => {
+    if (!current) return;
+    const terminId = Number(current.id);
+    const label = labelForTermin(current);
+    addItem({
+      type: 'seminar',
+      titel: `${seminarTitle} · ${label}`,
+      beschreibung: ortLabel(current),
+      terminId,
+      terminLabel: label,
+      preisBrutto: typeof priceSingle === 'number' ? priceSingle : 0,
+      steuerSatz,
+      menge: anzahl,
+      participants: Array.from({ length: anzahl }, () => ({ vorname: '', nachname: '', terminId })),
+    });
+  };
 
   return (
     <div className="sticky top-6 rounded-xl border p-4 shadow-sm ring-1 ring-black/5 bg-white">
@@ -110,13 +130,13 @@ export default function BookingSidebar({ termine, fallbackPreis, slug }: { termi
             <div className="mt-1 text-xs text-gray-600">Kapazität: {current.kapazitaet}</div>
           )}
 
-          <Link
+          <button
+            type="button"
             className="mt-5 w-full inline-block text-center bg-black text-white px-4 py-2.5 rounded-lg text-sm hover:bg-gray-900"
-            href={`/checkout?slug=${encodeURIComponent(slug)}&terminId=${encodeURIComponent(selectedTerminId)}&anzahl=${anzahl}`}
-            prefetch={false}
+            onClick={handleAddToCart}
           >
-            Zur Kasse
-          </Link>
+            In den Warenkorb
+          </button>
         </>
       )}
     </div>

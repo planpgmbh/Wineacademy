@@ -4,101 +4,32 @@
     "singularName": "buchung",
     "pluralName": "buchungen",
     "displayName": "Buchung",
-    "description": "Buchung für eine Session/Termin"
+    "description": "Teilnehmerdaten zu einem Seminartermin innerhalb einer Bestellung"
   },
   "options": {
     "draftAndPublish": false
   },
   "attributes": {
-    "titel": { "type": "string" },
-    
-    "rechnungstyp": {
-      "type": "enumeration",
-      "enum": ["privat", "firma"],
-      "default": "privat"
-    },
-    "firmenname": { "type": "string" },
-    "ustId": { "type": "string" },
-    "rechnungsEmail": { "type": "email" },
-    "strasse": { "type": "string" },
-    "plz": { "type": "string" },
-    "stadt": { "type": "string" },
-    "land": { "type": "string" },
-    
-    "teilnehmer": {
-      "type": "component",
-      "repeatable": true,
-      "component": "buchung.teilnehmer",
-      "min": 1
-    },
-    "mitMwst": { "type": "boolean", "default": true },
-    "steuerSatz": { "type": "decimal" },
-    "preisBrutto": { "type": "decimal" },
+    "vorname": { "type": "string", "required": true },
+    "nachname": { "type": "string", "required": true },
+    "email": { "type": "email" },
+    "geburtstag": { "type": "date" },
+    "wsetCandidateNumber": { "type": "string" },
+    "besondereBeduerfnisse": { "type": "text" },
+    "anmerkungen": { "type": "text" },
     "preisNetto": { "type": "decimal" },
-    "steuerBetrag": { "type": "decimal" },
-    "gesamtpreisBrutto": { "type": "decimal" },
-    "gesamtpreisNetto": { "type": "decimal" },
-    "gesamtsteuerBetrag": { "type": "decimal" },
-    "vorname": {
-      "type": "string",
-      "required": true
-    },
-    "nachname": {
-      "type": "string",
-      "required": true
-    },
-    "email": {
-      "type": "email",
-      "required": true
-    },
-    "telefon": { "type": "string" },
-    "anzahl": {
-      "type": "integer",
-      "default": 1,
-      "min": 1
-    },
-    "preisProPlatz": {
-      "type": "decimal"
-    },
-    "gesamtpreis": {
-      "type": "decimal"
-    },
-    "buchungsstatus": {
-      "type": "enumeration",
-      "enum": ["offen", "bezahlt", "bestaetigt", "storniert", "erstattet", "warteliste"],
-      "default": "offen"
-    },
-    "zahlungsmethode": {
-      "type": "enumeration",
-      "enum": ["ueberweisung", "karte", "paypal", "sonstiges"]
-    },
-    "zahlungsreferenz": { "type": "string" },
-    "gutscheincode": { "type": "string" },
-    "agbAkzeptiert": {
-      "type": "boolean",
-      "default": false
-    },
-    "datenschutzGelesen": {
-      "type": "boolean",
-      "default": false
-    },
-    "newsletterOptIn": {
-      "type": "boolean",
-      "default": false
-    },
-    "notizen": {
-      "type": "text"
+    "preisBrutto": { "type": "decimal" },
+    "steuerSatz": { "type": "decimal" },
+    "bestellung": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::bestellung.bestellung",
+      "inversedBy": "buchungen"
     },
     "termin": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::termin.termin",
-      "inversedBy": "buchungen"
-    },
-    "kunde": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::kunde.kunde",
       "inversedBy": "buchungen"
     }
   }

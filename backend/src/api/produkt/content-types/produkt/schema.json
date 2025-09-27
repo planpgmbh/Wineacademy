@@ -1,0 +1,26 @@
+{
+  "collectionName": "produkte",
+  "info": {
+    "singularName": "produkt",
+    "pluralName": "produkte",
+    "displayName": "Produkt",
+    "description": "Shop-Produkt (z. B. Buch, Gutschein)"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "titel": { "type": "string", "required": true },
+    "slug": { "type": "uid", "targetField": "titel", "required": true },
+    "kurzbeschreibung": { "type": "text" },
+    "beschreibung": { "type": "richtext" },
+    "preisNetto": { "type": "decimal" },
+    "preisBrutto": { "type": "decimal" },
+    "steuerSatz": { "type": "decimal" },
+    "mitMwst": { "type": "boolean", "default": true },
+    "waehrung": { "type": "string", "default": "EUR" },
+    "istGutschein": { "type": "boolean", "default": false },
+    "aktiv": { "type": "boolean", "default": true },
+    "bild": { "type": "media", "allowedTypes": ["images"], "multiple": false }
+  }
+}

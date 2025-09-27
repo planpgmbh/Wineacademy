@@ -10,7 +10,7 @@ Diese Seite beschreibt die produktive/staging Infrastruktur für Wine Academy Ha
 - Domains:
   - Produktion: `wineacademymain.plan-p.de`
   - Staging: `wineacademy.plan-p.de`
-- Basis-Pfad (Server): `/etc/docker/projects/wineacadamy`
+- Basis-Pfad (Server): `/opt/docker/projects/wineacadamy`
 
 ## Netzwerke
 
@@ -61,14 +61,14 @@ Vorbereitung (einmalig pro Umgebung):
 
 Staging:
 ```bash
-cd /etc/docker/projects/wineacadamy
+cd /opt/docker/projects/wineacadamy
 cp .env.staging.example .env.staging  # falls noch nicht vorhanden, dann befüllen
 docker compose -f docker-compose-staging.yml up -d --build
 ```
 
 Produktion:
 ```bash
-cd /etc/docker/projects/wineacadamy
+cd /opt/docker/projects/wineacadamy
 cp .env.example .env  # befüllen
 docker compose up -d --build
 ```
@@ -95,7 +95,7 @@ docker compose [-f docker-compose-staging.yml] logs db*
 ```bash
 docker exec <db-container> pg_dump -U $POSTGRES_USER $POSTGRES_DB > backup.sql
 ```
-- Compose/Projekt: regelmäßiges Backup des Pfades `/etc/docker/projects/wineacadamy` (z. B. via Duplicati).
+- Compose/Projekt: regelmäßiges Backup des Pfades `/opt/docker/projects/wineacadamy` (z. B. via Duplicati).
 
 ## Tipps & Troubleshooting
 

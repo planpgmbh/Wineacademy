@@ -1,0 +1,79 @@
+{
+  "collectionName": "bestellungen",
+  "info": {
+    "singularName": "bestellung",
+    "pluralName": "bestellungen",
+    "displayName": "Bestellung",
+    "description": "Bestellung mit Warenkorb-Positionen und Rechnungsdaten"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "titel": { "type": "string" },
+    "bestellnummer": { "type": "string", "unique": true },
+    "rechnungstyp": {
+      "type": "enumeration",
+      "enum": ["privat", "firma"],
+      "default": "privat"
+    },
+    "firmenname": { "type": "string" },
+    "ustId": { "type": "string" },
+    "rechnungsEmail": { "type": "email" },
+    "strasse": { "type": "string" },
+    "plz": { "type": "string" },
+    "stadt": { "type": "string" },
+    "land": { "type": "string" },
+    "vorname": { "type": "string", "required": true },
+    "nachname": { "type": "string", "required": true },
+    "email": { "type": "email", "required": true },
+    "telefon": { "type": "string" },
+    "positionen": {
+      "type": "component",
+      "repeatable": true,
+      "component": "bestellung.position"
+    },
+    "summePositionenNetto": { "type": "decimal" },
+    "summePositionenBrutto": { "type": "decimal" },
+    "summeSteuer": { "type": "decimal" },
+    "gutscheinBetrag": { "type": "decimal" },
+    "zuZahlenNetto": { "type": "decimal" },
+    "zuZahlenBrutto": { "type": "decimal" },
+    "zuZahlenSteuer": { "type": "decimal" },
+    "waehrung": { "type": "string", "default": "EUR" },
+    "gutscheinCode": { "type": "string" },
+    "bestellstatus": {
+      "type": "enumeration",
+      "enum": ["offen", "bezahlt", "storniert"],
+      "default": "offen"
+    },
+    "zahlungsmethode": {
+      "type": "enumeration",
+      "enum": ["rechnung", "paypal", "karte", "ueberweisung", "sonstiges"]
+    },
+    "zahlungsreferenz": { "type": "string" },
+    "paypalOrderId": { "type": "string" },
+    "agbAkzeptiert": { "type": "boolean", "default": false },
+    "datenschutzGelesen": { "type": "boolean", "default": false },
+    "newsletterOptIn": { "type": "boolean", "default": false },
+    "notizen": { "type": "text" },
+    "buchungen": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::buchung.buchung",
+      "mappedBy": "bestellung"
+    },
+    "gutscheine": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::gutschein.gutschein",
+      "mappedBy": "bestellung"
+    },
+    "kunde": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::kunde.kunde",
+      "inversedBy": "bestellungen"
+    }
+  }
+}

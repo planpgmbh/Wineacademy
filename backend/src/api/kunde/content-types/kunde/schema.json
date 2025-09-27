@@ -4,7 +4,7 @@
     "singularName": "kunde",
     "pluralName": "kunden",
     "displayName": "Kunde",
-    "description": "Kundendaten für Buchungen"
+    "description": "Kundendaten für Bestellungen"
   },
   "options": {
     "draftAndPublish": false
@@ -19,12 +19,11 @@
     "stadt": { "type": "string" },
     "land": { "type": "string" },
     "notizen": { "type": "text" },
-    "buchungen": {
+    "bestellungen": {
       "type": "relation",
       "relation": "oneToMany",
-      "target": "api::buchung.buchung",
+      "target": "api::bestellung.bestellung",
       "mappedBy": "kunde"
     }
   }
 }
-

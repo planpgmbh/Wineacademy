@@ -1,18 +1,32 @@
 import type { Schema, Struct } from '@strapi/strapi';
 
-export interface BuchungTeilnehmer extends Struct.ComponentSchema {
-  collectionName: 'components_buchung_teilnehmer';
+export interface BestellungPosition extends Struct.ComponentSchema {
+  collectionName: 'components_bestellung_positionen';
   info: {
-    description: 'Teilnehmerdaten f\u00FCr eine Buchung';
-    displayName: 'Teilnehmer';
+    description: 'Warenkorbposition einer Bestellung';
+    displayName: 'Position';
   };
   attributes: {
-    besondereBeduerfnisse: Schema.Attribute.Text;
-    email: Schema.Attribute.Email;
-    geburtstag: Schema.Attribute.Date;
-    nachname: Schema.Attribute.String & Schema.Attribute.Required;
-    vorname: Schema.Attribute.String & Schema.Attribute.Required;
-    wsetCandidateNumber: Schema.Attribute.String;
+    beschreibung: Schema.Attribute.Text;
+    einzelpreisBrutto: Schema.Attribute.Decimal;
+    einzelpreisNetto: Schema.Attribute.Decimal;
+    menge: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 1;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<1>;
+    produkt: Schema.Attribute.Relation<'oneToOne', 'api::produkt.produkt'>;
+    steuerSatz: Schema.Attribute.Decimal;
+    summeBrutto: Schema.Attribute.Decimal;
+    summeNetto: Schema.Attribute.Decimal;
+    summeSteuer: Schema.Attribute.Decimal;
+    termin: Schema.Attribute.Relation<'oneToOne', 'api::termin.termin'>;
+    titel: Schema.Attribute.String & Schema.Attribute.Required;
+    typ: Schema.Attribute.Enumeration<['seminar', 'produkt', 'gutschein']> &
+      Schema.Attribute.DefaultTo<'produkt'>;
   };
 }
 
@@ -36,7 +50,7 @@ export interface TerminSeminartag extends Struct.ComponentSchema {
 declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
-      'buchung.teilnehmer': BuchungTeilnehmer;
+      'bestellung.position': BestellungPosition;
       'termin.seminartag': TerminSeminartag;
     }
   }

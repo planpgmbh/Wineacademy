@@ -18,5 +18,5 @@ RUN npm run build
 ENV NODE_ENV=production
 EXPOSE 1337
 
-# Für Dev wird der Befehl in docker-compose-dev.yml überschrieben
+# Der Startbefehl kann bei Bedarf in den Compose-Dateien überschrieben werden
 CMD ["npm", "run", "start"]

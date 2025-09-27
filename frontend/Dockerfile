@@ -2,7 +2,7 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci || npm install
+RUN npm install && chmod +x node_modules/.bin/next
 COPY . .
 RUN npm run build
 
@@ -19,4 +19,3 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/static ./.next/static
 
 CMD ["node", "server.js"]
-

@@ -1,7 +1,7 @@
 networks:
   proxy:
     external: true
-  db_staging:
+  db_wineacadamy_staging:
     internal: true
 
 volumes:
@@ -9,25 +9,28 @@ volumes:
   uploads_staging_data:
 
 services:
-  db_staging:
+  db_wineacadamy_staging:
     image: postgres:15
-    container_name: wineacademy_db_staging
+    container_name: db_wineacadamy_staging
     env_file:
       - .env.staging
     volumes:
       - db_staging_data:/var/lib/postgresql/data
     networks:
-      - db_staging
+      - db_wineacadamy_staging
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       retries: 5
+    labels:
+      monitor.category: "database"
+      monitor.project: "wineacadamy_staging"
 
-  backend-staging:
+  service_wineacadamy_staging:
     build:
       context: ./backend
-    container_name: wineacademy_backend_staging
+    container_name: service_wineacadamy_staging
     command: ["npm", "run", "start"]
     env_file:
       - .env.staging
@@ -35,40 +38,42 @@ services:
       - NODE_ENV=production
       - HOST=0.0.0.0
       - PORT=1337
-      - DATABASE_HOST=db_staging
+      - DATABASE_HOST=db_wineacadamy_staging
       - DATABASE_PORT=5432
     depends_on:
-      db_staging:
+      db_wineacadamy_staging:
         condition: service_healthy
     volumes:
       - uploads_staging_data:/app/public/uploads
     networks:
-      - db_staging
+      - db_wineacadamy_staging
       - proxy
     labels:
       traefik.enable: "true"
       traefik.docker.network: "proxy"
-      traefik.http.services.backend-staging.loadbalancer.server.port: "1337"
-      traefik.http.routers.backend-staging.rule: "Host(`wineacademy.plan-p.de`) && PathPrefix(`/api`)"
-      traefik.http.routers.backend-staging.entrypoints: "websecure"
-      traefik.http.routers.backend-staging.tls.certresolver: "http-resolver"
+      traefik.http.services.service_wineacadamy_staging.loadbalancer.server.port: "1337"
+      traefik.http.routers.service_wineacadamy_staging.rule: "Host(`wineacademy.plan-p.de`) && PathPrefix(`/api`)"
+      traefik.http.routers.service_wineacadamy_staging.entrypoints: "websecure"
+      traefik.http.routers.service_wineacadamy_staging.tls.certresolver: "http-resolver"
       # Admin/Plugin-APIs (JSON-Endpunkte für das Admin-Panel)
-      traefik.http.routers.backend-staging-adminapi.rule: "Host(`wineacademy.plan-p.de`) && (PathPrefix(`/content-manager`) || PathPrefix(`/content-type-builder`) || PathPrefix(`/i18n`) || PathPrefix(`/users-permissions`) || PathPrefix(`/email`) || PathPrefix(`/upload`) || PathPrefix(`/users`))"
-      traefik.http.routers.backend-staging-adminapi.entrypoints: "websecure"
-      traefik.http.routers.backend-staging-adminapi.tls.certresolver: "http-resolver"
+      traefik.http.routers.service_wineacadamy_staging-adminapi.rule: "Host(`wineacademy.plan-p.de`) && (PathPrefix(`/content-manager`) || PathPrefix(`/content-type-builder`) || PathPrefix(`/i18n`) || PathPrefix(`/users-permissions`) || PathPrefix(`/email`) || PathPrefix(`/upload`) || PathPrefix(`/users`))"
+      traefik.http.routers.service_wineacadamy_staging-adminapi.entrypoints: "websecure"
+      traefik.http.routers.service_wineacadamy_staging-adminapi.tls.certresolver: "http-resolver"
       # Serve uploads without /api prefix for frontend asset URLs
-      traefik.http.routers.backend-staging-uploads.rule: "Host(`wineacademy.plan-p.de`) && PathPrefix(`/uploads`)"
-      traefik.http.routers.backend-staging-uploads.entrypoints: "websecure"
-      traefik.http.routers.backend-staging-uploads.tls.certresolver: "http-resolver"
+      traefik.http.routers.service_wineacadamy_staging-uploads.rule: "Host(`wineacademy.plan-p.de`) && PathPrefix(`/uploads`)"
+      traefik.http.routers.service_wineacadamy_staging-uploads.entrypoints: "websecure"
+      traefik.http.routers.service_wineacadamy_staging-uploads.tls.certresolver: "http-resolver"
       # Serve Strapi Admin under /admin (no strip)
-      traefik.http.routers.backend-staging-admin.rule: "Host(`wineacademy.plan-p.de`) && PathPrefix(`/admin`)"
-      traefik.http.routers.backend-staging-admin.entrypoints: "websecure"
-      traefik.http.routers.backend-staging-admin.tls.certresolver: "http-resolver"
+      traefik.http.routers.service_wineacadamy_staging-admin.rule: "Host(`wineacademy.plan-p.de`) && PathPrefix(`/admin`)"
+      traefik.http.routers.service_wineacadamy_staging-admin.entrypoints: "websecure"
+      traefik.http.routers.service_wineacadamy_staging-admin.tls.certresolver: "http-resolver"
+      monitor.category: "website"
+      monitor.project: "wineacadamy_staging"
 
-  frontend-staging:
+  web_wineacadamy_staging:
     build:
       context: ./frontend
-    container_name: wineacademy_frontend_staging
+    container_name: web_wineacadamy_staging
     env_file:
       - .env.staging
     environment:
@@ -78,7 +83,9 @@ services:
     labels:
       traefik.enable: "true"
       traefik.docker.network: "proxy"
-      traefik.http.services.frontend-staging.loadbalancer.server.port: "3000"
-      traefik.http.routers.frontend-staging.rule: "Host(`wineacademy.plan-p.de`)"
-      traefik.http.routers.frontend-staging.entrypoints: "websecure"
-      traefik.http.routers.frontend-staging.tls.certresolver: "http-resolver"
+      traefik.http.services.web_wineacadamy_staging.loadbalancer.server.port: "3000"
+      traefik.http.routers.web_wineacadamy_staging.rule: "Host(`wineacademy.plan-p.de`)"
+      traefik.http.routers.web_wineacadamy_staging.entrypoints: "websecure"
+      traefik.http.routers.web_wineacadamy_staging.tls.certresolver: "http-resolver"
+      monitor.category: "website"
+      monitor.project: "wineacadamy_staging"

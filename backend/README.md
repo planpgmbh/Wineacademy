@@ -1,146 +1,82 @@
-### Init‑Prompt (zum Kopieren)
+# Backend (Strapi 5)
 
-Aufgabe:
+Das Strapi-Backend stellt alle Inhalte (Seminare, Termine, Produkte) und Checkout-Flows für die Wine Academy Hamburg bereit. Es läuft als Node 20 Service mit PostgreSQL 15 und versorgt das Next.js-Frontend ausschließlich über Public-Endpoints.
 
-Deine Rolle: Du arbeitest NUR am Backend in `backend/`. Lies und befolge zuerst `backend/README.md` (Datenmodell, Public‑APIs, Lifecycles, Admin‑Hinweise) und die Root‑`README.md` (Docker Desktop, Compose, Ports/Routing). Für Seeding/Reset befolge `docs/Reset_and_filldb.md`. Starte/prüfe: `docker compose -f ../docker-compose-dev.yml up -d backend`. oder `docker compose -f ../docker-compose-staging.yml up -d backend` Nutze die Public‑Endpoints, keine direkten internen Services für das Frontend. Mache einen kurzen Plan und liste die Befehle/curl‑Tests, die du ausführst, bevor du Änderungen machst. Wenn das Backend aktuell nicht über Docker läuft, starte das Backend. Wenn du eine Änderung am backend vorgenommen hast öffne die seite bei mir im browser. Antworte immer in deutsch. 
+## Dokumentation & Referenzen
+- Root-Übersicht: `../README.md`
+- Seeding/Reset: `../docs/Reset_and_filldb.md`
+- Infrastruktur & Deploy: `../docs/server-infrastructure.md`
+- Frontend-Integration: `../frontend/README.md`
 
-# Backend (Strapi 5) – Wine Academy
-
-Zweck: Headless‑CMS und API für Seminare, Termine, Buchungen, Orte, Kunden, Gutscheine. Stellt schlanke Public‑Endpoints für das Frontend bereit und verwaltet Admin‑Workflows.
-
-## Stack & Ports
-- Strapi 5.23 (Node 20)
-- PostgreSQL 15
-- Dev‑Port: 1337 (`http://localhost:1337`, Admin: `/admin`)
-
-## Start (Dev)
-- Empfohlen über Root‑Compose: `docker compose -f ../docker-compose-dev.yml up -d backend`
-- Logs: `docker compose -f ../docker-compose-dev.yml logs -f backend`
-
-## Datenmodell (Kurzüberblick)
-- Content‑Types: 
-  - Seminar (Name, Slug, Beschreibungen, Bild, Standardpreis, aktiv)
-  - Termin (titel, planungsstatus: geplant/ausgebucht/abgesagt, preis, kapazitaet, tage[], seminar, ort)
-  - Ort (Standort/Adresse/Typ)
-- Buchung (Kundendaten, anzahl, preise, buchungsstatus)
-  - Kunde, Gutschein
-- Komponente: `termin.seminartag` (datum, startzeit, endzeit) – Defaultzeiten: 10:00–17:00
-- Relationen: Seminar ↔ Termine (1:n), Termin → Ort (n:1), Buchung → Termin/Kunde (n:1)
-
-## Lifecycles
-- Termin: afterCreate/afterUpdate → wenn `titel` leer ist, wird er aus „YYYY‑DD‑MM – Seminar – Ort“ gesetzt (Datum aus erstem Seminartag).
-
-## Public API (für das Frontend)
-- GET `/api/public/seminare` → aktive, veröffentlichte Seminare mit geplanten Terminen (Tage, Ort, Preise – nur benötigte Felder)
-- GET `/api/public/seminare/:slug` → Detail eines Seminars
-  - Routen/Controller: `src/api/seminar/routes/public.ts`, `src/api/seminar/controllers/seminar.ts`
-
-Ergänzende Public‑Endpoints (Checkout/Test):
-- POST `/api/public/buchungen` → Buchung anlegen (optional mit `paypalCaptureId`)
-- POST `/api/public/gutscheine/validate` → Gutschein prüfen und Totale (brutto) berechnen
-- GET  `/api/public/buchungen/:id` → Buchung minimal lesen (Status/Summen)
-
-Beispieltests:
+## Lokaler Start
+```bash
+docker compose -f ../docker-compose-staging.yml up -d service_wineacadamy_staging
+# Logs
+docker compose -f ../docker-compose-staging.yml logs -f service_wineacadamy_staging
 ```
-curl -s http://localhost:1337/api/public/seminare | jq '.[0]'
-curl -s http://localhost:1337/api/public/seminare/einfuhrung-in-die-weinwelt | jq
-```
+Strapi Admin erreichst du auf `http://localhost:1337/admin` (erster Start → eigenen Admin anlegen).
 
-## Seeding & Reset
-– Für das Befüllen/Zurücksetzen der Datenbank folge der Schritt‑für‑Schritt‑Anleitung in `../docs/Reset_and_filldb.md`.
-- Wichtig für Agenten/KI: Wenn du „Seed‑Prozess starten“ oder „Datenbank zurücksetzen“ liest, öffne `docs/Reset_and_filldb.md` und führe die dort beschriebenen Schritte aus.
-- Admin: Beim ersten Start wird automatisch ein Admin angelegt, falls keiner existiert (Standard: Email `philipp@plan-p.de`, Name `Philipp`, Passwort `AdRnuh1`).
+## Datenmodell (Kurzfassung)
+- **Seminar** – Stammdaten, Texte, Bild, Standardpreis, Relation zu Kategorien & Terminen
+- **Termin** – Datum(e) (`termin.seminartag`), Preis, `planungsstatus`, Relation zu Seminar & Ort
+- **Ort** – Veranstaltungsort (Adresse, Typ)
+- **Bestellung** – Rechnungs-/Zahlungsdaten, Warenkorb-Positionen, Summen, Status (`offen|bezahlt|storniert`), Relation zu Kunde, Buchungen, Gutscheinen
+- **Buchung** – Teilnehmer eines Seminartermins inkl. Preis/MwSt, verweist auf Termin & Bestellung
+- **Produkt** – Shop-Artikel (inkl. Flag `istGutschein` für Gutschein-Template)
+- **Gutschein** – Template oder generierter Code (Betrag, Bestellung, Einlöse-Status)
 
-## Umgebungsvariablen (Auszug)
-- DB: `DATABASE_*` (Host über Compose gesetzt)
-- Admin/Keys: `APP_KEYS`, `JWT_SECRET`, … (in Dev vom `backend/.env` generiert)
-- Interne API‑Basis für Frontend‑SSR: `API_INTERNAL_URL` (Root‑`.env`, z. B. `http://backend:1337`)
- - Öffentliche URL/Hosts: `PUBLIC_URL`/Strapi‑URL auf Domain setzen; CORS für Frontend‑Origin (`wineacademymain.plan-p.de` bzw. `wineacademy.plan-p.de`) erlauben
+Namenskonvention: Verwende `planungsstatus` statt `status`, und halte Relationen gemäß oben beschriebenem Modell.
 
-## Admin‑Hinweise
-- Nach Schema‑Änderungen ggf. Content‑Manager → Configure → „Reset to default“, damit neue Felder (z. B. `planungsstatus`) in der Maske sind.
-- Feldname `status` vermeiden (Kollision mit internem Publikationsstatus); wir nutzen `planungsstatus` (Termin) bzw. `buchungsstatus` (Buchung).
+## Public API
+| Endpoint | Zweck |
+| --- | --- |
+| `GET /api/public/seminare` | Liste aktiver Seminare inkl. geplanter Termine |
+| `GET /api/public/seminare/:slug` | Seminardetail (Texte, Termine, Preise) |
+| `GET /api/public/produkte` | Aktive Shop-Produkte (inkl. evtl. Gutschein-Template) |
+| `GET /api/public/gutscheine/template` | Konfiguration für Gutschein-Betrag (Min/Max, Beschreibung) |
+| `POST /api/public/gutscheine/pricing` | Wunschbetrag validieren und runden |
+| `POST /api/public/bestellungen` | Bestellung anlegen (Rechnung oder PayPal-Capture) |
+| `GET /api/public/bestellungen/:id` | Minimalstatus einer Bestellung (Summen, Codes) |
 
-## Deployment (kurz)
-- Über Root‑Compose + Traefik: `/` → Frontend, `/api` → Backend (kein StripPrefix), `/uploads` → Backend, `/admin` → Backend. Details siehe Projekt‑README.
-
-- Server‑URL: Setze `PUBLIC_URL` in der Staging‑ENV auf die öffentliche Basis ohne Pfadprefix, z. B. `https://wineacademy.plan-p.de`. Der Server liest diese URL (config/server.ts) und baut absolute Links korrekt.
-- Admin‑URL: Optional `ADMIN_PUBLIC_URL` setzen (Default `/admin`). In Staging bleibt das Admin‑Panel unter `https://wineacademy.plan-p.de/admin` erreichbar.
-- CORS: Optional `CORS_ORIGINS` als Liste setzen, z. B. `CORS_ORIGINS=['https://wineacademy.plan-p.de']`. Standard ist `*`.
-- Uploads/Routing: Kein StripPrefix. API unter `/api`, Uploads unter `/uploads`. Das Frontend erwartet `NEXT_PUBLIC_ASSETS_URL` ohne `/api`.
-- Seeds: Nicht mehr über ENV‑Flags. Bitte `docs/Reset_and_filldb.md` befolgen.
-
-## Für Agenten/KI
-- Bitte zuerst diese Datei vollständig lesen (Datenmodell, Public‑API, Lifecycles) und anschließend die Root‑`README.md` (Docker Desktop, Compose, Ports/Routing).
-- Seeding/Reset immer gemäß `docs/Reset_and_filldb.md` durchführen (kein Autoseed).
-- Nur Public‑Endpoints erweitern oder konsumieren (`/api/public/seminare`, `/api/public/seminare/:slug`), keine Breaking Changes am Schema ohne View‑Reset‑Hinweis.
-- Feld `planungsstatus` statt `status` verwenden.
-
-## Buchungen (Public‑Endpoint)
-
-- Route: `POST /api/public/buchungen` (auth: false)
-- Pflichtfelder:
-  - `terminId` (Integer; muss auf einen geplanten, veröffentlichten Termin zeigen)
-  - `rechnungstyp` (`privat` | `firma`)
-  - `vorname`, `nachname`, `email`
-  - `teilnehmer`: Array von Personen (Pflicht: `vorname`, `nachname`; optional: `email`, `geburtstag`, `wsetCandidateNumber`, `besondereBeduerfnisse`)
-  - `agbAkzeptiert`: boolean
-- Firmenfelder (nur bei `rechnungstyp=firma` erforderlich): `firmenname`, `rechnungsEmail`, `strasse`, `plz`, `stadt`, `land`
-- Abgeleitete Felder:
-  - `anzahl` wird serverseitig strikt aus `teilnehmer.length` berechnet (eingehende `anzahl` wird ignoriert).
-  - Preise/MwSt werden serverseitig berechnet; Client darf keine Preisfelder setzen. Grundlage ist der Terminpreis.
-    - Hinweis: Es gibt Seminare ohne MwSt. (`mitMwst=false`). Die Steuerlogik (Satz/Brutto/Netto) wird im Backend bestimmt.
-- PayPal (optional):
-  - `paypalCaptureId`: Wenn vorhanden, wird die Capture serverseitig verifiziert (Status=COMPLETED, `currency_code='EUR'`, Betrag = Terminpreis × `anzahl` abzüglich Rabatt). Nur dann wird `status='bezahlt'` gesetzt und `zahlungsmethode='paypal'` gespeichert.
-  - `paypalOrderId`: Alternativ kann eine Order‑ID übergeben werden. Die Order wird serverseitig gelesen; `custom_id` sollte `"<slug>|<terminId>|<anzahl>"` enthalten, um Termin/Anzahl sicher zuzuordnen. Die Buchung bleibt ohne Capture vorerst `status='offen'` und wird durch Webhook bestätigt.
-
-Beispiel (Privat, 1 TN, ohne PayPal):
-```
-curl -s -X POST http://localhost:1337/api/public/buchungen \
+**Beispiel (Produkt-Bestellung via Rechnung):**
+```bash
+curl -s -X POST http://localhost:1337/api/public/bestellungen \
   -H 'Content-Type: application/json' \
   -d '{
-    "terminId": 49,
     "rechnungstyp": "privat",
-    "vorname": "Max",
-    "nachname": "Muster",
-    "email": "max@example.com",
-    "teilnehmer": [ { "vorname": "Max", "nachname": "Muster" } ],
-    "agbAkzeptiert": true
+    "vorname": "Test",
+    "nachname": "User",
+    "email": "test@example.com",
+    "agbAkzeptiert": true,
+    "datenschutzGelesen": true,
+    "positionen": [
+      {
+        "typ": "produkt",
+        "produktId": 1,
+        "menge": 1,
+        "einzelpreisBrutto": 59.5,
+        "steuerSatz": 19
+      }
+    ],
+    "buchungen": []
   }'
 ```
 
-## PayPal Checkout & Webhook
+## Bestell- & PayPal-Workflow
+- Seminare/Produkte/Gutscheine werden im Payload als Positionen übergeben; der Server berechnet Netto/Brutto/Steuern und prüft verfügbare Termine/Produkte.
+- `buchungen` müssen je Seminartermin die gleiche Anzahl an Teilnehmern wie die Position enthalten.
+- Bei PayPal wird optional `paypalCaptureId` und `paypalOrderId` übergeben. Erfolgreiche Capture ⇒ Status `bezahlt`, `zahlungsmethode='paypal'`, Gutscheincodes werden generiert.
+- Webhook (`POST /api/public/paypal/webhook`) prüft Signatur (`PAYPAL_WEBHOOK_ID`), verifiziert Betrag/Währung und schließt offene Bestellungen nach.
 
-- Webhook‑Route: `POST /api/public/paypal/webhook` (auth: false)
-- Verifikation: Signatur via `v1/notifications/verify-webhook-signature` (ENV `PAYPAL_WEBHOOK_ID`). Nicht verifizierte Events werden ignoriert (200, `verified=false`).
-- Verarbeitung `PAYMENT.CAPTURE.COMPLETED`:
-  - Ermittelt `captureId` aus `resource`.
-  - Sucht Buchung per `zahlungsreferenz`/`paypalCaptureId`.
-  - Betrag/Währung werden gegen die Buchung geprüft (`EUR`, Betrag==Gesamtsumme inkl. Rabatt). Nur dann `status='bezahlt'`, `zahlungsmethode='paypal'`.
+ENV-Variablen (Auszug): `APP_KEYS`, `JWT_SECRET`, `API_INTERNAL_URL`, `PUBLIC_URL`, `PAYPAL_*`, `CORS_ORIGINS`. Siehe `.env.example` bzw. Compose-Dateien.
 
-Hinweise für Integration/Robustheit:
-- Browser erstellt eine Order und führt `actions.order.capture()` aus; der Abschluss erfolgt IMMER serverseitig über `POST /api/public/buchungen` mit `paypalCaptureId`.
-- Für Fallbacks (Tab geschlossen, Netzwerk) Webhook auf die App registrieren (gleiche Client‑ID wie im Checkout) und `PAYPAL_WEBHOOK_ID` setzen.
-- Idempotenz empfohlen: Capture‑ID (`zahlungsreferenz`) nur einmal verbuchen (Unique‑Constraint/Guard).
+## Datenpflege & Admin
+- Seed/Reset **immer** nach `../docs/Reset_and_filldb.md`.
+- Nach Schemaänderungen Content Manager → *Configure* → “Reset to default”, damit neue Felder sichtbar werden.
+- Keine manuellen Änderungen in `types/generated/*` – sie werden von Strapi generiert.
 
-Frontend/Checkout‑Hinweise (falls wieder aktiviert):
-- PayPal‑Order sollte `custom_id` setzen: `"<slug>|<terminId>|<anzahl>"`.
-- `return_url`/`cancel_url` mit allen Query‑Parametern setzen, damit bei Redirect (z. B. „Guthaben“) Termin/Anzahl erhalten bleiben.
-- Nach Rückkehr kann mit `paypalOrderId` + gesichertem Draft ein serverseitiger Abschluss ausgelöst werden.
-
-ENV‑Variablen (z. B. in `.env` oder Compose):
-
-```
-PAYPAL_MODE=sandbox            # oder live
-PAYPAL_CLIENT_ID=...
-PAYPAL_CLIENT_SECRET=...
-PAYPAL_WEBHOOK_ID=...
-```
-
-Test (ohne Signaturprüfung):
-
-```
-curl -s -X POST http://localhost:1337/webhooks/paypal \
-  -H 'Content-Type: application/json' \
-  -d '{"event_type":"PAYMENT.CAPTURE.COMPLETED","resource":{"id":"WH-TEST-12345"}}'
-```
+## Hinweise für Agenten/KI
+- Folge zusätzlich `../AGENTS.md`.
+- Arbeite ausschließlich über die Public-Endpoints (siehe Tabelle oben).
+- Verwende Docker Compose-Kommandos aus dem Projekt-Root.
+- Änderungen klein halten; vor Commits Tests/Builds nur bei Bedarf.

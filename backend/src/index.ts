@@ -1,6 +1,11 @@
 // import type { Core } from '@strapi/strapi';
 
-type UID = 'api::kategorie.kategorie' | 'api::ort.ort' | 'api::seminar.seminar' | 'api::gutschein.gutschein';
+type UID =
+  | 'api::kategorie.kategorie'
+  | 'api::ort.ort'
+  | 'api::seminar.seminar'
+  | 'api::gutschein.gutschein'
+  | 'api::produkt.produkt';
 
 function toBool(v: any): boolean {
   if (v == null) return false;
@@ -81,13 +86,71 @@ async function upsertSeminar(
   return created.id as number;
 }
 
+async function upsertProduct(strapi: any, values: {
+  titel: string;
+  slug?: string;
+  kurzbeschreibung?: string;
+  beschreibung?: string;
+  preisNetto?: number;
+  preisBrutto?: number;
+  steuerSatz?: number;
+  mitMwst?: boolean;
+  waehrung?: string;
+  istGutschein?: boolean;
+  aktiv?: boolean;
+}) {
+  const slug = values.slug ? slugify(values.slug) : slugify(values.titel);
+  const existing = await strapi.db.query('api::produkt.produkt').findOne({ where: { slug }, select: ['id'] });
+  const data: any = {
+    ...values,
+    slug,
+    waehrung: values.waehrung ?? 'EUR',
+    mitMwst: values.mitMwst ?? true,
+    aktiv: values.aktiv ?? true,
+    publishedAt: nowIso(),
+  };
+  if (existing) {
+    await strapi.entityService.update('api::produkt.produkt', existing.id, { data });
+    return existing.id as number;
+  }
+  const created = await strapi.entityService.create('api::produkt.produkt', { data });
+  return created.id as number;
+}
+
 async function upsertGutschein(
   strapi: any,
-  values: { code: string; typ: 'betrag' | 'prozent'; wert: number; aktiv?: boolean; maxNutzung?: number; bemerkung?: string; gueltigAb?: string; gueltigBis?: string }
+  values: { titel: string; code: string; beschreibung?: string; betrag?: number; aktiv?: boolean }
 ) {
-  const code = values.code.trim();
-  const existing = await strapi.db.query('api::gutschein.gutschein').findOne({ where: { code }, select: ['id'] });
-  const data: any = { ...values, code };
+  const existing = await strapi.db.query('api::gutschein.gutschein').findOne({ where: { code: values.code }, select: ['id'] });
+  const data: any = {
+    titel: values.titel,
+    beschreibung: values.beschreibung ?? undefined,
+    code: values.code,
+    istTemplate: false,
+    aktiv: values.aktiv ?? true,
+  };
+  if (typeof values.betrag === 'number') {
+    data.betrag = values.betrag;
+  }
+  if (existing) {
+    await strapi.entityService.update('api::gutschein.gutschein', existing.id, { data });
+    return existing.id as number;
+  }
+  const created = await strapi.entityService.create('api::gutschein.gutschein', { data });
+  return created.id as number;
+}
+
+async function upsertGutscheinTemplate(
+  strapi: any,
+  values: { titel: string; beschreibung?: string; minBetrag?: number; maxBetrag?: number; aktiv?: boolean }
+) {
+  const existing = await strapi.db.query('api::gutschein.gutschein').findOne({ where: { istTemplate: true }, select: ['id'] });
+  const data: any = {
+    ...values,
+    istTemplate: true,
+    aktiv: values.aktiv ?? true,
+    publishedAt: nowIso(),
+  };
   if (existing) {
     await strapi.entityService.update('api::gutschein.gutschein', existing.id, { data });
     return existing.id as number;
@@ -98,228 +161,447 @@ async function upsertGutschein(
 
 async function runSeed(strapi: any) {
   const log = (msg: string) => strapi.log.info(`[seed] ${msg}`);
-  log('Starte Seeding (ohne Termine)');
+  log('Starte Seeding');
 
-  // Hilfsfunktionen für Scraping
-  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-  const decodeHtml = (s: string) =>
-    s
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&euro;/g, '€')
-      .replace(/&#8211;/g, '–')
-      .replace(/&#8212;/g, '—')
-      .replace(/&#[0-9]+;/g, (m) => {
-        const code = Number(m.replace(/[^0-9]/g, ''));
-        try {
-          return String.fromCharCode(code);
-        } catch {
-          return '';
-        }
-      })
-      .trim();
-  const stripTags = (html: string) => decodeHtml(html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
-
-  async function fetchText(url: string): Promise<string> {
-    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; WineAcademySeeder/1.0)' } as any });
-    if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
-    return await res.text();
-  }
-
-  function findAll(regex: RegExp, input: string): RegExpExecArray[] {
-    const results: RegExpExecArray[] = [];
-    const r = new RegExp(regex.source, regex.flags.includes('g') ? regex.flags : regex.flags + 'g');
-    let m: RegExpExecArray | null;
-    while ((m = r.exec(input))) results.push(m);
-    return results;
-  }
-
-  function mapCategoryName(raw?: string): string[] {
-    const list: string[] = [];
-    const s = (raw || '').toLowerCase();
-    if (s.includes('wset')) list.push('WSET');
-    if (s.includes('sommelier')) list.push('Sommelier Ausbildung');
-    if (s.includes('masterclass')) list.push('Masterclass');
-    if (s.includes('tasting') || s.includes('verkostung')) list.push('Tastings');
-    if (s.includes('bourgogne')) list.push('Bourgogne');
-    if (s.includes('sensorik')) list.push('Sensorik');
-    return Array.from(new Set(list));
-  }
-
-  type ShopItem = {
-    title: string;
-    url: string;
-    price?: number; // Brutto in EUR
-    category?: string;
-  };
-
-  async function collectShopItems(): Promise<ShopItem[]> {
-    const pages: string[] = ['https://www.wineacademy.de/shop/'];
-    for (let i = 2; i <= 8; i++) pages.push(`https://www.wineacademy.de/shop/page/${i}/`);
-    const items: Record<string, ShopItem> = {};
-    for (const url of pages) {
-      try {
-        const html = await fetchText(url);
-        // WooCommerce Tracking Data auf Listing („span.gtm4wp_productdata ... data-gtm4wp_product_data=…“)
-        const spans = findAll(/<span[^>]*class=\"gtm4wp_productdata\"[^>]*data-gtm4wp_product_data=\"([^\"]+)\"/g, html);
-        for (const m of spans) {
-          const raw = decodeHtml(m[1]);
-          try {
-            const j = JSON.parse(raw);
-            const productUrl: string | undefined = j.productlink || j.item_url;
-            const title: string = j.item_name || '';
-            const price: number | undefined = typeof j.price === 'number' ? j.price : undefined;
-            const category: string | undefined = j.item_category || undefined;
-            if (!productUrl || !title) continue;
-            // Ausschlüsse: Gutscheine
-            if ((category || '').toLowerCase().includes('gutschein')) continue;
-            items[productUrl] = { title, url: productUrl, price, category };
-          } catch {}
-        }
-      } catch (err) {
-        strapi.log.warn(`[seed] Shop-Seite nicht abrufbar: ${url} (${(err as any)?.message})`);
-      }
-      await sleep(150);
-    }
-    return Object.values(items);
-  }
-
-  async function enrichFromDetail(item: ShopItem): Promise<ShopItem & { short?: string; desc?: string; breadcrumbs?: string[] }> {
-    try {
-      const html = await fetchText(item.url);
-      const h1m = /<h1[^>]*class=\"product_title[^\"]*\"[^>]*>([\s\S]*?)<\/h1>/m.exec(html);
-      const title = h1m ? stripTags(h1m[1]) : item.title;
-      const shortM = /<div[^>]*class=\"woocommerce-product-details__short-description\"[^>]*>([\s\S]*?)<\/div>/m.exec(html);
-      const descM = /<div[^>]*id=\"tab-description\"[^>]*>([\s\S]*?)<\/div>/m.exec(html);
-      const priceHidden = /name=\"gtm4wp_product_data\"[^>]*value=\"([^\"]+)\"/m.exec(html);
-      if (priceHidden) {
-        try {
-          const j = JSON.parse(decodeHtml(priceHidden[1]));
-          if (typeof j.price === 'number') item.price = j.price;
-          if (typeof j.item_category === 'string') item.category = j.item_category;
-        } catch {}
-      }
-      const bc = findAll(/<span class=\"woocommerce-breadcrumb-item\">(?:<a[^>]*>)?([^<]+)(?:<\/a>)?<\/span>/g, html).map((m) => stripTags(m[1]));
-      return { ...item, title, short: shortM ? stripTags(shortM[1]) : undefined, desc: descM ? stripTags(descM[1]) : undefined, breadcrumbs: bc };
-    } catch (err) {
-      strapi.log.warn(`[seed] Detail nicht abrufbar: ${item.url}`);
-      return { ...item } as any;
-    }
-  }
-
-  const catTexts: Record<string, string> = {
-    Bourgogne:
-      'Über 2000 Jahre Weinbaugeschichte, ein einzigartiges Terroir und unvergleichlicher Savoir-Faire der Winzer. Mit 84 Appellationen, zahlreichen kleinen Erzeugern, kleinteiligen Parzellen, Climats und einem einzigartigen Zusammenspiel zwischen Terroir und Rebsorten bietet die Region ein unvergleichliches Entdeckungspotential. Entdecke die Exzellenz der Bourgogne in unserer exklusiven Kursreihe bei der Wine Academy Hamburg. Tauche ein in die Welt dieser renommierten Weinregion und gewinne ein fundiertes Verständnis für ihre Geschichte, Terroirs und Weinherstellungstechniken. Unsere Kurse bieten einzigartige Einblicke in die Vielfalt und Finesse von Chardonnay und Pinot Noir sowie in die Unterschiede der bedeutendsten Crus. Werden Sie ein Experte für Bourgogne-Weine und erleben Sie unvergleichliche Geschmackserlebnisse auf höchstem Niveau.',
-    Masterclass:
-      'Für (angehende) Sommeliers, WSET-Studenten und Weinliebhaber. Unsere Masterclasses und Tageskurse bieten einen tiefgehenden Einblick in verschieden Regionen, Weine und Sake. Vormittags oder Abends, unter der Woche und am Wochenende, einige Stunden bis hin zu einem ganzen Tag – unsere Masterclasses lassen sich auch in einen vollen Alltag integrieren. Werde Teil unserer Community von Weinliebhabern und Fachleuten und vertiefe Dein Wissen unter der Anleitung von erfahrenen Experten. Entdecke auch unsere Prüfungsvorbereitungskurse für WSET und IHK Sommelier und genieße eine einzigartige Lernerfahrung in unserer Weinschule.',
-    Sensorik:
-      'Entdecke die verborgenen Nuancen des Weins und werde zum Sensorik-Experten in unserer Weinschule. In unseren Masterclasses zur Wein Sensorik erkunden wir die Welt unserer Sinneswahrnehmung. Von Einsteigern bis zum Profi – wir helfen Euch gerne das passende Level zu finden. Auch das spannende Thema der Weinfehler, sie zu erkennen und zu beschreiben ist Teil des Kursangebots. Tauche ein in die Grundlagen der menschlichen Sinneswahrnehmung und schärfe deine Sinne, um subtile Aromen in Weinen besser wahrzunehmen. Ein unverzichtbarer Kurs für alle Weinliebhaber und Fachleute, die ihr Sensorik-Wissen vertiefen möchten. Wenn Du bereits Erfahrung im Verkosten hast, bist Du bei unserem Sensorik Kurs für Fortgeschrittene und Weinfehler für Professionals richtig. Bist du bereit, die Herausforderung anzunehmen und Deine Sinne bei einer Blindverkostung auf die Probe zu stellen?',
-    'Sommelier Ausbildung':
-      'Die IHK-geprüfte Sommelier-Ausbildung vermittelt fundiertes Wissen zu Weinbau, Herstellung, Geschichte und Food-Pairing sowie professionelle Verkostungs- und Servicekompetenz. Sie bereitet auf Spitzenleistungen in Gastronomie, Handel und Weingütern vor; ergänzt durch Workshops und Exkursionen.',
-    WSET:
-      'Der Wine & Spirit Education Trust (WSET®) entwickelt international anerkannte Qualifikationen in Wein, Spirituosen (und Sake). Seit 1969 einer der weltweit führenden Anbieter: An der Wine Academy Hamburg kannst du WSET Level 1–3 Weine absolvieren – mit strukturierter Verkostung und Abschlusszertifikat.',
-    Tastings:
-      'Weintastings & Seminare in Hamburg: Theorie plus Praxis mit einer sorgfältig kuratierten Auswahl an Weinen aus verschiedenen Regionen und Stilistiken. Ideal, um sensorische Fähigkeiten zu entwickeln, Wissen zu vertiefen und aktuelle Themen in Workshops (z. B. Blindverkostung, Prüfungsvorbereitung) zu erleben.',
-  };
+  const categorySeeds = [
+    {
+      titel: 'Bourgogne',
+      kurzbeschreibung: 'Über 2000 Jahre Weinbaugeschichte, einzigartiges Terroir und Savoir-Faire der Winzer.',
+      beschreibung:
+        'Mit 84 Appellationen, zahlreichen kleinen Erzeugern, kleinteiligen Parzellen und dem Zusammenspiel zwischen Terroir und Rebsorten bietet die Bourgogne ein unvergleichliches Entdeckungspotential. Exklusive Kursreihe bei der Wine Academy Hamburg mit Fokus auf Chardonnay, Pinot Noir und Crus.',
+    },
+    {
+      titel: 'Masterclass',
+      kurzbeschreibung: 'Vertiefende Einblicke in Regionen, Weine und Sake für Sommeliers, WSET-Studierende und Weinliebhaber.',
+      beschreibung:
+        'Masterclasses und Tageskurse am Vormittag oder Abend, unter der Woche und am Wochenende. Dauer von einigen Stunden bis zu einem Tag. Zusätzlich Prüfungsvorbereitungskurse für WSET und IHK Sommelier.',
+    },
+    {
+      titel: 'Sensorik',
+      kurzbeschreibung: 'Entdecke die verborgenen Nuancen des Weins und werde zum Sensorik-Profi.',
+      beschreibung:
+        'Kurse von Einsteiger bis Profi: Sensorik Essentials, Fortgeschrittene, Weinfehler und Blindverkostungen. Ziel ist es, Sinneswahrnehmung zu schärfen, Aromen zu erkennen und strukturierte Verkostungen durchzuführen.',
+    },
+    {
+      titel: 'Sommelier Ausbildung',
+      kurzbeschreibung: 'IHK-geprüfte Sommelier-Ausbildung mit Theorie, Praxis und Exkursionen.',
+      beschreibung:
+        'Fundiertes Wissen zu Weinbau, Herstellung, Geschichte und Food-Pairing sowie professionelle Verkostungs- und Servicekompetenz. Vorbereitung auf Spitzenleistungen in Gastronomie, Handel und Weingütern.',
+    },
+    {
+      titel: 'WSET',
+      kurzbeschreibung: 'International anerkannte Wein-Qualifikationen des Wine & Spirit Education Trust.',
+      beschreibung:
+        'Seit 1969 weltweit führender Anbieter von Abschlüssen in Wein, Spirituosen und Sake. Bei der Wine Academy Hamburg können WSET Level 1–3 in Weinen absolviert werden.',
+    },
+    {
+      titel: 'Tastings',
+      kurzbeschreibung: 'Theorie & Praxis kombiniert mit sorgfältig ausgewählten Weinen.',
+      beschreibung:
+        'Weintastings & Seminare in Hamburg mit Fokus auf sensorische Fähigkeiten, Wissensvertiefung und aktuelle Themen wie Blindverkostungen oder Prüfungsvorbereitung.',
+    },
+  ];
 
   const catIds: Record<string, number> = {};
-  for (const [titel, beschreibung] of Object.entries(catTexts)) {
-    catIds[titel] = await upsertCategory(strapi, titel, beschreibung);
+  for (const category of categorySeeds) {
+    const combinedBeschreibung = [category.kurzbeschreibung, category.beschreibung].filter(Boolean).join('\n\n');
+    catIds[category.titel] = await upsertCategory(strapi, category.titel, combinedBeschreibung);
   }
   log(`Kategorien: ${Object.keys(catIds).join(', ')}`);
 
-  const hamburgId = await upsertOrt(strapi, {
-    standort: 'Hamburg',
-    typ: 'vorort',
-    veranstaltungsort: 'Wine Academy Hamburg',
-    stadt: 'Hamburg',
-    land: 'Deutschland',
-  });
-  const mannheimId = await upsertOrt(strapi, {
-    standort: 'Mannheim',
-    typ: 'vorort',
-    veranstaltungsort: 'Wine Academy Mannheim',
-    stadt: 'Mannheim',
-    land: 'Deutschland',
-  });
-  const onlineId = await upsertOrt(strapi, {
-    standort: 'Online',
-    typ: 'online',
-    veranstaltungsort: 'Online via Zoom',
-    stadt: 'Remote',
-    land: 'Deutschland',
-  });
-  log(`Orte IDs: Hamburg=${hamburgId}, Mannheim=${mannheimId}, Online=${onlineId}`);
+  const ortSeeds = [
+    {
+      standort: 'Hamburg',
+      typ: 'vorort' as const,
+      veranstaltungsort: 'Wine Academy Hamburg',
+      strasse: 'Testweg 1',
+      plz: '20000',
+      stadt: 'Hamburg',
+      land: 'Deutschland' as const,
+    },
+    {
+      standort: 'Mannheim',
+      typ: 'vorort' as const,
+      veranstaltungsort: 'Wine Academy Mannheim',
+      strasse: 'Testweg 1',
+      plz: '60000',
+      stadt: 'Mannheim',
+      land: 'Deutschland' as const,
+    },
+    {
+      standort: 'Online',
+      typ: 'online' as const,
+      veranstaltungsort: 'Online via Zoom',
+      strasse: 'Testweg 1',
+      plz: '99999',
+      stadt: 'Remote',
+      land: 'Deutschland' as const,
+    },
+  ];
+  const ortIdByName: Record<string, number> = {};
+  for (const ort of ortSeeds) {
+    const id = await upsertOrt(strapi, ort);
+    ortIdByName[ort.standort] = id;
+  }
+  log(`Orte aktualisiert: ${Object.entries(ortIdByName)
+    .map(([name, id]) => `${name}=${id}`)
+    .join(', ')}`);
 
-  // Dynamische Seminare aus dem Live-Shop scrapen und anlegen
-  const wsetCatId = catIds['WSET'];
-  const sensorikCatId = catIds['Sensorik'];
-  const masterclassCatId = catIds['Masterclass'];
-  const sommelierCatId = catIds['Sommelier Ausbildung'];
-  const tastingsCatId = catIds['Tastings'];
-  const bourgogneCatId = catIds['Bourgogne'];
-
-  const categoryIdByName: Record<string, number> = {
-    WSET: wsetCatId,
-    Sensorik: sensorikCatId,
-    Masterclass: masterclassCatId,
-    'Sommelier Ausbildung': sommelierCatId,
-    Tastings: tastingsCatId,
-    Bourgogne: bourgogneCatId,
+  type TerminSeed = {
+    titel: string;
+    planungsstatus: 'geplant' | 'ausgebucht' | 'abgesagt';
+    preis: number;
+    kapazitaet: number;
+    ort: string;
+    tageVersatz: number;
   };
 
-  const shopItems = await collectShopItems();
-  log(`Gefundene Shop-Items (gefiltert): ${shopItems.length}`);
-  for (const it of shopItems) {
-    const d = await enrichFromDetail(it);
-    const slug = (() => {
-      try {
-        const u = new URL(d.url);
-        const parts = u.pathname.split('/').filter(Boolean);
-        return parts[parts.length - 1] || slugify(d.title);
-      } catch {
-        return slugify(d.title);
-      }
-    })();
-    const categoryNames = [
-      ...mapCategoryName(d.category),
-      ...(d.breadcrumbs || []).map((x) => mapCategoryName(x)).flat(),
-    ];
-    const catIdsToSet = Array.from(new Set(categoryNames))
-      .map((name) => categoryIdByName[name])
-      .filter(Boolean) as number[];
+  type SeminarSeed = {
+    seminarname: string;
+    slug: string;
+    kurzbeschreibung: string;
+    beschreibung: string;
+    infos?: string;
+    standardPreis?: number;
+    mitMwst?: boolean;
+    aktiv: boolean;
+    kategorien: string[];
+    termine: TerminSeed[];
+  };
 
-    // Fallback-Kurzbeschreibung: nutze ggf. ersten Satz der langen Beschreibung
-    const kurz = d.short || (d.desc ? (d.desc.split('.').slice(0, 2).join('. ').trim() || undefined) : undefined);
-    const infos = `Quelle: ${d.url}${d.category ? `\nKategorie: ${d.category}` : ''}`;
+  const seminarSeeds: SeminarSeed[] = [
+    {
+      seminarname: 'Sensorik: Essentials',
+      slug: 'sensorik-essentials',
+      kurzbeschreibung:
+        'Einstieg in die Weinsensorik: Weinaromen, Weinbeschreibung, strukturierte Verkostung und Weinqualität.',
+      beschreibung:
+        '<p>Ein eintägiger Kurs, der Sinne schärft und subtile Wein-Aromen besser wahrnehmen lässt. Mit Sensibilisierungs-Training, strukturierter Weinverkostung, Fachvokabular, Blindverkostung am Ende. Zielgruppe sind Weinliebhaber sowie Fachleute, die ihr Sensorikverständnis vertiefen möchten.</p>',
+      standardPreis: 265,
+      mitMwst: true,
+      aktiv: true,
+      kategorien: ['Sensorik'],
+      termine: [
+        {
+          titel: 'Sensorik Essentials – Hamburg',
+          planungsstatus: 'geplant',
+          preis: 265,
+          kapazitaet: 14,
+          ort: 'Hamburg',
+          tageVersatz: 21,
+        },
+        {
+          titel: 'Sensorik Essentials – Online',
+          planungsstatus: 'geplant',
+          preis: 265,
+          kapazitaet: 40,
+          ort: 'Online',
+          tageVersatz: 60,
+        },
+      ],
+    },
+    {
+      seminarname: 'Weinfehler – Finde den Fehler!',
+      slug: 'weinfehler-basic',
+      kurzbeschreibung: 'Workshop: Weinfehler erkennen und verstehen inkl. Blindverkostung.',
+      beschreibung:
+        '<p>Teilnehmer lernen die wichtigsten Weinfehler kennen – Ursachen, wie sie entstehen, wie man sie erkennt. Mit Blindverkostung (10 Gläser, 10 verschiedene Fehler). Schulungsunterlagen & Zertifikat inklusive.</p>',
+      standardPreis: 79,
+      mitMwst: true,
+      aktiv: true,
+      kategorien: ['Sensorik'],
+      termine: [
+        {
+          titel: 'Weinfehler Workshop – Hamburg',
+          planungsstatus: 'geplant',
+          preis: 79,
+          kapazitaet: 18,
+          ort: 'Hamburg',
+          tageVersatz: 35,
+        },
+      ],
+    },
+    {
+      seminarname: 'Wein: der Weg zum Kenner',
+      slug: 'wein-der-weg-zum-kenner',
+      kurzbeschreibung: 'Kurs für Weinliebhaber mit ersten Kenntnissen, Überblick über Anbau & Weinqualität.',
+      beschreibung:
+        '<p>Vermittelt Wissen zu Etiketten, Herkunftsbezeichnungen und Weinanbau; Vergleich verschiedener Weine, Gläser, Regionen; Sensorische und theoretische Aspekte; Blindverkostung am Ende. Für alle mit ersten Vorkenntnissen, die fundierter in die Weinwelt eintauchen möchten.</p>',
+      standardPreis: 245,
+      mitMwst: true,
+      aktiv: true,
+      kategorien: ['Tastings'],
+      termine: [
+        {
+          titel: 'Der Weg zum Kenner – Hamburg',
+          planungsstatus: 'geplant',
+          preis: 245,
+          kapazitaet: 20,
+          ort: 'Hamburg',
+          tageVersatz: 28,
+        },
+      ],
+    },
+    {
+      seminarname: 'WSET® Level 2 Weine',
+      slug: 'wset-level-2-weine',
+      kurzbeschreibung: 'WSET Level 2: über 20 Rebsorten & 70 Anbaugebiete; Etiketten- und Weinverständnis im Fokus.',
+      beschreibung:
+        '<p>Theorie & Praxis über die wichtigsten Rebsorten und Regionen weltweit. Verkostungen nach dem WSET-System (SAT). Prüfung & Zertifikat inklusive. Geeignet für Einsteiger mit etwas Vorkenntnissen oder zur Vertiefung nach Level 1.</p>',
+      standardPreis: 950,
+      mitMwst: true,
+      aktiv: true,
+      kategorien: ['WSET'],
+      termine: [
+        {
+          titel: 'WSET Level 2 – Hamburg',
+          planungsstatus: 'geplant',
+          preis: 950,
+          kapazitaet: 16,
+          ort: 'Hamburg',
+          tageVersatz: 45,
+        },
+        {
+          titel: 'WSET Level 2 – Mannheim',
+          planungsstatus: 'geplant',
+          preis: 950,
+          kapazitaet: 16,
+          ort: 'Mannheim',
+          tageVersatz: 75,
+        },
+      ],
+    },
+    {
+      seminarname: 'WSET® Level 1 Weine ONLINEKURS',
+      slug: 'wset-level-1-weine-onlinekurs',
+      kurzbeschreibung: 'Onlinekurs über 3 Blöcke, ideal für Einsteiger ohne Vorkenntnisse.',
+      beschreibung:
+        '<p>Kurs via Microsoft Teams, mit 6 Unterrichtsstunden in 3 Sessions (je 2 Stunden). Themen: Grundlagen zum Weinbau, Weinservierung, unterschiedliche Weintypen & Stile. Verkostung von Qualitätsweinen, Prüfung vor Ort in Hamburg. Abschluss mit WSET Level 1 Zertifikat.</p>',
+      standardPreis: 340,
+      mitMwst: true,
+      aktiv: true,
+      kategorien: ['WSET'],
+      termine: [
+        {
+          titel: 'WSET Level 1 – Online-Blöcke',
+          planungsstatus: 'geplant',
+          preis: 340,
+          kapazitaet: 50,
+          ort: 'Online',
+          tageVersatz: 30,
+        },
+      ],
+    },
+    {
+      seminarname: 'Masterclass Champagne: Essentials',
+      slug: 'masterclass-champagner',
+      kurzbeschreibung: 'Masterclass über Champagne: Herstellung, Terroir & Stilistik; Blindverkostung mit mind. 12 Weinen.',
+      beschreibung:
+        '<p>Intensiver Tageskurs über die Region Champagne: Trauben, Kellerarbeit, Assemblage, Stilistik, Einfluss von Jahrgängen & Lagen sowie Vergleich großer und kleiner Produzenten. Verkostung inkl. Blindverkostung. Für Weininteressierte und Profis, die ihre Kenntnisse über Schaumweine vertiefen möchten.</p>',
+      standardPreis: 320,
+      mitMwst: true,
+      aktiv: true,
+      kategorien: ['Masterclass'],
+      termine: [],
+    },
+    {
+      seminarname: 'WSET® Level 3 Weine',
+      slug: 'wset-level-3-weine',
+      kurzbeschreibung: 'Aufbaukurs mit tiefem Fokus auf die wichtigsten Weine der Welt und deren wirtschaftliche Bedeutung.',
+      beschreibung:
+        '<p>Vertiefung der Kenntnisse aus Level 2; detaillierte Auseinandersetzung mit Regionen, Rebsorten und Produktionsmethoden. Professionelles Analysieren und Beschreiben von Weinen nach WSET SAT, Vorbereitung auf Beratung und Service.</p>',
+      standardPreis: 1850,
+      mitMwst: true,
+      aktiv: true,
+      kategorien: ['WSET'],
+      termine: [],
+    },
+    {
+      seminarname: 'Assistant Sommelier (inkl. WSET® Level 2 Weine)',
+      slug: 'assistant-sommelier',
+      kurzbeschreibung: 'Berufsbegleitender Lehrgang für Gastronomie, Handel und Weinliebhaber inkl. WSET Level 2.',
+      beschreibung:
+        '<p>Fünf Kurstage mit Fokus auf Weinwissen, Service und Sensorik; Kombination mit WSET Level 2 Weine zur internationalen Qualifizierung.</p>',
+      standardPreis: 1650,
+      mitMwst: true,
+      aktiv: true,
+      kategorien: ['Sommelier Ausbildung', 'WSET'],
+      termine: [],
+    },
+    {
+      seminarname: 'Sensorik Advanced',
+      slug: 'sensorik-advanced',
+      kurzbeschreibung: 'Aufbaukurs zur Vertiefung der Verkostungs- und Sensorikkompetenz.',
+      beschreibung:
+        '<p>Erweiterung der Sensorik-Skills, anspruchsvollere Weinstile und differenzierte Analysen; ideal nach „Sensorik: Essentials“.</p>',
+      standardPreis: 285,
+      mitMwst: true,
+      aktiv: true,
+      kategorien: ['Sensorik'],
+      termine: [],
+    },
+    {
+      seminarname: 'Masterclass Sake',
+      slug: 'masterclass-sake',
+      kurzbeschreibung: 'Kompakter Einstieg in Geschichte, Herstellung, Reis-Kategorien, Verkostung & Foodpairing.',
+      beschreibung:
+        '<p>Tageskurs inkl. Kurzprüfung und Zertifikat der Wine Academy Hamburg; ideal für Gastronomie-Profis und Enthusiasten.</p>',
+      standardPreis: 249,
+      mitMwst: true,
+      aktiv: true,
+      kategorien: ['Masterclass'],
+      termine: [
+        {
+          titel: 'Masterclass Sake – Hamburg',
+          planungsstatus: 'geplant',
+          preis: 249,
+          kapazitaet: 22,
+          ort: 'Hamburg',
+          tageVersatz: 52,
+        },
+      ],
+    },
+  ];
 
-    try {
-      await upsertSeminar(strapi, {
-        seminarname: d.title,
-        slug,
-        kurzbeschreibung: kurz,
-        beschreibung: d.desc,
-        infos,
-        standardPreis: typeof d.price === 'number' ? Number(d.price) : 0,
-        mitMwst: true,
-        standardKapazitaetProTermin: 20,
-        aktiv: true,
-        kategorien: catIdsToSet.length ? catIdsToSet : undefined,
+  const ensureTermine = async (seminarId: number, termine: typeof seminarSeeds[number]['termine']) => {
+    await strapi.db.query('api::termin.termin').deleteMany({ where: { seminar: seminarId } });
+    for (const termin of termine) {
+      const baseDate = new Date();
+      baseDate.setDate(baseDate.getDate() + termin.tageVersatz);
+      const datum = baseDate.toISOString().slice(0, 10);
+      await strapi.entityService.create('api::termin.termin', {
+        data: {
+          titel: termin.titel,
+          planungsstatus: termin.planungsstatus,
+          kapazitaet: termin.kapazitaet,
+          preis: termin.preis,
+          tage: [
+            {
+              datum,
+              startzeit: '10:00:00',
+              endzeit: '17:00:00',
+            },
+          ],
+          seminar: seminarId,
+          ort: ortIdByName[termin.ort],
+          publishedAt: nowIso(),
+        },
       });
-      log(`Seminar upserted: ${d.title} [${slug}] (${catIdsToSet.join(',') || 'ohne Kategorien'})`);
-    } catch (e) {
-      strapi.log.error(
-        `[seed] Upsert fehlgeschlagen: ${d.title} [${slug}] – Kategorien: ${catIdsToSet.join(',') || 'none'} – Fehler: ${(e as any)?.message}`
-      );
     }
-    await sleep(80);
+  };
+
+  for (const seminardata of seminarSeeds) {
+    const catIdsForSeminar = (seminardata.kategorien || [])
+      .map((name) => catIds[name])
+      .filter((id): id is number => typeof id === 'number');
+
+    const seminarId = await upsertSeminar(strapi, {
+      seminarname: seminardata.seminarname,
+      slug: seminardata.slug,
+      kurzbeschreibung: seminardata.kurzbeschreibung,
+      beschreibung: seminardata.beschreibung,
+      infos: seminardata.infos,
+      standardPreis: seminardata.standardPreis,
+      mitMwst: seminardata.mitMwst,
+      aktiv: seminardata.aktiv,
+      kategorien: catIdsForSeminar,
+    });
+
+    await ensureTermine(seminarId, seminardata.termine);
+    log(`Seminar angelegt/aktualisiert: ${seminardata.seminarname} (ID ${seminarId})`);
   }
 
-  await upsertGutschein(strapi, { code: 'WELCOME10', typ: 'prozent', wert: 10, aktiv: true, maxNutzung: 999, bemerkung: '10 % Willkommensrabatt' });
-  await upsertGutschein(strapi, { code: 'TEST-25', typ: 'betrag', wert: 25, aktiv: true, maxNutzung: 10, bemerkung: '25 € Testgutschein' });
-  await upsertGutschein(strapi, { code: 'WSET50', typ: 'betrag', wert: 50, aktiv: true, maxNutzung: 100, bemerkung: '50 € Gutschein (WSET-Thema – aktuell keine inhaltliche Einschränkung)' });
+  const productSeeds = [
+    {
+      titel: 'Weinbuch Klassiker',
+      slug: 'weinbuch-klassiker',
+      kurzbeschreibung: 'Fundiertes Wissen in Buchform.',
+      beschreibung: '<p>Ein Standardwerk für alle Weinfreunde.</p>',
+      preisNetto: 50,
+      preisBrutto: 59.5,
+      steuerSatz: 19,
+      mitMwst: true,
+      istGutschein: false,
+      aktiv: true,
+    },
+    {
+      titel: 'Verkostungsset Sensorik',
+      slug: 'verkostungsset-sensorik',
+      kurzbeschreibung: '6er-Set Musterproben für Sensorik-Trainings.',
+      beschreibung: '<p>Ideal als Ergänzung zu unseren Online-Kursen.</p>',
+      preisNetto: 79,
+      preisBrutto: 94.01,
+      steuerSatz: 19,
+      mitMwst: true,
+      istGutschein: false,
+      aktiv: true,
+    },
+    {
+      titel: 'WSET® Level 1 Weine Tasting Set (klein, 2cl)',
+      slug: 'wset-level-1-tasting-set',
+      kurzbeschreibung: 'Ergänzendes Tasting-Set zum WSET Level 1 mit ausgewählten Weinen in Vinottes.',
+      beschreibung:
+        '<p>Vermittelt Grundlagen zu Aromen, Rebsorten und Stilrichtungen; ideal als Begleitung zum Kurs oder zum Eigenstudium.</p>',
+      preisNetto: 60,
+      preisBrutto: 71.4,
+      steuerSatz: 19,
+      mitMwst: true,
+      istGutschein: false,
+      aktiv: true,
+    },
+    {
+      titel: 'WSET® Level 3 Weine Tasting Set (groß, 5cl)',
+      slug: 'wset-level-3-weine-tasting-set-gross-5cl',
+      kurzbeschreibung: 'Umfangreiches Tasting-Set mit hochwertigen Weinen verschiedener Stile und Regionen.',
+      beschreibung:
+        '<p>Enthält detaillierte WSET SAT Verkostungsnotizen; ideal zur Vorbereitung oder Vertiefung für Level 3.</p>',
+      preisNetto: 150,
+      preisBrutto: 178.5,
+      steuerSatz: 19,
+      mitMwst: true,
+      istGutschein: false,
+      aktiv: true,
+    },
+  ];
+
+  for (const product of productSeeds) {
+    const productId = await upsertProduct(strapi, product);
+    log(`Produkt angelegt/aktualisiert: ${product.titel} (ID ${productId})`);
+  }
+
+  const voucherSeeds = [
+    {
+      titel: 'WELCOME10',
+      code: 'WELCOME10',
+      beschreibung: '10% Willkommensrabatt',
+    },
+    {
+      titel: 'TEST-25',
+      code: 'TEST-25',
+      beschreibung: '25 EUR Testgutschein',
+      betrag: 25,
+    },
+    {
+      titel: 'WSET50',
+      code: 'WSET50',
+      beschreibung: '50 EUR auf WSET Seminare',
+      betrag: 50,
+    },
+  ];
+
+  for (const voucher of voucherSeeds) {
+    const voucherId = await upsertGutschein(strapi, voucher);
+    log(`Gutschein angelegt/aktualisiert: ${voucher.code} (ID ${voucherId})`);
+  }
+
+  await upsertGutscheinTemplate(strapi, {
+    titel: 'Geschenkgutschein',
+    beschreibung: 'Verschenke frei wählbare Beträge für Seminare und Produkte.',
+    minBetrag: 50,
+    maxBetrag: 500,
+    aktiv: true,
+  });
+  log('Gutschein-Template aktualisiert');
 
   log('Seeding abgeschlossen');
 }

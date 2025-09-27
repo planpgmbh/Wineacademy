@@ -9,9 +9,9 @@ volumes:
   uploads_data:
 
 services:
-  db:
+  db_wineacadamy:
     image: postgres:15
-    container_name: wineacademy_db
+    container_name: db_wineacadamy
     env_file:
       - .env
     volumes:
@@ -23,11 +23,14 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    labels:
+      monitor.category: "database"
+      monitor.project: "wineacadamy"
 
-  backend:
+  service_wineacadamy:
     build:
       context: ./backend
-    container_name: wineacademy_backend
+    container_name: service_wineacadamy
     command: ["npm", "run", "start"]
     env_file:
       - .env
@@ -35,10 +38,10 @@ services:
       - NODE_ENV=production
       - HOST=0.0.0.0
       - PORT=1337
-      - DATABASE_HOST=db
+      - DATABASE_HOST=db_wineacadamy
       - DATABASE_PORT=5432
     depends_on:
-      db:
+      db_wineacadamy:
         condition: service_healthy
     volumes:
       - uploads_data:/app/public/uploads
@@ -48,31 +51,33 @@ services:
     labels:
       traefik.enable: "true"
       traefik.docker.network: "proxy"
-      traefik.http.services.backend.loadbalancer.server.port: "1337"
-      traefik.http.routers.backend.rule: "Host(`wineacademymain.plan-p.de`) && PathPrefix(`/api`)"
-      traefik.http.routers.backend.entrypoints: "websecure"
-      traefik.http.routers.backend.tls.certresolver: "http-resolver"
-      traefik.http.routers.backend.priority: "100"
+      traefik.http.services.service_wineacadamy.loadbalancer.server.port: "1337"
+      traefik.http.routers.service_wineacadamy.rule: "Host(`wineacademymain.plan-p.de`) && PathPrefix(`/api`)"
+      traefik.http.routers.service_wineacadamy.entrypoints: "websecure"
+      traefik.http.routers.service_wineacadamy.tls.certresolver: "http-resolver"
+      traefik.http.routers.service_wineacadamy.priority: "100"
       # Serve uploads without /api prefix for frontend asset URLs
-      traefik.http.routers.backend-uploads.rule: "Host(`wineacademymain.plan-p.de`) && PathPrefix(`/uploads`)"
-      traefik.http.routers.backend-uploads.entrypoints: "websecure"
-      traefik.http.routers.backend-uploads.tls.certresolver: "http-resolver"
-      traefik.http.routers.backend-uploads.priority: "100"
+      traefik.http.routers.service_wineacadamy-uploads.rule: "Host(`wineacademymain.plan-p.de`) && PathPrefix(`/uploads`)"
+      traefik.http.routers.service_wineacadamy-uploads.entrypoints: "websecure"
+      traefik.http.routers.service_wineacadamy-uploads.tls.certresolver: "http-resolver"
+      traefik.http.routers.service_wineacadamy-uploads.priority: "100"
       # Admin/Plugin APIs used by the Strapi admin
-      traefik.http.routers.backend-adminapi.rule: "Host(`wineacademymain.plan-p.de`) && (PathPrefix(`/content-manager`) || PathPrefix(`/content-type-builder`) || PathPrefix(`/i18n`) || PathPrefix(`/users-permissions`) || PathPrefix(`/email`) || PathPrefix(`/upload`) || PathPrefix(`/users`))"
-      traefik.http.routers.backend-adminapi.entrypoints: "websecure"
-      traefik.http.routers.backend-adminapi.tls.certresolver: "http-resolver"
-      traefik.http.routers.backend-adminapi.priority: "100"
+      traefik.http.routers.service_wineacadamy-adminapi.rule: "Host(`wineacademymain.plan-p.de`) && (PathPrefix(`/content-manager`) || PathPrefix(`/content-type-builder`) || PathPrefix(`/i18n`) || PathPrefix(`/users-permissions`) || PathPrefix(`/email`) || PathPrefix(`/upload`) || PathPrefix(`/users`))"
+      traefik.http.routers.service_wineacadamy-adminapi.entrypoints: "websecure"
+      traefik.http.routers.service_wineacadamy-adminapi.tls.certresolver: "http-resolver"
+      traefik.http.routers.service_wineacadamy-adminapi.priority: "100"
       # Serve Strapi Admin under /admin (no strip)
-      traefik.http.routers.backend-admin.rule: "Host(`wineacademymain.plan-p.de`) && PathPrefix(`/admin`)"
-      traefik.http.routers.backend-admin.entrypoints: "websecure"
-      traefik.http.routers.backend-admin.tls.certresolver: "http-resolver"
-      traefik.http.routers.backend-admin.priority: "100"
+      traefik.http.routers.service_wineacadamy-admin.rule: "Host(`wineacademymain.plan-p.de`) && PathPrefix(`/admin`)"
+      traefik.http.routers.service_wineacadamy-admin.entrypoints: "websecure"
+      traefik.http.routers.service_wineacadamy-admin.tls.certresolver: "http-resolver"
+      traefik.http.routers.service_wineacadamy-admin.priority: "100"
+      monitor.category: "website"
+      monitor.project: "wineacadamy"
 
-  frontend:
+  web_wineacadamy:
     build:
       context: ./frontend
-    container_name: wineacademy_frontend
+    container_name: web_wineacadamy
     env_file:
       - .env
     environment:
@@ -82,8 +87,10 @@ services:
     labels:
       traefik.enable: "true"
       traefik.docker.network: "proxy"
-      traefik.http.services.frontend.loadbalancer.server.port: "3000"
-      traefik.http.routers.frontend.rule: "Host(`wineacademymain.plan-p.de`)"
-      traefik.http.routers.frontend.entrypoints: "websecure"
-      traefik.http.routers.frontend.tls.certresolver: "http-resolver"
-      traefik.http.routers.frontend.priority: "1"
+      traefik.http.services.web_wineacadamy.loadbalancer.server.port: "3000"
+      traefik.http.routers.web_wineacadamy.rule: "Host(`wineacademymain.plan-p.de`)"
+      traefik.http.routers.web_wineacadamy.entrypoints: "websecure"
+      traefik.http.routers.web_wineacadamy.tls.certresolver: "http-resolver"
+      traefik.http.routers.web_wineacadamy.priority: "1"
+      monitor.category: "website"
+      monitor.project: "wineacadamy"
