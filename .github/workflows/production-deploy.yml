@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 env:
-  DEPLOY_DIR: /etc/docker/projects/wineacadamy
+  DEPLOY_DIR: /opt/docker/projects/wineacadamy
 
 jobs:
   deploy:
