@@ -425,6 +425,9 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
       const dueNetto = round2(Math.max(0, summePositionenNetto - gutscheinNetto));
       const dueSteuer = round2(Math.max(0, summeSteuer - gutscheinSteuer));
 
+      const newsletterOptIn = !!body.newsletterOptIn;
+      const newsletterOptInAt = newsletterOptIn ? new Date().toISOString() : undefined;
+
       const bestellungData: any = {
         titel: body.titel,
         rechnungstyp,
@@ -453,7 +456,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         paypalOrderId: body.paypalOrderId ? String(body.paypalOrderId) : undefined,
         agbAkzeptiert: !!body.agbAkzeptiert,
         datenschutzGelesen: !!body.datenschutzGelesen,
-        newsletterOptIn: !!body.newsletterOptIn,
+        newsletterOptIn,
         notizen: body.notizen,
         bestellstatus,
         waehrung: body.waehrung || 'EUR',
@@ -478,7 +481,10 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
       try {
         const email: string | undefined = rechnungstyp === 'firma' ? (bestellungData.rechnungsEmail || bestellungData.email) : bestellungData.email;
         if (email) {
-          const existingCustomer = await strapi.db.query('api::kunde.kunde').findOne({ where: { email }, select: ['id'] });
+          const existingCustomer = await strapi.db.query('api::kunde.kunde').findOne({
+            where: { email },
+            select: ['id', 'newsletterOptIn', 'newsletterOptInAt'],
+          });
           let kundeId = existingCustomer?.id;
           if (!kundeId) {
             const createdCustomer = await strapi.entityService.create('api::kunde.kunde', {
@@ -491,9 +497,22 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
                 plz: bestellungData.plz,
                 stadt: bestellungData.stadt,
                 land: bestellungData.land,
+                ...(newsletterOptIn
+                  ? {
+                      newsletterOptIn: true,
+                      newsletterOptInAt: newsletterOptInAt || new Date().toISOString(),
+                    }
+                  : {}),
               },
             });
             kundeId = createdCustomer.id;
+          } else if (newsletterOptIn && (!existingCustomer?.newsletterOptIn || !existingCustomer?.newsletterOptInAt)) {
+            await strapi.entityService.update('api::kunde.kunde', kundeId, {
+              data: {
+                newsletterOptIn: true,
+                newsletterOptInAt: existingCustomer?.newsletterOptInAt || newsletterOptInAt || new Date().toISOString(),
+              },
+            });
           }
           if (kundeId) {
             await strapi.entityService.update('api::bestellung.bestellung', bestellungId, { data: { kunde: kundeId } });

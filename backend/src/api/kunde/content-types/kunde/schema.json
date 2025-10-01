@@ -18,6 +18,8 @@
     "plz": { "type": "string" },
     "stadt": { "type": "string" },
     "land": { "type": "string" },
+    "newsletterOptIn": { "type": "boolean", "default": false },
+    "newsletterOptInAt": { "type": "datetime" },
     "notizen": { "type": "text" },
     "bestellungen": {
       "type": "relation",

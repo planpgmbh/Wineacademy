@@ -203,6 +203,63 @@ export interface AdminRole extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface AdminSession extends Struct.CollectionTypeSchema {
+  collectionName: 'strapi_sessions';
+  info: {
+    description: 'Session Manager storage';
+    displayName: 'Session';
+    name: 'Session';
+    pluralName: 'sessions';
+    singularName: 'session';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  pluginOptions: {
+    'content-manager': {
+      visible: false;
+    };
+    'content-type-builder': {
+      visible: false;
+    };
+    i18n: {
+      localized: false;
+    };
+  };
+  attributes: {
+    absoluteExpiresAt: Schema.Attribute.DateTime & Schema.Attribute.Private;
+    childId: Schema.Attribute.String & Schema.Attribute.Private;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    deviceId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private;
+    expiresAt: Schema.Attribute.DateTime &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'admin::session'> &
+      Schema.Attribute.Private;
+    origin: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    sessionId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique;
+    status: Schema.Attribute.String & Schema.Attribute.Private;
+    type: Schema.Attribute.String & Schema.Attribute.Private;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    userId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface AdminTransferToken extends Struct.CollectionTypeSchema {
   collectionName: 'strapi_transfer_tokens';
   info: {
@@ -386,6 +443,7 @@ export interface ApiBestellungBestellung extends Struct.CollectionTypeSchema {
   };
   attributes: {
     agbAkzeptiert: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    bestellnummer: Schema.Attribute.String & Schema.Attribute.Unique;
     bestellstatus: Schema.Attribute.Enumeration<
       ['offen', 'bezahlt', 'storniert']
     > &
@@ -468,7 +526,6 @@ export interface ApiBuchungBuchung extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     email: Schema.Attribute.Email;
-    geburtstag: Schema.Attribute.Date;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -557,7 +614,7 @@ export interface ApiKategorieKategorie extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
     seminare: Schema.Attribute.Relation<'manyToMany', 'api::seminar.seminar'>;
-    titel: Schema.Attribute.String & Schema.Attribute.Required;
+    kategoriename: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -591,6 +648,9 @@ export interface ApiKundeKunde extends Struct.CollectionTypeSchema {
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::kunde.kunde'> &
       Schema.Attribute.Private;
     nachname: Schema.Attribute.String & Schema.Attribute.Required;
+    newsletterOptIn: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    newsletterOptInAt: Schema.Attribute.DateTime;
     notizen: Schema.Attribute.Text;
     plz: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
@@ -659,7 +719,7 @@ export interface ApiProduktProdukt extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    istGutschein: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    gutschein: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     kurzbeschreibung: Schema.Attribute.Text;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -667,7 +727,7 @@ export interface ApiProduktProdukt extends Struct.CollectionTypeSchema {
       'api::produkt.produkt'
     > &
       Schema.Attribute.Private;
-    mitMwst: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    mwst: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     preisBrutto: Schema.Attribute.Decimal;
     preisNetto: Schema.Attribute.Decimal;
     publishedAt: Schema.Attribute.DateTime;
@@ -677,7 +737,6 @@ export interface ApiProduktProdukt extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    waehrung: Schema.Attribute.String & Schema.Attribute.DefaultTo<'EUR'>;
   };
 }
 
@@ -700,6 +759,7 @@ export interface ApiSeminarSeminar extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     infos: Schema.Attribute.Text;
+    kapazitaet: Schema.Attribute.Integer;
     kategorien: Schema.Attribute.Relation<
       'manyToMany',
       'api::kategorie.kategorie'
@@ -711,12 +771,11 @@ export interface ApiSeminarSeminar extends Struct.CollectionTypeSchema {
       'api::seminar.seminar'
     > &
       Schema.Attribute.Private;
-    mitMwst: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    mwst: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    preis: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
     publishedAt: Schema.Attribute.DateTime;
     seminarname: Schema.Attribute.String & Schema.Attribute.Required;
     slug: Schema.Attribute.UID<'seminarname'> & Schema.Attribute.Required;
-    standardKapazitaetProTermin: Schema.Attribute.Integer;
-    standardPreis: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
     termine: Schema.Attribute.Relation<'oneToMany', 'api::termin.termin'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -755,22 +814,17 @@ export interface ApiTerminTermin extends Struct.CollectionTypeSchema {
       'api::termin.termin'
     > &
       Schema.Attribute.Private;
-    ort: Schema.Attribute.Relation<'manyToOne', 'api::ort.ort'>;
+    ort: Schema.Attribute.Relation<'manyToOne', 'api::ort.ort'> &
+      Schema.Attribute.Required;
     planungsstatus: Schema.Attribute.Enumeration<
       ['geplant', 'ausgebucht', 'abgesagt']
     > &
       Schema.Attribute.DefaultTo<'geplant'>;
-    preis: Schema.Attribute.Decimal;
     publishedAt: Schema.Attribute.DateTime;
-    seminar: Schema.Attribute.Relation<'manyToOne', 'api::seminar.seminar'>;
-    tage: Schema.Attribute.Component<'termin.seminartag', true> &
-      Schema.Attribute.Required &
-      Schema.Attribute.SetMinMax<
-        {
-          min: 1;
-        },
-        number
-      >;
+    seminar: Schema.Attribute.Relation<'manyToOne', 'api::seminar.seminar'> &
+      Schema.Attribute.Required;
+    starttag: Schema.Attribute.Date & Schema.Attribute.Required;
+    tage: Schema.Attribute.Component<'termin.seminartag', true>;
     titel: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1284,6 +1338,7 @@ declare module '@strapi/strapi' {
       'admin::api-token-permission': AdminApiTokenPermission;
       'admin::permission': AdminPermission;
       'admin::role': AdminRole;
+      'admin::session': AdminSession;
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
