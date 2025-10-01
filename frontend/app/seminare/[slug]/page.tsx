@@ -69,8 +69,8 @@ export default async function SeminarDetailPage({ params }: Props) {
           <p className="text-gray-700 mt-2 max-w-3xl">{seminar.kurzbeschreibung}</p>
         )}
         <div className="mt-3 text-sm text-gray-700 flex gap-6 flex-wrap">
-          {typeof seminar.standardPreis !== 'undefined' && (
-            <span>ab {seminar.standardPreis} €</span>
+          {typeof seminar.preis !== 'undefined' && (
+            <span>ab {seminar.preis} €</span>
           )}
           {nextTermin && (
             <span>Nächster Termin: {terminDateLine(nextTermin)}</span>
@@ -94,7 +94,7 @@ export default async function SeminarDetailPage({ params }: Props) {
 
         {/* Sidebar: Terminwahl (Wunschtermin) */}
         <aside className="md:col-span-1">
-          <BookingSidebar termine={termine} fallbackPreis={seminar.standardPreis} seminarTitle={seminar.seminarname} mitMwst={seminar.mitMwst} />
+          <BookingSidebar termine={termine} fallbackPreis={seminar.preis} seminarTitle={seminar.seminarname} mwstAktiv={seminar.mwst} />
         </aside>
       </div>
     </div>

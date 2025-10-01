@@ -2,18 +2,12 @@
 // Zweck: Serverseitige Vorbelegung/Ableitung von Feldern beim Erstellen/Aktualisieren von Terminen.
 //
 // Was wird gemacht?
-// - Preis-Default: Wenn kein Preis gesetzt ist, wird er aus dem verknüpften Seminar (standardPreis) übernommen.
 // - Titel-Autogenerierung: Wenn kein sinnvoller Titel vorhanden ist (leer/"Untitled"),
 //   wird er als "DDMMYY | <Seminarname> | <Ort>" erzeugt (Datum aus dem ersten Eintrag in tage[]).
 //
 // Hinweis zu Performance: Die Titel-Generierung macht schlanke DB-Looks (Seminarname/Ort-Name).
 // Das ist für Einzeloperationen sinnvoll und gut verständlich. Für Massenimporte könnte
 // man alternativ in Services bündeln.
-
-const toNumberOrUndefined = (v: any): number | undefined => {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : undefined;
-};
 
 // Extrahiert eine numerische ID aus unterschiedlichen Relationen-Formaten, wie sie
 // vom Content-Manager oder der API kommen können:
@@ -31,17 +25,6 @@ const extractId = (rel: any): number | undefined => {
   }
   return undefined;
 };
-
-// Normalformat (Reserve-Helfer): YYYY-MM-DD
-function formatDate(d: string | Date | undefined) {
-  if (!d) return '';
-  const dt = typeof d === 'string' ? new Date(d) : d;
-  if (!dt || isNaN(dt.getTime())) return '';
-  const y = dt.getFullYear();
-  const m = String(dt.getMonth() + 1).padStart(2, '0');
-  const day = String(dt.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
 
 // Kurzformat (für Titel): DDMMYY
 function formatDateShort(d: string | Date | undefined) {
@@ -91,21 +74,10 @@ const buildTitel = async (data: any) => {
 // (Entfernt) Früher: buildTageUebersicht – wurde nicht persistiert/genutzt; daher entfernt.
 
 // Vor Anlage eines Termins:
-// - Preis aus Seminar übernehmen, wenn nicht gesetzt
 // - Titel generieren, wenn leer/"Untitled"
 // - Tage-Übersicht erzeugen
 const beforeCreate = async (event: any) => {
   const { data } = event.params;
-  // Wenn kein Preis gesetzt ist, Standardpreis des verknüpften Seminars kopieren
-  const hasPreis = data.preis != null && data.preis !== '';
-  const seminarId = extractId(data.seminar);
-  if (!hasPreis && seminarId) {
-    const sem = await (strapi as any).db
-      .query('api::seminar.seminar')
-      .findOne({ where: { id: seminarId }, select: ['standardPreis'] });
-    const std = toNumberOrUndefined(sem?.standardPreis);
-    if (std != null) data.preis = std;
-  }
   // Titel generieren, falls leer
   if (isMissingTitle(data.titel)) {
     const t = await buildTitel(data);
@@ -114,19 +86,10 @@ const beforeCreate = async (event: any) => {
 };
 
 // Vor Aktualisierung eines Termins:
-// - Wenn Preis explizit geleert wird, erneut Standardpreis übernehmen
 // - Titel ggf. neu generieren (nur, wenn (weiterhin) leer/"Untitled")
 // - Tage-Übersicht aktualisieren
 const beforeUpdate = async (event: any) => {
-  const { data, where } = event.params;
-  // Nur falls explizit leer gesetzt wird und Seminar vorhanden ist
-  const willBeLeer = data.preis === null || data.preis === '' || data.preis === undefined;
-  const seminarId = extractId(data.seminar);
-  if (willBeLeer && seminarId) {
-    const sem = await (strapi as any).db.query('api::seminar.seminar').findOne({ where: { id: seminarId }, select: ['standardPreis'] });
-    const std = toNumberOrUndefined(sem?.standardPreis);
-    if (std != null) data.preis = std;
-  }
+  const { data } = event.params;
   // Titel bei Änderungen ggf. neu setzen
   if (isMissingTitle(data.titel)) {
     const t = await buildTitel(data);

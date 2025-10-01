@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function ProduktePage() {
   const produkte = await getProdukte();
-  const normale = produkte.filter((p) => !p.istGutschein);
+  const normale = produkte.filter((p) => !p.gutschein);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-6 py-8">

@@ -1,5 +1,6 @@
 export default ({ env }) => [
   'strapi::logger',
+  'global::force-https',
   'strapi::errors',
   'strapi::security',
   {

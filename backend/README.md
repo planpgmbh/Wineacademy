@@ -2,27 +2,13 @@
 
 Das Strapi-Backend stellt alle Inhalte (Seminare, Termine, Produkte) und Checkout-Flows für die Wine Academy Hamburg bereit. Es läuft als Node 20 Service mit PostgreSQL 15 und versorgt das Next.js-Frontend ausschließlich über Public-Endpoints.
 
-## Dokumentation & Referenzen
-- Root-Übersicht: `../README.md`
-- Seeding/Reset: `../docs/Reset_and_filldb.md`
-- Infrastruktur & Deploy: `../docs/server-infrastructure.md`
-- Frontend-Integration: `../frontend/README.md`
-
-## Lokaler Start
-```bash
-docker compose -f ../docker-compose-staging.yml up -d service_wineacadamy_staging
-# Logs
-docker compose -f ../docker-compose-staging.yml logs -f service_wineacadamy_staging
-```
-Strapi Admin erreichst du auf `http://localhost:1337/admin` (erster Start → eigenen Admin anlegen).
-
 ## Datenmodell (Kurzfassung)
-- **Seminar** – Stammdaten, Texte, Bild, Standardpreis, Relation zu Kategorien & Terminen
-- **Termin** – Datum(e) (`termin.seminartag`), Preis, `planungsstatus`, Relation zu Seminar & Ort
+- **Seminar** – Stammdaten, Texte, Bild, Preis, Relation zu Kategorien & Terminen
+- **Termin** – Datum(e) (`termin.seminartag`), `planungsstatus`, Relation zu Seminar & Ort (Preis wird aus dem Seminar übernommen)
 - **Ort** – Veranstaltungsort (Adresse, Typ)
 - **Bestellung** – Rechnungs-/Zahlungsdaten, Warenkorb-Positionen, Summen, Status (`offen|bezahlt|storniert`), Relation zu Kunde, Buchungen, Gutscheinen
 - **Buchung** – Teilnehmer eines Seminartermins inkl. Preis/MwSt, verweist auf Termin & Bestellung
-- **Produkt** – Shop-Artikel (inkl. Flag `istGutschein` für Gutschein-Template)
+- **Produkt** – Shop-Artikel (inkl. Flag `gutschein` für Gutschein-Template)
 - **Gutschein** – Template oder generierter Code (Betrag, Bestellung, Einlöse-Status)
 
 Namenskonvention: Verwende `planungsstatus` statt `status`, und halte Relationen gemäß oben beschriebenem Modell.
@@ -70,13 +56,9 @@ curl -s -X POST http://localhost:1337/api/public/bestellungen \
 
 ENV-Variablen (Auszug): `APP_KEYS`, `JWT_SECRET`, `API_INTERNAL_URL`, `PUBLIC_URL`, `PAYPAL_*`, `CORS_ORIGINS`. Siehe `.env.example` bzw. Compose-Dateien.
 
-## Datenpflege & Admin
-- Seed/Reset **immer** nach `../docs/Reset_and_filldb.md`.
-- Nach Schemaänderungen Content Manager → *Configure* → “Reset to default”, damit neue Felder sichtbar werden.
-- Keine manuellen Änderungen in `types/generated/*` – sie werden von Strapi generiert.
-
 ## Hinweise für Agenten/KI
-- Folge zusätzlich `../AGENTS.md`.
 - Arbeite ausschließlich über die Public-Endpoints (siehe Tabelle oben).
 - Verwende Docker Compose-Kommandos aus dem Projekt-Root.
 - Änderungen klein halten; vor Commits Tests/Builds nur bei Bedarf.
+- Nach Änderungen an Strapi-Schemas/Content-Types den Backend-Container neu aufsetzen, damit der Admin die Anpassung sofort sieht:
+  `docker compose -f docker-compose-staging.yml up -d --force-recreate service_wineacadamy_staging`.

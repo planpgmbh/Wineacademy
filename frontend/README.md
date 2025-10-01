@@ -2,24 +2,22 @@
 
 Das Next.js-Frontend liefert die öffentlichen Seiten (Seminare, Shop, Checkout) der Wine Academy Hamburg und spricht ausschließlich die Public-Endpoints des Strapi-Backends an.
 
-## Dokumentation & Referenzen
-- Root-Übersicht: `../README.md`
-- Backend-API: `../backend/README.md`
-- Seeding/Reset: `../docs/Reset_and_filldb.md`
-- Infrastruktur & Deploy: `../docs/server-infrastructure.md`
-
-## Lokaler Start
-```bash
-docker compose -f ../docker-compose-staging.yml up -d web_wineacadamy_staging
-# Logs
-docker compose -f ../docker-compose-staging.yml logs -f web_wineacadamy_staging
-```
-Der Code ist bind-gemountet, `next dev` sorgt für Hot Reload.
-
 ## API-Basen & Konfiguration
 - SSR (Server-Komponenten): `API_INTERNAL_URL=http://backend:1337`
 - CSR (Browser): `NEXT_PUBLIC_API_URL=http://localhost:1337`
 - Medien: `mediaUrl()` aus `lib/api.ts`; optional `NEXT_PUBLIC_ASSETS_URL`/`ASSETS_INTERNAL_URL`
+
+`lib/api.ts` kapselt die Trennung zwischen Server- und Browser-Aufrufen (`fetchJSON` setzt `next.revalidate=30`) und nutzt interne bzw. öffentliche Basen samt Medien-URLs. Neue Requests sollten darauf aufsetzen, damit SSR (Container-Netz) und CSR (Browser) konsistent bleiben.
+
+## Ordner & Verantwortlichkeiten
+- `app/*` – Routen im App Router (Server-Komponenten + ggf. Client-Komponenten, z. B. `app/seminare/page.tsx`).
+- `components/*` – wiederverwendbare UI-Bausteine, Checkout-Formulare, PayPal-Buttons.
+- `lib/*` – API-Layer (`api.ts`), State/Hooks (`cart-context.tsx`) und Hilfsfunktionen.
+- `public/*` – statische Assets (Icons, Logos, Fonts).
+
+## Staging-Stack
+- Frontend immer über `docker compose -f docker-compose-staging.yml up -d web_wineacadamy_staging` neu starten (Logs/Restart-Kommandos siehe Root-README).
+- Bei lokalen Anpassungen `NEXT_PUBLIC_API_URL`/`NEXT_PUBLIC_ASSETS_URL` in `.env.staging.local` setzen, damit Browser-Aufrufe die Staging-Domain nutzen.
 
 Genutzte Public-Endpoints:
 - `GET /api/public/seminare`
@@ -41,6 +39,7 @@ Genutzte Public-Endpoints:
 ## Warenkorb & Checkout
 - Zustand liegt im `CartProvider` (`frontend/lib/cart-context.tsx`) und wird clientseitig persistiert.
 - Seminare erzeugen pro Platz verpflichtende Teilnehmerfelder.
+- `CheckoutClient` (`app/checkout/CheckoutClient.tsx`) mappt Warenkorb + Teilnehmer auf das Payload aus `backend/README.md` (Positionen + Buchungen) und validiert alle Pflichtfelder.
 - Nach erfolgreichem `POST /api/public/bestellungen` wird die Bestätigungsansicht mit Bestellnummer angezeigt; Warenkorb wird geleert.
 
 ## PayPal (Sandbox)
@@ -50,13 +49,11 @@ Genutzte Public-Endpoints:
 - Backend-Webhooks schließen offene Bestellungen automatisch ab (siehe Backend-README).
 
 ## Troubleshooting
-- Frontend zeigt alte Inhalte → Hard Reload (Cmd/Ctrl+Shift+R) oder `docker compose ... up -d frontend`.
+- Frontend zeigt alte Inhalte → Hard Reload (Cmd/Ctrl+Shift+R) oder `docker compose -f docker-compose-staging.yml up -d web_wineacadamy_staging`.
 - SSR-Requests schlagen fehl → `API_INTERNAL_URL` prüfen (`backend` Container muss erreichbar sein).
 - Bilder fehlen → Domain in `next.config.ts` ergänzen und `NEXT_PUBLIC_ASSETS_URL` setzen.
-- PayPal-Buttons fehlen → Client-ID/ENV prüfen, ggf. Browser-Extensions deaktivieren.
 
 ## Hinweise für Agenten/KI
-- Folge zusätzlich `../AGENTS.md`.
 - Verwende ausschließlich die oben gelisteten Public-Endpoints.
 - Passe Warenkorb-/Checkout-Logik nur mit Blick auf `lib/cart-context.tsx` und die Backend-Validierung an.
 - Keine direkten Aufrufe interner Strapi-Services aus React-Komponenten.

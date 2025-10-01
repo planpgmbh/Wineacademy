@@ -17,7 +17,6 @@ type TeilnehmerInput = {
   vorname: string;
   nachname: string;
   email?: string;
-  geburtstag?: string;
   wsetCandidateNumber?: string;
   besondereBeduerfnisse?: string;
   anmerkungen?: string;
@@ -169,16 +168,16 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
     const loadProdukt = async (id: number) => {
       return strapi.db.query('api::produkt.produkt').findOne({
         where: { id, aktiv: true },
-        select: ['id', 'titel', 'preisNetto', 'preisBrutto', 'steuerSatz', 'mitMwst', 'istGutschein'],
+        select: ['id', 'titel', 'preisNetto', 'preisBrutto', 'steuerSatz', 'mwst', 'gutschein'],
       });
     };
 
     const loadTermin = async (id: number) => {
       return strapi.db.query('api::termin.termin').findOne({
         where: { id },
-        select: ['id', 'preis', 'planungsstatus', 'publishedAt'],
+        select: ['id', 'planungsstatus', 'publishedAt'],
         populate: {
-          seminar: { select: ['id', 'seminarname', 'mitMwst', 'standardPreis'] },
+          seminar: { select: ['id', 'seminarname', 'mwst', 'preis'] },
           tage: { select: ['datum', 'startzeit', 'endzeit'] },
         },
       });
@@ -210,16 +209,18 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         }
         const seminar = (termin as any).seminar;
         const defaultVat = Number(process.env.VAT_RATE ?? 19);
-        const mitMwst = seminar?.mitMwst !== false;
-        const steuerSatz = mitMwst ? defaultVat : 0;
+        const mwstAktiv = seminar?.mwst !== false;
+        const steuerSatz = mwstAktiv ? defaultVat : 0;
 
-        const basisPreis = Number(termin.preis != null ? termin.preis : seminar?.standardPreis);
+        const seminarPreis = Number(seminar?.preis);
+        const fallbackPreis = Number(raw.einzelpreisBrutto);
+        const basisPreis = Number.isFinite(seminarPreis) ? seminarPreis : fallbackPreis;
         if (!Number.isFinite(basisPreis)) {
-          strapi.log.error(`[publicCreate Bestellung] Kein Preis für Termin ${terminId} (raw=${JSON.stringify({ terminId, rawPreis: raw.einzelpreisBrutto, terminPreis: termin.preis, seminarPreis: seminar?.standardPreis })})`);
+          strapi.log.error(`[publicCreate Bestellung] Kein Preis für Termin ${terminId} (raw=${JSON.stringify({ terminId, rawPreis: raw.einzelpreisBrutto, seminarPreis: seminar?.preis })})`);
           return ctx.badRequest('Preis für Termin nicht verfügbar');
         }
         const brutto = round2(basisPreis);
-        const netto = mitMwst ? round2(brutto / (1 + steuerSatz / 100)) : brutto;
+        const netto = mwstAktiv ? round2(brutto / (1 + steuerSatz / 100)) : brutto;
 
         const titel = raw.titel?.trim() || `${seminar?.seminarname || 'Seminar'} · Termin #${termin.id}`;
         const summeBrutto = round2(brutto * menge);
@@ -252,10 +253,13 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         const produkt = await loadProdukt(produktId);
         if (!produkt) return ctx.badRequest('Produkt nicht verfügbar');
 
-        const istGutschein = !!produkt.istGutschein || typ === 'gutschein';
+        const istGutschein = !!produkt.gutschein || typ === 'gutschein';
         let brutto: number | undefined = produkt.preisBrutto != null ? Number(produkt.preisBrutto) : undefined;
         let netto: number | undefined = produkt.preisNetto != null ? Number(produkt.preisNetto) : undefined;
         let steuerSatz = produkt.steuerSatz != null ? Number(produkt.steuerSatz) : Number(process.env.VAT_RATE ?? 19);
+        if (produkt.mwst === false) {
+          steuerSatz = 0;
+        }
 
         if (istGutschein) {
           const template = await templatePromise;
@@ -330,7 +334,6 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
           vorname: teilnehmer.vorname.trim(),
           nachname: teilnehmer.nachname.trim(),
           email: teilnehmer.email?.trim(),
-          geburtstag: teilnehmer.geburtstag || null,
           wsetCandidateNumber: teilnehmer.wsetCandidateNumber,
           besondereBeduerfnisse: teilnehmer.besondereBeduerfnisse,
           anmerkungen: teilnehmer.anmerkungen,

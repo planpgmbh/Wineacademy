@@ -1,74 +1,64 @@
-# Wine Academy Hamburg – Monorepo (Strapi + Next.js)
+# Backend (Strapi 5)
 
-Die Wine Academy Hamburg betreibt über dieses Repository eine kombinierte Strapi- und Next.js-Anwendung für Seminarverwaltung, Shop und Checkout (Rechnung & PayPal).
+Das Strapi-Backend stellt alle Inhalte (Seminare, Termine, Produkte) und Checkout-Flows für die Wine Academy Hamburg bereit. Es läuft als Node 20 Service mit PostgreSQL 15 und versorgt das Next.js-Frontend ausschließlich über Public-Endpoints.
 
-## Stack-Überblick
-- **Backend:** Strapi 5 (Node 20) mit PostgreSQL
-- **Frontend:** Next.js 15 (App Router), React 19, Tailwind 4
-- **Payments & Drittsysteme:** PayPal Checkout, LexOffice, SendGrid
-- **Containerisation:** Docker Compose (Dev/Staging/Prod) + Traefik-Routing
+## Datenmodell (Kurzfassung)
+- **Seminar** – Stammdaten, Texte, Bild, Preis, Relation zu Kategorien & Terminen
+- **Termin** – Datum(e) (`termin.seminartag`), `planungsstatus`, Relation zu Seminar & Ort (Preis wird aus dem Seminar übernommen)
+- **Ort** – Veranstaltungsort (Adresse, Typ)
+- **Bestellung** – Rechnungs-/Zahlungsdaten, Warenkorb-Positionen, Summen, Status (`offen|bezahlt|storniert`), Relation zu Kunde, Buchungen, Gutscheinen
+- **Buchung** – Teilnehmer eines Seminartermins inkl. Preis/MwSt, verweist auf Termin & Bestellung
+- **Produkt** – Shop-Artikel (inkl. Flag `gutschein` für Gutschein-Template)
+- **Gutschein** – Template oder generierter Code (Betrag, Bestellung, Einlöse-Status)
 
-## Verzeichnis & Dokumentation
-- `backend/README.md` – Datenmodell, Public-API, Admin- & Backend-Flows
-- `frontend/README.md` – App-Struktur, API-Anbindung, Checkout-Details
-- `docs/Reset_and_filldb.md` – Datenbank zurücksetzen & befüllen
-- `docs/server-infrastructure.md` – Traefik, Server-Setup, Deploy-Anleitung
+Namenskonvention: Verwende `planungsstatus` statt `status`, und halte Relationen gemäß oben beschriebenem Modell.
 
-> **Tipp:** Lies zuerst die Root-README (dieses Dokument) und anschließend die README des Teilprojekts, in dem du arbeitest. Für Seeds/Deployments immer in den Docs nachschlagen – dort stehen die verbindlichen Schritte.
+## Public API
+| Endpoint | Zweck |
+| --- | --- |
+| `GET /api/public/seminare` | Liste aktiver Seminare inkl. geplanter Termine |
+| `GET /api/public/seminare/:slug` | Seminardetail (Texte, Termine, Preise) |
+| `GET /api/public/produkte` | Aktive Shop-Produkte (inkl. evtl. Gutschein-Template) |
+| `GET /api/public/gutscheine/template` | Konfiguration für Gutschein-Betrag (Min/Max, Beschreibung) |
+| `POST /api/public/gutscheine/pricing` | Wunschbetrag validieren und runden |
+| `POST /api/public/bestellungen` | Bestellung anlegen (Rechnung oder PayPal-Capture) |
+| `GET /api/public/bestellungen/:id` | Minimalstatus einer Bestellung (Summen, Codes) |
 
-## Schnellstart (lokale Entwicklung)
-1. `.env` aus Vorlage übernehmen und anpassen
-   ```bash
-   cp .env.example .env
-   ```
-2. Docker Desktop als Engine verwenden (`docker context use desktop-linux`).
-3. Staging-Stack lokal starten
-   ```bash
-   docker compose -f docker-compose-staging.yml up -d --build
-   ```
-4. Zugänge:
-   - Strapi Admin: `http://localhost:1337/admin`
-   - Frontend: `http://localhost:3000`
-
-**Logs & Neustarts (Staging-Stack)**
+**Beispiel (Produkt-Bestellung via Rechnung):**
 ```bash
-docker compose -f docker-compose-staging.yml logs -f backend|frontend
-docker compose -f docker-compose-staging.yml up -d service_wineacadamy_staging   # Backend neu starten
-docker compose -f docker-compose-staging.yml up -d web_wineacadamy_staging       # Frontend neu starten
+curl -s -X POST http://localhost:1337/api/public/bestellungen \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "rechnungstyp": "privat",
+    "vorname": "Test",
+    "nachname": "User",
+    "email": "test@example.com",
+    "agbAkzeptiert": true,
+    "datenschutzGelesen": true,
+    "positionen": [
+      {
+        "typ": "produkt",
+        "produktId": 1,
+        "menge": 1,
+        "einzelpreisBrutto": 59.5,
+        "steuerSatz": 19
+      }
+    ],
+    "buchungen": []
+  }'
 ```
 
-**Seeding / Reset**
-> Folge strikt `docs/Reset_and_filldb.md`. Automatisches Seeding ist deaktiviert – Daten manuellerstellen.
+## Bestell- & PayPal-Workflow
+- Seminare/Produkte/Gutscheine werden im Payload als Positionen übergeben; der Server berechnet Netto/Brutto/Steuern und prüft verfügbare Termine/Produkte.
+- `buchungen` müssen je Seminartermin die gleiche Anzahl an Teilnehmern wie die Position enthalten.
+- Bei PayPal wird optional `paypalCaptureId` und `paypalOrderId` übergeben. Erfolgreiche Capture ⇒ Status `bezahlt`, `zahlungsmethode='paypal'`, Gutscheincodes werden generiert.
+- Webhook (`POST /api/public/paypal/webhook`) prüft Signatur (`PAYPAL_WEBHOOK_ID`), verifiziert Betrag/Währung und schließt offene Bestellungen nach.
 
-## Öffentliche API (Frontend <-> Backend)
-Das Frontend nutzt ausschließlich die folgenden Public-Endpoints:
+ENV-Variablen (Auszug): `APP_KEYS`, `JWT_SECRET`, `API_INTERNAL_URL`, `PUBLIC_URL`, `PAYPAL_*`, `CORS_ORIGINS`. Siehe `.env.example` bzw. Compose-Dateien.
 
-- `GET /api/public/seminare`
-- `GET /api/public/seminare/:slug`
-- `GET /api/public/produkte`
-- `GET /api/public/gutscheine/template`
-- `POST /api/public/gutscheine/pricing`
-- `POST /api/public/bestellungen`
-- `GET /api/public/bestellungen/:id`
-
-Preise, Steuern und Gutscheinlogik werden serverseitig verifiziert. Details zum Payload findest du in `backend/README.md`.
-
-## Checkout & Zahlungen
-- Rechnungsbestellungen bleiben auf Status `offen`.
-- PayPal-Checkout erzeugt Orders mit `custom_id` (Base64-kodierter Warenkorb) und löst nach Capture `POST /api/public/bestellungen` aus.
-- Webhook (`POST /api/public/paypal/webhook`) gleicht Captures serverseitig ab und erzeugt ggf. fehlende Gutscheine.
-- Konfiguration der Zahlungs-ENV-Variablen siehe `backend/README.md`.
-
-## Deployments & Infrastruktur
-- Compose-Äquivalente für Staging/Prod: `docker-compose-staging.yml` bzw. `docker-compose.yml`.
-- Server-Setup, Traefik-Labels, CI-GitHub-Actions und ENV-Variablen sind in `docs/server-infrastructure.md` dokumentiert.
-- Staging-Domain: `https://wineacademy.plan-p.de`, Production: `https://wineacademymain.plan-p.de`.
-
-## Sandbox-Zugangsdaten
-PayPal Sandbox Account (Staging):
-```
-E-Mail: winetest@personal.example.com
-Passwort: u*q7gR%D
-```
-
-Bitte Passwörter vertraulich behandeln und nur in Testumgebungen verwenden.
+## Hinweise für Agenten/KI
+- Arbeite ausschließlich über die Public-Endpoints (siehe Tabelle oben).
+- Verwende Docker Compose-Kommandos aus dem Projekt-Root.
+- Änderungen klein halten; vor Commits Tests/Builds nur bei Bedarf.
+- Nach Änderungen an Strapi-Schemas/Content-Types den Backend-Container neu aufsetzen, damit der Admin die Anpassung sofort sieht:
+  `docker compose -f docker-compose-staging.yml up -d --force-recreate service_wineacadamy_staging`.

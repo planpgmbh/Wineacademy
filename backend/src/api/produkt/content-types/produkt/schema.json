@@ -17,9 +17,8 @@
     "preisNetto": { "type": "decimal" },
     "preisBrutto": { "type": "decimal" },
     "steuerSatz": { "type": "decimal" },
-    "mitMwst": { "type": "boolean", "default": true },
-    "waehrung": { "type": "string", "default": "EUR" },
-    "istGutschein": { "type": "boolean", "default": false },
+    "mwst": { "type": "boolean", "default": true },
+    "gutschein": { "type": "boolean", "default": false },
     "aktiv": { "type": "boolean", "default": true },
     "bild": { "type": "media", "allowedTypes": ["images"], "multiple": false }
   }

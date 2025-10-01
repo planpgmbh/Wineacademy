@@ -32,7 +32,7 @@ export default async function SeminarePage() {
                 <p className="text-sm text-gray-700 mt-1 line-clamp-3">{s.kurzbeschreibung}</p>
               )}
               <div className="text-sm mt-3 flex gap-4 flex-wrap text-gray-700">
-                {typeof s.standardPreis !== 'undefined' && <span>ab {s.standardPreis} €</span>}
+                {typeof s.preis !== 'undefined' && <span>ab {s.preis} €</span>}
                 {firstDay && <span>Nächster Termin: {fmtDateISOToGerman(firstDay)}</span>}
                 {ort && <span>Ort: {ort}</span>}
               </div>

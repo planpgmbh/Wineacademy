@@ -28,12 +28,12 @@
     "infos": {
       "type": "text"
     },
-    "standardPreis": {
+    "preis": {
       "type": "decimal",
       "default": 0
     },
-    "mitMwst": { "type": "boolean", "default": true },
-    "standardKapazitaetProTermin": { "type": "integer" },
+    "mwst": { "type": "boolean", "default": true },
+    "kapazitaet": { "type": "integer" },
     "bild": {
       "type": "media",
       "allowedTypes": ["images"],

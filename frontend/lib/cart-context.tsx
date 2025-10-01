@@ -6,7 +6,6 @@ export type TeilnehmerForm = {
   vorname: string;
   nachname: string;
   email?: string;
-  geburtstag?: string;
   wsetCandidateNumber?: string;
   besondereBeduerfnisse?: string;
   anmerkungen?: string;

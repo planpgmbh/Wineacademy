@@ -14,7 +14,7 @@
 4. **Basisdaten einpflegen** (vorerst manuell, bis das Seed-Script aktualisiert ist):
    - Kategorien, Orte
    - Seminare inklusive Termine & Orte
-   - Produkte (mit `istGutschein=true` für den Gutschein-Artikel)
+   - Produkte (mit `gutschein=true` für den Gutschein-Artikel)
    - Gutschein-Template (Single Entry – freier Betrag)
 5. **Testbestellungen ergänzen** (optional):
    - Eine Bestellung mit Seminartermin und Teilnehmern

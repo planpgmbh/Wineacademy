@@ -45,8 +45,8 @@ export type SeminarListItem = {
   kurzbeschreibung?: string;
   beschreibung?: string;
   infos?: string;
-  standardPreis?: number;
-  mitMwst?: boolean;
+  preis?: number;
+  mwst?: boolean;
   bild?: { url: string; alternativeText?: string } | null;
   termine?: Array<{
     id: number;
@@ -83,9 +83,8 @@ export type Produkt = {
   preisBrutto: number;
   preisNetto?: number;
   steuerSatz?: number;
-  mitMwst?: boolean;
-  istGutschein?: boolean;
-  waehrung?: string;
+  mwst?: boolean;
+  gutschein?: boolean;
   bild?: { url: string; alternativeText?: string } | null;
 };
 

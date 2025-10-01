@@ -4,22 +4,23 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
   async publicList(ctx) {
     const seminars = await strapi.db.query('api::seminar.seminar').findMany({
       where: { aktiv: true, publishedAt: { $not: null } },
-      select: ['id', 'seminarname', 'slug', 'kurzbeschreibung', 'standardPreis', 'mitMwst'],
+      select: ['id', 'seminarname', 'slug', 'kurzbeschreibung', 'preis', 'mwst'],
       populate: { bild: { select: ['url', 'alternativeText'] } },
       orderBy: { seminarname: 'asc' },
     });
 
     const result = [] as any[];
     for (const s of seminars) {
-      const termine = await strapi.db.query('api::termin.termin').findMany({
+      const termineRaw = await strapi.db.query('api::termin.termin').findMany({
         where: { planungsstatus: 'geplant', publishedAt: { $not: null }, seminar: s.id },
-        select: ['kapazitaet', 'preis', 'planungsstatus', 'id'],
+        select: ['kapazitaet', 'planungsstatus', 'id'],
         populate: {
           tage: { select: ['datum', 'startzeit', 'endzeit'] },
           ort: { select: ['standort', 'typ', 'veranstaltungsort', 'stadt'] },
         },
         orderBy: { id: 'asc' },
       });
+      const termine = termineRaw.map((t) => ({ ...t, preis: (s as any).preis }));
       const fallbackBild = { url: '/favicon.png', alternativeText: 'Weinseminar – Testbild' } as any;
       const sWithBild = { ...(s as any), bild: (s as any).bild ?? fallbackBild };
       result.push({ ...sWithBild, termine });
@@ -39,8 +40,8 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
         'kurzbeschreibung',
         'beschreibung',
         'infos',
-        'standardPreis',
-        'mitMwst',
+        'preis',
+        'mwst',
       ],
       populate: { bild: { select: ['url', 'alternativeText'] } },
       limit: 1,
@@ -48,15 +49,16 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
 
     const seminar = Array.isArray(items) ? items[0] : items;
     if (!seminar) return ctx.notFound('Seminar nicht gefunden');
-    const termine = await strapi.db.query('api::termin.termin').findMany({
+    const termineRaw = await strapi.db.query('api::termin.termin').findMany({
       where: { planungsstatus: 'geplant', publishedAt: { $not: null }, seminar: seminar.id },
-      select: ['kapazitaet', 'preis', 'planungsstatus', 'id'],
+      select: ['kapazitaet', 'planungsstatus', 'id'],
       populate: {
         tage: { select: ['datum', 'startzeit', 'endzeit'] },
         ort: { select: ['standort', 'typ', 'veranstaltungsort', 'stadt'] },
       },
       orderBy: { id: 'asc' },
     });
+    const termine = termineRaw.map((t) => ({ ...t, preis: (seminar as any).preis }));
     const fallbackBild = { url: '/favicon.png', alternativeText: 'Weinseminar – Testbild' } as any;
     const withBild = { ...(seminar as any), bild: (seminar as any).bild ?? fallbackBild };
     ctx.body = { ...withBild, termine };

@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export default async function GutscheinPage() {
   const template = await getGutscheinTemplate();
   const produkte = await getProdukte();
-  const gutscheinProdukt = produkte.find((p) => p.istGutschein);
+  const gutscheinProdukt = produkte.find((p) => p.gutschein);
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-6 py-8">
       <header>

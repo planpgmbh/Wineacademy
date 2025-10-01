@@ -62,9 +62,9 @@ async function upsertSeminar(
     kurzbeschreibung?: string;
     beschreibung?: string;
     infos?: string;
-    standardPreis?: number;
-    mitMwst?: boolean;
-    standardKapazitaetProTermin?: number;
+    preis?: number;
+    mwst?: boolean;
+    kapazitaet?: number;
     aktiv?: boolean;
     kategorien?: number[];
   }
@@ -94,9 +94,8 @@ async function upsertProduct(strapi: any, values: {
   preisNetto?: number;
   preisBrutto?: number;
   steuerSatz?: number;
-  mitMwst?: boolean;
-  waehrung?: string;
-  istGutschein?: boolean;
+  mwst?: boolean;
+  gutschein?: boolean;
   aktiv?: boolean;
 }) {
   const slug = values.slug ? slugify(values.slug) : slugify(values.titel);
@@ -104,8 +103,7 @@ async function upsertProduct(strapi: any, values: {
   const data: any = {
     ...values,
     slug,
-    waehrung: values.waehrung ?? 'EUR',
-    mitMwst: values.mitMwst ?? true,
+    mwst: values.mwst ?? true,
     aktiv: values.aktiv ?? true,
     publishedAt: nowIso(),
   };
@@ -250,7 +248,6 @@ async function runSeed(strapi: any) {
   type TerminSeed = {
     titel: string;
     planungsstatus: 'geplant' | 'ausgebucht' | 'abgesagt';
-    preis: number;
     kapazitaet: number;
     ort: string;
     tageVersatz: number;
@@ -262,8 +259,8 @@ async function runSeed(strapi: any) {
     kurzbeschreibung: string;
     beschreibung: string;
     infos?: string;
-    standardPreis?: number;
-    mitMwst?: boolean;
+    preis?: number;
+    mwst?: boolean;
     aktiv: boolean;
     kategorien: string[];
     termine: TerminSeed[];
@@ -277,15 +274,14 @@ async function runSeed(strapi: any) {
         'Einstieg in die Weinsensorik: Weinaromen, Weinbeschreibung, strukturierte Verkostung und Weinqualität.',
       beschreibung:
         '<p>Ein eintägiger Kurs, der Sinne schärft und subtile Wein-Aromen besser wahrnehmen lässt. Mit Sensibilisierungs-Training, strukturierter Weinverkostung, Fachvokabular, Blindverkostung am Ende. Zielgruppe sind Weinliebhaber sowie Fachleute, die ihr Sensorikverständnis vertiefen möchten.</p>',
-      standardPreis: 265,
-      mitMwst: true,
+      preis: 265,
+      mwst: true,
       aktiv: true,
       kategorien: ['Sensorik'],
       termine: [
         {
           titel: 'Sensorik Essentials – Hamburg',
           planungsstatus: 'geplant',
-          preis: 265,
           kapazitaet: 14,
           ort: 'Hamburg',
           tageVersatz: 21,
@@ -293,7 +289,6 @@ async function runSeed(strapi: any) {
         {
           titel: 'Sensorik Essentials – Online',
           planungsstatus: 'geplant',
-          preis: 265,
           kapazitaet: 40,
           ort: 'Online',
           tageVersatz: 60,
@@ -306,15 +301,14 @@ async function runSeed(strapi: any) {
       kurzbeschreibung: 'Workshop: Weinfehler erkennen und verstehen inkl. Blindverkostung.',
       beschreibung:
         '<p>Teilnehmer lernen die wichtigsten Weinfehler kennen – Ursachen, wie sie entstehen, wie man sie erkennt. Mit Blindverkostung (10 Gläser, 10 verschiedene Fehler). Schulungsunterlagen & Zertifikat inklusive.</p>',
-      standardPreis: 79,
-      mitMwst: true,
+      preis: 79,
+      mwst: true,
       aktiv: true,
       kategorien: ['Sensorik'],
       termine: [
         {
           titel: 'Weinfehler Workshop – Hamburg',
           planungsstatus: 'geplant',
-          preis: 79,
           kapazitaet: 18,
           ort: 'Hamburg',
           tageVersatz: 35,
@@ -327,15 +321,14 @@ async function runSeed(strapi: any) {
       kurzbeschreibung: 'Kurs für Weinliebhaber mit ersten Kenntnissen, Überblick über Anbau & Weinqualität.',
       beschreibung:
         '<p>Vermittelt Wissen zu Etiketten, Herkunftsbezeichnungen und Weinanbau; Vergleich verschiedener Weine, Gläser, Regionen; Sensorische und theoretische Aspekte; Blindverkostung am Ende. Für alle mit ersten Vorkenntnissen, die fundierter in die Weinwelt eintauchen möchten.</p>',
-      standardPreis: 245,
-      mitMwst: true,
+      preis: 245,
+      mwst: true,
       aktiv: true,
       kategorien: ['Tastings'],
       termine: [
         {
           titel: 'Der Weg zum Kenner – Hamburg',
           planungsstatus: 'geplant',
-          preis: 245,
           kapazitaet: 20,
           ort: 'Hamburg',
           tageVersatz: 28,
@@ -348,15 +341,14 @@ async function runSeed(strapi: any) {
       kurzbeschreibung: 'WSET Level 2: über 20 Rebsorten & 70 Anbaugebiete; Etiketten- und Weinverständnis im Fokus.',
       beschreibung:
         '<p>Theorie & Praxis über die wichtigsten Rebsorten und Regionen weltweit. Verkostungen nach dem WSET-System (SAT). Prüfung & Zertifikat inklusive. Geeignet für Einsteiger mit etwas Vorkenntnissen oder zur Vertiefung nach Level 1.</p>',
-      standardPreis: 950,
-      mitMwst: true,
+      preis: 950,
+      mwst: true,
       aktiv: true,
       kategorien: ['WSET'],
       termine: [
         {
           titel: 'WSET Level 2 – Hamburg',
           planungsstatus: 'geplant',
-          preis: 950,
           kapazitaet: 16,
           ort: 'Hamburg',
           tageVersatz: 45,
@@ -364,7 +356,6 @@ async function runSeed(strapi: any) {
         {
           titel: 'WSET Level 2 – Mannheim',
           planungsstatus: 'geplant',
-          preis: 950,
           kapazitaet: 16,
           ort: 'Mannheim',
           tageVersatz: 75,
@@ -377,15 +368,14 @@ async function runSeed(strapi: any) {
       kurzbeschreibung: 'Onlinekurs über 3 Blöcke, ideal für Einsteiger ohne Vorkenntnisse.',
       beschreibung:
         '<p>Kurs via Microsoft Teams, mit 6 Unterrichtsstunden in 3 Sessions (je 2 Stunden). Themen: Grundlagen zum Weinbau, Weinservierung, unterschiedliche Weintypen & Stile. Verkostung von Qualitätsweinen, Prüfung vor Ort in Hamburg. Abschluss mit WSET Level 1 Zertifikat.</p>',
-      standardPreis: 340,
-      mitMwst: true,
+      preis: 340,
+      mwst: true,
       aktiv: true,
       kategorien: ['WSET'],
       termine: [
         {
           titel: 'WSET Level 1 – Online-Blöcke',
           planungsstatus: 'geplant',
-          preis: 340,
           kapazitaet: 50,
           ort: 'Online',
           tageVersatz: 30,
@@ -398,8 +388,8 @@ async function runSeed(strapi: any) {
       kurzbeschreibung: 'Masterclass über Champagne: Herstellung, Terroir & Stilistik; Blindverkostung mit mind. 12 Weinen.',
       beschreibung:
         '<p>Intensiver Tageskurs über die Region Champagne: Trauben, Kellerarbeit, Assemblage, Stilistik, Einfluss von Jahrgängen & Lagen sowie Vergleich großer und kleiner Produzenten. Verkostung inkl. Blindverkostung. Für Weininteressierte und Profis, die ihre Kenntnisse über Schaumweine vertiefen möchten.</p>',
-      standardPreis: 320,
-      mitMwst: true,
+      preis: 320,
+      mwst: true,
       aktiv: true,
       kategorien: ['Masterclass'],
       termine: [],
@@ -410,8 +400,8 @@ async function runSeed(strapi: any) {
       kurzbeschreibung: 'Aufbaukurs mit tiefem Fokus auf die wichtigsten Weine der Welt und deren wirtschaftliche Bedeutung.',
       beschreibung:
         '<p>Vertiefung der Kenntnisse aus Level 2; detaillierte Auseinandersetzung mit Regionen, Rebsorten und Produktionsmethoden. Professionelles Analysieren und Beschreiben von Weinen nach WSET SAT, Vorbereitung auf Beratung und Service.</p>',
-      standardPreis: 1850,
-      mitMwst: true,
+      preis: 1850,
+      mwst: true,
       aktiv: true,
       kategorien: ['WSET'],
       termine: [],
@@ -422,8 +412,8 @@ async function runSeed(strapi: any) {
       kurzbeschreibung: 'Berufsbegleitender Lehrgang für Gastronomie, Handel und Weinliebhaber inkl. WSET Level 2.',
       beschreibung:
         '<p>Fünf Kurstage mit Fokus auf Weinwissen, Service und Sensorik; Kombination mit WSET Level 2 Weine zur internationalen Qualifizierung.</p>',
-      standardPreis: 1650,
-      mitMwst: true,
+      preis: 1650,
+      mwst: true,
       aktiv: true,
       kategorien: ['Sommelier Ausbildung', 'WSET'],
       termine: [],
@@ -434,8 +424,8 @@ async function runSeed(strapi: any) {
       kurzbeschreibung: 'Aufbaukurs zur Vertiefung der Verkostungs- und Sensorikkompetenz.',
       beschreibung:
         '<p>Erweiterung der Sensorik-Skills, anspruchsvollere Weinstile und differenzierte Analysen; ideal nach „Sensorik: Essentials“.</p>',
-      standardPreis: 285,
-      mitMwst: true,
+      preis: 285,
+      mwst: true,
       aktiv: true,
       kategorien: ['Sensorik'],
       termine: [],
@@ -446,15 +436,14 @@ async function runSeed(strapi: any) {
       kurzbeschreibung: 'Kompakter Einstieg in Geschichte, Herstellung, Reis-Kategorien, Verkostung & Foodpairing.',
       beschreibung:
         '<p>Tageskurs inkl. Kurzprüfung und Zertifikat der Wine Academy Hamburg; ideal für Gastronomie-Profis und Enthusiasten.</p>',
-      standardPreis: 249,
-      mitMwst: true,
+      preis: 249,
+      mwst: true,
       aktiv: true,
       kategorien: ['Masterclass'],
       termine: [
         {
           titel: 'Masterclass Sake – Hamburg',
           planungsstatus: 'geplant',
-          preis: 249,
           kapazitaet: 22,
           ort: 'Hamburg',
           tageVersatz: 52,
@@ -474,7 +463,6 @@ async function runSeed(strapi: any) {
           titel: termin.titel,
           planungsstatus: termin.planungsstatus,
           kapazitaet: termin.kapazitaet,
-          preis: termin.preis,
           tage: [
             {
               datum,
@@ -501,8 +489,8 @@ async function runSeed(strapi: any) {
       kurzbeschreibung: seminardata.kurzbeschreibung,
       beschreibung: seminardata.beschreibung,
       infos: seminardata.infos,
-      standardPreis: seminardata.standardPreis,
-      mitMwst: seminardata.mitMwst,
+      preis: seminardata.preis,
+      mwst: seminardata.mwst,
       aktiv: seminardata.aktiv,
       kategorien: catIdsForSeminar,
     });
@@ -520,8 +508,8 @@ async function runSeed(strapi: any) {
       preisNetto: 50,
       preisBrutto: 59.5,
       steuerSatz: 19,
-      mitMwst: true,
-      istGutschein: false,
+      mwst: true,
+      gutschein: false,
       aktiv: true,
     },
     {
@@ -532,8 +520,8 @@ async function runSeed(strapi: any) {
       preisNetto: 79,
       preisBrutto: 94.01,
       steuerSatz: 19,
-      mitMwst: true,
-      istGutschein: false,
+      mwst: true,
+      gutschein: false,
       aktiv: true,
     },
     {
@@ -545,8 +533,8 @@ async function runSeed(strapi: any) {
       preisNetto: 60,
       preisBrutto: 71.4,
       steuerSatz: 19,
-      mitMwst: true,
-      istGutschein: false,
+      mwst: true,
+      gutschein: false,
       aktiv: true,
     },
     {
@@ -558,8 +546,8 @@ async function runSeed(strapi: any) {
       preisNetto: 150,
       preisBrutto: 178.5,
       steuerSatz: 19,
-      mitMwst: true,
-      istGutschein: false,
+      mwst: true,
+      gutschein: false,
       aktiv: true,
     },
   ];

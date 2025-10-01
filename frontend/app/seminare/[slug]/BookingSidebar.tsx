@@ -36,7 +36,7 @@ function ortLabel(t: Termin) {
 
 const defaultVat = Number(process.env.NEXT_PUBLIC_DEFAULT_VAT || '19');
 
-export default function BookingSidebar({ termine, fallbackPreis, seminarTitle, mitMwst }: { termine: NonNullable<SeminarListItem['termine']>; fallbackPreis?: number; seminarTitle: string; mitMwst?: boolean }) {
+export default function BookingSidebar({ termine, fallbackPreis, seminarTitle, mwstAktiv }: { termine: NonNullable<SeminarListItem['termine']>; fallbackPreis?: number; seminarTitle: string; mwstAktiv?: boolean }) {
   const { addItem } = useCart();
   const allOrte = useMemo(() => {
     const labels = Array.from(new Set((termine || []).map(ortLabel)));
@@ -51,9 +51,9 @@ export default function BookingSidebar({ termine, fallbackPreis, seminarTitle, m
   const current = useMemo(() => terminOptions.find(o => o.value === selectedTerminId)?.data, [terminOptions, selectedTerminId]);
 
   const [anzahl, setAnzahl] = useState(1);
-  const priceSingle = current?.preis ?? fallbackPreis ?? 0;
+  const priceSingle = fallbackPreis ?? 0;
   const total = typeof priceSingle === 'number' ? priceSingle * anzahl : undefined;
-  const steuerSatz = mitMwst === false ? 0 : defaultVat;
+  const steuerSatz = mwstAktiv === false ? 0 : defaultVat;
 
   // Falls Ort wechselt und bisheriger Termin nicht mehr existiert, auf ersten Termin setzen
   useEffect(() => {
