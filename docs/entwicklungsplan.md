@@ -131,4 +131,4 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - 2025-10-02 – Benachrichtigungstemplates + Admin-Testversand umgesetzt; API-/Admin-Doku ergänzt. – Commit: 5dad24c
 - 2025-10-02 – Termin-Relation von "Ort" auf "Standort" umbenannt (Strapi-Schema, Seeds, Admin-Übersetzung, Frontend, TS-Typen); ESLint & TypeScript-Check ausgeführt. – Commit: n/a
 - 2025-10-02 – Veraltete "Ort"-Artefakte im Strapi-Build (dist) entfernt, Backend & Staging-Stack neu gebaut. – Commit: n/a
-- 2025-10-02 – Content-Type „Benachrichtigungen“ im Strapi-Admin umbenannt, Feld-Beschriftungen & Hilfetexte in Deutsch ergänzt; Doku aktualisiert. – Commit: 2a4aadc
+- 2025-10-02 – Content-Type „Benachrichtigungen“ im Strapi-Admin umbenannt, Feld-Beschriftungen & Hilfetexte in Deutsch ergänzt; Doku aktualisiert. – Commit: 1b5d199
