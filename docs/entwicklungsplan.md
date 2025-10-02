@@ -19,6 +19,10 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - Zahlungsarten: Rechnung als Default, PayPal via Capture + Webhook-Verifikation (Sandbox-Mode bis Go-Live).
 - Gutscheine: Ein Template in Strapi, Codes werden nach erfolgreicher Bezahlung serverseitig generiert und Bestellungen zugeordnet.
 - Newsletter-Opt-in wird im Kundenstamm (`api::kunde`) persistiert und bei Wiederbestellungen aktualisiert.
+- SendGrid versendet transaktionale E-Mails; redaktionelle Inhalte/Layouts werden in Strapi-Templates gepflegt (Draft/Publish, Testversand möglich).
+- Rechnungsstellung läuft über die LexOffice-API (API-Token), inkl. Kontakte-/Rechnungsanlage und Rückführung der PDFs in das System.
+- Landingpages werden über Strapi-Dynamic-Zones gepflegt; Visual-Editing-Workflow (Vercel Preview → Strapi-Feld) ermöglicht redaktionelles Live-Editing.
+- Externe APIs (z. B. SendGrid, LexOffice) werden vor Implementierung durch Tests/Prototypen verifiziert; Ergebnisse & Anforderungen werden dokumentiert, bevor produktiver Code entsteht.
 - Forced-HTTPS-Middleware im Backend stellt korrekte Proxy-Header sicher (secure Cookies für Admin/REST).
 - Seed-Daten (Seminare, Termine, Produkte, Gutscheine) werden über `SEED_ON_BOOT` gesteuert; keine automatischen Resets in Produktion.
 - Tests: Puppeteer-Skript deckt Checkout (Rechnung & PayPal) gegen Staging-Domain ab.
@@ -36,40 +40,66 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - [x] Content-Types für Seminare, Termine, Standorte, Produkte, Gutscheine, Bestellungen, Buchungen, Kunden, Kategorien erstellt.
 - [x] Öffentliche Controller für Seminar-/Produktlisten, Seminardetail, Gutschein-Template/Pricing, Bestellungen (POST/GET) bereitgestellt.
 - [x] PayPal-Webhooks verifizieren Signatur & Betrag; Gutscheincodes werden bei Zahlung generiert.
+- [ ] Benachrichtigungs-Templates (Bestellbestätigung, Zahlungsbestätigung, Rechnung/Gutschein, Backoffice) als Collection-Type mit Layout-/Token-Feldern aufsetzen.
+- [ ] Admin-Testversand & Dokumentation der verfügbaren Platzhalter in Strapi/Admin-Handbuch hinterlegen.
 - [ ] Endpoint-Dokumentation (OpenAPI/Markdown) für Partner & Frontend erweitern.
 
-3. Frontend Grundgerüst
+3. SendGrid API-Discovery & Dokumentation
+- [ ] SendGrid-Spezifikation (Auth, Limits, relevante Endpoints) analysieren und offene Fragen sammeln.
+- [ ] Transaktionale E-Mail über `/mail/send` mit Sandbox/Suppressions testen (erfolgreiche Response, Zustellung prüfen).
+- [ ] Versand mit Template-Data (Dynamic Templates) und Fehlerfall (ungültiger API-Key/Empfänger) verifizieren.
+- [ ] Ergebnisse als Implementierungsleitfaden in `docs/sendgrid.md` dokumentieren (Workflows, Payload-Mapping, Fehlerszenarien).
+
+4. LexOffice API-Discovery & Dokumentation
+- [ ] LexOffice-Spezifikation (Auth, Limits, relevante Endpoints, Datenfelder) analysieren und offene Fragen sammeln.
+- [ ] Authentifizierung & einfache GET-Requests (z. B. `/contacts`) mit gültigem Token prüfen.
+- [ ] Erstellung/Update von Privat- und Firmenkontakten samt Dublettenprüfung testen.
+- [ ] Anlage einer Rechnung über `/vouchers/invoices` inkl. Positionen, Steuerlogik und Zahlungsziel validieren.
+- [ ] Abruf des generierten PDF-Belegs (`/vouchers/invoices/{id}/document`) und Ablage im Filesystem nachvollziehen.
+- [ ] Statusabfragen & Zahlungsmarkierung (z. B. `bookingCategory=payment`) oder Storno simulieren, Fehlercodes dokumentieren.
+- [ ] Ergebnisse als Implementierungsleitfaden in `docs/lexoffice.md` dokumentieren (Workflows, Payload-Mapping, Fehlerszenarien).
+
+5. Frontend Grundgerüst
 - [x] App Router mit Navigation, CartProvider und CartSidebar implementiert.
 - [x] Seiten für Seminare (Liste/Detail mit Terminwahl), Produkte und Gutscheinbetrag aufgebaut.
 - [ ] Landingpage/Home austauschen (zzt. Next.js-Placeholder) inklusive Markenauftritt & CTA.
 - [ ] Footer, SEO-Metadaten und rechtliche Seiten (Impressum/Datenschutz) ergänzen.
+- [ ] Landingpages via Dynamic-Zone-Komponentenbibliothek modellieren; Visual-Editing-Preview (Vercel → Strapi Edit-Link) implementieren (Backlog).
 
-4. Warenkorb & Checkout
+6. Warenkorb & Checkout
 - [x] Clientseitige Warenkorbverwaltung inkl. Teilnehmerdaten (LocalStorage) umgesetzt.
 - [x] Checkout validiert Rechnungs-/Teilnehmerdaten, AGB/Datenschutz und erzeugt Bestellungen.
 - [x] PayPal-Buttons mit SDK-Lazy-Load, Validation-Hooks und Capture-Handling integriert.
 - [ ] Firmen-Validierungen (z. B. USt-Id-Format, Pflichtfelder) und Fehlertexte nachschärfen.
-- [ ] Transaktionale E-Mail-Bestätigung & Rechnungsversand (SendGrid/LexOffice) ergänzen.
+- [ ] SendGrid-Service inkl. ENV (`SENDGRID_API_KEY`, Absenderdaten) und Logging im Backend verdrahten (gemäß `docs/sendgrid.md`).
+- [ ] Versand-Toggle (`EMAIL_TRANSPORT_ENABLED` o. ä.) über ENV einführen und in allen Umgebungen dokumentieren.
+- [ ] Bestellbestätigung nach Checkout mit Template-Renderer auslösen (Kund:innen-Mail).
+- [ ] Zahlungsbestätigung & Versand von Rechnung/Gutscheinen nach Zahlungseingang (PayPal-Webhook, Rechnungsverbuchung).
+- [ ] Interne Benachrichtigung bei neuen Bestellungen an definierte Backoffice-Empfänger:innen senden.
+- [ ] LexOffice-API-Client (Token-Auth) im Backend kapseln und Bestell-Payload für Rechnungsanlage vorbereiten.
 
-5. Backoffice & Automatisierung
+7. Backoffice & Automatisierung
 - [x] Kundenverknüpfung/Newsletter-Opt-in beim Bestell-Write-Through im Backend umgesetzt.
-- [ ] LexOffice-Anbindung (API-Calls, Webhooks) aufsetzen und Secrets verwalten.
+- [ ] LexOffice-Anbindung vervollständigen (ENV `LEXOFFICE_API_TOKEN`, Sandbox/Prod-Konfiguration, Secrets-Handling) gemäß `docs/lexoffice.md`.
+- [ ] Kontakte (Privat/Firma) aus Bestelldaten in LexOffice synchronisieren bzw. wiederverwenden.
+- [ ] Rechnungen/Belege via `vouchers/invoices` erzeugen, PDF abrufen und in Strapi/Storage verlinken.
+- [ ] Webhook- oder Polling-Strategie für Zahlungsstatus/Storno etablieren und Fehler-Retry dokumentieren.
 - [ ] Strapi-Admin konfigurieren (Collection-Ansichten, Rollen/Rechte, Default-Filter).
 - [ ] Prozess-Doku für Inhalte/Termine (inkl. Media-Upload) erstellen.
 
-6. Testing & Qualitätssicherung
+8. Testing & Qualitätssicherung
 - [x] Puppeteer-End-to-End-Testskript für Rechnung & PayPal vorhanden.
 - [ ] CI-Integration des Puppeteer-Skripts (z. B. GitHub Actions mit Secrets) aufsetzen.
 - [ ] Backend-Integrationstests für `bestellung`/`gutschein`-Flows hinzufügen.
 - [ ] Frontend-Lint/Format-Setup (ESLint, Prettier/Tailwind) und Konsistenz-Checks aktivieren.
 
-7. Deployment & Monitoring
+9. Deployment & Monitoring
 - [x] Traefik-Routing (Host + PathPrefix) für API, Admin & Uploads definiert.
 - [ ] Automatisierte Build/Deploy-Pipeline etablieren (Branch → Staging → Prod).
 - [ ] Monitoring/Alerting (Container-Health, PayPal-Webhook-Fehler, Strapi-Logs) konfigurieren.
 - [ ] Uptime/Smoke-Checks (curl/Playwright) nach Deploys automatisieren.
 
-8. Content & Marketing Enablement
+10. Content & Marketing Enablement
 - [ ] Finales Content-Set (Texte, Bilder, Terminlisten) in Strapi pflegen.
 - [ ] Tracking/Analytics (Matomo/GTM) definieren und technisch integrieren.
 - [ ] Newsletter-/CRM-Flows (Double-Opt-in, Segmentierung) klären und implementieren.
@@ -84,3 +114,5 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 
 ## Arbeitsprotokoll
 - 2025-10-02 – Entwicklungsplan erstellt, bisherige Architektur erfasst und nächste Arbeitsschritte priorisiert. – Commit: n/a
+- 2025-10-02 – SendGrid-E-Mail-Konzept abgestimmt; Template-Struktur und Umsetzungsschritte im Plan ergänzt. – Commit: n/a
+- 2025-10-02 – LexOffice-API recherchiert und Integrationsschritte (Kontakt-/Rechnungsanlage, PDFs, Status-Rücklauf) in den Plan aufgenommen. – Commit: n/a
