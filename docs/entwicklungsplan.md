@@ -123,7 +123,7 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - 2025-10-02 – Entwicklungsplan erstellt, bisherige Architektur erfasst und nächste Arbeitsschritte priorisiert. – Commit: n/a
 - 2025-10-02 – SendGrid-E-Mail-Konzept abgestimmt; Template-Struktur und Umsetzungsschritte im Plan ergänzt. – Commit: n/a
 - 2025-10-02 – SevDesk-API recherchiert und Integrationsschritte (Kontakt-/Rechnungsanlage, PDFs, Status-Rücklauf) in den Plan aufgenommen. – Commit: n/a
-- 2025-10-02 – Rechnungsintegration auf SevDesk umgestellt (ENV & Dokumentation aktualisiert). – Commit: 45536fd
-- 2025-10-02 – Storno-Event-Anforderung (E-Mail/Stornobeleg) in Plan und Backend-Doku ergänzt. – Commit: 45536fd
-- 2025-10-02 – Strapi-Systemeinstellungen (Absender/Benachrichtigung) im Plan ergänzt. – Commit: 45536fd
-- 2025-10-02 – Strapi-Settings-Aufteilung (ENV vs. Single-Type) konkretisiert. – Commit: 45536fd
+- 2025-10-02 – Rechnungsintegration auf SevDesk umgestellt (ENV & Dokumentation aktualisiert). – Commit: 030507b
+- 2025-10-02 – Storno-Event-Anforderung (E-Mail/Stornobeleg) in Plan und Backend-Doku ergänzt. – Commit: 030507b
+- 2025-10-02 – Strapi-Systemeinstellungen (Absender/Benachrichtigung) im Plan ergänzt. – Commit: 030507b
+- 2025-10-02 – Strapi-Settings-Aufteilung (ENV vs. Single-Type) konkretisiert. – Commit: 030507b
