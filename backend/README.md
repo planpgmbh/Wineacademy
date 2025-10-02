@@ -8,7 +8,7 @@ Strapi liefert die Inhalte (Seminare, Termine, Produkte, Gutscheine) und wickelt
   - Strapi-Secrets: `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `ENCRYPTION_KEY`.
   - Datenbank: `DATABASE_*`, `POSTGRES_*` (Host `db_wineacadamy` bzw. `db_wineacadamy_staging`).
   - Public URLs: `PUBLIC_URL`, `API_INTERNAL_URL`, optional `ASSETS_INTERNAL_URL`.
-  - Zahlungen & Kommunikation: `PAYPAL_*`, `SENDGRID_API_KEY`, `EMAIL_FROM`, `SEVDESK_API_TOKEN`.
+  - Zahlungen & Kommunikation: `PAYPAL_*`, `SENDGRID_API_KEY`, `EMAIL_FROM`, optional `EMAIL_REPLY_TO`, `SEVDESK_API_TOKEN`.
   - Sonstiges: `VAT_RATE`, `ORDER_NUMBER_PREFIX`, `SEED_ON_BOOT`.
 - **Container neu starten:** Bei Schema- oder Plugin-Änderungen Strapi mit `docker compose -f docker-compose-staging.yml up -d --force-recreate service_wineacadamy_staging` neu aufsetzen.
 - **Seeds:** `backend/src/index.ts` erzeugt Demo-Daten, wenn `SEED_ON_BOOT=true` gesetzt ist (nicht in Produktion aktivieren).
@@ -22,6 +22,7 @@ Strapi liefert die Inhalte (Seminare, Termine, Produkte, Gutscheine) und wickelt
 - **Buchung:** Teilnehmer eines Seminartermins; referenziert Termin & Bestellung.
 - **Gutschein:** Templates & generierte Codes inkl. Betrag/Einsatzstatus.
 - **Kategorie/Kunde:** Klassifizierung der Seminare bzw. CRM-Einträge inkl. Newsletter-Opt-in.
+- **Einstellung:** Single-Type für Kommunikations-Defaults (Absendername/-adresse, Reply-To, Benachrichtigungsempfänger) mit ENV-Fallback (`EMAIL_FROM`, `EMAIL_REPLY_TO`).
 
 Namenskonvention: Für Terminstatus `planungsstatus` verwenden und Relationen laut Schema (`schema.json`) pflegen.
 
@@ -67,6 +68,7 @@ curl -s -X POST http://localhost:1337/api/public/bestellungen \
 - PayPal-Zahlungen: `paypalCaptureId`/`paypalOrderId` mitliefern. Capture wird per REST verifiziert (Betrag, Währung, Status `COMPLETED`).
 - Webhook (`/api/public/paypal/webhook`) validiert Signatur (`PAYPAL_WEBHOOK_ID`), markiert Bestellungen als `bezahlt` und erzeugt fehlende Gutscheincodes.
 - Bei Statuswechsel auf `storniert` soll ein Event ausgelöst werden, das Storno-E-Mails und ggf. Stornobelege versendet.
+- Service `src/services/settings.ts` liest die Einstellungen und kombiniert sie mit ENV-Fallbacks für Mail-Transport.
 - Newsletter-Opt-in wird auf Kundenebene gespeichert bzw. aktualisiert, sobald `newsletterOptIn=true` übermittelt wird.
 
 ## Entwicklung & Qualitätssicherung

@@ -1,0 +1,31 @@
+{
+  "kind": "singleType",
+  "collectionName": "einstellungen",
+  "info": {
+    "singularName": "einstellung",
+    "pluralName": "einstellungen",
+    "displayName": "Einstellungen",
+    "description": "Systemweite Kommunikations- und Backoffice-Einstellungen"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": true
+    },
+    "content-type-builder": {
+      "visible": true
+    }
+  },
+  "attributes": {
+    "absenderName": { "type": "string" },
+    "absenderEmail": { "type": "email" },
+    "replyToEmail": { "type": "email" },
+    "benachrichtigungen": {
+      "type": "component",
+      "repeatable": true,
+      "component": "system.benachrichtigungsempfaenger"
+    }
+  }
+}

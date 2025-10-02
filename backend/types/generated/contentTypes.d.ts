@@ -546,6 +546,34 @@ export interface ApiBuchungBuchung extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiEinstellungEinstellung extends Struct.SingleTypeSchema {
+  collectionName: 'einstellungen';
+  info: {
+    description: 'Systemweite Kommunikations- und Backoffice-Einstellungen';
+    displayName: 'Einstellungen';
+    pluralName: 'einstellungen';
+    singularName: 'einstellung';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    absenderEmail: Schema.Attribute.Email;
+    absenderName: Schema.Attribute.String;
+    benachrichtigungen: Schema.Attribute.Component<
+      'system.benachrichtigungsempfaenger',
+      true
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    replyToEmail: Schema.Attribute.Email;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiGutscheinGutschein extends Struct.CollectionTypeSchema {
   collectionName: 'gutscheine';
   info: {
@@ -1343,6 +1371,7 @@ declare module '@strapi/strapi' {
       'admin::user': AdminUser;
       'api::bestellung.bestellung': ApiBestellungBestellung;
       'api::buchung.buchung': ApiBuchungBuchung;
+      'api::einstellung.einstellung': ApiEinstellungEinstellung;
       'api::gutschein.gutschein': ApiGutscheinGutschein;
       'api::kategorie.kategorie': ApiKategorieKategorie;
       'api::kunde.kunde': ApiKundeKunde;

@@ -1,0 +1,17 @@
+{
+  "collectionName": "components_system_benachrichtigungsempfaenger",
+  "info": {
+    "displayName": "Benachrichtigungsempfänger",
+    "description": "E-Mail-Empfänger für Systembenachrichtigungen"
+  },
+  "attributes": {
+    "label": { "type": "string", "required": true },
+    "email": { "type": "email", "required": true },
+    "typ": {
+      "type": "enumeration",
+      "enum": ["bestellung", "storno", "sonstiges"],
+      "default": "bestellung"
+    },
+    "aktiv": { "type": "boolean", "default": true }
+  }
+}

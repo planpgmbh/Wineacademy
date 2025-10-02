@@ -37,8 +37,8 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - [x] `.env`-Templates für beide Umgebungen erstellt und dokumentiert.
 - [x] HTTPS-Weiterleitung & Proxy-Konfiguration (force-https, Traefik-Router) umgesetzt.
 
-2. Content-Model & Public API (Strapi)
 - [x] Content-Types für Seminare, Termine, Standorte, Produkte, Gutscheine, Bestellungen, Buchungen, Kunden, Kategorien erstellt.
+- [x] Single-Type "Einstellungen" (Kommunikation, Benachrichtigungen) implementiert.
 - [x] Öffentliche Controller für Seminar-/Produktlisten, Seminardetail, Gutschein-Template/Pricing, Bestellungen (POST/GET) bereitgestellt.
 - [x] PayPal-Webhooks verifizieren Signatur & Betrag; Gutscheincodes werden bei Zahlung generiert.
 - [ ] Benachrichtigungs-Templates (Bestellbestätigung, Zahlungsbestätigung, Rechnung/Gutschein, Backoffice) als Collection-Type mit Layout-/Token-Feldern aufsetzen.
@@ -86,9 +86,9 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - [ ] SevDesk-Anbindung vervollständigen (ENV `SEVDESK_API_TOKEN`, Sandbox/Prod-Konfiguration, Secrets-Handling) gemäß `docs/sevdesk.md`.
 - [ ] Kontakte (Privat/Firma) aus Bestelldaten in SevDesk synchronisieren bzw. wiederverwenden.
 - [ ] Rechnungen/Belege via `vouchers/invoices` erzeugen, PDF abrufen und in Strapi/Storage verlinken.
-- [ ] Strapi-Systemeinstellungen für Absenderadresse und Antwort-E-Mail dokumentieren und im Admin pflegen (Single-Type "Einstellungen").
-- [ ] ENV-Fallbacks für sensible Mail-Credentials (z. B. API-Key, Default-Absender) dokumentieren und in allen Umgebungen pflegen.
-- [ ] Benachrichtigungs-Empfänger (z. B. "Neue Bestellung") in Strapi konfigurierbar machen und dokumentieren.
+- [x] Strapi-Systemeinstellungen für Absenderadresse und Antwort-E-Mail dokumentieren und im Admin pflegen (Single-Type "Einstellungen").
+- [x] ENV-Fallbacks für sensible Mail-Credentials (z. B. API-Key, Default-Absender) dokumentieren und in allen Umgebungen pflegen.
+- [x] Benachrichtigungs-Empfänger (z. B. "Neue Bestellung") in Strapi konfigurierbar machen und dokumentieren.
 - [ ] Webhook- oder Polling-Strategie für Zahlungsstatus/Storno etablieren und Fehler-Retry dokumentieren.
 - [ ] Storno-Benachrichtigungen (Mail, Stornobeleg) über zentrales Event bei Statuswechsel auf `storniert` auslösen.
 - [ ] Strapi-Admin konfigurieren (Collection-Ansichten, Rollen/Rechte, Default-Filter).
@@ -127,3 +127,4 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - 2025-10-02 – Storno-Event-Anforderung (E-Mail/Stornobeleg) in Plan und Backend-Doku ergänzt. – Commit: 030507b
 - 2025-10-02 – Strapi-Systemeinstellungen (Absender/Benachrichtigung) im Plan ergänzt. – Commit: 030507b
 - 2025-10-02 – Strapi-Settings-Aufteilung (ENV vs. Single-Type) konkretisiert. – Commit: 030507b
+- 2025-10-02 – Strapi-Single-Type "Einstellungen" implementiert und Service für Mail-Fallbacks ergänzt. – Commit: 9886c12

@@ -47,10 +47,26 @@ export interface TerminSeminartag extends Struct.ComponentSchema {
   };
 }
 
+export interface SystemBenachrichtigungsempfaenger extends Struct.ComponentSchema {
+  collectionName: 'components_system_benachrichtigungsempfaenger';
+  info: {
+    description: 'E-Mail-Empfänger für Systembenachrichtigungen';
+    displayName: 'Benachrichtigungsempfänger';
+  };
+  attributes: {
+    aktiv: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    email: Schema.Attribute.Email & Schema.Attribute.Required;
+    label: Schema.Attribute.String & Schema.Attribute.Required;
+    typ: Schema.Attribute.Enumeration<['bestellung', 'storno', 'sonstiges']> &
+      Schema.Attribute.DefaultTo<'bestellung'>;
+  };
+}
+
 declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
       'bestellung.position': BestellungPosition;
+      'system.benachrichtigungsempfaenger': SystemBenachrichtigungsempfaenger;
       'termin.seminartag': TerminSeminartag;
     }
   }
