@@ -23,6 +23,7 @@ Strapi liefert die Inhalte (Seminare, Termine, Produkte, Gutscheine) und wickelt
 - **Gutschein:** Templates & generierte Codes inkl. Betrag/Einsatzstatus.
 - **Kategorie/Kunde:** Klassifizierung der Seminare bzw. CRM-Einträge inkl. Newsletter-Opt-in.
 - **Einstellung:** Single-Type für Kommunikations-Defaults (Absendername/-adresse, Reply-To, Benachrichtigungsempfänger) mit ENV-Fallback (`EMAIL_FROM`, `EMAIL_REPLY_TO`).
+- **Benachrichtigungstemplate:** Collection-Type für transaktionale E-Mail-Layouts inkl. Platzhalterdokumentation, Testpayload und optionaler SendGrid-Template-ID.
 
 Namenskonvention: Für Terminstatus `planungsstatus` verwenden und Relationen laut Schema (`schema.json`) pflegen.
 
@@ -70,6 +71,17 @@ curl -s -X POST http://localhost:1337/api/public/bestellungen \
 - Bei Statuswechsel auf `storniert` soll ein Event ausgelöst werden, das Storno-E-Mails und ggf. Stornobelege versendet.
 - Service `src/services/settings.ts` liest die Einstellungen und kombiniert sie mit ENV-Fallbacks für Mail-Transport.
 - Newsletter-Opt-in wird auf Kundenebene gespeichert bzw. aktualisiert, sobald `newsletterOptIn=true` übermittelt wird.
+
+## Benachrichtigungs-Templates & Testversand
+- **Content-Type:** `Benachrichtigungstemplate` (Collection) verwaltet jede Systemmail (z. B. Bestellbestätigung, Zahlungsbestätigung, Backoffice-Info). Pflichtfelder: `name`, `templateKey`, `betreff`.
+- **Platzhalter:** Über die Component `benachrichtigung.token` können beliebig viele Tokens mit Beschreibung und Beispielwert gepflegt werden. Das Feld `testPayload` erlaubt Beispiel-Datenstrukturen für verschachtelte JSON-Werte.
+- **Layouts:** Das Feld `layout` (Default/Rechnung/Backoffice) bestimmt das HTML-Grundgerüst, `bodyHtml`/`bodyText` werden mit `{{token}}`-Platzhaltern gerendert. Optional kann eine `sendgridTemplateId` gesetzt werden, dann werden `dynamicTemplateData` an SendGrid übergeben.
+- **Admin-Testversand:** `POST /admin/benachrichtigung-templates/:id/test-send` (authentifizierte Admin-Session) löst einen Einzelversand via SendGrid aus. Payload:
+  ```json
+  { "email": "ziel@example.com", "tokens": { "bestellnummer": "WA-000123" } }
+  ```
+  Tokens aus der Request überschreiben `testPayload` und Beispielwerte. Antwort enthält `messageId` des SendGrid-Transports.
+- **Service:** Implementiert in `src/api/benachrichtigung-template/services/benachrichtigung-template.ts`, Versand via `src/services/notification-email.ts` (SendGrid API). Einstellungen/Absender stammen aus `src/services/settings.ts` + Strapi-Single-Type "Einstellungen".
 
 ## Entwicklung & Qualitätssicherung
 - **Tests:** E2E-Checkout über `node tests/checkout-puppeteer.js` (setzt laufenden Staging-Stack und PayPal-Sandbox-Zugangsdaten voraus).

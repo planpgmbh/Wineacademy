@@ -1,0 +1,44 @@
+{
+  "collectionName": "benachrichtigung_templates",
+  "info": {
+    "singularName": "benachrichtigung-template",
+    "pluralName": "benachrichtigung-templates",
+    "displayName": "Benachrichtigungstemplate",
+    "description": "E-Mail-Layouts und Platzhalter für System- und Kundenmails"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "name": { "type": "string", "required": true },
+    "templateKey": {
+      "type": "enumeration",
+      "enum": [
+        "bestellbestaetigung",
+        "zahlungsbestaetigung",
+        "rechnung_gutschein",
+        "backoffice_benachrichtigung"
+      ],
+      "required": true,
+      "unique": true
+    },
+    "layout": {
+      "type": "enumeration",
+      "enum": ["default", "rechnung", "backoffice"],
+      "default": "default"
+    },
+    "beschreibung": { "type": "text" },
+    "betreff": { "type": "string", "required": true },
+    "preheader": { "type": "string" },
+    "bodyHtml": { "type": "richtext" },
+    "bodyText": { "type": "text" },
+    "tokens": {
+      "type": "component",
+      "repeatable": true,
+      "component": "benachrichtigung.token"
+    },
+    "testPayload": { "type": "json" },
+    "sendgridTemplateId": { "type": "string" },
+    "aktiv": { "type": "boolean", "default": true }
+  }
+}
