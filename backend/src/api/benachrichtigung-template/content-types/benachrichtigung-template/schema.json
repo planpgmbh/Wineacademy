@@ -3,14 +3,23 @@
   "info": {
     "singularName": "benachrichtigung-template",
     "pluralName": "benachrichtigung-templates",
-    "displayName": "Benachrichtigungstemplate",
-    "description": "E-Mail-Layouts und Platzhalter für System- und Kundenmails"
+    "displayName": "Benachrichtigungen",
+    "description": "Transaktionale E-Mails inkl. Layout, Platzhaltern und Dokumentation"
   },
   "options": {
     "draftAndPublish": false
   },
   "attributes": {
-    "name": { "type": "string", "required": true },
+    "name": {
+      "type": "string",
+      "required": true,
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Titel",
+          "description": "Interner Name des Templates; hilft bei der Auswahl im Admin, wird nicht mitversendet."
+        }
+      }
+    },
     "templateKey": {
       "type": "enumeration",
       "enum": [
@@ -20,25 +29,109 @@
         "backoffice_benachrichtigung"
       ],
       "required": true,
-      "unique": true
+      "unique": true,
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Systemschlüssel",
+          "description": "Eindeutiger Schlüssel, über den das System das Template findet (z. B. `bestellbestaetigung`)."
+        }
+      }
     },
     "layout": {
       "type": "enumeration",
       "enum": ["default", "rechnung", "backoffice"],
-      "default": "default"
+      "default": "default",
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Layout",
+          "description": "Bestimmt das Grundgerüst der E-Mail (z. B. Standard, Rechnung oder Backoffice-Design)."
+        }
+      }
     },
-    "beschreibung": { "type": "text" },
-    "betreff": { "type": "string", "required": true },
-    "preheader": { "type": "string" },
-    "bodyHtml": { "type": "richtext" },
-    "bodyText": { "type": "text" },
+    "beschreibung": {
+      "type": "text",
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Beschreibung",
+          "description": "Kurze interne Erklärung, wann diese Benachrichtigung verwendet wird."
+        }
+      }
+    },
+    "betreff": {
+      "type": "string",
+      "required": true,
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Betreff",
+          "description": "Betreffzeile der E-Mail; Platzhalter `{{token}}` sind erlaubt."
+        }
+      }
+    },
+    "preheader": {
+      "type": "string",
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Preheader (Vorschauzeile)",
+          "description": "Kurzer Vorschautext, der in vielen Postfächern direkt hinter dem Betreff erscheint."
+        }
+      }
+    },
+    "bodyHtml": {
+      "type": "richtext",
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "HTML-Inhalt",
+          "description": "Gestalteter E-Mail-Inhalt mit Überschriften, Buttons usw.; Platzhalter `{{token}}` werden beim Versand ersetzt."
+        }
+      }
+    },
+    "bodyText": {
+      "type": "text",
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Text-Inhalt",
+          "description": "Einfache Textversion als Fallback für E-Mail-Clients ohne HTML-Unterstützung."
+        }
+      }
+    },
     "tokens": {
       "type": "component",
       "repeatable": true,
-      "component": "benachrichtigung.token"
+      "component": "benachrichtigung.token",
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Token (Platzhalter)",
+          "description": "Liste der verfügbaren Platzhalter inklusive Beschreibung und Beispielwert."
+        }
+      }
     },
-    "testPayload": { "type": "json" },
-    "sendgridTemplateId": { "type": "string" },
-    "aktiv": { "type": "boolean", "default": true }
+    "testPayload": {
+      "type": "json",
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Testdaten (JSON)",
+          "description": "Zusätzliche JSON-Daten für den Testversand, z. B. verschachtelte Objekte oder Arrays."
+        }
+      }
+    },
+    "sendgridTemplateId": {
+      "type": "string",
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "SendGrid Template-ID",
+          "description": "Optional: nutzt eine dynamische SendGrid-Vorlage; HTML/Text in Strapi dienen dann nur zur Dokumentation."
+        }
+      }
+    },
+    "aktiv": {
+      "type": "boolean",
+      "default": true,
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Aktiv",
+          "description": "Nur aktive Vorlagen werden für den Versand angeboten."
+        }
+      }
+    }
   }
 }

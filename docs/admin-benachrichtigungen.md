@@ -2,13 +2,14 @@
 
 Dieser Leitfaden beschreibt, wie transaktionale E-Mails in Strapi verwaltet und getestet werden.
 
-## Content-Type „Benachrichtigungstemplate“
-- **Pflichtfelder:** `Name`, `Template Key` (Enum), `Betreff`.
+## Content-Type „Benachrichtigungen“
+- **Pflichtfelder:** `Titel`, `Systemschlüssel` (Enum) und `Betreff` müssen gesetzt sein.
 - **Layout:** Wähle `default`, `rechnung` oder `backoffice`, um das HTML-Grundgerüst zu bestimmen.
-- **HTML/Text-Inhalt:** `bodyHtml` und optional `bodyText` unterstützen `{{token}}`-Platzhalter.
-- **Token-Dokumentation:** Über die eingebettete Component `Token` lassen sich Schlüssel, Beschreibung und Beispielwerte pflegen. Beispielwerte fließen automatisch in den Testversand ein.
-- **Testpayload:** Für verschachtelte Objekte oder Listen kannst Du im Feld `testPayload` ein JSON (z. B. `{ "kundin": { "vorname": "Anna" } }`) hinterlegen. Es wird mit den Token-Beispielen zusammengeführt; Request-Daten haben Priorität.
-- **SendGrid-Template:** Wird `sendgridTemplateId` gepflegt, nutzt Strapi das Dynamic-Template bei SendGrid. `Betreff`, `bodyHtml`/`bodyText` dienen dann nur als Dokumentation.
+- **HTML/Text-Inhalt:** `HTML-Inhalt` und optional `Text-Inhalt` unterstützen `{{token}}`-Platzhalter und werden beim Versand ersetzt.
+- **Preheader:** Die `Vorschauzeile` erscheint in vielen Mail-Clients hinter dem Betreff und kann zusätzliche Infos liefern.
+- **Token-Dokumentation:** Über die Component `Token (Platzhalter)` pflegst du Schlüssel, Beschreibung und Beispielwerte; Beispiele landen automatisch im Testversand.
+- **Testdaten:** Im Feld `Testdaten (JSON)` kannst du verschachtelte Objekte oder Arrays hinterlegen (z. B. `{ "kundin": { "vorname": "Anna" } }`). Die Daten werden mit Token-Beispielen zusammengeführt; Request-Daten haben Priorität.
+- **SendGrid-Vorlage:** Mit `SendGrid Template-ID` wird stattdessen das dynamische SendGrid-Template genutzt, Strapi-Inhalte dienen dann nur zur Dokumentation.
 
 ### Empfohlene Token je Template
 | Template Key | Zweck | Empfohlene Token |
@@ -24,7 +25,7 @@ Dieser Leitfaden beschreibt, wie transaktionale E-Mails in Strapi verwaltet und 
 
 ### Voraussetzungen
 1. **SendGrid-API-Key** (`SENDGRID_API_KEY`) und Absender-Einstellungen (`EMAIL_FROM`, optional `EMAIL_REPLY_TO`) müssen gesetzt sein.
-2. Strapi-Admin-Nutzer*in mit Berechtigung „Benachrichtigungstemplate“.
+2. Strapi-Admin-Nutzer*in mit Berechtigung „Benachrichtigungen“.
 
 ### Endpoint
 ```
@@ -49,7 +50,7 @@ Authorization: Bearer <Admin-Token>
 - Antwort enthält `{ "ok": true, "messageId": "<SendGrid-ID>", "transport": "sendgrid" }`.
 
 ### Durchführung im Browser
-1. Im Strapi-Admin eine API-Token mit Zugriff auf den Collection-Type erzeugen (`Einstellungen → API Tokens → Create new` → Scope: `Benachrichtigungstemplate` & `Custom` → Route `POST /admin/benachrichtigung-templates/:id/test-send`).
+1. Im Strapi-Admin eine API-Token mit Zugriff auf den Collection-Type erzeugen (`Einstellungen → API Tokens → Create new` → Scope: `Benachrichtigungen` & `Custom` → Route `POST /admin/benachrichtigung-templates/:id/test-send`).
 2. ID des Templates aus der Detailansicht kopieren (URL oder Feld `id`).
 3. Mit einem Tool wie Hoppscotch, Thunder Client oder `curl` den Request absetzen.
 
