@@ -54,7 +54,7 @@ export type SeminarListItem = {
     preis?: number;
     planungsstatus?: string;
     tageMitUhrzeit?: Array<{ datum: string; startzeit?: string; endzeit?: string }>;
-    ort?: { name?: string; typ?: string; veranstaltungsort?: string; stadt?: string };
+    standort?: { name?: string; typ?: string; veranstaltungsort?: string; stadt?: string };
   }>;
 };
 

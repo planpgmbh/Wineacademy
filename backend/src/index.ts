@@ -250,7 +250,7 @@ async function runSeed(strapi: any) {
   type TerminSeed = {
     planungsstatus: 'geplant' | 'ausgebucht' | 'abgesagt';
     kapazitaet: number;
-    ort: string;
+    standort: string;
     tageVersatz: number;
   };
 
@@ -283,13 +283,13 @@ async function runSeed(strapi: any) {
         {
           planungsstatus: 'geplant',
           kapazitaet: 14,
-          ort: 'Hamburg',
+          standort: 'Hamburg',
           tageVersatz: 21,
         },
         {
           planungsstatus: 'geplant',
           kapazitaet: 40,
-          ort: 'Online',
+          standort: 'Online',
           tageVersatz: 60,
         },
       ],
@@ -308,7 +308,7 @@ async function runSeed(strapi: any) {
         {
           planungsstatus: 'geplant',
           kapazitaet: 18,
-          ort: 'Hamburg',
+          standort: 'Hamburg',
           tageVersatz: 35,
         },
       ],
@@ -327,7 +327,7 @@ async function runSeed(strapi: any) {
         {
           planungsstatus: 'geplant',
           kapazitaet: 20,
-          ort: 'Hamburg',
+          standort: 'Hamburg',
           tageVersatz: 28,
         },
       ],
@@ -346,13 +346,13 @@ async function runSeed(strapi: any) {
         {
           planungsstatus: 'geplant',
           kapazitaet: 16,
-          ort: 'Hamburg',
+          standort: 'Hamburg',
           tageVersatz: 45,
         },
         {
           planungsstatus: 'geplant',
           kapazitaet: 16,
-          ort: 'Mannheim',
+          standort: 'Mannheim',
           tageVersatz: 75,
         },
       ],
@@ -371,7 +371,7 @@ async function runSeed(strapi: any) {
         {
           planungsstatus: 'geplant',
           kapazitaet: 50,
-          ort: 'Online',
+          standort: 'Online',
           tageVersatz: 30,
         },
       ],
@@ -438,7 +438,7 @@ async function runSeed(strapi: any) {
         {
           planungsstatus: 'geplant',
           kapazitaet: 22,
-          ort: 'Hamburg',
+          standort: 'Hamburg',
           tageVersatz: 52,
         },
       ],
@@ -464,7 +464,7 @@ async function runSeed(strapi: any) {
             },
           ],
           seminar: seminarId,
-          ort: standortIdByName[termin.ort],
+          standort: standortIdByName[termin.standort],
           publishedAt: nowIso(),
         },
       });

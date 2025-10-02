@@ -29,7 +29,7 @@
       "inversedBy": "termine",
       "required": true
     },
-    "ort": {
+    "standort": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::standort.standort",

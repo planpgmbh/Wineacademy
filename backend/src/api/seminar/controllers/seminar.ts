@@ -16,7 +16,7 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
         select: ['kapazitaet', 'planungsstatus', 'id', 'starttag'],
         populate: {
           tageMitUhrzeit: { select: ['datum', 'startzeit', 'endzeit'] },
-          ort: { select: ['name', 'typ', 'veranstaltungsort', 'stadt'] },
+          standort: { select: ['name', 'typ', 'veranstaltungsort', 'stadt'] },
         },
         orderBy: { id: 'asc' },
       });
@@ -54,7 +54,7 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
       select: ['kapazitaet', 'planungsstatus', 'id', 'starttag'],
       populate: {
         tageMitUhrzeit: { select: ['datum', 'startzeit', 'endzeit'] },
-        ort: { select: ['name', 'typ', 'veranstaltungsort', 'stadt'] },
+        standort: { select: ['name', 'typ', 'veranstaltungsort', 'stadt'] },
       },
       orderBy: { id: 'asc' },
     });

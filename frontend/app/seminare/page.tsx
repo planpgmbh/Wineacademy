@@ -20,7 +20,7 @@ export default async function SeminarePage() {
         {seminare.map((s) => {
           const firstTermin = s.termine?.[0];
           const firstDay = firstTermin?.tageMitUhrzeit?.[0]?.datum;
-          const ort = firstTermin?.ort?.name || firstTermin?.ort?.veranstaltungsort || firstTermin?.ort?.stadt;
+          const standort = firstTermin?.standort?.name || firstTermin?.standort?.veranstaltungsort || firstTermin?.standort?.stadt;
           return (
             <li key={s.id} className="border rounded p-4 flex flex-col">
               <h2 className="text-lg font-medium">
@@ -34,7 +34,7 @@ export default async function SeminarePage() {
               <div className="text-sm mt-3 flex gap-4 flex-wrap text-gray-700">
                 {typeof s.preis !== 'undefined' && <span>ab {s.preis} €</span>}
                 {firstDay && <span>Nächster Termin: {fmtDateISOToGerman(firstDay)}</span>}
-                {ort && <span>Ort: {ort}</span>}
+                {standort && <span>Standort: {standort}</span>}
               </div>
               <div className="mt-4">
                 <Link href={`/seminare/${s.slug}`} className="inline-block bg-black text-white px-3 py-1.5 rounded hover:bg-gray-800 text-sm">Details</Link>

@@ -179,6 +179,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         populate: {
           seminar: { select: ['id', 'name', 'mwst', 'preis'] },
           tageMitUhrzeit: { select: ['datum', 'startzeit', 'endzeit'] },
+          standort: { select: ['name', 'typ', 'veranstaltungsort', 'stadt'] },
         },
       });
     };
@@ -229,7 +230,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         const position = {
           typ: 'seminar',
           titel,
-          beschreibung: raw.beschreibung || termin?.ort?.name,
+          beschreibung: raw.beschreibung || termin?.standort?.name,
           termin: termin.id,
           menge,
           steuerSatz,

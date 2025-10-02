@@ -504,6 +504,52 @@ export interface ApiBestellungBestellung extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiBenachrichtigungTemplateBenachrichtigungTemplate
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'benachrichtigung_templates';
+  info: {
+    description: 'E-Mail-Layouts und Platzhalter für System- und Kundenmails';
+    displayName: 'Benachrichtigungstemplate';
+    pluralName: 'benachrichtigung-templates';
+    singularName: 'benachrichtigung-template';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    aktiv: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    beschreibung: Schema.Attribute.Text;
+    betreff: Schema.Attribute.String & Schema.Attribute.Required;
+    bodyHtml: Schema.Attribute.RichText;
+    bodyText: Schema.Attribute.Text;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    layout: Schema.Attribute.Enumeration<
+      ['default', 'rechnung', 'backoffice']
+    > &
+      Schema.Attribute.DefaultTo<'default'>;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    preheader: Schema.Attribute.String;
+    sendgridTemplateId: Schema.Attribute.String;
+    templateKey: Schema.Attribute.Enumeration<
+      [
+        'bestellbestaetigung',
+        'zahlungsbestaetigung',
+        'rechnung_gutschein',
+        'backoffice_benachrichtigung'
+      ]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    testPayload: Schema.Attribute.JSON;
+    tokens: Schema.Attribute.Component<'benachrichtigung.token', true>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiBuchungBuchung extends Struct.CollectionTypeSchema {
   collectionName: 'buchungen';
   info: {
@@ -842,7 +888,7 @@ export interface ApiTerminTermin extends Struct.CollectionTypeSchema {
       'api::termin.termin'
     > &
       Schema.Attribute.Private;
-    ort: Schema.Attribute.Relation<'manyToOne', 'api::standort.standort'> &
+    standort: Schema.Attribute.Relation<'manyToOne', 'api::standort.standort'> &
       Schema.Attribute.Required;
     planungsstatus: Schema.Attribute.Enumeration<
       ['geplant', 'ausgebucht', 'abgesagt']
@@ -1370,6 +1416,7 @@ declare module '@strapi/strapi' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
       'api::bestellung.bestellung': ApiBestellungBestellung;
+      'api::benachrichtigung-template.benachrichtigung-template': ApiBenachrichtigungTemplateBenachrichtigungTemplate;
       'api::buchung.buchung': ApiBuchungBuchung;
       'api::einstellung.einstellung': ApiEinstellungEinstellung;
       'api::gutschein.gutschein': ApiGutscheinGutschein;

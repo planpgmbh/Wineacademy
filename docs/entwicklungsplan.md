@@ -41,9 +41,9 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - [x] Single-Type "Einstellungen" (Kommunikation, Benachrichtigungen) implementiert.
 - [x] Öffentliche Controller für Seminar-/Produktlisten, Seminardetail, Gutschein-Template/Pricing, Bestellungen (POST/GET) bereitgestellt.
 - [x] PayPal-Webhooks verifizieren Signatur & Betrag; Gutscheincodes werden bei Zahlung generiert.
-- [ ] Benachrichtigungs-Templates (Bestellbestätigung, Zahlungsbestätigung, Rechnung/Gutschein, Backoffice) als Collection-Type mit Layout-/Token-Feldern aufsetzen.
-- [ ] Admin-Testversand & Dokumentation der verfügbaren Platzhalter in Strapi/Admin-Handbuch hinterlegen.
-- [ ] Endpoint-Dokumentation (OpenAPI/Markdown) für Partner & Frontend erweitern.
+- [x] Benachrichtigungs-Templates (Bestellbestätigung, Zahlungsbestätigung, Rechnung/Gutschein, Backoffice) als Collection-Type mit Layout-/Token-Feldern aufgesetzt (`backend/src/api/benachrichtigung-template` + Component `benachrichtigung.token`).
+- [x] Admin-Testversand & Dokumentation der verfügbaren Platzhalter in Strapi/Admin-Handbuch hinterlegt (`/admin/…/test-send`, Anleitung `docs/admin-benachrichtigungen.md`).
+- [x] Endpoint-Dokumentation (OpenAPI/Markdown) für Partner & Frontend erweitert (`docs/api-public.md`).
 
 3. SendGrid API-Discovery & Dokumentation
 - [ ] SendGrid-Spezifikation (Auth, Limits, relevante Endpoints) analysieren und offene Fragen sammeln.
@@ -128,3 +128,6 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - 2025-10-02 – Strapi-Systemeinstellungen (Absender/Benachrichtigung) im Plan ergänzt. – Commit: 030507b
 - 2025-10-02 – Strapi-Settings-Aufteilung (ENV vs. Single-Type) konkretisiert. – Commit: 030507b
 - 2025-10-02 – Strapi-Single-Type "Einstellungen" implementiert und Service für Mail-Fallbacks ergänzt. – Commit: 9125913
+- 2025-10-02 – Benachrichtigungstemplates + Admin-Testversand umgesetzt; API-/Admin-Doku ergänzt. – Commit: n/a
+- 2025-10-02 – Termin-Relation von "Ort" auf "Standort" umbenannt (Strapi-Schema, Seeds, Admin-Übersetzung, Frontend, TS-Typen); ESLint & TypeScript-Check ausgeführt. – Commit: n/a
+- 2025-10-02 – Veraltete "Ort"-Artefakte im Strapi-Build (dist) entfernt, Backend & Staging-Stack neu gebaut. – Commit: n/a

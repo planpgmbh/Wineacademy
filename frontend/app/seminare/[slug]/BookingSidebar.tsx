@@ -30,21 +30,24 @@ function labelForTermin(t: Termin) {
   return [range].join(' · ');
 }
 
-function ortLabel(t: Termin) {
-  return t.ort?.stadt || t.ort?.name || t.ort?.veranstaltungsort || 'Ort n/a';
+function standortLabel(t: Termin) {
+  return t.standort?.stadt || t.standort?.name || t.standort?.veranstaltungsort || 'Standort n/a';
 }
 
 const defaultVat = Number(process.env.NEXT_PUBLIC_DEFAULT_VAT || '19');
 
 export default function BookingSidebar({ termine, fallbackPreis, seminarTitle, mwstAktiv }: { termine: NonNullable<SeminarListItem['termine']>; fallbackPreis?: number; seminarTitle: string; mwstAktiv?: boolean }) {
   const { addItem } = useCart();
-  const allOrte = useMemo(() => {
-    const labels = Array.from(new Set((termine || []).map(ortLabel)));
+  const allStandorte = useMemo(() => {
+    const labels = Array.from(new Set((termine || []).map(standortLabel)));
     return labels;
   }, [termine]);
 
-  const [selectedOrt, setSelectedOrt] = useState(allOrte[0] || '');
-  const filteredTermine = useMemo(() => (termine || []).filter(t => ortLabel(t) === selectedOrt), [termine, selectedOrt]);
+  const [selectedStandort, setSelectedStandort] = useState(allStandorte[0] || '');
+  const filteredTermine = useMemo(
+    () => (termine || []).filter(t => standortLabel(t) === selectedStandort),
+    [termine, selectedStandort],
+  );
 
   const terminOptions = useMemo(() => filteredTermine.map(t => ({ value: String(t.id), label: labelForTermin(t), data: t })), [filteredTermine]);
   const [selectedTerminId, setSelectedTerminId] = useState(terminOptions[0]?.value || '');
@@ -55,7 +58,7 @@ export default function BookingSidebar({ termine, fallbackPreis, seminarTitle, m
   const total = typeof priceSingle === 'number' ? priceSingle * anzahl : undefined;
   const steuerSatz = mwstAktiv === false ? 0 : defaultVat;
 
-  // Falls Ort wechselt und bisheriger Termin nicht mehr existiert, auf ersten Termin setzen
+  // Falls Standort wechselt und bisheriger Termin nicht mehr existiert, auf ersten Termin setzen
   useEffect(() => {
     if (terminOptions.length > 0 && !terminOptions.some(o => o.value === selectedTerminId)) {
       setSelectedTerminId(terminOptions[0].value);
@@ -69,7 +72,7 @@ export default function BookingSidebar({ termine, fallbackPreis, seminarTitle, m
     addItem({
       type: 'seminar',
       titel: `${seminarTitle} · ${label}`,
-      beschreibung: ortLabel(current),
+      beschreibung: standortLabel(current),
       terminId,
       terminLabel: label,
       preisBrutto: typeof priceSingle === 'number' ? priceSingle : 0,
@@ -88,13 +91,13 @@ export default function BookingSidebar({ termine, fallbackPreis, seminarTitle, m
         <>
           <div className="grid grid-cols-1 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Ort</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Standort</label>
               <select
                 className="w-full rounded-lg border px-3 py-2 text-sm bg-white hover:bg-gray-50"
-                value={selectedOrt}
-                onChange={(e) => setSelectedOrt(e.target.value)}
+                value={selectedStandort}
+                onChange={(e) => setSelectedStandort(e.target.value)}
               >
-                {allOrte.map((o) => (
+                {allStandorte.map((o) => (
                   <option key={o} value={o}>{o}</option>
                 ))}
               </select>
