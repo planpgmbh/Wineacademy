@@ -127,4 +127,4 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - 2025-10-02 – Storno-Event-Anforderung (E-Mail/Stornobeleg) in Plan und Backend-Doku ergänzt. – Commit: 030507b
 - 2025-10-02 – Strapi-Systemeinstellungen (Absender/Benachrichtigung) im Plan ergänzt. – Commit: 030507b
 - 2025-10-02 – Strapi-Settings-Aufteilung (ENV vs. Single-Type) konkretisiert. – Commit: 030507b
-- 2025-10-02 – Strapi-Single-Type "Einstellungen" implementiert und Service für Mail-Fallbacks ergänzt. – Commit: 9886c12
+- 2025-10-02 – Strapi-Single-Type "Einstellungen" implementiert und Service für Mail-Fallbacks ergänzt. – Commit: 9125913
