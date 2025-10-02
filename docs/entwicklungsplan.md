@@ -128,6 +128,6 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - 2025-10-02 – Strapi-Systemeinstellungen (Absender/Benachrichtigung) im Plan ergänzt. – Commit: 030507b
 - 2025-10-02 – Strapi-Settings-Aufteilung (ENV vs. Single-Type) konkretisiert. – Commit: 030507b
 - 2025-10-02 – Strapi-Single-Type "Einstellungen" implementiert und Service für Mail-Fallbacks ergänzt. – Commit: 9125913
-- 2025-10-02 – Benachrichtigungstemplates + Admin-Testversand umgesetzt; API-/Admin-Doku ergänzt. – Commit: fc8728e
+- 2025-10-02 – Benachrichtigungstemplates + Admin-Testversand umgesetzt; API-/Admin-Doku ergänzt. – Commit: 5dad24c
 - 2025-10-02 – Termin-Relation von "Ort" auf "Standort" umbenannt (Strapi-Schema, Seeds, Admin-Übersetzung, Frontend, TS-Typen); ESLint & TypeScript-Check ausgeführt. – Commit: n/a
 - 2025-10-02 – Veraltete "Ort"-Artefakte im Strapi-Build (dist) entfernt, Backend & Staging-Stack neu gebaut. – Commit: n/a
