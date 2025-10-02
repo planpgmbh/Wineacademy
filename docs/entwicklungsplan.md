@@ -20,9 +20,11 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - Gutscheine: Ein Template in Strapi, Codes werden nach erfolgreicher Bezahlung serverseitig generiert und Bestellungen zugeordnet.
 - Newsletter-Opt-in wird im Kundenstamm (`api::kunde`) persistiert und bei Wiederbestellungen aktualisiert.
 - SendGrid versendet transaktionale E-Mails; redaktionelle Inhalte/Layouts werden in Strapi-Templates gepflegt (Draft/Publish, Testversand möglich).
-- Rechnungsstellung läuft über die LexOffice-API (API-Token), inkl. Kontakte-/Rechnungsanlage und Rückführung der PDFs in das System.
+- Strapi hält zentrale Systemeinstellungen (Absenderadresse, Benachrichtigungs-Empfänger) für Kommunikation und Backoffice-Events vor.
+- Sensible Credentials (API-Keys) liegen in ENV-Dateien; redaktionell pflegbare Werte (Absendernamen, Empfängerlisten) werden als Single-Type "Einstellungen" in Strapi verwaltet.
+- Rechnungsstellung läuft über die SevDesk-API (API-Token), inkl. Kontakte-/Rechnungsanlage und Rückführung der PDFs in das System.
 - Landingpages werden über Strapi-Dynamic-Zones gepflegt; Visual-Editing-Workflow (Vercel Preview → Strapi-Feld) ermöglicht redaktionelles Live-Editing.
-- Externe APIs (z. B. SendGrid, LexOffice) werden vor Implementierung durch Tests/Prototypen verifiziert; Ergebnisse & Anforderungen werden dokumentiert, bevor produktiver Code entsteht.
+- Externe APIs (z. B. SendGrid, SevDesk) werden vor Implementierung durch Tests/Prototypen verifiziert; Ergebnisse & Anforderungen werden dokumentiert, bevor produktiver Code entsteht.
 - Forced-HTTPS-Middleware im Backend stellt korrekte Proxy-Header sicher (secure Cookies für Admin/REST).
 - Seed-Daten (Seminare, Termine, Produkte, Gutscheine) werden über `SEED_ON_BOOT` gesteuert; keine automatischen Resets in Produktion.
 - Tests: Puppeteer-Skript deckt Checkout (Rechnung & PayPal) gegen Staging-Domain ab.
@@ -34,7 +36,6 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - [x] Docker-Compose für Prod/Staging mit getrennten Netzwerken, Volumes und Traefik-Labels.
 - [x] `.env`-Templates für beide Umgebungen erstellt und dokumentiert.
 - [x] HTTPS-Weiterleitung & Proxy-Konfiguration (force-https, Traefik-Router) umgesetzt.
-- [ ] Automatisierten Backup-Plan (DB + Uploads) inklusive Dokumentation ausarbeiten.
 
 2. Content-Model & Public API (Strapi)
 - [x] Content-Types für Seminare, Termine, Standorte, Produkte, Gutscheine, Bestellungen, Buchungen, Kunden, Kategorien erstellt.
@@ -50,14 +51,15 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - [ ] Versand mit Template-Data (Dynamic Templates) und Fehlerfall (ungültiger API-Key/Empfänger) verifizieren.
 - [ ] Ergebnisse als Implementierungsleitfaden in `docs/sendgrid.md` dokumentieren (Workflows, Payload-Mapping, Fehlerszenarien).
 
-4. LexOffice API-Discovery & Dokumentation
-- [ ] LexOffice-Spezifikation (Auth, Limits, relevante Endpoints, Datenfelder) analysieren und offene Fragen sammeln.
+4. SevDesk API-Discovery & Dokumentation
+- [ ] SevDesk-Spezifikation (Auth, Limits, relevante Endpoints, Datenfelder) analysieren und offene Fragen sammeln.
 - [ ] Authentifizierung & einfache GET-Requests (z. B. `/contacts`) mit gültigem Token prüfen.
 - [ ] Erstellung/Update von Privat- und Firmenkontakten samt Dublettenprüfung testen.
 - [ ] Anlage einer Rechnung über `/vouchers/invoices` inkl. Positionen, Steuerlogik und Zahlungsziel validieren.
 - [ ] Abruf des generierten PDF-Belegs (`/vouchers/invoices/{id}/document`) und Ablage im Filesystem nachvollziehen.
 - [ ] Statusabfragen & Zahlungsmarkierung (z. B. `bookingCategory=payment`) oder Storno simulieren, Fehlercodes dokumentieren.
-- [ ] Ergebnisse als Implementierungsleitfaden in `docs/lexoffice.md` dokumentieren (Workflows, Payload-Mapping, Fehlerszenarien).
+- [ ] Storno-Event in SevDesk testen (Stornobeleg, Status-Abgleich).
+- [ ] Ergebnisse als Implementierungsleitfaden in `docs/sevdesk.md` dokumentieren (Workflows, Payload-Mapping, Fehlerszenarien).
 
 5. Frontend Grundgerüst
 - [x] App Router mit Navigation, CartProvider und CartSidebar implementiert.
@@ -75,15 +77,20 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - [ ] Versand-Toggle (`EMAIL_TRANSPORT_ENABLED` o. ä.) über ENV einführen und in allen Umgebungen dokumentieren.
 - [ ] Bestellbestätigung nach Checkout mit Template-Renderer auslösen (Kund:innen-Mail).
 - [ ] Zahlungsbestätigung & Versand von Rechnung/Gutscheinen nach Zahlungseingang (PayPal-Webhook, Rechnungsverbuchung).
+- [ ] Storno-Event bei Statuswechsel auf `storniert` auslösen (Mail & Stornobeleg vorbereiten).
 - [ ] Interne Benachrichtigung bei neuen Bestellungen an definierte Backoffice-Empfänger:innen senden.
-- [ ] LexOffice-API-Client (Token-Auth) im Backend kapseln und Bestell-Payload für Rechnungsanlage vorbereiten.
+- [ ] SevDesk-API-Client (Token-Auth) im Backend kapseln und Bestell-Payload für Rechnungsanlage vorbereiten.
 
 7. Backoffice & Automatisierung
 - [x] Kundenverknüpfung/Newsletter-Opt-in beim Bestell-Write-Through im Backend umgesetzt.
-- [ ] LexOffice-Anbindung vervollständigen (ENV `LEXOFFICE_API_TOKEN`, Sandbox/Prod-Konfiguration, Secrets-Handling) gemäß `docs/lexoffice.md`.
-- [ ] Kontakte (Privat/Firma) aus Bestelldaten in LexOffice synchronisieren bzw. wiederverwenden.
+- [ ] SevDesk-Anbindung vervollständigen (ENV `SEVDESK_API_TOKEN`, Sandbox/Prod-Konfiguration, Secrets-Handling) gemäß `docs/sevdesk.md`.
+- [ ] Kontakte (Privat/Firma) aus Bestelldaten in SevDesk synchronisieren bzw. wiederverwenden.
 - [ ] Rechnungen/Belege via `vouchers/invoices` erzeugen, PDF abrufen und in Strapi/Storage verlinken.
+- [ ] Strapi-Systemeinstellungen für Absenderadresse und Antwort-E-Mail dokumentieren und im Admin pflegen (Single-Type "Einstellungen").
+- [ ] ENV-Fallbacks für sensible Mail-Credentials (z. B. API-Key, Default-Absender) dokumentieren und in allen Umgebungen pflegen.
+- [ ] Benachrichtigungs-Empfänger (z. B. "Neue Bestellung") in Strapi konfigurierbar machen und dokumentieren.
 - [ ] Webhook- oder Polling-Strategie für Zahlungsstatus/Storno etablieren und Fehler-Retry dokumentieren.
+- [ ] Storno-Benachrichtigungen (Mail, Stornobeleg) über zentrales Event bei Statuswechsel auf `storniert` auslösen.
 - [ ] Strapi-Admin konfigurieren (Collection-Ansichten, Rollen/Rechte, Default-Filter).
 - [ ] Prozess-Doku für Inhalte/Termine (inkl. Media-Upload) erstellen.
 
@@ -115,4 +122,8 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 ## Arbeitsprotokoll
 - 2025-10-02 – Entwicklungsplan erstellt, bisherige Architektur erfasst und nächste Arbeitsschritte priorisiert. – Commit: n/a
 - 2025-10-02 – SendGrid-E-Mail-Konzept abgestimmt; Template-Struktur und Umsetzungsschritte im Plan ergänzt. – Commit: n/a
-- 2025-10-02 – LexOffice-API recherchiert und Integrationsschritte (Kontakt-/Rechnungsanlage, PDFs, Status-Rücklauf) in den Plan aufgenommen. – Commit: n/a
+- 2025-10-02 – SevDesk-API recherchiert und Integrationsschritte (Kontakt-/Rechnungsanlage, PDFs, Status-Rücklauf) in den Plan aufgenommen. – Commit: n/a
+- 2025-10-02 – Rechnungsintegration auf SevDesk umgestellt (ENV & Dokumentation aktualisiert). – Commit: 45536fd
+- 2025-10-02 – Storno-Event-Anforderung (E-Mail/Stornobeleg) in Plan und Backend-Doku ergänzt. – Commit: 45536fd
+- 2025-10-02 – Strapi-Systemeinstellungen (Absender/Benachrichtigung) im Plan ergänzt. – Commit: 45536fd
+- 2025-10-02 – Strapi-Settings-Aufteilung (ENV vs. Single-Type) konkretisiert. – Commit: 45536fd
