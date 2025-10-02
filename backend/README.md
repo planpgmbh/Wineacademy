@@ -1,30 +1,43 @@
 # Backend (Strapi 5)
 
-Das Strapi-Backend stellt alle Inhalte (Seminare, Termine, Produkte) und Checkout-Flows für die Wine Academy Hamburg bereit. Es läuft als Node 20 Service mit PostgreSQL 15 und versorgt das Next.js-Frontend ausschließlich über Public-Endpoints.
+Strapi liefert die Inhalte (Seminare, Termine, Produkte, Gutscheine) und wickelt Bestellungen für die Wine Academy Hamburg ab. Es läuft als Node-20-Service auf PostgreSQL 15 und stellt ausschließlich öffentliche REST-Endpunkte unter `/api/public/*` bereit.
 
-## Datenmodell (Kurzfassung)
-- **Seminar** – Stammdaten, Texte, Bild, Preis, Relation zu Kategorien & Terminen
-- **Termin** – Datum(e) (`termin.seminartag`), `planungsstatus`, Relation zu Seminar & Ort (Preis wird aus dem Seminar übernommen)
-- **Ort** – Veranstaltungsort (Adresse, Typ)
-- **Bestellung** – Rechnungs-/Zahlungsdaten, Warenkorb-Positionen, Summen, Status (`offen|bezahlt|storniert`), Relation zu Kunde, Buchungen, Gutscheinen
-- **Buchung** – Teilnehmer eines Seminartermins inkl. Preis/MwSt, verweist auf Termin & Bestellung
-- **Produkt** – Shop-Artikel (inkl. Flag `gutschein` für Gutschein-Template)
-- **Gutschein** – Template oder generierter Code (Betrag, Bestellung, Einlöse-Status)
+## Setup & Betrieb
+- **Service-Namen:** `service_wineacadamy` (Prod) / `service_wineacadamy_staging` (Staging) in den Compose-Dateien.
+- **ENV-Variablen:**
+  - Strapi-Secrets: `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `ENCRYPTION_KEY`.
+  - Datenbank: `DATABASE_*`, `POSTGRES_*` (Host `db_wineacadamy` bzw. `db_wineacadamy_staging`).
+  - Public URLs: `PUBLIC_URL`, `API_INTERNAL_URL`, optional `ASSETS_INTERNAL_URL`.
+  - Zahlungen & Kommunikation: `PAYPAL_*`, `SENDGRID_API_KEY`, `EMAIL_FROM`, `LEXOFFICE_API_TOKEN`.
+  - Sonstiges: `VAT_RATE`, `ORDER_NUMBER_PREFIX`, `SEED_ON_BOOT`.
+- **Container neu starten:** Bei Schema- oder Plugin-Änderungen Strapi mit `docker compose -f docker-compose-staging.yml up -d --force-recreate service_wineacadamy_staging` neu aufsetzen.
+- **Seeds:** `backend/src/index.ts` erzeugt Demo-Daten, wenn `SEED_ON_BOOT=true` gesetzt ist (nicht in Produktion aktivieren).
 
-Namenskonvention: Verwende `planungsstatus` statt `status`, und halte Relationen gemäß oben beschriebenem Modell.
+## Content-Modell (Kurzfassung)
+- **Seminar:** Stammdaten, Texte, Preise, Relations zu Kategorien & Terminen.
+- **Termin:** Datum(e) (`termin.seminartag`), `planungsstatus`, Relation zu Seminar & Standort.
+- **Standort:** Veranstaltungsort (Adresse, Typ).
+- **Produkt:** Shop-Artikel (optional `gutschein`-Flag).
+- **Bestellung:** Rechnungs-/Zahlungsdaten, Positionen, Summen, Status (`offen|bezahlt|storniert`).
+- **Buchung:** Teilnehmer eines Seminartermins; referenziert Termin & Bestellung.
+- **Gutschein:** Templates & generierte Codes inkl. Betrag/Einsatzstatus.
+- **Kategorie/Kunde:** Klassifizierung der Seminare bzw. CRM-Einträge inkl. Newsletter-Opt-in.
 
-## Public API
-| Endpoint | Zweck |
-| --- | --- |
-| `GET /api/public/seminare` | Liste aktiver Seminare inkl. geplanter Termine |
-| `GET /api/public/seminare/:slug` | Seminardetail (Texte, Termine, Preise) |
-| `GET /api/public/produkte` | Aktive Shop-Produkte (inkl. evtl. Gutschein-Template) |
-| `GET /api/public/gutscheine/template` | Konfiguration für Gutschein-Betrag (Min/Max, Beschreibung) |
-| `POST /api/public/gutscheine/pricing` | Wunschbetrag validieren und runden |
-| `POST /api/public/bestellungen` | Bestellung anlegen (Rechnung oder PayPal-Capture) |
-| `GET /api/public/bestellungen/:id` | Minimalstatus einer Bestellung (Summen, Codes) |
+Namenskonvention: Für Terminstatus `planungsstatus` verwenden und Relationen laut Schema (`schema.json`) pflegen.
 
-**Beispiel (Produkt-Bestellung via Rechnung):**
+## Öffentliche Endpunkte
+| Methode | Pfad | Zweck |
+| --- | --- | --- |
+| `GET` | `/api/public/seminare` | Liste aktiver Seminare inkl. geplante Termine & Orte |
+| `GET` | `/api/public/seminare/:slug` | Seminardetail (Texte, Termine, Preise) |
+| `GET` | `/api/public/produkte` | Aktive Produkte inkl. Gutschein-Flag |
+| `GET` | `/api/public/gutscheine/template` | Gutschein-Template (Min/Max, Beschreibung, Bild) |
+| `POST` | `/api/public/gutscheine/pricing` | Wunschbetrag validieren/runden |
+| `POST` | `/api/public/bestellungen` | Bestellung anlegen (Rechnung oder PayPal-Capture) |
+| `GET` | `/api/public/bestellungen/:id` | Bestellstatus + Gutschein-Codes |
+| `POST` | `/api/public/paypal/webhook` | PayPal-Webhooks zur Nachverarbeitung |
+
+### Beispiel: Rechnungskauf eines Produkts
 ```bash
 curl -s -X POST http://localhost:1337/api/public/bestellungen \
   -H 'Content-Type: application/json' \
@@ -49,16 +62,19 @@ curl -s -X POST http://localhost:1337/api/public/bestellungen \
 ```
 
 ## Bestell- & PayPal-Workflow
-- Seminare/Produkte/Gutscheine werden im Payload als Positionen übergeben; der Server berechnet Netto/Brutto/Steuern und prüft verfügbare Termine/Produkte.
-- `buchungen` müssen je Seminartermin die gleiche Anzahl an Teilnehmern wie die Position enthalten.
-- Bei PayPal wird optional `paypalCaptureId` und `paypalOrderId` übergeben. Erfolgreiche Capture ⇒ Status `bezahlt`, `zahlungsmethode='paypal'`, Gutscheincodes werden generiert.
-- Webhook (`POST /api/public/paypal/webhook`) prüft Signatur (`PAYPAL_WEBHOOK_ID`), verifiziert Betrag/Währung und schließt offene Bestellungen nach.
+- Strapi validiert Positionen (Seminar/Produkt/Gutschein), berechnet Netto/Brutto/Steuer und prüft Terminverfügbarkeit.
+- `buchungen` müssen pro Termin die Menge der Seminar-Position widerspiegeln; fehlende Teilnehmerdaten führen zu `400`.
+- PayPal-Zahlungen: `paypalCaptureId`/`paypalOrderId` mitliefern. Capture wird per REST verifiziert (Betrag, Währung, Status `COMPLETED`).
+- Webhook (`/api/public/paypal/webhook`) validiert Signatur (`PAYPAL_WEBHOOK_ID`), markiert Bestellungen als `bezahlt` und erzeugt fehlende Gutscheincodes.
+- Newsletter-Opt-in wird auf Kundenebene gespeichert bzw. aktualisiert, sobald `newsletterOptIn=true` übermittelt wird.
 
-ENV-Variablen (Auszug): `APP_KEYS`, `JWT_SECRET`, `API_INTERNAL_URL`, `PUBLIC_URL`, `PAYPAL_*`, `CORS_ORIGINS`. Siehe `.env.example` bzw. Compose-Dateien.
+## Entwicklung & Qualitätssicherung
+- **Tests:** E2E-Checkout über `node tests/checkout-puppeteer.js` (setzt laufenden Staging-Stack und PayPal-Sandbox-Zugangsdaten voraus).
+- **Codeänderungen:** Bei Anpassungen an Content-Types immer `schema.json` prüfen und ggf. Admin-Oberfläche testen.
+- **Middleware:** `backend/src/middlewares/force-https.ts` sorgt für korrekte HTTPS-Erkennung hinter Traefik.
+- **Troubleshooting:** Logs via `docker compose -f docker-compose-staging.yml logs -f service_wineacadamy_staging`; DB-Verbindungen mit `psql` prüfen, falls Migrationen fehlschlagen.
 
-## Hinweise für Agenten/KI
-- Arbeite ausschließlich über die Public-Endpoints (siehe Tabelle oben).
-- Verwende Docker Compose-Kommandos aus dem Projekt-Root.
-- Änderungen klein halten; vor Commits Tests/Builds nur bei Bedarf.
-- Nach Änderungen an Strapi-Schemas/Content-Types den Backend-Container neu aufsetzen, damit der Admin die Anpassung sofort sieht:
-  `docker compose -f docker-compose-staging.yml up -d --force-recreate service_wineacadamy_staging`.
+## Weiterführende Ressourcen
+- Root-README für Gesamtüberblick & Compose-Kommandos.
+- `docs/server-infrastructure.md` für Traefik, Netzwerke und Backup-Hinweise.
+- `docs/entwicklungsplan.md` für Roadmap und offene Backend-Aufgaben.

@@ -1,64 +1,45 @@
-# Backend (Strapi 5)
+# Wine Academy Plattform
 
-Das Strapi-Backend stellt alle Inhalte (Seminare, Termine, Produkte) und Checkout-Flows für die Wine Academy Hamburg bereit. Es läuft als Node 20 Service mit PostgreSQL 15 und versorgt das Next.js-Frontend ausschließlich über Public-Endpoints.
+Diese Codebasis liefert die Wine Academy Hamburg Website: ein Strapi-Backend für Seminar- und Shop-Inhalte sowie ein Next.js-Frontend mit Warenkorb, Checkout (Rechnung & PayPal) und Gutscheinverwaltung. Deployment und Betrieb erfolgen über Docker Compose (Produktion/Staging) hinter Traefik.
 
-## Datenmodell (Kurzfassung)
-- **Seminar** – Stammdaten, Texte, Bild, Preis, Relation zu Kategorien & Terminen
-- **Termin** – Datum(e) (`termin.seminartag`), `planungsstatus`, Relation zu Seminar & Ort (Preis wird aus dem Seminar übernommen)
-- **Ort** – Veranstaltungsort (Adresse, Typ)
-- **Bestellung** – Rechnungs-/Zahlungsdaten, Warenkorb-Positionen, Summen, Status (`offen|bezahlt|storniert`), Relation zu Kunde, Buchungen, Gutscheinen
-- **Buchung** – Teilnehmer eines Seminartermins inkl. Preis/MwSt, verweist auf Termin & Bestellung
-- **Produkt** – Shop-Artikel (inkl. Flag `gutschein` für Gutschein-Template)
-- **Gutschein** – Template oder generierter Code (Betrag, Bestellung, Einlöse-Status)
+## Überblick
+- **Backend:** Strapi 5 auf Node 20 mit PostgreSQL 15; liefert ausschließlich öffentliche REST-Endpunkte unter `/api/public/*`.
+- **Frontend:** Next.js 15 (App Router, Tailwind 4) konsumiert die Public-API und stellt Seminare, Produkte, Gutschein-Flow und Checkout bereit.
+- **Stacks:** Zwei Compose-Stacks (`docker-compose.yml` für Produktion, `docker-compose-staging.yml` für Staging) mit gemeinsamen Traefik-Proxy (`proxy` Netzwerk) und getrennten Datenbank-Volumes.
+- **Domänen:** Produktion `https://wineacademymain.plan-p.de`, Staging `https://wineacademy.plan-p.de`.
 
-Namenskonvention: Verwende `planungsstatus` statt `status`, und halte Relationen gemäß oben beschriebenem Modell.
+## Schnellstart für KI-Agenten
+1. **Pflichtlektüre:** `AGENTS.md`, `docs/entwicklungsplan.md` sowie die Readmes von Backend und Frontend lesen.
+2. **Plan erstellen:** Vor jeder Änderung einen 2–5 Schritte umfassenden Plan formulieren, geplante Kommandos/Tests notieren.
+3. **Staging nutzen:** Alle Container-Kommandos mit `docker compose -f docker-compose-staging.yml ...` ausführen.
+4. **Tests ausführen:** Nach Änderungen eigenständig die relevanten Tests/Checks laufen lassen (z. B. Puppeteer, Linting) und Ergebnisse protokollieren.
+5. **Dokumente aktualisieren:** Bei Workflow-, Infrastruktur- oder Content-Modell-Änderungen den Entwicklungsplan und zugehörige Docs anpassen.
 
-## Public API
-| Endpoint | Zweck |
-| --- | --- |
-| `GET /api/public/seminare` | Liste aktiver Seminare inkl. geplanter Termine |
-| `GET /api/public/seminare/:slug` | Seminardetail (Texte, Termine, Preise) |
-| `GET /api/public/produkte` | Aktive Shop-Produkte (inkl. evtl. Gutschein-Template) |
-| `GET /api/public/gutscheine/template` | Konfiguration für Gutschein-Betrag (Min/Max, Beschreibung) |
-| `POST /api/public/gutscheine/pricing` | Wunschbetrag validieren und runden |
-| `POST /api/public/bestellungen` | Bestellung anlegen (Rechnung oder PayPal-Capture) |
-| `GET /api/public/bestellungen/:id` | Minimalstatus einer Bestellung (Summen, Codes) |
+## Verzeichnisstruktur
+- `backend/` – Strapi-Projekt inklusive Content-Types, Controller für Public API und Seed-Logik (`backend/README.md`).
+- `frontend/` – Next.js-Frontend mit App Router, Warenkorb/Checkout-Komponenten und PayPal-Integration (`frontend/README.md`).
+- `docs/` – Infrastruktur- und Projektpläne (`entwicklungsplan.md`, `server-infrastructure.md`).
+- `tests/` – Automatisierte End-to-End-Skripte (z. B. `checkout-puppeteer.js`).
+- `docker-compose*.yml` – Compose-Stacks für Produktion und Staging.
+- `.env.example`, `.env.staging.example` – Vorlagen für Umgebungsvariablen (Backend-, Frontend- und Infrastruktur-Settings).
 
-**Beispiel (Produkt-Bestellung via Rechnung):**
+## Häufig genutzte Kommandos
 ```bash
-curl -s -X POST http://localhost:1337/api/public/bestellungen \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "rechnungstyp": "privat",
-    "vorname": "Test",
-    "nachname": "User",
-    "email": "test@example.com",
-    "agbAkzeptiert": true,
-    "datenschutzGelesen": true,
-    "positionen": [
-      {
-        "typ": "produkt",
-        "produktId": 1,
-        "menge": 1,
-        "einzelpreisBrutto": 59.5,
-        "steuerSatz": 19
-      }
-    ],
-    "buchungen": []
-  }'
+# Staging-Stack aktualisieren (Backend & Frontend)
+docker compose -f docker-compose-staging.yml up -d --build
+
+# Nur Backend neu starten (z. B. nach Schema-Anpassungen)
+docker compose -f docker-compose-staging.yml up -d --force-recreate service_wineacadamy_staging
+
+# Puppeteer-Checkout-Test (setzt PAYPAL_* Variablen voraus)
+node tests/checkout-puppeteer.js
 ```
 
-## Bestell- & PayPal-Workflow
-- Seminare/Produkte/Gutscheine werden im Payload als Positionen übergeben; der Server berechnet Netto/Brutto/Steuern und prüft verfügbare Termine/Produkte.
-- `buchungen` müssen je Seminartermin die gleiche Anzahl an Teilnehmern wie die Position enthalten.
-- Bei PayPal wird optional `paypalCaptureId` und `paypalOrderId` übergeben. Erfolgreiche Capture ⇒ Status `bezahlt`, `zahlungsmethode='paypal'`, Gutscheincodes werden generiert.
-- Webhook (`POST /api/public/paypal/webhook`) prüft Signatur (`PAYPAL_WEBHOOK_ID`), verifiziert Betrag/Währung und schließt offene Bestellungen nach.
+## Weiterführende Dokumente & Referenzen
+- `backend/README.md` – Content-Modelle, Public-Endpoints, Bestell-/PayPal-Workflow, relevante ENV-Variablen.
+- `frontend/README.md` – API-Basen, Komponentenstruktur, Checkout-/PayPal-Integration, Frontend-ENV-Variablen.
+- `docs/server-infrastructure.md` – Traefik-Routing, Netzwerke, Deploy-Abläufe, Backup-Hinweise.
+- `docs/entwicklungsplan.md` – Roadmap, offene Arbeitspakete und Arbeitsprotokoll.
+- `AGENTS.md` – Arbeitsprinzipien, Kommunikation und Tooling-Konventionen.
 
-ENV-Variablen (Auszug): `APP_KEYS`, `JWT_SECRET`, `API_INTERNAL_URL`, `PUBLIC_URL`, `PAYPAL_*`, `CORS_ORIGINS`. Siehe `.env.example` bzw. Compose-Dateien.
-
-## Hinweise für Agenten/KI
-- Arbeite ausschließlich über die Public-Endpoints (siehe Tabelle oben).
-- Verwende Docker Compose-Kommandos aus dem Projekt-Root.
-- Änderungen klein halten; vor Commits Tests/Builds nur bei Bedarf.
-- Nach Änderungen an Strapi-Schemas/Content-Types den Backend-Container neu aufsetzen, damit der Admin die Anpassung sofort sieht:
-  `docker compose -f docker-compose-staging.yml up -d --force-recreate service_wineacadamy_staging`.
+Für Details zum Datenmodell, API-Requests oder Frontend-Flows bitte die jeweiligen Teilprojekt-Readmes heranziehen, um Redundanzen zu vermeiden.
