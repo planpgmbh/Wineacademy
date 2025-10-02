@@ -19,13 +19,13 @@ export default async function SeminarePage() {
       <ul className="grid md:grid-cols-2 gap-5">
         {seminare.map((s) => {
           const firstTermin = s.termine?.[0];
-          const firstDay = firstTermin?.tage?.[0]?.datum;
-          const ort = firstTermin?.ort?.standort || firstTermin?.ort?.veranstaltungsort || firstTermin?.ort?.stadt;
+          const firstDay = firstTermin?.tageMitUhrzeit?.[0]?.datum;
+          const ort = firstTermin?.ort?.name || firstTermin?.ort?.veranstaltungsort || firstTermin?.ort?.stadt;
           return (
             <li key={s.id} className="border rounded p-4 flex flex-col">
               <h2 className="text-lg font-medium">
                 <Link href={`/seminare/${s.slug}`} className="hover:underline">
-                  {s.seminarname}
+                  {s.name}
                 </Link>
               </h2>
               {s.kurzbeschreibung && (

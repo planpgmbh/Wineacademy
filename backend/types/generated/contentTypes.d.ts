@@ -582,7 +582,7 @@ export interface ApiGutscheinGutschein extends Struct.CollectionTypeSchema {
     maxBetrag: Schema.Attribute.Decimal;
     minBetrag: Schema.Attribute.Decimal;
     publishedAt: Schema.Attribute.DateTime;
-    titel: Schema.Attribute.String & Schema.Attribute.Required;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -614,7 +614,7 @@ export interface ApiKategorieKategorie extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
     seminare: Schema.Attribute.Relation<'manyToMany', 'api::seminar.seminar'>;
-    kategoriename: Schema.Attribute.String & Schema.Attribute.Required;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -664,13 +664,13 @@ export interface ApiKundeKunde extends Struct.CollectionTypeSchema {
   };
 }
 
-export interface ApiOrtOrt extends Struct.CollectionTypeSchema {
-  collectionName: 'orte';
+export interface ApiStandortStandort extends Struct.CollectionTypeSchema {
+  collectionName: 'standorte';
   info: {
     description: 'Veranstaltungsort oder Online';
-    displayName: 'Ort';
-    pluralName: 'orte';
-    singularName: 'ort';
+    displayName: 'Standort';
+    pluralName: 'standorte';
+    singularName: 'standort';
   };
   options: {
     draftAndPublish: true;
@@ -683,12 +683,12 @@ export interface ApiOrtOrt extends Struct.CollectionTypeSchema {
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'Deutschland'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<'oneToMany', 'api::ort.ort'> &
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::standort.standort'> &
       Schema.Attribute.Private;
     plz: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
     stadt: Schema.Attribute.String;
-    standort: Schema.Attribute.String & Schema.Attribute.Required;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
     strasse: Schema.Attribute.String;
     termine: Schema.Attribute.Relation<'oneToMany', 'api::termin.termin'>;
     typ: Schema.Attribute.Enumeration<['vorort', 'online']> &
@@ -731,9 +731,9 @@ export interface ApiProduktProdukt extends Struct.CollectionTypeSchema {
     preisBrutto: Schema.Attribute.Decimal;
     preisNetto: Schema.Attribute.Decimal;
     publishedAt: Schema.Attribute.DateTime;
-    slug: Schema.Attribute.UID<'titel'> & Schema.Attribute.Required;
+    slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
     steuerSatz: Schema.Attribute.Decimal;
-    titel: Schema.Attribute.String & Schema.Attribute.Required;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -774,8 +774,8 @@ export interface ApiSeminarSeminar extends Struct.CollectionTypeSchema {
     mwst: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     preis: Schema.Attribute.Decimal & Schema.Attribute.DefaultTo<0>;
     publishedAt: Schema.Attribute.DateTime;
-    seminarname: Schema.Attribute.String & Schema.Attribute.Required;
-    slug: Schema.Attribute.UID<'seminarname'> & Schema.Attribute.Required;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
     termine: Schema.Attribute.Relation<'oneToMany', 'api::termin.termin'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -814,7 +814,7 @@ export interface ApiTerminTermin extends Struct.CollectionTypeSchema {
       'api::termin.termin'
     > &
       Schema.Attribute.Private;
-    ort: Schema.Attribute.Relation<'manyToOne', 'api::ort.ort'> &
+    ort: Schema.Attribute.Relation<'manyToOne', 'api::standort.standort'> &
       Schema.Attribute.Required;
     planungsstatus: Schema.Attribute.Enumeration<
       ['geplant', 'ausgebucht', 'abgesagt']
@@ -824,8 +824,7 @@ export interface ApiTerminTermin extends Struct.CollectionTypeSchema {
     seminar: Schema.Attribute.Relation<'manyToOne', 'api::seminar.seminar'> &
       Schema.Attribute.Required;
     starttag: Schema.Attribute.Date & Schema.Attribute.Required;
-    tage: Schema.Attribute.Component<'termin.seminartag', true>;
-    titel: Schema.Attribute.String;
+    tageMitUhrzeit: Schema.Attribute.Component<'termin.seminartag', true>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1347,7 +1346,7 @@ declare module '@strapi/strapi' {
       'api::gutschein.gutschein': ApiGutscheinGutschein;
       'api::kategorie.kategorie': ApiKategorieKategorie;
       'api::kunde.kunde': ApiKundeKunde;
-      'api::ort.ort': ApiOrtOrt;
+      'api::standort.standort': ApiStandortStandort;
       'api::produkt.produkt': ApiProduktProdukt;
       'api::seminar.seminar': ApiSeminarSeminar;
       'api::termin.termin': ApiTerminTermin;

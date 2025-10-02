@@ -10,7 +10,6 @@
     "draftAndPublish": false
   },
   "attributes": {
-    "titel": { "type": "string" },
     "bestellnummer": { "type": "string", "unique": true },
     "rechnungstyp": {
       "type": "enumeration",

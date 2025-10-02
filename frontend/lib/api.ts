@@ -40,7 +40,7 @@ export async function fetchJSON<T>(path: string, init?: RequestInit): Promise<T>
 
 export type SeminarListItem = {
   id: number;
-  seminarname: string;
+  name: string;
   slug: string;
   kurzbeschreibung?: string;
   beschreibung?: string;
@@ -53,8 +53,8 @@ export type SeminarListItem = {
     kapazitaet?: number;
     preis?: number;
     planungsstatus?: string;
-    tage?: Array<{ datum: string; startzeit?: string; endzeit?: string }>;
-    ort?: { standort?: string; typ?: string; veranstaltungsort?: string; stadt?: string };
+    tageMitUhrzeit?: Array<{ datum: string; startzeit?: string; endzeit?: string }>;
+    ort?: { name?: string; typ?: string; veranstaltungsort?: string; stadt?: string };
   }>;
 };
 
@@ -77,7 +77,7 @@ export function mediaUrl(path?: string): string | undefined {
 
 export type Produkt = {
   id: number;
-  titel: string;
+  name: string;
   slug: string;
   kurzbeschreibung?: string;
   preisBrutto: number;
@@ -93,7 +93,7 @@ export async function getProdukte(): Promise<Produkt[]> {
 }
 
 export type GutscheinTemplate = {
-  titel: string;
+  name: string;
   beschreibung?: string | null;
   minBetrag: number | null;
   maxBetrag: number | null;

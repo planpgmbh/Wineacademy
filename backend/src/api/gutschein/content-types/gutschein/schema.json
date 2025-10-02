@@ -10,7 +10,7 @@
     "draftAndPublish": false
   },
   "attributes": {
-    "titel": { "type": "string", "required": true },
+    "name": { "type": "string", "required": true },
     "istTemplate": { "type": "boolean", "default": false },
     "beschreibung": { "type": "text" },
     "bild": { "type": "media", "allowedTypes": ["images"], "multiple": false },
@@ -29,4 +29,3 @@
     }
   }
 }
-

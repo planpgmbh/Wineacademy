@@ -9,4 +9,18 @@ export default {
     });
   },
   bootstrap() {},
+  async registerTrads({ locales }: { locales: string[] }) {
+    const importedTrads = await Promise.all(
+      locales.map(async (locale) => {
+        try {
+          const translations = await import(`./translations/${locale}.json`);
+          return { data: translations.default, locale };
+        } catch (error) {
+          return { data: {}, locale };
+        }
+      })
+    );
+
+    return importedTrads;
+  },
 };

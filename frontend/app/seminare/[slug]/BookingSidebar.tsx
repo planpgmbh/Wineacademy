@@ -15,7 +15,7 @@ function fmtDateISOToGerman(iso: string) {
 }
 
 function labelForTermin(t: Termin) {
-  const days = t.tage || [];
+  const days = t.tageMitUhrzeit || [];
   if (days.length === 0) return `Termin #${t.id}`;
   const first = days[0];
   if (days.length === 1) {
@@ -31,7 +31,7 @@ function labelForTermin(t: Termin) {
 }
 
 function ortLabel(t: Termin) {
-  return t.ort?.stadt || t.ort?.standort || t.ort?.veranstaltungsort || 'Ort n/a';
+  return t.ort?.stadt || t.ort?.name || t.ort?.veranstaltungsort || 'Ort n/a';
 }
 
 const defaultVat = Number(process.env.NEXT_PUBLIC_DEFAULT_VAT || '19');

@@ -19,7 +19,7 @@ export default function ProductGrid({ products }: Props) {
   const handleAdd = (product: Produkt) => {
     addItem({
       type: product.gutschein ? 'gutschein' : 'produkt',
-      titel: product.titel,
+      titel: product.name,
       beschreibung: product.kurzbeschreibung,
       produktId: product.id,
       preisBrutto: product.preisBrutto ?? 0,
@@ -37,11 +37,11 @@ export default function ProductGrid({ products }: Props) {
           <article key={product.id} className="flex h-full flex-col overflow-hidden rounded-xl border shadow-sm">
             {imageUrl && (
               <div className="relative h-40 w-full">
-                <Image src={imageUrl} alt={product.bild?.alternativeText || product.titel} fill className="object-cover" />
+                <Image src={imageUrl} alt={product.bild?.alternativeText || product.name} fill className="object-cover" />
               </div>
             )}
             <div className="flex flex-1 flex-col p-4">
-              <h3 className="text-lg font-semibold">{product.titel}</h3>
+              <h3 className="text-lg font-semibold">{product.name}</h3>
               {product.kurzbeschreibung && <p className="mt-2 text-sm text-gray-600">{product.kurzbeschreibung}</p>}
               <div className="mt-auto pt-4">
                 <p className="text-sm font-medium text-gray-900">{formatPrice(product.preisBrutto ?? 0)}</p>

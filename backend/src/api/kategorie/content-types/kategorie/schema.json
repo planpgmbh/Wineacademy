@@ -10,7 +10,7 @@
     "draftAndPublish": true
   },
   "attributes": {
-    "titel": { "type": "string", "required": true },
+    "name": { "type": "string", "required": true },
     "beschreibung": { "type": "text" },
     "bild": { "type": "media", "allowedTypes": ["images"], "multiple": false },
     "seminare": {
@@ -21,4 +21,3 @@
     }
   }
 }
-

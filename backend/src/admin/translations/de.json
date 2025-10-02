@@ -1,0 +1,10 @@
+{
+  "content-manager": {
+    "attributes": {
+      "api::termin.termin": {
+        "tageMitUhrzeit": "Tage mit Uhrzeit",
+        "starttag": "Starttag"
+      }
+    }
+  }
+}

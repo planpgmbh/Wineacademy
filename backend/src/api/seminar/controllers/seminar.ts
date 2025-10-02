@@ -4,19 +4,19 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
   async publicList(ctx) {
     const seminars = await strapi.db.query('api::seminar.seminar').findMany({
       where: { aktiv: true, publishedAt: { $not: null } },
-      select: ['id', 'seminarname', 'slug', 'kurzbeschreibung', 'preis', 'mwst'],
+      select: ['id', 'name', 'slug', 'kurzbeschreibung', 'preis', 'mwst'],
       populate: { bild: { select: ['url', 'alternativeText'] } },
-      orderBy: { seminarname: 'asc' },
+      orderBy: { name: 'asc' },
     });
 
     const result = [] as any[];
     for (const s of seminars) {
       const termineRaw = await strapi.db.query('api::termin.termin').findMany({
         where: { planungsstatus: 'geplant', publishedAt: { $not: null }, seminar: s.id },
-        select: ['kapazitaet', 'planungsstatus', 'id'],
+        select: ['kapazitaet', 'planungsstatus', 'id', 'starttag'],
         populate: {
-          tage: { select: ['datum', 'startzeit', 'endzeit'] },
-          ort: { select: ['standort', 'typ', 'veranstaltungsort', 'stadt'] },
+          tageMitUhrzeit: { select: ['datum', 'startzeit', 'endzeit'] },
+          ort: { select: ['name', 'typ', 'veranstaltungsort', 'stadt'] },
         },
         orderBy: { id: 'asc' },
       });
@@ -35,7 +35,7 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
       where: { aktiv: true, publishedAt: { $not: null }, slug },
       select: [
         'id',
-        'seminarname',
+        'name',
         'slug',
         'kurzbeschreibung',
         'beschreibung',
@@ -51,10 +51,10 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
     if (!seminar) return ctx.notFound('Seminar nicht gefunden');
     const termineRaw = await strapi.db.query('api::termin.termin').findMany({
       where: { planungsstatus: 'geplant', publishedAt: { $not: null }, seminar: seminar.id },
-      select: ['kapazitaet', 'planungsstatus', 'id'],
+      select: ['kapazitaet', 'planungsstatus', 'id', 'starttag'],
       populate: {
-        tage: { select: ['datum', 'startzeit', 'endzeit'] },
-        ort: { select: ['standort', 'typ', 'veranstaltungsort', 'stadt'] },
+        tageMitUhrzeit: { select: ['datum', 'startzeit', 'endzeit'] },
+        ort: { select: ['name', 'typ', 'veranstaltungsort', 'stadt'] },
       },
       orderBy: { id: 'asc' },
     });

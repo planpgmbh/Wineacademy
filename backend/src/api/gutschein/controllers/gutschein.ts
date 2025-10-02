@@ -6,12 +6,12 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
   async template(ctx) {
     const template = await strapi.db.query('api::gutschein.gutschein').findOne({
       where: { istTemplate: true },
-      select: ['id', 'titel', 'beschreibung', 'minBetrag', 'maxBetrag'],
+      select: ['id', 'name', 'beschreibung', 'minBetrag', 'maxBetrag'],
       populate: { bild: { select: ['url', 'alternativeText'] } },
     });
     if (!template) return ctx.notFound('Kein Gutschein-Template konfiguriert');
     ctx.body = {
-      titel: template.titel,
+      name: template.name,
       beschreibung: template.beschreibung,
       minBetrag: template.minBetrag != null ? Number(template.minBetrag) : null,
       maxBetrag: template.maxBetrag != null ? Number(template.maxBetrag) : null,

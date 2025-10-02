@@ -10,13 +10,13 @@
     "draftAndPublish": true
   },
   "attributes": {
-    "seminarname": {
+    "name": {
       "type": "string",
       "required": true
     },
     "slug": {
       "type": "uid",
-      "targetField": "seminarname",
+      "targetField": "name",
       "required": true
     },
     "kurzbeschreibung": {

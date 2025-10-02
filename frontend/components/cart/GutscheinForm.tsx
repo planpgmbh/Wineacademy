@@ -34,7 +34,7 @@ export default function GutscheinForm({ template, produkt }: Props) {
       const res = await postGutscheinPricing(betrag);
       addItem({
         type: 'gutschein',
-        titel: template.titel,
+        titel: template.name,
         beschreibung: template.beschreibung || undefined,
         produktId: produkt?.id,
         preisBrutto: res.betrag,
@@ -55,11 +55,11 @@ export default function GutscheinForm({ template, produkt }: Props) {
     <div className="grid gap-8 lg:grid-cols-[2fr_3fr]">
       {imageUrl && (
         <div className="relative h-64 w-full overflow-hidden rounded-xl border">
-          <Image src={imageUrl} alt={template.bild?.alternativeText || template.titel} fill className="object-cover" />
+          <Image src={imageUrl} alt={template.bild?.alternativeText || template.name} fill className="object-cover" />
         </div>
       )}
       <div className="space-y-4">
-        <h2 className="text-2xl font-semibold">{template.titel}</h2>
+        <h2 className="text-2xl font-semibold">{template.name}</h2>
         {template.beschreibung && <p className="text-sm text-gray-600 whitespace-pre-line">{template.beschreibung}</p>}
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">Wunschbetrag ({formatPrice(min)} – {formatPrice(max)})</label>

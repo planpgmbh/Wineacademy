@@ -1,16 +1,16 @@
 {
-  "collectionName": "orte",
+  "collectionName": "standorte",
   "info": {
-    "singularName": "ort",
-    "pluralName": "orte",
-    "displayName": "Ort",
+    "singularName": "standort",
+    "pluralName": "standorte",
+    "displayName": "Standort",
     "description": "Veranstaltungsort oder Online"
   },
   "options": {
     "draftAndPublish": true
   },
   "attributes": {
-    "standort": {
+    "name": {
       "type": "string",
       "required": true
     },

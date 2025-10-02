@@ -157,7 +157,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
                   newCodes.push(code);
                   await strapi.entityService.create('api::gutschein.gutschein', {
                     data: {
-                      titel: pos.titel,
+                      name: pos.titel,
                       beschreibung: pos.beschreibung,
                       code,
                       betrag,

@@ -163,22 +163,22 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
 
     const seminarSeats = new Map<number, { menge: number; brutto: number; netto: number; titel: string; steuerSatz: number }>();
     const positionen: any[] = [];
-    const voucherRequests: Array<{ betrag: number; titel: string; beschreibung?: string; produktId?: number; menge: number }> = [];
+    const voucherRequests: Array<{ betrag: number; name: string; beschreibung?: string; produktId?: number; menge: number }> = [];
 
     const loadProdukt = async (id: number) => {
       return strapi.db.query('api::produkt.produkt').findOne({
         where: { id, aktiv: true },
-        select: ['id', 'titel', 'preisNetto', 'preisBrutto', 'steuerSatz', 'mwst', 'gutschein'],
+        select: ['id', 'name', 'preisNetto', 'preisBrutto', 'steuerSatz', 'mwst', 'gutschein'],
       });
     };
 
     const loadTermin = async (id: number) => {
       return strapi.db.query('api::termin.termin').findOne({
         where: { id },
-        select: ['id', 'planungsstatus', 'publishedAt'],
+        select: ['id', 'planungsstatus', 'publishedAt', 'starttag'],
         populate: {
-          seminar: { select: ['id', 'seminarname', 'mwst', 'preis'] },
-          tage: { select: ['datum', 'startzeit', 'endzeit'] },
+          seminar: { select: ['id', 'name', 'mwst', 'preis'] },
+          tageMitUhrzeit: { select: ['datum', 'startzeit', 'endzeit'] },
         },
       });
     };
@@ -186,7 +186,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
     const loadGutscheinTemplate = async () => {
       return strapi.db.query('api::gutschein.gutschein').findOne({
         where: { istTemplate: true },
-        select: ['id', 'minBetrag', 'maxBetrag', 'titel'],
+        select: ['id', 'minBetrag', 'maxBetrag', 'name'],
       });
     };
 
@@ -222,14 +222,14 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         const brutto = round2(basisPreis);
         const netto = mwstAktiv ? round2(brutto / (1 + steuerSatz / 100)) : brutto;
 
-        const titel = raw.titel?.trim() || `${seminar?.seminarname || 'Seminar'} · Termin #${termin.id}`;
+        const titel = raw.titel?.trim() || `${seminar?.name || 'Seminar'} · Termin #${termin.id}`;
         const summeBrutto = round2(brutto * menge);
         const summeNetto = round2(netto * menge);
         const summeSteuer = round2(summeBrutto - summeNetto);
         const position = {
           typ: 'seminar',
           titel,
-          beschreibung: raw.beschreibung || termin?.ort?.standort,
+          beschreibung: raw.beschreibung || termin?.ort?.name,
           termin: termin.id,
           menge,
           steuerSatz,
@@ -279,7 +279,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
           steuerSatz = 0;
           voucherRequests.push({
             betrag: brutto,
-            titel: raw.titel?.trim() || produkt.titel,
+            name: raw.titel?.trim() || produkt.name,
             beschreibung: raw.beschreibung,
             produktId,
             menge,
@@ -302,7 +302,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         const summeSteuer = round2(summeBrutto - summeNetto);
         const position = {
           typ: istGutschein ? 'gutschein' : 'produkt',
-          titel: raw.titel?.trim() || produkt.titel,
+          titel: raw.titel?.trim() || produkt.name,
           beschreibung: raw.beschreibung,
           produkt: produkt.id,
           menge,
@@ -429,7 +429,6 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
       const newsletterOptInAt = newsletterOptIn ? new Date().toISOString() : undefined;
 
       const bestellungData: any = {
-        titel: body.titel,
         rechnungstyp,
         firmenname: body.firmenname,
         ustId: body.ustId,
@@ -525,17 +524,12 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
       try {
         if (!bestellnummer) {
           bestellnummer = formatOrderNumber(bestellungId);
+          await strapi.entityService.update('api::bestellung.bestellung', bestellungId, {
+            data: { bestellnummer },
+          });
         }
-        const hasTitel = bestellungData.titel && String(bestellungData.titel).trim() !== '';
-        const titel = hasTitel ? bestellungData.titel : bestellnummer;
-        await strapi.entityService.update('api::bestellung.bestellung', bestellungId, {
-          data: {
-            bestellnummer,
-            ...(hasTitel ? {} : { titel }),
-          },
-        });
       } catch (titleErr) {
-        strapi.log.warn(`[publicCreate Bestellung] Nummer-/Titel-Setzung übersprungen: ${(titleErr as any)?.message || titleErr}`);
+        strapi.log.warn(`[publicCreate Bestellung] Nummer-Setzung übersprungen: ${(titleErr as any)?.message || titleErr}`);
       }
 
       let generatedCodes: string[] = [];
@@ -547,7 +541,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
             generatedCodes.push(code);
             await strapi.entityService.create('api::gutschein.gutschein', {
               data: {
-                titel: req.titel,
+                name: req.name,
                 beschreibung: req.beschreibung,
                 code,
                 betrag: req.betrag,

@@ -22,7 +22,7 @@ function fmtDateISOToGerman(iso: string) {
 }
 
 function terminDateLine(t: NonNullable<Awaited<ReturnType<typeof getSeminar>>['termine']>[number]) {
-  const days = t.tage || [];
+  const days = t.tageMitUhrzeit || [];
   if (days.length === 0) return '';
   const first = days[0];
   if (days.length === 1) {
@@ -54,17 +54,17 @@ export default async function SeminarDetailPage({ params }: Props) {
         <span className="mx-2">/</span>
         <Link href="/seminare" className="hover:underline">Seminare</Link>
         <span className="mx-2">/</span>
-        <span className="text-gray-900">{seminar.seminarname}</span>
+        <span className="text-gray-900">{seminar.name}</span>
       </nav>
 
       {/* Header */}
       <header className="mb-6">
         {bildUrl && (
           <div className="mb-4 relative w-full aspect-[16/6] bg-gray-100 overflow-hidden rounded">
-            <Image src={bildUrl} alt={seminar.bild?.alternativeText || seminar.seminarname} fill priority sizes="100vw" className="object-cover" />
+            <Image src={bildUrl} alt={seminar.bild?.alternativeText || seminar.name} fill priority sizes="100vw" className="object-cover" />
           </div>
         )}
-        <h1 className="text-3xl font-semibold">{seminar.seminarname}</h1>
+        <h1 className="text-3xl font-semibold">{seminar.name}</h1>
         {seminar.kurzbeschreibung && (
           <p className="text-gray-700 mt-2 max-w-3xl">{seminar.kurzbeschreibung}</p>
         )}
@@ -94,7 +94,7 @@ export default async function SeminarDetailPage({ params }: Props) {
 
         {/* Sidebar: Terminwahl (Wunschtermin) */}
         <aside className="md:col-span-1">
-          <BookingSidebar termine={termine} fallbackPreis={seminar.preis} seminarTitle={seminar.seminarname} mwstAktiv={seminar.mwst} />
+          <BookingSidebar termine={termine} fallbackPreis={seminar.preis} seminarTitle={seminar.name} mwstAktiv={seminar.mwst} />
         </aside>
       </div>
     </div>
