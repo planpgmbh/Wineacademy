@@ -84,10 +84,16 @@ export default function CartSidebar() {
           <h2 className="text-lg font-semibold text-gray-900">Warenkorb</h2>
           <p className="text-xs text-gray-500">{itemCount === 1 ? '1 Artikel' : `${itemCount} Artikel`}</p>
         </div>
-        <button onClick={closeCart} className="text-sm text-gray-500 hover:text-gray-800">Schließen</button>
+        <button
+          onClick={closeCart}
+          className="inline-flex size-9 items-center justify-center rounded-full text-base font-semibold text-gray-400 transition hover:bg-gray-100 hover:text-gray-800"
+          aria-label="Warenkorb schließen"
+        >
+          ×
+        </button>
       </div>
-      <div className="flex h-full flex-col">
-        <div className="flex-1 overflow-y-auto px-6 pt-5 pb-28">
+      <div className="flex h-full min-h-0 flex-col">
+        <div className="flex-1 overflow-y-auto px-6 pt-5 pb-32">
           {items.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-sm text-gray-600">
               <span>Der Warenkorb ist leer.</span>
@@ -112,7 +118,7 @@ export default function CartSidebar() {
                   >
                     <button
                       onClick={() => removeItem(item.id)}
-                      className="absolute right-4 top-4 inline-flex size-7 items-center justify-center rounded-full text-xs font-semibold text-gray-400 transition hover:bg-gray-100 hover:text-red-500"
+                      className="absolute right-4 top-4 inline-flex size-9 items-center justify-center rounded-full text-base font-semibold text-gray-400 transition hover:bg-gray-100 hover:text-red-500"
                       aria-label={`${item.titel} entfernen`}
                     >
                       ×
@@ -172,8 +178,8 @@ export default function CartSidebar() {
           )}
         </div>
         <div
-          className="border-t border-gray-100 bg-white px-6 pt-5 pb-10 shadow-[0_-12px_24px_rgba(0,0,0,0.08)]"
-          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 16px) + 40px)' }}
+          className="border-t border-gray-100 bg-white px-6 pt-5 pb-12 shadow-[0_-12px_24px_rgba(0,0,0,0.08)]"
+          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 16px) + 56px)' }}
         >
           <div className="space-y-2 text-sm text-gray-700">
             <div className="flex items-center justify-between">
