@@ -3,23 +3,54 @@
   "info": {
     "singularName": "produkt",
     "pluralName": "produkte",
-    "displayName": "Produkt",
-    "description": "Shop-Produkt (z. B. Buch, Gutschein)"
+    "displayName": "Produkt"
   },
   "options": {
     "draftAndPublish": true
   },
   "attributes": {
-    "name": { "type": "string", "required": true },
-    "slug": { "type": "uid", "targetField": "name", "required": true },
-    "kurzbeschreibung": { "type": "text" },
-    "beschreibung": { "type": "richtext" },
-    "preisNetto": { "type": "decimal" },
-    "preisBrutto": { "type": "decimal" },
-    "steuerSatz": { "type": "decimal" },
-    "mwst": { "type": "boolean", "default": true },
-    "gutschein": { "type": "boolean", "default": false },
-    "aktiv": { "type": "boolean", "default": true },
-    "bild": { "type": "media", "allowedTypes": ["images"], "multiple": false }
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true
+    },
+    "kurzbeschreibung": {
+      "type": "text"
+    },
+    "beschreibung": {
+      "type": "richtext"
+    },
+    "preisNetto": {
+      "type": "decimal"
+    },
+    "preisBrutto": {
+      "type": "decimal"
+    },
+    "steuerSatz": {
+      "type": "decimal"
+    },
+    "mwst": {
+      "type": "boolean",
+      "default": true
+    },
+    "gutschein": {
+      "type": "boolean",
+      "default": false
+    },
+    "aktiv": {
+      "type": "boolean",
+      "default": true
+    },
+    "bild": {
+      "type": "media",
+      "allowedTypes": [
+        "images"
+      ],
+      "multiple": false
+    }
   }
 }

@@ -3,24 +3,54 @@
   "info": {
     "singularName": "gutschein",
     "pluralName": "gutscheine",
-    "displayName": "Gutschein",
-    "description": "Gutschein-Templates und generierte Codes"
+    "displayName": "Gutschein"
   },
   "options": {
     "draftAndPublish": false
   },
   "attributes": {
-    "name": { "type": "string", "required": true },
-    "istTemplate": { "type": "boolean", "default": false },
-    "beschreibung": { "type": "text" },
-    "bild": { "type": "media", "allowedTypes": ["images"], "multiple": false },
-    "code": { "type": "string", "unique": true },
-    "betrag": { "type": "decimal" },
-    "minBetrag": { "type": "decimal" },
-    "maxBetrag": { "type": "decimal" },
-    "aktiv": { "type": "boolean", "default": true },
-    "eingeloest": { "type": "boolean", "default": false },
-    "eingeloestAm": { "type": "datetime" },
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "istTemplate": {
+      "type": "boolean",
+      "default": false
+    },
+    "beschreibung": {
+      "type": "text"
+    },
+    "bild": {
+      "type": "media",
+      "allowedTypes": [
+        "images"
+      ],
+      "multiple": false
+    },
+    "code": {
+      "type": "string",
+      "unique": true
+    },
+    "betrag": {
+      "type": "decimal"
+    },
+    "minBetrag": {
+      "type": "decimal"
+    },
+    "maxBetrag": {
+      "type": "decimal"
+    },
+    "aktiv": {
+      "type": "boolean",
+      "default": true
+    },
+    "eingeloest": {
+      "type": "boolean",
+      "default": false
+    },
+    "eingeloestAm": {
+      "type": "datetime"
+    },
     "bestellung": {
       "type": "relation",
       "relation": "manyToOne",

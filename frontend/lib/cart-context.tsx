@@ -12,14 +12,22 @@ export type TeilnehmerForm = {
   terminId?: number;
 };
 
+export type TerminTag = {
+  datum: string;
+  startzeit?: string;
+  endzeit?: string;
+};
+
 export type CartItem = {
   id: string;
   type: 'seminar' | 'produkt' | 'gutschein';
   titel: string;
+  seminarName?: string;
   beschreibung?: string;
   produktId?: number;
   terminId?: number;
   terminLabel?: string;
+  terminTage?: TerminTag[];
   preisBrutto: number;
   steuerSatz: number;
   menge: number;

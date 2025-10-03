@@ -4,8 +4,7 @@
   "info": {
     "singularName": "einstellung",
     "pluralName": "einstellungen",
-    "displayName": "Einstellungen",
-    "description": "Systemweite Kommunikations- und Backoffice-Einstellungen"
+    "displayName": "Einstellungen"
   },
   "options": {
     "draftAndPublish": false
@@ -23,8 +22,7 @@
       "type": "string",
       "pluginOptions": {
         "content-manager": {
-          "displayName": "Absendername",
-          "description": "Name, der als Absender in E-Mails erscheint (Fallback, wenn kein ENV gesetzt ist)."
+          "displayName": "Absendername"
         }
       }
     },
@@ -32,8 +30,7 @@
       "type": "email",
       "pluginOptions": {
         "content-manager": {
-          "displayName": "Absenderadresse",
-          "description": "E-Mail-Adresse des Absenders für Systemmails (Fallback zu `EMAIL_FROM`)."
+          "displayName": "Absenderadresse"
         }
       }
     },
@@ -41,8 +38,7 @@
       "type": "email",
       "pluginOptions": {
         "content-manager": {
-          "displayName": "Antwort-Adresse",
-          "description": "Optionale Antwort-Adresse; falls leer, wird auf die Absenderadresse zurückgegriffen."
+          "displayName": "Antwort-Adresse"
         }
       }
     },
@@ -52,8 +48,7 @@
       "component": "system.benachrichtigungsempfaenger",
       "pluginOptions": {
         "content-manager": {
-          "displayName": "Benachrichtigungsempfänger",
-          "description": "Interne Empfängerlisten für Backoffice-/Systemmeldungen (z. B. neue Bestellungen)."
+          "displayName": "Benachrichtigungsempfänger"
         }
       }
     }

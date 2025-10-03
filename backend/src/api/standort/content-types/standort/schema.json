@@ -3,8 +3,7 @@
   "info": {
     "singularName": "standort",
     "pluralName": "standorte",
-    "displayName": "Standort",
-    "description": "Veranstaltungsort oder Online"
+    "displayName": "Standort"
   },
   "options": {
     "draftAndPublish": true
@@ -16,11 +15,16 @@
     },
     "typ": {
       "type": "enumeration",
-      "enum": ["vorort", "online"],
+      "enum": [
+        "vorort",
+        "online"
+      ],
       "default": "vorort",
       "required": true
     },
-    "veranstaltungsort": { "type": "string" },
+    "veranstaltungsort": {
+      "type": "string"
+    },
     "strasse": {
       "type": "string"
     },
@@ -32,7 +36,9 @@
     },
     "land": {
       "type": "enumeration",
-      "enum": ["Deutschland"],
+      "enum": [
+        "Deutschland"
+      ],
       "default": "Deutschland",
       "required": true
     },
@@ -42,6 +48,5 @@
       "target": "api::termin.termin",
       "mappedBy": "standort"
     }
-    
   }
 }

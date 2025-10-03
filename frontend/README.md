@@ -46,6 +46,7 @@ Alle Datenabrufe laufen über `lib/api.ts`:
 - **Linting:** `npm run lint` (ESLint + Next.js-Konfiguration).
 - **Styling:** Tailwind 4; bestehende Utility-Nutzung übernehmen, keine manuellen Reset-Overwrites.
 - **PayPal Sandbox:** Für lokale Tests `NEXT_PUBLIC_PAYPAL_CLIENT_ID` setzen und Checkout gegen Staging-Backend laufen lassen.
+- **Build & Sichtprüfung:** Nach jeder Frontend-Änderung das Staging-Frontend via `docker compose -f docker-compose-staging.yml up -d --build web_wineacadamy_staging` neu deployen und danach automatisch ein Browserfenster mit der aktualisierten Seite öffnen, um die sichtbare Änderung zu bestätigen.
 
 ## Weiterführende Ressourcen
 - Root-README für Gesamtüberblick & Compose-Kommandos.

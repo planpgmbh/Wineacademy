@@ -3,24 +3,50 @@
   "info": {
     "singularName": "kunde",
     "pluralName": "kunden",
-    "displayName": "Kunde",
-    "description": "Kundendaten für Bestellungen"
+    "displayName": "Kunde"
   },
   "options": {
     "draftAndPublish": false
   },
   "attributes": {
-    "vorname": { "type": "string", "required": true },
-    "nachname": { "type": "string", "required": true },
-    "email": { "type": "email", "required": true, "unique": true },
-    "telefon": { "type": "string" },
-    "strasse": { "type": "string" },
-    "plz": { "type": "string" },
-    "stadt": { "type": "string" },
-    "land": { "type": "string" },
-    "newsletterOptIn": { "type": "boolean", "default": false },
-    "newsletterOptInAt": { "type": "datetime" },
-    "notizen": { "type": "text" },
+    "vorname": {
+      "type": "string",
+      "required": true
+    },
+    "nachname": {
+      "type": "string",
+      "required": true
+    },
+    "email": {
+      "type": "email",
+      "required": true,
+      "unique": true
+    },
+    "telefon": {
+      "type": "string"
+    },
+    "strasse": {
+      "type": "string"
+    },
+    "plz": {
+      "type": "string"
+    },
+    "stadt": {
+      "type": "string"
+    },
+    "land": {
+      "type": "string"
+    },
+    "newsletterOptIn": {
+      "type": "boolean",
+      "default": false
+    },
+    "newsletterOptInAt": {
+      "type": "datetime"
+    },
+    "notizen": {
+      "type": "text"
+    },
     "bestellungen": {
       "type": "relation",
       "relation": "oneToMany",

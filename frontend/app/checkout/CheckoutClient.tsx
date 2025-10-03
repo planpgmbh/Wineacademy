@@ -256,7 +256,7 @@ export default function CheckoutClient({ paypalClientId, paypalCurrency = 'EUR' 
             {items.map((item) => (
               <li key={item.id} className="flex items-start justify-between border-b pb-3 last:border-none">
                 <div>
-                  <p className="font-medium">{item.titel}</p>
+                  <p className="font-medium">{item.seminarName || item.titel}</p>
                   {item.terminLabel && <p className="text-xs text-gray-500">{item.terminLabel}</p>}
                   {item.beschreibung && <p className="text-xs text-gray-500">{item.beschreibung}</p>}
                 </div>
@@ -278,7 +278,10 @@ export default function CheckoutClient({ paypalClientId, paypalCurrency = 'EUR' 
           <h2 className="text-lg font-semibold">Teilnehmerdaten</h2>
           {items.filter((item) => item.type === 'seminar').map((item) => (
             <div key={item.id} className="mt-4 space-y-3">
-              <h3 className="text-sm font-medium">{item.titel}</h3>
+              <div>
+                <h3 className="text-sm font-medium text-gray-900">{item.seminarName || item.titel}</h3>
+                {item.terminLabel && <p className="text-xs text-gray-500">{item.terminLabel}</p>}
+              </div>
               {(participants[item.id] || []).map((teilnehmer, idx) => (
                 <div key={idx} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <label className="text-xs font-medium text-gray-600">

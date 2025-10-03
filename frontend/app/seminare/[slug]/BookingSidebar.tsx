@@ -71,10 +71,16 @@ export default function BookingSidebar({ termine, fallbackPreis, seminarTitle, m
     const label = labelForTermin(current);
     addItem({
       type: 'seminar',
-      titel: `${seminarTitle} · ${label}`,
+      titel: seminarTitle,
+      seminarName: seminarTitle,
       beschreibung: standortLabel(current),
       terminId,
       terminLabel: label,
+      terminTage: current.tageMitUhrzeit?.map((tag) => ({
+        datum: tag.datum,
+        startzeit: tag.startzeit || undefined,
+        endzeit: tag.endzeit || undefined,
+      })),
       preisBrutto: typeof priceSingle === 'number' ? priceSingle : 0,
       steuerSatz,
       menge: anzahl,

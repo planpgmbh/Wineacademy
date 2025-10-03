@@ -3,8 +3,7 @@
   "info": {
     "singularName": "benachrichtigung",
     "pluralName": "benachrichtigungen",
-    "displayName": "Benachrichtigungen",
-    "description": "Transaktionale E-Mails inkl. Layout, Platzhaltern und Dokumentation"
+    "displayName": "Benachrichtigungen"
   },
   "options": {
     "draftAndPublish": false
@@ -15,8 +14,7 @@
       "required": true,
       "pluginOptions": {
         "content-manager": {
-          "displayName": "Titel",
-          "description": "Interner Name der Benachrichtigung; hilft bei der Auswahl im Admin, wird nicht mitversendet."
+          "displayName": "Titel"
         }
       }
     },
@@ -32,19 +30,21 @@
       "unique": true,
       "pluginOptions": {
         "content-manager": {
-          "displayName": "Anwendungsfall",
-          "description": "Welche Benachrichtigung hier gepflegt wird (z. B. Bestellbestätigung)."
+          "displayName": "Anwendungsfall"
         }
       }
     },
     "layout": {
       "type": "enumeration",
-      "enum": ["default", "rechnung", "backoffice"],
+      "enum": [
+        "default",
+        "rechnung",
+        "backoffice"
+      ],
       "default": "default",
       "pluginOptions": {
         "content-manager": {
-          "displayName": "Layout",
-          "description": "Bestimmt das Grundgerüst der E-Mail (z. B. Standard, Rechnung oder Backoffice-Design)."
+          "displayName": "Layout"
         }
       }
     },
@@ -52,8 +52,7 @@
       "type": "text",
       "pluginOptions": {
         "content-manager": {
-          "displayName": "Beschreibung",
-          "description": "Kurze interne Erklärung, wann diese Benachrichtigung verwendet wird."
+          "displayName": "Beschreibung"
         }
       }
     },
@@ -62,8 +61,7 @@
       "required": true,
       "pluginOptions": {
         "content-manager": {
-          "displayName": "Betreff",
-          "description": "Betreffzeile der E-Mail; Platzhalter wie `{{kunde.vorname}}` sind erlaubt."
+          "displayName": "Betreff"
         }
       }
     },
@@ -71,8 +69,7 @@
       "type": "string",
       "pluginOptions": {
         "content-manager": {
-          "displayName": "Vorschauzeile",
-          "description": "Kurzer Text hinter dem Betreff, der im Posteingang als Vorschau erscheint."
+          "displayName": "Vorschauzeile"
         }
       }
     },
@@ -80,8 +77,7 @@
       "type": "richtext",
       "pluginOptions": {
         "content-manager": {
-          "displayName": "HTML-Inhalt",
-          "description": "Gestalteter E-Mail-Inhalt mit Überschriften, Buttons usw.; Platzhalter wie `{{kunde.vorname}}` werden beim Versand ersetzt."
+          "displayName": "HTML-Inhalt"
         }
       }
     },
@@ -89,8 +85,7 @@
       "type": "text",
       "pluginOptions": {
         "content-manager": {
-          "displayName": "Text-Inhalt",
-          "description": "Einfache Textversion als Fallback für E-Mail-Clients ohne HTML-Unterstützung."
+          "displayName": "Text-Inhalt"
         }
       }
     },
@@ -100,8 +95,7 @@
       "component": "benachrichtigung.platzhalter",
       "pluginOptions": {
         "content-manager": {
-          "displayName": "Platzhalter",
-          "description": "Dokumentation der verfügbaren Platzhalter inkl. Beschreibung und Beispielwert."
+          "displayName": "Platzhalter"
         }
       }
     },
@@ -109,8 +103,7 @@
       "type": "json",
       "pluginOptions": {
         "content-manager": {
-          "displayName": "Testdaten (JSON)",
-          "description": "Zusätzliche JSON-Daten für den Testversand, z. B. verschachtelte Objekte oder Arrays (werden mit den Platzhalter-Beispielen kombiniert)."
+          "displayName": "Testdaten (JSON)"
         }
       }
     },
@@ -118,8 +111,7 @@
       "type": "string",
       "pluginOptions": {
         "content-manager": {
-          "displayName": "SendGrid-Vorlagen-ID",
-          "description": "Optional: ID der dynamischen SendGrid-Vorlage; HTML/Text in Strapi dienen dann nur zur Dokumentation."
+          "displayName": "SendGrid-Vorlagen-ID"
         }
       }
     },
@@ -128,8 +120,7 @@
       "default": true,
       "pluginOptions": {
         "content-manager": {
-          "displayName": "Aktiv",
-          "description": "Nur aktive Vorlagen werden für den Versand angeboten."
+          "displayName": "Aktiv"
         }
       }
     }

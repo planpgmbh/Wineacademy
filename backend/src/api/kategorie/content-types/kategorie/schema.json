@@ -3,16 +3,26 @@
   "info": {
     "singularName": "kategorie",
     "pluralName": "kategorien",
-    "displayName": "Kategorie",
-    "description": "Seminarkategorien (Mehrfachzuordnung möglich)"
+    "displayName": "Kategorie"
   },
   "options": {
     "draftAndPublish": true
   },
   "attributes": {
-    "name": { "type": "string", "required": true },
-    "beschreibung": { "type": "text" },
-    "bild": { "type": "media", "allowedTypes": ["images"], "multiple": false },
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "beschreibung": {
+      "type": "text"
+    },
+    "bild": {
+      "type": "media",
+      "allowedTypes": [
+        "images"
+      ],
+      "multiple": false
+    },
     "seminare": {
       "type": "relation",
       "relation": "manyToMany",

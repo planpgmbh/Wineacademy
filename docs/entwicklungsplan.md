@@ -135,3 +135,4 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - 2025-10-03 – Content-Type „Benachrichtigungen“ (UID, Felder, Platzhalter, SendGrid) und Einstellungen vollständig eingedeutscht; Admin-Endpunkt, Component & Typdefinitionen angepasst. – Commit: 591ac3f
 - 2025-10-03 – Warenkorb-Slideout im Frontend entschlackt (Seminar-Termine mit Uhrzeiten, vereinheitlichte Karten für Produkte/Gutscheine) und Safe-Area-Padding für den Kassen-Button ergänzt; ESLint mangels Projektkonfiguration nicht lauffähig. – Commit: n/a
 - 2025-10-03 – Frontend-README um verpflichtenden Build/Compose-Neustart + Browser-Sichtprüfung ergänzt und Staging-Web-Container neu gebaut/gestartet. – Commit: n/a
+- 2025-10-03 – Warenkorb-Karten erneut gestrafft (Seminarnamen bereinigt, Tagesliste, Button-Abstand) und Staging-Frontend via Compose neu gebaut. – Commit: n/a

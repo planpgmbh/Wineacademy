@@ -3,8 +3,7 @@
   "info": {
     "singularName": "seminar",
     "pluralName": "seminare",
-    "displayName": "Seminar",
-    "description": "Grundinformationen eines Seminars/Kurses"
+    "displayName": "Seminar"
   },
   "options": {
     "draftAndPublish": true
@@ -32,11 +31,18 @@
       "type": "decimal",
       "default": 0
     },
-    "mwst": { "type": "boolean", "default": true },
-    "kapazitaet": { "type": "integer" },
+    "mwst": {
+      "type": "boolean",
+      "default": true
+    },
+    "kapazitaet": {
+      "type": "integer"
+    },
     "bild": {
       "type": "media",
-      "allowedTypes": ["images"],
+      "allowedTypes": [
+        "images"
+      ],
       "multiple": false
     },
     "aktiv": {
@@ -48,8 +54,7 @@
       "relation": "oneToMany",
       "target": "api::termin.termin",
       "mappedBy": "seminar"
-    }
-    ,
+    },
     "kategorien": {
       "type": "relation",
       "relation": "manyToMany",

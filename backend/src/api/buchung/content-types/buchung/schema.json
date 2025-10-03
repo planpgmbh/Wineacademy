@@ -3,22 +3,41 @@
   "info": {
     "singularName": "buchung",
     "pluralName": "buchungen",
-    "displayName": "Buchung",
-    "description": "Teilnehmerdaten zu einem Seminartermin innerhalb einer Bestellung"
+    "displayName": "Buchung"
   },
   "options": {
     "draftAndPublish": false
   },
   "attributes": {
-    "vorname": { "type": "string", "required": true },
-    "nachname": { "type": "string", "required": true },
-    "email": { "type": "email" },
-    "wsetCandidateNumber": { "type": "string" },
-    "besondereBeduerfnisse": { "type": "text" },
-    "anmerkungen": { "type": "text" },
-    "preisNetto": { "type": "decimal" },
-    "preisBrutto": { "type": "decimal" },
-    "steuerSatz": { "type": "decimal" },
+    "vorname": {
+      "type": "string",
+      "required": true
+    },
+    "nachname": {
+      "type": "string",
+      "required": true
+    },
+    "email": {
+      "type": "email"
+    },
+    "wsetCandidateNumber": {
+      "type": "string"
+    },
+    "besondereBeduerfnisse": {
+      "type": "text"
+    },
+    "anmerkungen": {
+      "type": "text"
+    },
+    "preisNetto": {
+      "type": "decimal"
+    },
+    "preisBrutto": {
+      "type": "decimal"
+    },
+    "steuerSatz": {
+      "type": "decimal"
+    },
     "bestellung": {
       "type": "relation",
       "relation": "manyToOne",

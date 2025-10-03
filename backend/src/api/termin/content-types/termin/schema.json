@@ -3,23 +3,34 @@
   "info": {
     "singularName": "termin",
     "pluralName": "termine",
-    "displayName": "Termin",
-    "description": "Seminar-Termin mit mehreren Tagen (Datum, Start- und Endzeit)"
+    "displayName": "Termin"
   },
   "options": {
     "draftAndPublish": true
   },
   "attributes": {
-    "starttag": { "type": "date", "required": true },
+    "starttag": {
+      "type": "date",
+      "required": true
+    },
     "tageMitUhrzeit": {
       "type": "component",
       "repeatable": true,
       "component": "termin.seminartag"
     },
-    "kapazitaet": { "type": "integer", "required": true, "min": 1, "default": 30 },
+    "kapazitaet": {
+      "type": "integer",
+      "required": true,
+      "min": 1,
+      "default": 30
+    },
     "planungsstatus": {
       "type": "enumeration",
-      "enum": ["geplant", "ausgebucht", "abgesagt"],
+      "enum": [
+        "geplant",
+        "ausgebucht",
+        "abgesagt"
+      ],
       "default": "geplant"
     },
     "seminar": {
