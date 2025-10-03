@@ -5,7 +5,9 @@ type UID =
   | 'api::standort.standort'
   | 'api::seminar.seminar'
   | 'api::gutschein.gutschein'
-  | 'api::produkt.produkt';
+  | 'api::produkt.produkt'
+  | 'api::benachrichtigung.benachrichtigung'
+  | 'api::einstellung.einstellung';
 
 function toBool(v: any): boolean {
   if (v == null) return false;
@@ -86,6 +88,103 @@ async function upsertSeminar(
   return created.id as number;
 }
 
+async function upsertBenachrichtigung(
+  strapi: any,
+  values: {
+    name: string;
+    anwendungsfall: 'bestellbestaetigung' | 'zahlungsbestaetigung' | 'rechnung_gutschein' | 'backoffice_benachrichtigung';
+    layout?: 'default' | 'rechnung' | 'backoffice';
+    beschreibung?: string;
+    betreff: string;
+    vorschauzeile?: string;
+    bodyHtml?: string;
+    bodyText?: string;
+    platzhalter?: Array<{ schluessel: string; beschreibung?: string; beispiel?: string }>;
+    testPayload?: Record<string, unknown>;
+  }
+) {
+  const existing = await strapi.db
+    .query('api::benachrichtigung.benachrichtigung')
+    .findOne({ where: { anwendungsfall: values.anwendungsfall }, select: ['id'] });
+
+  const data: any = {
+    name: values.name,
+    anwendungsfall: values.anwendungsfall,
+    layout: values.layout ?? 'default',
+    beschreibung: values.beschreibung ?? undefined,
+    betreff: values.betreff,
+    vorschauzeile: values.vorschauzeile ?? undefined,
+    bodyHtml: values.bodyHtml ?? undefined,
+    bodyText: values.bodyText ?? undefined,
+    aktiv: true,
+    publishedAt: nowIso(),
+  };
+
+  if (Array.isArray(values.platzhalter) && values.platzhalter.length > 0) {
+    data.platzhalter = values.platzhalter.map((entry) => ({
+      schluessel: entry.schluessel,
+      beschreibung: entry.beschreibung ?? undefined,
+      beispiel: entry.beispiel ?? undefined,
+    }));
+  } else {
+    data.platzhalter = [];
+  }
+
+  if (values.testPayload) {
+    data.testPayload = values.testPayload;
+  }
+
+  if (existing) {
+    await strapi.entityService.update('api::benachrichtigung.benachrichtigung', existing.id, { data });
+    return existing.id as number;
+  }
+
+  const created = await strapi.entityService.create('api::benachrichtigung.benachrichtigung', { data });
+  return created.id as number;
+}
+
+type BenachrichtigungSeedInput = Parameters<typeof upsertBenachrichtigung>[1];
+
+async function upsertEinstellungen(
+  strapi: any,
+  values: {
+    absenderName?: string;
+    absenderEmail: string;
+    antwortEmail?: string;
+    benachrichtigungen?: Array<{
+      bezeichnung: string;
+      email: string;
+      typ: 'bestellung' | 'storno' | 'sonstiges';
+    }>;
+  }
+) {
+  const existing = await strapi.db
+    .query('api::einstellung.einstellung')
+    .findOne({ select: ['id'] });
+
+  const data: any = {
+    absenderName: values.absenderName ?? undefined,
+    absenderEmail: values.absenderEmail,
+    antwortEmail: values.antwortEmail ?? undefined,
+    benachrichtigungen: Array.isArray(values.benachrichtigungen)
+      ? values.benachrichtigungen.map((eintrag) => ({
+          bezeichnung: eintrag.bezeichnung,
+          email: eintrag.email,
+          typ: eintrag.typ,
+          aktiv: true,
+        }))
+      : [],
+  };
+
+  if (existing) {
+    await strapi.entityService.update('api::einstellung.einstellung', existing.id, { data });
+    return existing.id as number;
+  }
+
+  const created = await strapi.entityService.create('api::einstellung.einstellung', { data });
+  return created.id as number;
+}
+
 async function upsertProduct(strapi: any, values: {
   name: string;
   slug?: string;
@@ -161,7 +260,10 @@ async function runSeed(strapi: any) {
   const log = (msg: string) => strapi.log.info(`[seed] ${msg}`);
   log('Starte Seeding');
 
-  const seedTermineEnabled = toBool(process.env.SEED_SEMINAR_TERMINE);
+  const seedTermineEnabled =
+    typeof process.env.SEED_SEMINAR_TERMINE === 'undefined'
+      ? true
+      : toBool(process.env.SEED_SEMINAR_TERMINE);
 
   const categorySeeds = [
     {
@@ -247,11 +349,20 @@ async function runSeed(strapi: any) {
     .map(([name, id]) => `${name}=${id}`)
     .join(', ')}`);
 
+  type TerminTagSeed = {
+    offset?: number;
+    startzeit?: string;
+    endzeit?: string;
+  };
+
   type TerminSeed = {
     planungsstatus: 'geplant' | 'ausgebucht' | 'abgesagt';
     kapazitaet: number;
     standort: string;
     tageVersatz: number;
+    startzeit?: string;
+    endzeit?: string;
+    tage?: TerminTagSeed[];
   };
 
   type SeminarSeed = {
@@ -267,210 +378,365 @@ async function runSeed(strapi: any) {
     termine: TerminSeed[];
   };
 
-  const seminarSeeds: SeminarSeed[] = [
-    {
-      name: 'Sensorik: Essentials',
-      slug: 'sensorik-essentials',
-      kurzbeschreibung:
-        'Einstieg in die Weinsensorik: Weinaromen, Weinbeschreibung, strukturierte Verkostung und Weinqualität.',
-      beschreibung:
-        '<p>Ein eintägiger Kurs, der Sinne schärft und subtile Wein-Aromen besser wahrnehmen lässt. Mit Sensibilisierungs-Training, strukturierter Weinverkostung, Fachvokabular, Blindverkostung am Ende. Zielgruppe sind Weinliebhaber sowie Fachleute, die ihr Sensorikverständnis vertiefen möchten.</p>',
-      preis: 265,
-      mwst: true,
-      aktiv: true,
-      kategorien: ['Sensorik'],
-      termine: [
-        {
-          planungsstatus: 'geplant',
-          kapazitaet: 14,
-          standort: 'Hamburg',
-          tageVersatz: 21,
-        },
-        {
-          planungsstatus: 'geplant',
-          kapazitaet: 40,
-          standort: 'Online',
-          tageVersatz: 60,
-        },
-      ],
-    },
-    {
-      name: 'Weinfehler – Finde den Fehler!',
-      slug: 'weinfehler-basic',
-      kurzbeschreibung: 'Workshop: Weinfehler erkennen und verstehen inkl. Blindverkostung.',
-      beschreibung:
-        '<p>Teilnehmer lernen die wichtigsten Weinfehler kennen – Ursachen, wie sie entstehen, wie man sie erkennt. Mit Blindverkostung (10 Gläser, 10 verschiedene Fehler). Schulungsunterlagen & Zertifikat inklusive.</p>',
-      preis: 79,
-      mwst: true,
-      aktiv: true,
-      kategorien: ['Sensorik'],
-      termine: [
-        {
-          planungsstatus: 'geplant',
-          kapazitaet: 18,
-          standort: 'Hamburg',
-          tageVersatz: 35,
-        },
-      ],
-    },
-    {
-      name: 'Wein: der Weg zum Kenner',
-      slug: 'wein-der-weg-zum-kenner',
-      kurzbeschreibung: 'Kurs für Weinliebhaber mit ersten Kenntnissen, Überblick über Anbau & Weinqualität.',
-      beschreibung:
-        '<p>Vermittelt Wissen zu Etiketten, Herkunftsbezeichnungen und Weinanbau; Vergleich verschiedener Weine, Gläser, Regionen; Sensorische und theoretische Aspekte; Blindverkostung am Ende. Für alle mit ersten Vorkenntnissen, die fundierter in die Weinwelt eintauchen möchten.</p>',
-      preis: 245,
-      mwst: true,
-      aktiv: true,
-      kategorien: ['Tastings'],
-      termine: [
-        {
-          planungsstatus: 'geplant',
-          kapazitaet: 20,
-          standort: 'Hamburg',
-          tageVersatz: 28,
-        },
-      ],
-    },
-    {
-      name: 'WSET® Level 2 Weine',
-      slug: 'wset-level-2-weine',
-      kurzbeschreibung: 'WSET Level 2: über 20 Rebsorten & 70 Anbaugebiete; Etiketten- und Weinverständnis im Fokus.',
-      beschreibung:
-        '<p>Theorie & Praxis über die wichtigsten Rebsorten und Regionen weltweit. Verkostungen nach dem WSET-System (SAT). Prüfung & Zertifikat inklusive. Geeignet für Einsteiger mit etwas Vorkenntnissen oder zur Vertiefung nach Level 1.</p>',
-      preis: 950,
-      mwst: true,
-      aktiv: true,
-      kategorien: ['WSET'],
-      termine: [
-        {
-          planungsstatus: 'geplant',
-          kapazitaet: 16,
-          standort: 'Hamburg',
-          tageVersatz: 45,
-        },
-        {
-          planungsstatus: 'geplant',
-          kapazitaet: 16,
-          standort: 'Mannheim',
-          tageVersatz: 75,
-        },
-      ],
-    },
-    {
-      name: 'WSET® Level 1 Weine ONLINEKURS',
-      slug: 'wset-level-1-weine-onlinekurs',
-      kurzbeschreibung: 'Onlinekurs über 3 Blöcke, ideal für Einsteiger ohne Vorkenntnisse.',
-      beschreibung:
-        '<p>Kurs via Microsoft Teams, mit 6 Unterrichtsstunden in 3 Sessions (je 2 Stunden). Themen: Grundlagen zum Weinbau, Weinservierung, unterschiedliche Weintypen & Stile. Verkostung von Qualitätsweinen, Prüfung vor Ort in Hamburg. Abschluss mit WSET Level 1 Zertifikat.</p>',
-      preis: 340,
-      mwst: true,
-      aktiv: true,
-      kategorien: ['WSET'],
-      termine: [
-        {
-          planungsstatus: 'geplant',
-          kapazitaet: 50,
-          standort: 'Online',
-          tageVersatz: 30,
-        },
-      ],
-    },
-    {
-      name: 'Masterclass Champagne: Essentials',
-      slug: 'masterclass-champagner',
-      kurzbeschreibung: 'Masterclass über Champagne: Herstellung, Terroir & Stilistik; Blindverkostung mit mind. 12 Weinen.',
-      beschreibung:
-        '<p>Intensiver Tageskurs über die Region Champagne: Trauben, Kellerarbeit, Assemblage, Stilistik, Einfluss von Jahrgängen & Lagen sowie Vergleich großer und kleiner Produzenten. Verkostung inkl. Blindverkostung. Für Weininteressierte und Profis, die ihre Kenntnisse über Schaumweine vertiefen möchten.</p>',
-      preis: 320,
-      mwst: true,
-      aktiv: true,
-      kategorien: ['Masterclass'],
-      termine: [],
-    },
-    {
-      name: 'WSET® Level 3 Weine',
-      slug: 'wset-level-3-weine',
-      kurzbeschreibung: 'Aufbaukurs mit tiefem Fokus auf die wichtigsten Weine der Welt und deren wirtschaftliche Bedeutung.',
-      beschreibung:
-        '<p>Vertiefung der Kenntnisse aus Level 2; detaillierte Auseinandersetzung mit Regionen, Rebsorten und Produktionsmethoden. Professionelles Analysieren und Beschreiben von Weinen nach WSET SAT, Vorbereitung auf Beratung und Service.</p>',
-      preis: 1850,
-      mwst: true,
-      aktiv: true,
-      kategorien: ['WSET'],
-      termine: [],
-    },
-    {
-      name: 'Assistant Sommelier (inkl. WSET® Level 2 Weine)',
-      slug: 'assistant-sommelier',
-      kurzbeschreibung: 'Berufsbegleitender Lehrgang für Gastronomie, Handel und Weinliebhaber inkl. WSET Level 2.',
-      beschreibung:
-        '<p>Fünf Kurstage mit Fokus auf Weinwissen, Service und Sensorik; Kombination mit WSET Level 2 Weine zur internationalen Qualifizierung.</p>',
-      preis: 1650,
-      mwst: true,
-      aktiv: true,
-      kategorien: ['Sommelier Ausbildung', 'WSET'],
-      termine: [],
-    },
-    {
-      name: 'Sensorik Advanced',
-      slug: 'sensorik-advanced',
-      kurzbeschreibung: 'Aufbaukurs zur Vertiefung der Verkostungs- und Sensorikkompetenz.',
-      beschreibung:
-        '<p>Erweiterung der Sensorik-Skills, anspruchsvollere Weinstile und differenzierte Analysen; ideal nach „Sensorik: Essentials“.</p>',
-      preis: 285,
-      mwst: true,
-      aktiv: true,
-      kategorien: ['Sensorik'],
-      termine: [],
-    },
-    {
-      name: 'Masterclass Sake',
-      slug: 'masterclass-sake',
-      kurzbeschreibung: 'Kompakter Einstieg in Geschichte, Herstellung, Reis-Kategorien, Verkostung & Foodpairing.',
-      beschreibung:
-        '<p>Tageskurs inkl. Kurzprüfung und Zertifikat der Wine Academy Hamburg; ideal für Gastronomie-Profis und Enthusiasten.</p>',
-      preis: 249,
-      mwst: true,
-      aktiv: true,
-      kategorien: ['Masterclass'],
-      termine: [
-        {
-          planungsstatus: 'geplant',
-          kapazitaet: 22,
-          standort: 'Hamburg',
-          tageVersatz: 52,
-        },
-      ],
-    },
-  ];
 
-  const ensureTermine = async (seminarId: number, termine: typeof seminarSeeds[number]['termine']) => {
-    await strapi.db.query('api::termin.termin').deleteMany({ where: { seminar: seminarId } });
-    for (const termin of termine) {
-      const baseDate = new Date();
-      baseDate.setDate(baseDate.getDate() + termin.tageVersatz);
-      const datum = baseDate.toISOString().slice(0, 10);
-      await strapi.entityService.create('api::termin.termin', {
-        data: {
-          planungsstatus: termin.planungsstatus,
-          kapazitaet: termin.kapazitaet,
-          starttag: datum,
-          tageMitUhrzeit: [
-            {
-              datum,
-              startzeit: '10:00:00',
-              endzeit: '17:00:00',
-            },
-          ],
-          seminar: seminarId,
-          standort: standortIdByName[termin.standort],
-          publishedAt: nowIso(),
-        },
-      });
-    }
-  };
+const seminarSeeds: SeminarSeed[] = [
+  {
+    name: 'Sensorik: Essentials',
+    slug: 'sensorik-essentials',
+    kurzbeschreibung:
+      'Einstieg in die Weinsensorik: Weinaromen, Weinbeschreibung, strukturierte Verkostung und Weinqualität.',
+    beschreibung:
+      '<p>Ein eintägiger Kurs, der Sinne schärft und subtile Wein-Aromen besser wahrnehmen lässt. Mit Sensibilisierungs-Training, strukturierter Weinverkostung, Fachvokabular, Blindverkostung am Ende. Zielgruppe sind Weinliebhaber sowie Fachleute, die ihr Sensorikverständnis vertiefen möchten.</p>',
+    preis: 265,
+    mwst: true,
+    aktiv: true,
+    kategorien: ['Sensorik'],
+    termine: [
+      {
+        planungsstatus: 'geplant',
+        kapazitaet: 16,
+        standort: 'Hamburg',
+        tageVersatz: 7,
+        startzeit: '10:00:00',
+        endzeit: '16:00:00',
+      },
+      {
+        planungsstatus: 'ausgebucht',
+        kapazitaet: 14,
+        standort: 'Hamburg',
+        tageVersatz: 21,
+        startzeit: '09:30:00',
+        endzeit: '17:30:00',
+      },
+      {
+        planungsstatus: 'geplant',
+        kapazitaet: 40,
+        standort: 'Online',
+        tageVersatz: 35,
+        startzeit: '18:00:00',
+        endzeit: '20:30:00',
+        tage: [
+          { offset: 0, startzeit: '18:00:00', endzeit: '20:30:00' },
+          { offset: 7, startzeit: '18:00:00', endzeit: '20:30:00' },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Weinfehler – Finde den Fehler!',
+    slug: 'weinfehler-basic',
+    kurzbeschreibung: 'Workshop: Weinfehler erkennen und verstehen inkl. Blindverkostung.',
+    beschreibung:
+      '<p>Teilnehmer lernen die wichtigsten Weinfehler kennen – Ursachen, wie sie entstehen, wie man sie erkennt. Mit Blindverkostung (10 Gläser, 10 verschiedene Fehler). Schulungsunterlagen & Zertifikat inklusive.</p>',
+    preis: 79,
+    mwst: true,
+    aktiv: true,
+    kategorien: ['Sensorik'],
+    termine: [
+      {
+        planungsstatus: 'geplant',
+        kapazitaet: 18,
+        standort: 'Hamburg',
+        tageVersatz: 14,
+        startzeit: '17:00:00',
+        endzeit: '20:30:00',
+      },
+      {
+        planungsstatus: 'abgesagt',
+        kapazitaet: 18,
+        standort: 'Hamburg',
+        tageVersatz: 60,
+        startzeit: '18:00:00',
+        endzeit: '21:00:00',
+      },
+    ],
+  },
+  {
+    name: 'Wein: der Weg zum Kenner',
+    slug: 'wein-der-weg-zum-kenner',
+    kurzbeschreibung: 'Kurs für Weinliebhaber mit ersten Kenntnissen, Überblick über Anbau & Weinqualität.',
+    beschreibung:
+      '<p>Vermittelt Wissen zu Etiketten, Herkunftsbezeichnungen und Weinanbau; Vergleich verschiedener Weine, Gläser, Regionen; Sensorische und theoretische Aspekte; Blindverkostung am Ende. Für alle mit ersten Vorkenntnissen, die fundierter in die Weinwelt eintauchen möchten.</p>',
+    preis: 245,
+    mwst: true,
+    aktiv: true,
+    kategorien: ['Tastings'],
+    termine: [
+      {
+        planungsstatus: 'geplant',
+        kapazitaet: 20,
+        standort: 'Hamburg',
+        tageVersatz: 10,
+        startzeit: '10:00:00',
+        endzeit: '17:00:00',
+      },
+      {
+        planungsstatus: 'ausgebucht',
+        kapazitaet: 24,
+        standort: 'Mannheim',
+        tageVersatz: 55,
+        startzeit: '10:00:00',
+        endzeit: '16:00:00',
+      },
+    ],
+  },
+  {
+    name: 'WSET® Level 2 Weine',
+    slug: 'wset-level-2-weine',
+    kurzbeschreibung: 'WSET Level 2: über 20 Rebsorten & 70 Anbaugebiete; Etiketten- und Weinverständnis im Fokus.',
+    beschreibung:
+      '<p>Theorie & Praxis über die wichtigsten Rebsorten und Regionen weltweit. Verkostungen nach dem WSET-System (SAT). Prüfung & Zertifikat inklusive. Geeignet für Einsteiger mit etwas Vorkenntnissen oder zur Vertiefung nach Level 1.</p>',
+    preis: 950,
+    mwst: true,
+    aktiv: true,
+    kategorien: ['WSET'],
+    termine: [
+      {
+        planungsstatus: 'geplant',
+        kapazitaet: 16,
+        standort: 'Hamburg',
+        tageVersatz: 28,
+        tage: [
+          { offset: 0, startzeit: '09:00:00', endzeit: '17:30:00' },
+          { offset: 1, startzeit: '09:00:00', endzeit: '17:30:00' },
+          { offset: 30, startzeit: '10:00:00', endzeit: '13:00:00' },
+        ],
+      },
+      {
+        planungsstatus: 'ausgebucht',
+        kapazitaet: 18,
+        standort: 'Mannheim',
+        tageVersatz: 70,
+        tage: [
+          { offset: 0, startzeit: '09:30:00', endzeit: '17:30:00' },
+          { offset: 1, startzeit: '09:30:00', endzeit: '17:30:00' },
+          { offset: 28, startzeit: '09:00:00', endzeit: '12:30:00' },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'WSET® Level 1 Weine ONLINEKURS',
+    slug: 'wset-level-1-weine-onlinekurs',
+    kurzbeschreibung: 'Onlinekurs über 3 Blöcke, ideal für Einsteiger ohne Vorkenntnisse.',
+    beschreibung:
+      '<p>Kurs via Microsoft Teams, mit 6 Unterrichtsstunden in 3 Sessions (je 2 Stunden). Themen: Grundlagen zum Weinbau, Weinservierung, unterschiedliche Weintypen & Stile. Verkostung von Qualitätsweinen, Prüfung vor Ort in Hamburg. Abschluss mit WSET Level 1 Zertifikat.</p>',
+    preis: 340,
+    mwst: true,
+    aktiv: true,
+    kategorien: ['WSET'],
+    termine: [
+      {
+        planungsstatus: 'geplant',
+        kapazitaet: 50,
+        standort: 'Online',
+        tageVersatz: 20,
+        tage: [
+          { offset: 0, startzeit: '18:00:00', endzeit: '20:00:00' },
+          { offset: 2, startzeit: '18:00:00', endzeit: '20:00:00' },
+          { offset: 4, startzeit: '18:00:00', endzeit: '20:00:00' },
+        ],
+      },
+      {
+        planungsstatus: 'geplant',
+        kapazitaet: 45,
+        standort: 'Online',
+        tageVersatz: 55,
+        tage: [
+          { offset: 0, startzeit: '10:00:00', endzeit: '12:00:00' },
+          { offset: 7, startzeit: '10:00:00', endzeit: '12:00:00' },
+          { offset: 14, startzeit: '10:00:00', endzeit: '12:00:00' },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Masterclass Champagne: Essentials',
+    slug: 'masterclass-champagner',
+    kurzbeschreibung: 'Masterclass über Champagne: Herstellung, Terroir & Stilistik; Blindverkostung mit mind. 12 Weinen.',
+    beschreibung:
+      '<p>Intensiver Tageskurs über die Region Champagne: Trauben, Kellerarbeit, Assemblage, Stilistik, Einfluss von Jahrgängen & Lagen sowie Vergleich großer und kleiner Produzenten. Verkostung inkl. Blindverkostung. Für Weininteressierte und Profis, die ihre Kenntnisse über Schaumweine vertiefen möchten.</p>',
+    preis: 320,
+    mwst: true,
+    aktiv: true,
+    kategorien: ['Masterclass'],
+    termine: [
+      {
+        planungsstatus: 'geplant',
+        kapazitaet: 25,
+        standort: 'Hamburg',
+        tageVersatz: 40,
+        tage: [
+          { offset: 0, startzeit: '11:00:00', endzeit: '18:00:00' },
+        ],
+      },
+      {
+        planungsstatus: 'ausgebucht',
+        kapazitaet: 22,
+        standort: 'Mannheim',
+        tageVersatz: 90,
+        tage: [
+          { offset: 0, startzeit: '11:00:00', endzeit: '18:30:00' },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'WSET® Level 3 Weine',
+    slug: 'wset-level-3-weine',
+    kurzbeschreibung: 'Aufbaukurs mit tiefem Fokus auf die wichtigsten Weine der Welt und deren wirtschaftliche Bedeutung.',
+    beschreibung:
+      '<p>Vertiefung der Kenntnisse aus Level 2; detaillierte Auseinandersetzung mit Regionen, Rebsorten und Produktionsmethoden. Professionelles Analysieren und Beschreiben von Weinen nach WSET SAT, Vorbereitung auf Beratung und Service.</p>',
+    preis: 1850,
+    mwst: true,
+    aktiv: true,
+    kategorien: ['WSET'],
+    termine: [
+      {
+        planungsstatus: 'geplant',
+        kapazitaet: 14,
+        standort: 'Hamburg',
+        tageVersatz: 90,
+        tage: [
+          { offset: 0, startzeit: '09:00:00', endzeit: '18:00:00' },
+          { offset: 1, startzeit: '09:00:00', endzeit: '18:00:00' },
+          { offset: 2, startzeit: '09:00:00', endzeit: '17:00:00' },
+        ],
+      },
+      {
+        planungsstatus: 'abgesagt',
+        kapazitaet: 14,
+        standort: 'Hamburg',
+        tageVersatz: 150,
+        tage: [
+          { offset: 0, startzeit: '09:00:00', endzeit: '18:00:00' },
+          { offset: 1, startzeit: '09:00:00', endzeit: '18:00:00' },
+          { offset: 2, startzeit: '09:00:00', endzeit: '17:00:00' },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Assistant Sommelier (inkl. WSET® Level 2 Weine)',
+    slug: 'assistant-sommelier',
+    kurzbeschreibung: 'Berufsbegleitender Lehrgang für Gastronomie, Handel und Weinliebhaber inkl. WSET Level 2.',
+    beschreibung:
+      '<p>Fünf Kurstage mit Fokus auf Weinwissen, Service und Sensorik; Kombination mit WSET Level 2 Weine zur internationalen Qualifizierung.</p>',
+    preis: 1650,
+    mwst: true,
+    aktiv: true,
+    kategorien: ['Sommelier Ausbildung', 'WSET'],
+    termine: [
+      {
+        planungsstatus: 'geplant',
+        kapazitaet: 18,
+        standort: 'Hamburg',
+        tageVersatz: 32,
+        tage: [
+          { offset: 0, startzeit: '10:00:00', endzeit: '18:00:00' },
+          { offset: 1, startzeit: '10:00:00', endzeit: '18:00:00' },
+          { offset: 2, startzeit: '10:00:00', endzeit: '18:00:00' },
+          { offset: 30, startzeit: '10:00:00', endzeit: '17:00:00' },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Sensorik Advanced',
+    slug: 'sensorik-advanced',
+    kurzbeschreibung: 'Aufbaukurs zur Vertiefung der Verkostungs- und Sensorikkompetenz.',
+    beschreibung:
+      '<p>Erweiterung der Sensorik-Skills, anspruchsvollere Weinstile und differenzierte Analysen; ideal nach „Sensorik: Essentials“.</p>',
+    preis: 285,
+    mwst: true,
+    aktiv: true,
+    kategorien: ['Sensorik'],
+    termine: [
+      {
+        planungsstatus: 'geplant',
+        kapazitaet: 18,
+        standort: 'Hamburg',
+        tageVersatz: 48,
+        startzeit: '10:00:00',
+        endzeit: '18:00:00',
+      },
+      {
+        planungsstatus: 'geplant',
+        kapazitaet: 18,
+        standort: 'Online',
+        tageVersatz: 120,
+        startzeit: '17:00:00',
+        endzeit: '20:00:00',
+      },
+    ],
+  },
+  {
+    name: 'Masterclass Sake',
+    slug: 'masterclass-sake',
+    kurzbeschreibung: 'Kompakter Einstieg in Geschichte, Herstellung, Reis-Kategorien, Verkostung & Foodpairing.',
+    beschreibung:
+      '<p>Tageskurs inkl. Kurzprüfung und Zertifikat der Wine Academy Hamburg; ideal für Gastronomie-Profis und Enthusiasten.</p>',
+    preis: 249,
+    mwst: true,
+    aktiv: true,
+    kategorien: ['Masterclass'],
+    termine: [
+      {
+        planungsstatus: 'geplant',
+        kapazitaet: 22,
+        standort: 'Hamburg',
+        tageVersatz: 52,
+        startzeit: '10:00:00',
+        endzeit: '17:00:00',
+      },
+      {
+        planungsstatus: 'ausgebucht',
+        kapazitaet: 20,
+        standort: 'Hamburg',
+        tageVersatz: 95,
+        startzeit: '10:30:00',
+        endzeit: '17:30:00',
+      },
+    ],
+  },
+];
 
+const ensureTermine = async (seminarId: number, termine: typeof seminarSeeds[number]['termine']) => {
+  await strapi.db.query('api::termin.termin').deleteMany({ where: { seminar: seminarId } });
+  for (const termin of termine) {
+    const baseDate = new Date();
+    baseDate.setHours(12, 0, 0, 0);
+    baseDate.setDate(baseDate.getDate() + termin.tageVersatz);
+
+    const defaultStart = termin.startzeit ?? '10:00:00';
+    const defaultEnd = termin.endzeit ?? '17:00:00';
+    const tageSeeds = Array.isArray(termin.tage) && termin.tage.length > 0
+      ? termin.tage
+      : [{ offset: 0, startzeit: defaultStart, endzeit: defaultEnd }];
+
+    const tageMitUhrzeit = tageSeeds.map((tag) => {
+      const dayDate = new Date(baseDate);
+      dayDate.setDate(baseDate.getDate() + Number(tag.offset ?? 0));
+      return {
+        datum: dayDate.toISOString().slice(0, 10),
+        startzeit: tag.startzeit ?? defaultStart,
+        endzeit: tag.endzeit ?? defaultEnd,
+      };
+    });
+
+    await strapi.entityService.create('api::termin.termin', {
+      data: {
+        planungsstatus: termin.planungsstatus,
+        kapazitaet: termin.kapazitaet,
+        starttag: tageMitUhrzeit[0]?.datum ?? baseDate.toISOString().slice(0, 10),
+        tageMitUhrzeit,
+        seminar: seminarId,
+        standort: standortIdByName[termin.standort],
+        publishedAt: nowIso(),
+      },
+    });
+  }
+};
   for (const seminardata of seminarSeeds) {
     const catIdsForSeminar = (seminardata.kategorien || [])
       .map((name) => catIds[name])
@@ -585,6 +851,229 @@ async function runSeed(strapi: any) {
     aktiv: true,
   });
   log('Gutschein-Template aktualisiert');
+
+
+  const notificationSeeds: BenachrichtigungSeedInput[] = [
+    {
+      name: 'Bestellbestätigung',
+      anwendungsfall: 'bestellbestaetigung',
+      layout: 'default',
+      beschreibung: 'Kundenmail direkt nach Checkout.',
+      betreff: 'Wir haben deine Bestellung {{bestellung.bestellnummer}} erhalten',
+      vorschauzeile: 'Danke für deine Buchung bei der Wine Academy.',
+      bodyHtml: `<h1>Hallo {{kunde.vorname}},</h1>
+<p>wir haben deine Bestellung {{bestellung.bestellnummer}} erhalten. Danke für dein Vertrauen in die Wine Academy Hamburg.</p>
+<p><strong>Bestellübersicht</strong></p>
+{{bestellung.positionenTableHtml}}
+<p><strong>Summe brutto:</strong> {{bestellung.summeBrutto}}</p>
+<p>Du findest alle Unterlagen jederzeit in deinem Kundenbereich: <a href="{{links.kundencenter}}">Kundenbereich öffnen</a>.</p>
+<p>Viele Grüße<br/>Wine Academy Hamburg</p>`,
+      bodyText: `Hallo {{kunde.vorname}},
+
+wir haben deine Bestellung {{bestellung.bestellnummer}} erhalten. Die wichtigsten Details findest du im Kundenbereich: {{links.kundencenter}}
+
+Summe brutto: {{bestellung.summeBrutto}}
+
+Viele Grüße
+Wine Academy Hamburg`,
+      platzhalter: [
+        { schluessel: 'kunde.vorname', beispiel: 'Anna' },
+        { schluessel: 'bestellung.bestellnummer', beispiel: 'WA-000123' },
+        { schluessel: 'bestellung.summeBrutto', beispiel: '1.270,00 €' },
+        {
+          schluessel: 'bestellung.positionenTableHtml',
+          beschreibung: 'HTML-Tabelle mit allen Positionen inklusive Mengen und Summen.',
+          beispiel:
+            '<table><tr><td>Sensorik Essentials</td><td>2</td><td>530,00 €</td></tr><tr><td>WSET Level 2</td><td>1</td><td>950,00 €</td></tr></table>',
+        },
+        {
+          schluessel: 'links.kundencenter',
+          beschreibung: 'Direktlink zum Kundenbereich der Bestellung.',
+          beispiel: 'https://wineacademy.plan-p.de/konto/bestellungen/WA-000123',
+        },
+      ],
+      testPayload: {
+        kunde: { vorname: 'Anna', nachname: 'Beispiel' },
+        bestellung: {
+          bestellnummer: 'WA-000123',
+          summeBrutto: '1.270,00 €',
+          zahlungsmethode: 'Rechnung',
+          zahlungsstatus: 'offen',
+          positionenTableHtml:
+            '<table><thead><tr><th>Position</th><th>Menge</th><th>Summe</th></tr></thead><tbody><tr><td>Sensorik Essentials</td><td>2</td><td>530,00 €</td></tr><tr><td>WSET Level 2</td><td>1</td><td>950,00 €</td></tr></tbody></table>',
+        },
+        links: {
+          kundencenter: 'https://wineacademy.plan-p.de/konto/bestellungen/WA-000123',
+        },
+      },
+    },
+    {
+      name: 'Zahlungsbestätigung',
+      anwendungsfall: 'zahlungsbestaetigung',
+      layout: 'default',
+      beschreibung: 'Automatische Bestätigung nach Zahlungseingang.',
+      betreff: 'Zahlung für {{bestellung.bestellnummer}} ist eingegangen',
+      vorschauzeile: 'Wir haben deine Zahlung erhalten und schalten alle Leistungen frei.',
+      bodyHtml: `<h1>Hallo {{kunde.vorname}},</h1>
+<p>deine Zahlung über {{bestellung.zahlungsbetrag}} zu Bestellung {{bestellung.bestellnummer}} ist am {{bestellung.zahlungsdatum}} eingegangen.</p>
+{{gutscheineHtml}}
+<p>Du kannst deine Unterlagen jederzeit hier abrufen: <a href="{{links.kundencenter}}">Kundenbereich öffnen</a>.</p>
+<p>Vielen Dank und bis bald!<br/>Wine Academy Hamburg</p>`,
+      bodyText: `Hallo {{kunde.vorname}},
+
+wir haben deine Zahlung für Bestellung {{bestellung.bestellnummer}} am {{bestellung.zahlungsdatum}} erhalten. Betrag: {{bestellung.zahlungsbetrag}}.
+
+Weitere Details findest du im Kundenbereich: {{links.kundencenter}}
+
+Viele Grüße
+Wine Academy Hamburg`,
+      platzhalter: [
+        { schluessel: 'kunde.vorname', beispiel: 'Anna' },
+        { schluessel: 'bestellung.bestellnummer', beispiel: 'WA-000123' },
+        { schluessel: 'bestellung.zahlungsdatum', beispiel: '03.10.2025' },
+        { schluessel: 'bestellung.zahlungsbetrag', beispiel: '1.270,00 €' },
+        {
+          schluessel: 'gutscheineHtml',
+          beschreibung: 'HTML-Liste mit generierten Gutscheincodes (falls vorhanden).',
+          beispiel: '<ul><li>Gutschein: CODE-1234 (50 €)</li></ul>',
+        },
+        {
+          schluessel: 'links.kundencenter',
+          beispiel: 'https://wineacademy.plan-p.de/konto/bestellungen/WA-000123',
+        },
+      ],
+      testPayload: {
+        kunde: { vorname: 'Anna' },
+        bestellung: {
+          bestellnummer: 'WA-000123',
+          zahlungsdatum: '03.10.2025',
+          zahlungsbetrag: '1.270,00 €',
+        },
+        gutscheineHtml: '<ul><li>Gutschein: WA3K-9XYZ (50 €)</li></ul>',
+        links: {
+          kundencenter: 'https://wineacademy.plan-p.de/konto/bestellungen/WA-000123',
+        },
+      },
+    },
+    {
+      name: 'Rechnung & Gutscheinversand',
+      anwendungsfall: 'rechnung_gutschein',
+      layout: 'rechnung',
+      beschreibung: 'Mail mit Links zu Rechnung und ggf. Gutschein-PDFs.',
+      betreff: 'Deine Unterlagen zu {{bestellung.bestellnummer}}',
+      vorschauzeile: 'Hier findest du Rechnung und Gutscheincodes zur Bestellung.',
+      bodyHtml: `<h1>Hallo {{kunde.vorname}},</h1>
+<p>anbei erhältst du die Rechnung zu deiner Bestellung {{bestellung.bestellnummer}}.</p>
+<p><a href="{{anhang.rechnungUrl}}">Rechnung herunterladen</a></p>
+{{anhang.gutscheineHtml}}
+<p>Viel Freude mit unseren Seminaren!<br/>Wine Academy Hamburg</p>`,
+      bodyText: `Hallo {{kunde.vorname}},
+
+die Rechnung zu deiner Bestellung {{bestellung.bestellnummer}} findest du hier: {{anhang.rechnungUrl}}.
+{{anhang.gutscheineText}}
+
+Viele Grüße
+Wine Academy Hamburg`,
+      platzhalter: [
+        { schluessel: 'kunde.vorname', beispiel: 'Anna' },
+        { schluessel: 'bestellung.bestellnummer', beispiel: 'WA-000123' },
+        {
+          schluessel: 'anhang.rechnungUrl',
+          beschreibung: 'Direkter Link zum Rechnungs-PDF.',
+          beispiel: 'https://wineacademy.plan-p.de/uploads/WA-000123.pdf',
+        },
+        {
+          schluessel: 'anhang.gutscheineHtml',
+          beschreibung: 'HTML-Liste aller Gutschein-PDFs.',
+          beispiel: '<ul><li><a href="https://.../GUT-123.pdf">GUT-123.pdf</a></li></ul>',
+        },
+        {
+          schluessel: 'anhang.gutscheineText',
+          beschreibung: 'Textuelle Auflistung der Gutscheine für Plain-Text-Version.',
+          beispiel: 'Gutschein WA3K-9XYZ (50 €)',
+        },
+      ],
+      testPayload: {
+        kunde: { vorname: 'Anna' },
+        bestellung: { bestellnummer: 'WA-000123' },
+        anhang: {
+          rechnungUrl: 'https://wineacademy.plan-p.de/uploads/WA-000123.pdf',
+          gutscheineHtml:
+            '<ul><li><a href="https://wineacademy.plan-p.de/uploads/GUT-123.pdf">GUT-123.pdf</a></li></ul>',
+          gutscheineText: 'Gutschein WA3K-9XYZ (50 €)',
+        },
+      },
+    },
+    {
+      name: 'Backoffice Benachrichtigung',
+      anwendungsfall: 'backoffice_benachrichtigung',
+      layout: 'backoffice',
+      beschreibung: 'Interne Info bei neuen Bestellungen.',
+      betreff: 'Neue Bestellung {{bestellung.bestellnummer}}',
+      vorschauzeile: 'Neue Bestellung wartet auf Prüfung.',
+      bodyHtml: `<h1>Neue Bestellung {{bestellung.bestellnummer}}</h1>
+<p><strong>Status:</strong> {{bestellung.status}}</p>
+<p><strong>Summe brutto:</strong> {{bestellung.summeBrutto}}</p>
+<p><strong>Rechnungstyp:</strong> {{bestellung.rechnungstyp}}</p>
+<p><strong>Kund*in:</strong> {{bestellung.kundeEmail}}</p>
+<p>{{bestellung.positionenJson}}</p>
+<p><a href="{{links.adminOrder}}">Zur Bestellung im Admin</a></p>`,
+      bodyText: `Neue Bestellung {{bestellung.bestellnummer}}
+Status: {{bestellung.status}}
+Summe: {{bestellung.summeBrutto}}
+Rechnungstyp: {{bestellung.rechnungstyp}}
+Kund: {{bestellung.kundeEmail}}
+Positionen: {{bestellung.positionenJson}}
+
+Admin-Link: {{links.adminOrder}}`,
+      platzhalter: [
+        { schluessel: 'bestellung.bestellnummer', beispiel: 'WA-000123' },
+        { schluessel: 'bestellung.summeBrutto', beispiel: '1.270,00 €' },
+        { schluessel: 'bestellung.rechnungstyp', beispiel: 'firma' },
+        { schluessel: 'bestellung.status', beispiel: 'offen' },
+        { schluessel: 'bestellung.kundeEmail', beispiel: 'anna@example.com' },
+        {
+          schluessel: 'bestellung.positionenJson',
+          beschreibung: 'JSON-String der Positionen zur schnellen Übersicht.',
+          beispiel: '[{"titel":"Sensorik Essentials","menge":2}]',
+        },
+        {
+          schluessel: 'links.adminOrder',
+          beispiel: 'https://wineacademy.plan-p.de/admin/content-manager/collectionType/api::bestellung.bestellung/1',
+        },
+      ],
+      testPayload: {
+        bestellung: {
+          bestellnummer: 'WA-000123',
+          summeBrutto: '1.270,00 €',
+          rechnungstyp: 'firma',
+          status: 'offen',
+          kundeEmail: 'anna@example.com',
+          positionenJson: '[{"titel":"Sensorik Essentials","menge":2}]',
+        },
+        links: {
+          adminOrder: 'https://wineacademy.plan-p.de/admin/content-manager/collectionType/api::bestellung.bestellung/1',
+        },
+      },
+    },
+  ];
+
+  for (const notification of notificationSeeds) {
+    const notificationId = await upsertBenachrichtigung(strapi, notification);
+    log(`Benachrichtigung angelegt/aktualisiert: ${notification.anwendungsfall} (ID ${notificationId})`);
+  }
+
+  const einstellungenId = await upsertEinstellungen(strapi, {
+    absenderName: 'Wine Academy Hamburg',
+    absenderEmail: 'noreply@wineacademy.test',
+    antwortEmail: 'support@wineacademy.test',
+    benachrichtigungen: [
+      { bezeichnung: 'Backoffice Bestellungen', email: 'bestellungen@wineacademy.test', typ: 'bestellung' },
+      { bezeichnung: 'Storno-Team', email: 'storno@wineacademy.test', typ: 'storno' },
+      { bezeichnung: 'Operations', email: 'operations@wineacademy.test', typ: 'sonstiges' },
+    ],
+  });
+  log(`Einstellungen aktualisiert (ID ${einstellungenId})`);
 
   log('Seeding abgeschlossen');
 }

@@ -52,14 +52,15 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - [x] Ergebnisse als Implementierungsleitfaden in `docs/sendgrid.md` dokumentieren (Workflows, Payload-Mapping, Fehlerszenarien, Free-Plan-Einrichtung).
 
 4. SevDesk API-Discovery & Dokumentation
-- [ ] SevDesk-Spezifikation (Auth, Limits, relevante Endpoints, Datenfelder) analysieren und offene Fragen sammeln.
+- [x] SevDesk-Spezifikation (Auth, Limits, relevante Endpoints, Datenfelder) analysieren und offene Fragen sammeln.
 - [ ] Authentifizierung & einfache GET-Requests (z. B. `/contacts`) mit gültigem Token prüfen.
 - [ ] Erstellung/Update von Privat- und Firmenkontakten samt Dublettenprüfung testen.
 - [ ] Anlage einer Rechnung über `/vouchers/invoices` inkl. Positionen, Steuerlogik und Zahlungsziel validieren.
 - [ ] Abruf des generierten PDF-Belegs (`/vouchers/invoices/{id}/document`) und Ablage im Filesystem nachvollziehen.
 - [ ] Statusabfragen & Zahlungsmarkierung (z. B. `bookingCategory=payment`) oder Storno simulieren, Fehlercodes dokumentieren.
-- [ ] Storno-Event in SevDesk testen (Stornobeleg, Status-Abgleich).
-- [ ] Ergebnisse als Implementierungsleitfaden in `docs/sevdesk.md` dokumentieren (Workflows, Payload-Mapping, Fehlerszenarien).
+- [x] Storno-Event in SevDesk testen (Stornobeleg, Status-Abgleich).
+- [x] Gutscheinrabatte auf SevDesk-Rechnungen verteilen (Sync aktuell ohne Gutscheinpositionen).
+- [x] Ergebnisse als Implementierungsleitfaden in `docs/sevdesk.md` dokumentieren (Workflows, Payload-Mapping, Fehlerszenarien).
 
 5. Frontend Grundgerüst
 - [x] App Router mit Navigation, CartProvider und CartSidebar implementiert.
@@ -79,7 +80,7 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - [ ] Zahlungsbestätigung & Versand von Rechnung/Gutscheinen nach Zahlungseingang (PayPal-Webhook, Rechnungsverbuchung).
 - [ ] Storno-Event bei Statuswechsel auf `storniert` auslösen (Mail & Stornobeleg vorbereiten).
 - [ ] Interne Benachrichtigung bei neuen Bestellungen an definierte Backoffice-Empfänger:innen senden.
-- [ ] SevDesk-API-Client (Token-Auth) im Backend kapseln und Bestell-Payload für Rechnungsanlage vorbereiten.
+- [x] SevDesk-API-Client (Token-Auth) im Backend kapseln und Bestell-Payload für Rechnungsanlage vorbereiten.
 
 7. Backoffice & Automatisierung
 - [x] Kundenverknüpfung/Newsletter-Opt-in beim Bestell-Write-Through im Backend umgesetzt.
@@ -142,3 +143,8 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - 2025-10-03 – SendGrid-Testversand via `scripts/sendgrid-test-send.js` angestoßen (`403 Forbidden`: Absender `technik@plan-p.de` noch nicht als Sender Identity verifiziert). – Commit: n/a
 - 2025-10-03 – Nach Verifizierung von `technik@plan-p.de` erfolgreicher Testversand (`messageId=_Ir7gYCcSce-RA13xEZiiw`). – Commit: n/a
 - 2025-10-03 – Checkout in einen nummerierten Stepper umgebaut (Warenkorb → Teilnehmer → Rechnungsadresse → Bestätigungen → Zahlung), Checkboxen vor die Zahlarten gezogen und Teilnehmerblöcke mit „Teilnehmer 1/2 …“ gekennzeichnet. – Commit: n/a
+- 2025-10-03 – SevDesk-API-Discovery dokumentiert (`docs/sevdesk.md`), offene Punkte & Testplan für Integration erfasst. – Commit: n/a
+- 2025-10-03 – Backend-Service `src/services/sevdesk.ts` angelegt (Token-Auth, Retries, PDF-Download), Readmes aktualisiert und Build erfolgreich durchlaufen. – Commit: n/a
+- 2025-10-03 – Checkout speist SevDesk mit Kontakten & Rechnungen (inkl. Gutscheinrabatt-Verteilung), neue ENV-Parameter dokumentiert, Backend-Build grün. – Commit: n/a
+- 2025-10-03 – Storni bereitgestellt: Statuswechsel aktualisiert SevDesk-Rechnung, Storno-Dokument-ID wird gespeichert. – Commit: n/a
+- 2025-10-03 – Seed-Logik erweitert (Termine, Benachrichtigungen, Einstellungen) und Testdaten für vollständige Systemtests hinterlegt. – Commit: n/a
