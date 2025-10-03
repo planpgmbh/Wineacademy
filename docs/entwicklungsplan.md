@@ -81,6 +81,7 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - [ ] Storno-Event bei Statuswechsel auf `storniert` auslösen (Mail & Stornobeleg vorbereiten).
 - [ ] Interne Benachrichtigung bei neuen Bestellungen an definierte Backoffice-Empfänger:innen senden.
 - [x] SevDesk-API-Client (Token-Auth) im Backend kapseln und Bestell-Payload für Rechnungsanlage vorbereiten.
+- [x] SevDesk-Sync-Toggle (`SEVDESK_SYNC_ENABLED`) über ENV eingeführt und dokumentiert (Staging `.env` aktualisiert).
 
 7. Backoffice & Automatisierung
 - [x] Kundenverknüpfung/Newsletter-Opt-in beim Bestell-Write-Through im Backend umgesetzt.
@@ -149,3 +150,4 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - 2025-10-03 – Storni bereitgestellt: Statuswechsel aktualisiert SevDesk-Rechnung, Storno-Dokument-ID wird gespeichert. – Commit: n/a
 - 2025-10-03 – Seed-Logik erweitert (Termine, Benachrichtigungen, Einstellungen) und Testdaten für vollständige Systemtests hinterlegt. – Commit: n/a
 - 2025-10-03 – Staging-Datenbank zurückgesetzt, Seeds ausgeführt (Termine/Benachrichtigungen geprüft) und Strapi-Service neu gestartet. – Commit: n/a
+- 2025-10-03 – SevDesk-Sync-Toggle (`SEVDESK_SYNC_ENABLED`) implementiert, `.env`-Vorlagen aktualisiert und Backend-Guards ergänzt. – Commit: fc49e3c

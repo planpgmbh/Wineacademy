@@ -4,9 +4,20 @@ const DEFAULT_BASE_URL = 'https://my.sevdesk.de/api/v1';
 const MAX_RETRIES = 3;
 const RETRY_BASE_DELAY_MS = 500;
 
+const DISABLED_FLAGS = ['0', 'false', 'no', 'off', 'disabled'];
+
 const fetchFn: typeof globalThis.fetch = (globalThis as any).fetch;
 if (!fetchFn) {
   throw new Error('Global fetch ist nicht verfügbar. Node 18+ wird benötigt.');
+}
+
+export function isSevDeskSyncEnabled(): boolean {
+  const flag = process.env.SEVDESK_SYNC_ENABLED;
+  if (!flag) {
+    return true;
+  }
+  const normalised = flag.trim().toLowerCase();
+  return !DISABLED_FLAGS.includes(normalised);
 }
 
 export interface SevDeskClientOptions {

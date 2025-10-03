@@ -9,6 +9,7 @@ import {
   fetchInvoiceWithDocument,
   extractDocumentId,
   SevDeskError,
+  isSevDeskSyncEnabled,
 } from '../../../services/sevdesk';
 
 type PositionInput = {
@@ -249,6 +250,13 @@ const createDiscountInvoicePositions = (positions: any[], discountAmount: number
 };
 
 async function syncSevDeskOrder(strapi: any, input: SevDeskSyncInput): Promise<void> {
+  if (!isSevDeskSyncEnabled()) {
+    if (strapi?.log?.debug) {
+      strapi.log.debug('SevDesk-Synchronisation deaktiviert (SEVDESK_SYNC_ENABLED=false).');
+    }
+    return;
+  }
+
   if (!process.env.SEVDESK_API_TOKEN) {
     if (strapi?.log?.debug) {
       strapi.log.debug('SevDesk-Synchronisation übersprungen: Kein API-Token konfiguriert.');

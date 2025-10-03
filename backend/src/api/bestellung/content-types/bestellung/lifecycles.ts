@@ -1,4 +1,9 @@
-import { cancelInvoice, fetchInvoiceWithDocument, extractDocumentId } from '../../../../services/sevdesk';
+import {
+  cancelInvoice,
+  fetchInvoiceWithDocument,
+  extractDocumentId,
+  isSevDeskSyncEnabled,
+} from '../../../../services/sevdesk';
 
 const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
@@ -102,6 +107,13 @@ const normalisePositionen = (data: Record<string, any>) => {
 };
 
 async function handleSevDeskStorno(bestellungId: number) {
+  if (!isSevDeskSyncEnabled()) {
+    if (strapi?.log?.debug) {
+      strapi.log.debug('SevDesk-Storno übersprungen: Sync deaktiviert.');
+    }
+    return;
+  }
+
   if (!process.env.SEVDESK_API_TOKEN) {
     return;
   }
