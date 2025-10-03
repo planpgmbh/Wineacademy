@@ -30,11 +30,11 @@ export interface BestellungPosition extends Struct.ComponentSchema {
   };
 }
 
-export interface BenachrichtigungToken extends Struct.ComponentSchema {
-  collectionName: 'components_benachrichtigung_tokens';
+export interface BenachrichtigungPlatzhalter extends Struct.ComponentSchema {
+  collectionName: 'components_benachrichtigung_platzhalter';
   info: {
-    description: 'Platzhalterbeschreibung für Benachrichtigungen';
-    displayName: 'Token';
+    description: 'Beschreibt verfügbare Platzhalter innerhalb einer Benachrichtigung';
+    displayName: 'Platzhalter';
   };
   attributes: {
     beispiel: Schema.Attribute.String;
@@ -69,7 +69,7 @@ export interface SystemBenachrichtigungsempfaenger extends Struct.ComponentSchem
   attributes: {
     aktiv: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     email: Schema.Attribute.Email & Schema.Attribute.Required;
-    label: Schema.Attribute.String & Schema.Attribute.Required;
+    bezeichnung: Schema.Attribute.String & Schema.Attribute.Required;
     typ: Schema.Attribute.Enumeration<['bestellung', 'storno', 'sonstiges']> &
       Schema.Attribute.DefaultTo<'bestellung'>;
   };
@@ -78,7 +78,7 @@ export interface SystemBenachrichtigungsempfaenger extends Struct.ComponentSchem
 declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
-      'benachrichtigung.token': BenachrichtigungToken;
+      'benachrichtigung.platzhalter': BenachrichtigungPlatzhalter;
       'bestellung.position': BestellungPosition;
       'system.benachrichtigungsempfaenger': SystemBenachrichtigungsempfaenger;
       'termin.seminartag': TerminSeminartag;

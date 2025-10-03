@@ -22,8 +22,8 @@ Strapi liefert die Inhalte (Seminare, Termine, Produkte, Gutscheine) und wickelt
 - **Buchung:** Teilnehmer eines Seminartermins; referenziert Termin & Bestellung.
 - **Gutschein:** Templates & generierte Codes inkl. Betrag/Einsatzstatus.
 - **Kategorie/Kunde:** Klassifizierung der Seminare bzw. CRM-Einträge inkl. Newsletter-Opt-in.
-- **Einstellung:** Single-Type für Kommunikations-Defaults (Absendername/-adresse, Reply-To, Benachrichtigungsempfänger) mit ENV-Fallback (`EMAIL_FROM`, `EMAIL_REPLY_TO`).
-- **Benachrichtigungstemplate:** Collection-Type für transaktionale E-Mail-Layouts inkl. Platzhalterdokumentation, Testpayload und optionaler SendGrid-Template-ID.
+- **Einstellung:** Single-Type für Kommunikations-Defaults (Absendername/-adresse, Antwort-Adresse, Benachrichtigungsempfänger) mit ENV-Fallback (`EMAIL_FROM`, `EMAIL_REPLY_TO`).
+- **Benachrichtigungen:** Collection-Type für transaktionale E-Mail-Layouts inkl. Platzhalterdokumentation, Testdaten und optionaler SendGrid-Vorlagen-ID.
 
 Namenskonvention: Für Terminstatus `planungsstatus` verwenden und Relationen laut Schema (`schema.json`) pflegen.
 
@@ -72,22 +72,23 @@ curl -s -X POST http://localhost:1337/api/public/bestellungen \
 - Service `src/services/settings.ts` liest die Einstellungen und kombiniert sie mit ENV-Fallbacks für Mail-Transport.
 - Newsletter-Opt-in wird auf Kundenebene gespeichert bzw. aktualisiert, sobald `newsletterOptIn=true` übermittelt wird.
 
-## Benachrichtigungs-Templates & Testversand
-- **Content-Type:** `Benachrichtigungstemplate` (Collection) verwaltet jede Systemmail (z. B. Bestellbestätigung, Zahlungsbestätigung, Backoffice-Info). Pflichtfelder: `name`, `templateKey`, `betreff`.
-- **Platzhalter:** Über die Component `benachrichtigung.token` können beliebig viele Tokens mit Beschreibung und Beispielwert gepflegt werden. Das Feld `testPayload` erlaubt Beispiel-Datenstrukturen für verschachtelte JSON-Werte.
-- **Layouts:** Das Feld `layout` (Default/Rechnung/Backoffice) bestimmt das HTML-Grundgerüst, `bodyHtml`/`bodyText` werden mit `{{token}}`-Platzhaltern gerendert. Optional kann eine `sendgridTemplateId` gesetzt werden, dann werden `dynamicTemplateData` an SendGrid übergeben.
-- **Admin-Testversand:** `POST /admin/benachrichtigung-templates/:id/test-send` (authentifizierte Admin-Session) löst einen Einzelversand via SendGrid aus. Payload:
+## Benachrichtigungen & Testversand
+- **Content-Type:** `Benachrichtigungen` verwaltet jede Systemmail (z. B. Bestellbestätigung, Zahlungsbestätigung, Backoffice-Info). Pflichtfelder: `Titel`, `Anwendungsfall`, `Betreff`.
+- **Platzhalter:** Über die Component `benachrichtigung.platzhalter` dokumentierst du Schlüssel, Beschreibung und Beispielwerte. `Testdaten (JSON)` ergänzt komplexe Strukturen (z. B. Arrays) und wird mit den Platzhalter-Beispielen zusammengeführt.
+- **Layouts:** Das Feld `layout` (Default/Rechnung/Backoffice) bestimmt das HTML-Grundgerüst, `bodyHtml`/`bodyText` verwenden Platzhalter wie `{{kunde.vorname}}`. Optional kann eine `sendgridVorlagenId` gesetzt werden, dann werden `dynamicTemplateData` an SendGrid übergeben.
+- **Admin-Testversand:** `POST /admin/benachrichtigungen/:id/test-send` (authentifizierte Admin-Session) löst einen Einzelversand via SendGrid aus. Payload:
   ```json
-  { "email": "ziel@example.com", "tokens": { "bestellnummer": "WA-000123" } }
+  { "email": "ziel@example.com", "platzhalter": { "bestellung.bestellnummer": "WA-000123" } }
   ```
-  Tokens aus der Request überschreiben `testPayload` und Beispielwerte. Antwort enthält `messageId` des SendGrid-Transports.
-- **Service:** Implementiert in `src/api/benachrichtigung-template/services/benachrichtigung-template.ts`, Versand via `src/services/notification-email.ts` (SendGrid API). Einstellungen/Absender stammen aus `src/services/settings.ts` + Strapi-Single-Type "Einstellungen".
+  Übergebene Platzhalter überschreiben `Testdaten (JSON)` und Beispielwerte. Antwort enthält `messageId` des SendGrid-Transports.
+- **Service:** Implementiert in `src/api/benachrichtigung/services/benachrichtigung.ts`, Versand via `src/services/notification-email.ts` (SendGrid API). Einstellungen/Absender stammen aus `src/services/settings.ts` + Strapi-Single-Type "Einstellungen".
 
 ## Entwicklung & Qualitätssicherung
 - **Tests:** E2E-Checkout über `node tests/checkout-puppeteer.js` (setzt laufenden Staging-Stack und PayPal-Sandbox-Zugangsdaten voraus).
 - **Codeänderungen:** Bei Anpassungen an Content-Types immer `schema.json` prüfen und ggf. Admin-Oberfläche testen.
 - **Middleware:** `backend/src/middlewares/force-https.ts` sorgt für korrekte HTTPS-Erkennung hinter Traefik.
 - **Troubleshooting:** Logs via `docker compose -f docker-compose-staging.yml logs -f service_wineacadamy_staging`; DB-Verbindungen mit `psql` prüfen, falls Migrationen fehlschlagen.
+- **Build & Sichtprüfung:** Nach jeder Backend-Änderung `docker compose -f docker-compose-staging.yml up -d --build --force-recreate service_wineacadamy_staging` ausführen und anschließend das Strapi-Admin unter `https://wineacademy.plan-p.de/admin` im Browser öffnen, um die Anpassungen zu kontrollieren (z. B. Content-Types, Felder, Texte).
 
 ## Weiterführende Ressourcen
 - Root-README für Gesamtüberblick & Compose-Kommandos.

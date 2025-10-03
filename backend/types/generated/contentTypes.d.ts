@@ -504,20 +504,30 @@ export interface ApiBestellungBestellung extends Struct.CollectionTypeSchema {
   };
 }
 
-export interface ApiBenachrichtigungTemplateBenachrichtigungTemplate
+export interface ApiBenachrichtigungBenachrichtigung
   extends Struct.CollectionTypeSchema {
-  collectionName: 'benachrichtigung_templates';
+  collectionName: 'benachrichtigungen';
   info: {
-    description: 'E-Mail-Layouts und Platzhalter für System- und Kundenmails';
-    displayName: 'Benachrichtigungstemplate';
-    pluralName: 'benachrichtigung-templates';
-    singularName: 'benachrichtigung-template';
+    description: 'Transaktionale E-Mails inkl. Layout, Platzhaltern und Dokumentation';
+    displayName: 'Benachrichtigungen';
+    pluralName: 'benachrichtigungen';
+    singularName: 'benachrichtigung';
   };
   options: {
     draftAndPublish: false;
   };
   attributes: {
     aktiv: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    anwendungsfall: Schema.Attribute.Enumeration<
+      [
+        'bestellbestaetigung',
+        'zahlungsbestaetigung',
+        'rechnung_gutschein',
+        'backoffice_benachrichtigung'
+      ]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
     beschreibung: Schema.Attribute.Text;
     betreff: Schema.Attribute.String & Schema.Attribute.Required;
     bodyHtml: Schema.Attribute.RichText;
@@ -530,23 +540,13 @@ export interface ApiBenachrichtigungTemplateBenachrichtigungTemplate
     > &
       Schema.Attribute.DefaultTo<'default'>;
     name: Schema.Attribute.String & Schema.Attribute.Required;
-    preheader: Schema.Attribute.String;
-    sendgridTemplateId: Schema.Attribute.String;
-    templateKey: Schema.Attribute.Enumeration<
-      [
-        'bestellbestaetigung',
-        'zahlungsbestaetigung',
-        'rechnung_gutschein',
-        'backoffice_benachrichtigung'
-      ]
-    > &
-      Schema.Attribute.Required &
-      Schema.Attribute.Unique;
+    platzhalter: Schema.Attribute.Component<'benachrichtigung.platzhalter', true>;
+    sendgridVorlagenId: Schema.Attribute.String;
     testPayload: Schema.Attribute.JSON;
-    tokens: Schema.Attribute.Component<'benachrichtigung.token', true>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    vorschauzeile: Schema.Attribute.String;
   };
 }
 
@@ -613,7 +613,7 @@ export interface ApiEinstellungEinstellung extends Struct.SingleTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    replyToEmail: Schema.Attribute.Email;
+    antwortEmail: Schema.Attribute.Email;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1416,7 +1416,7 @@ declare module '@strapi/strapi' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
       'api::bestellung.bestellung': ApiBestellungBestellung;
-      'api::benachrichtigung-template.benachrichtigung-template': ApiBenachrichtigungTemplateBenachrichtigungTemplate;
+      'api::benachrichtigung.benachrichtigung': ApiBenachrichtigungBenachrichtigung;
       'api::buchung.buchung': ApiBuchungBuchung;
       'api::einstellung.einstellung': ApiEinstellungEinstellung;
       'api::gutschein.gutschein': ApiGutscheinGutschein;

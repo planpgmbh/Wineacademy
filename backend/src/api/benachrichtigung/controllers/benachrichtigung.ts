@@ -1,15 +1,18 @@
 import { factories } from '@strapi/strapi';
+import type { UID } from '@strapi/types';
 
 interface TestSendBody {
   email?: string;
-  tokens?: Record<string, unknown>;
+  platzhalter?: Record<string, unknown>;
 }
 
-export default factories.createCoreController('api::benachrichtigung-template.benachrichtigung-template' as const, ({ strapi }) => ({
+const CONTENT_UID = 'api::benachrichtigung.benachrichtigung' as UID.ContentType;
+
+export default factories.createCoreController(CONTENT_UID, ({ strapi }) => ({
   async testSend(ctx) {
     const id = Number(ctx.params?.id);
     if (!Number.isFinite(id)) {
-      return ctx.badRequest('Ungültige Template-ID');
+      return ctx.badRequest('Ungültige Benachrichtigungs-ID');
     }
 
     const body = (ctx.request.body ?? {}) as TestSendBody;
@@ -18,19 +21,22 @@ export default factories.createCoreController('api::benachrichtigung-template.be
       return ctx.badRequest('Empfängeradresse (email) ist erforderlich');
     }
 
-    const template = await strapi.entityService.findOne('api::benachrichtigung-template.benachrichtigung-template' as any, id, {
-      populate: { tokens: true },
+    const template = await strapi.entityService.findOne(CONTENT_UID as any, id, {
+      populate: { platzhalter: true },
     });
 
     if (!template) {
-      return ctx.notFound('Template nicht gefunden');
+      return ctx.notFound('Benachrichtigung nicht gefunden');
     }
 
     try {
-      const result = await strapi.service('api::benachrichtigung-template.benachrichtigung-template').testSend({
+      const overridePlatzhalter =
+        body.platzhalter ?? (body as Record<string, unknown> & { tokens?: Record<string, unknown> }).tokens;
+
+      const result = await strapi.service(CONTENT_UID).testSend({
         template,
         recipient,
-        overrideTokens: body.tokens,
+        overridePlatzhalter,
       });
 
       ctx.body = {
@@ -40,7 +46,7 @@ export default factories.createCoreController('api::benachrichtigung-template.be
       };
       return ctx.body;
     } catch (error: any) {
-      strapi.log.error('[benachrichtigung-template.testSend] Fehler', error);
+      strapi.log.error('[benachrichtigung.testSend] Fehler', error);
       const message = error?.message || 'Testversand fehlgeschlagen';
       return ctx.badRequest(message);
     }

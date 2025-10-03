@@ -1,6 +1,7 @@
 # Projekt-Agent Regeln
 
 - **README einlesen:** Lies zu Beginn jeder Session `README.md` und berücksichtige die dortigen Informationen.
+- **Bereichsspezifische Readmes:** Bei Änderungen am Backend vor dem Plan die `backend/README.md`, bei Frontend-Arbeiten die `frontend/README.md` querlesen und relevante Hinweise einplanen.
 - **Sprache:** Antworte immer auf Deutsch.
 - **Planung vor Umsetzung:** Bevor du mit dem Programmieren oder Änderungen beginnst, schreibe einen kurzen Plan und warte auf Bestätigung, bevor du größere Änderungen durchführst.
 - **Teste:** Nachdem du programmiert hast, möchte ich dass du eigenständig durchtest ist ob die änderung oder die ergänzung funktioniert.

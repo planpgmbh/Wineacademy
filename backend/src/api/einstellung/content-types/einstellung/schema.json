@@ -19,13 +19,43 @@
     }
   },
   "attributes": {
-    "absenderName": { "type": "string" },
-    "absenderEmail": { "type": "email" },
-    "replyToEmail": { "type": "email" },
+    "absenderName": {
+      "type": "string",
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Absendername",
+          "description": "Name, der als Absender in E-Mails erscheint (Fallback, wenn kein ENV gesetzt ist)."
+        }
+      }
+    },
+    "absenderEmail": {
+      "type": "email",
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Absenderadresse",
+          "description": "E-Mail-Adresse des Absenders für Systemmails (Fallback zu `EMAIL_FROM`)."
+        }
+      }
+    },
+    "antwortEmail": {
+      "type": "email",
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Antwort-Adresse",
+          "description": "Optionale Antwort-Adresse; falls leer, wird auf die Absenderadresse zurückgegriffen."
+        }
+      }
+    },
     "benachrichtigungen": {
       "type": "component",
       "repeatable": true,
-      "component": "system.benachrichtigungsempfaenger"
+      "component": "system.benachrichtigungsempfaenger",
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Benachrichtigungsempfänger",
+          "description": "Interne Empfängerlisten für Backoffice-/Systemmeldungen (z. B. neue Bestellungen)."
+        }
+      }
     }
   }
 }

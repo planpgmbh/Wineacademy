@@ -2,8 +2,8 @@ export default {
   routes: [
     {
       method: 'POST',
-      path: '/benachrichtigung-templates/:id/test-send',
-      handler: 'benachrichtigung-template.testSend',
+      path: '/benachrichtigungen/:id/test-send',
+      handler: 'benachrichtigung.testSend',
       config: {
         policies: ['admin::isAuthenticatedAdmin'],
         middlewares: [],

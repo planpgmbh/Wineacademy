@@ -5,13 +5,46 @@
     "description": "E-Mail-Empfänger für Systembenachrichtigungen"
   },
   "attributes": {
-    "label": { "type": "string", "required": true },
-    "email": { "type": "email", "required": true },
+    "bezeichnung": {
+      "type": "string",
+      "required": true,
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Bezeichnung",
+          "description": "Interner Name, z. B. „Backoffice Team“."
+        }
+      }
+    },
+    "email": {
+      "type": "email",
+      "required": true,
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "E-Mail-Adresse",
+          "description": "Empfängeradresse für diese Benachrichtigungen."
+        }
+      }
+    },
     "typ": {
       "type": "enumeration",
       "enum": ["bestellung", "storno", "sonstiges"],
-      "default": "bestellung"
+      "default": "bestellung",
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Benachrichtigungstyp",
+          "description": "Steuert, bei welchen Ereignissen diese Adresse benachrichtigt wird."
+        }
+      }
     },
-    "aktiv": { "type": "boolean", "default": true }
+    "aktiv": {
+      "type": "boolean",
+      "default": true,
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Aktiv",
+          "description": "Nur aktive Einträge erhalten Benachrichtigungen."
+        }
+      }
+    }
   }
 }

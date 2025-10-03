@@ -41,7 +41,7 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - [x] Single-Type "Einstellungen" (Kommunikation, Benachrichtigungen) implementiert.
 - [x] Öffentliche Controller für Seminar-/Produktlisten, Seminardetail, Gutschein-Template/Pricing, Bestellungen (POST/GET) bereitgestellt.
 - [x] PayPal-Webhooks verifizieren Signatur & Betrag; Gutscheincodes werden bei Zahlung generiert.
-- [x] Benachrichtigungs-Templates (Bestellbestätigung, Zahlungsbestätigung, Rechnung/Gutschein, Backoffice) als Collection-Type mit Layout-/Token-Feldern aufgesetzt (`backend/src/api/benachrichtigung-template` + Component `benachrichtigung.token`).
+- [x] Benachrichtigungen (Bestellbestätigung, Zahlungsbestätigung, Rechnung/Gutschein, Backoffice) als Collection-Type mit Layout-/Platzhalter-Feldern aufgesetzt (`backend/src/api/benachrichtigung` + Component `benachrichtigung.platzhalter`).
 - [x] Admin-Testversand & Dokumentation der verfügbaren Platzhalter in Strapi/Admin-Handbuch hinterlegt (`/admin/…/test-send`, Anleitung `docs/admin-benachrichtigungen.md`).
 - [x] Endpoint-Dokumentation (OpenAPI/Markdown) für Partner & Frontend erweitert (`docs/api-public.md`).
 
@@ -132,3 +132,5 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - 2025-10-02 – Termin-Relation von "Ort" auf "Standort" umbenannt (Strapi-Schema, Seeds, Admin-Übersetzung, Frontend, TS-Typen); ESLint & TypeScript-Check ausgeführt. – Commit: n/a
 - 2025-10-02 – Veraltete "Ort"-Artefakte im Strapi-Build (dist) entfernt, Backend & Staging-Stack neu gebaut. – Commit: n/a
 - 2025-10-02 – Content-Type „Benachrichtigungen“ im Strapi-Admin umbenannt, Feld-Beschriftungen & Hilfetexte in Deutsch ergänzt; Doku aktualisiert. – Commit: 1b5d199
+- 2025-10-03 – Content-Type „Benachrichtigungen“ (UID, Felder, Platzhalter, SendGrid) und Einstellungen vollständig eingedeutscht; Admin-Endpunkt, Component & Typdefinitionen angepasst. – Commit: 685d00f
+- 2025-10-03 – Warenkorb-Slideout im Frontend entschlackt (Seminar-Termine mit Uhrzeiten, vereinheitlichte Karten für Produkte/Gutscheine) und Safe-Area-Padding für den Kassen-Button ergänzt; ESLint mangels Projektkonfiguration nicht lauffähig. – Commit: n/a

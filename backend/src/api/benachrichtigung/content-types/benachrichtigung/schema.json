@@ -1,8 +1,8 @@
 {
-  "collectionName": "benachrichtigung_templates",
+  "collectionName": "benachrichtigungen",
   "info": {
-    "singularName": "benachrichtigung-template",
-    "pluralName": "benachrichtigung-templates",
+    "singularName": "benachrichtigung",
+    "pluralName": "benachrichtigungen",
     "displayName": "Benachrichtigungen",
     "description": "Transaktionale E-Mails inkl. Layout, Platzhaltern und Dokumentation"
   },
@@ -16,11 +16,11 @@
       "pluginOptions": {
         "content-manager": {
           "displayName": "Titel",
-          "description": "Interner Name des Templates; hilft bei der Auswahl im Admin, wird nicht mitversendet."
+          "description": "Interner Name der Benachrichtigung; hilft bei der Auswahl im Admin, wird nicht mitversendet."
         }
       }
     },
-    "templateKey": {
+    "anwendungsfall": {
       "type": "enumeration",
       "enum": [
         "bestellbestaetigung",
@@ -32,8 +32,8 @@
       "unique": true,
       "pluginOptions": {
         "content-manager": {
-          "displayName": "Systemschlüssel",
-          "description": "Eindeutiger Schlüssel, über den das System das Template findet (z. B. `bestellbestaetigung`)."
+          "displayName": "Anwendungsfall",
+          "description": "Welche Benachrichtigung hier gepflegt wird (z. B. Bestellbestätigung)."
         }
       }
     },
@@ -63,16 +63,16 @@
       "pluginOptions": {
         "content-manager": {
           "displayName": "Betreff",
-          "description": "Betreffzeile der E-Mail; Platzhalter `{{token}}` sind erlaubt."
+          "description": "Betreffzeile der E-Mail; Platzhalter wie `{{kunde.vorname}}` sind erlaubt."
         }
       }
     },
-    "preheader": {
+    "vorschauzeile": {
       "type": "string",
       "pluginOptions": {
         "content-manager": {
-          "displayName": "Preheader (Vorschauzeile)",
-          "description": "Kurzer Vorschautext, der in vielen Postfächern direkt hinter dem Betreff erscheint."
+          "displayName": "Vorschauzeile",
+          "description": "Kurzer Text hinter dem Betreff, der im Posteingang als Vorschau erscheint."
         }
       }
     },
@@ -81,7 +81,7 @@
       "pluginOptions": {
         "content-manager": {
           "displayName": "HTML-Inhalt",
-          "description": "Gestalteter E-Mail-Inhalt mit Überschriften, Buttons usw.; Platzhalter `{{token}}` werden beim Versand ersetzt."
+          "description": "Gestalteter E-Mail-Inhalt mit Überschriften, Buttons usw.; Platzhalter wie `{{kunde.vorname}}` werden beim Versand ersetzt."
         }
       }
     },
@@ -94,14 +94,14 @@
         }
       }
     },
-    "tokens": {
+    "platzhalter": {
       "type": "component",
       "repeatable": true,
-      "component": "benachrichtigung.token",
+      "component": "benachrichtigung.platzhalter",
       "pluginOptions": {
         "content-manager": {
-          "displayName": "Token (Platzhalter)",
-          "description": "Liste der verfügbaren Platzhalter inklusive Beschreibung und Beispielwert."
+          "displayName": "Platzhalter",
+          "description": "Dokumentation der verfügbaren Platzhalter inkl. Beschreibung und Beispielwert."
         }
       }
     },
@@ -110,16 +110,16 @@
       "pluginOptions": {
         "content-manager": {
           "displayName": "Testdaten (JSON)",
-          "description": "Zusätzliche JSON-Daten für den Testversand, z. B. verschachtelte Objekte oder Arrays."
+          "description": "Zusätzliche JSON-Daten für den Testversand, z. B. verschachtelte Objekte oder Arrays (werden mit den Platzhalter-Beispielen kombiniert)."
         }
       }
     },
-    "sendgridTemplateId": {
+    "sendgridVorlagenId": {
       "type": "string",
       "pluginOptions": {
         "content-manager": {
-          "displayName": "SendGrid Template-ID",
-          "description": "Optional: nutzt eine dynamische SendGrid-Vorlage; HTML/Text in Strapi dienen dann nur zur Dokumentation."
+          "displayName": "SendGrid-Vorlagen-ID",
+          "description": "Optional: ID der dynamischen SendGrid-Vorlage; HTML/Text in Strapi dienen dann nur zur Dokumentation."
         }
       }
     },

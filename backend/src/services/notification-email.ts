@@ -41,8 +41,8 @@ function buildBaseMessage(settings: SystemSettings, options: SendEmailOptions): 
     },
   } as MailDataRequired;
 
-  if (settings.replyToEmail) {
-    base.replyTo = settings.replyToEmail;
+  if (settings.antwortEmail) {
+    base.replyTo = settings.antwortEmail;
   }
 
   if (options.headers) {

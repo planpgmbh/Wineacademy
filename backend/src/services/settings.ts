@@ -1,7 +1,7 @@
 export type NotificationType = "bestellung" | "storno" | "sonstiges";
 
 export interface NotificationRecipient {
-  label: string;
+  bezeichnung: string;
   email: string;
   typ: NotificationType;
 }
@@ -9,7 +9,7 @@ export interface NotificationRecipient {
 export interface SystemSettings {
   fromEmail: string;
   fromName?: string;
-  replyToEmail?: string;
+  antwortEmail?: string;
   formattedFrom: string;
   recipients: NotificationRecipient[];
 }
@@ -41,7 +41,7 @@ export async function getSystemSettings(strapi: any): Promise<SystemSettings> {
 
   const fromEmail = (settingsRecord?.absenderEmail as string | undefined)?.trim() || envFrom.email || "";
   const fromName = (settingsRecord?.absenderName as string | undefined)?.trim() || envFrom.name;
-  const replyToEmail = (settingsRecord?.replyToEmail as string | undefined)?.trim() || envReplyTo.email || fromEmail;
+  const antwortEmail = (settingsRecord?.antwortEmail as string | undefined)?.trim() || envReplyTo.email || fromEmail;
 
   const rawRecipients = Array.isArray(settingsRecord?.benachrichtigungen)
     ? (settingsRecord.benachrichtigungen as Array<Record<string, unknown>>)
@@ -51,7 +51,7 @@ export async function getSystemSettings(strapi: any): Promise<SystemSettings> {
     .map((item) => {
       const candidate = item as {
         email?: string;
-        label?: string;
+        bezeichnung?: string;
         typ?: NotificationType;
         aktiv?: boolean;
       } | undefined;
@@ -63,16 +63,16 @@ export async function getSystemSettings(strapi: any): Promise<SystemSettings> {
       if (candidate?.aktiv === false) {
         return null;
       }
-      const label = candidate?.label?.trim() || email;
+      const bezeichnung = candidate?.bezeichnung?.trim() || email;
       const typ = candidate?.typ || "sonstiges";
-      return { label, email, typ } as NotificationRecipient;
+      return { bezeichnung, email, typ } as NotificationRecipient;
     })
     .filter((value): value is NotificationRecipient => value !== null);
 
   return {
     fromEmail,
     fromName,
-    replyToEmail,
+    antwortEmail,
     formattedFrom: formatAddress(fromEmail, fromName),
     recipients,
   };

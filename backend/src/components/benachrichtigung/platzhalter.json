@@ -1,8 +1,8 @@
 {
-  "collectionName": "components_benachrichtigung_tokens",
+  "collectionName": "components_benachrichtigung_platzhalter",
   "info": {
-    "displayName": "Token",
-    "description": "Platzhalterbeschreibung für Benachrichtigungen"
+    "displayName": "Platzhalter",
+    "description": "Beschreibt verfügbare Platzhalter innerhalb einer Benachrichtigung"
   },
   "options": {},
   "attributes": {
