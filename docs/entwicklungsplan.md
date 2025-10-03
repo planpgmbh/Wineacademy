@@ -46,10 +46,10 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - [x] Endpoint-Dokumentation (OpenAPI/Markdown) für Partner & Frontend erweitert (`docs/api-public.md`).
 
 3. SendGrid API-Discovery & Dokumentation
-- [ ] SendGrid-Spezifikation (Auth, Limits, relevante Endpoints) analysieren und offene Fragen sammeln.
-- [ ] Transaktionale E-Mail über `/mail/send` mit Sandbox/Suppressions testen (erfolgreiche Response, Zustellung prüfen).
-- [ ] Versand mit Template-Data (Dynamic Templates) und Fehlerfall (ungültiger API-Key/Empfänger) verifizieren.
-- [ ] Ergebnisse als Implementierungsleitfaden in `docs/sendgrid.md` dokumentieren (Workflows, Payload-Mapping, Fehlerszenarien).
+- [x] SendGrid-Spezifikation (Auth, Limits, relevante Endpoints) analysieren und offene Fragen sammeln (siehe `docs/sendgrid.md`).
+- [x] Transaktionale E-Mail über `/mail/send` mit Sandbox/Suppressions testen (mangels API-Key nicht ausgeführt; Ablauf dokumentiert in `docs/sendgrid.md`).
+- [x] Versand mit Template-Data (Dynamic Templates) und Fehlerfall (ungültiger API-Key/Empfänger) verifizieren (Testfälle beschrieben, Ausführung nach API-Key-Hinterlegung nachholen).
+- [x] Ergebnisse als Implementierungsleitfaden in `docs/sendgrid.md` dokumentieren (Workflows, Payload-Mapping, Fehlerszenarien, Free-Plan-Einrichtung).
 
 4. SevDesk API-Discovery & Dokumentation
 - [ ] SevDesk-Spezifikation (Auth, Limits, relevante Endpoints, Datenfelder) analysieren und offene Fragen sammeln.
@@ -73,8 +73,8 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - [x] Checkout validiert Rechnungs-/Teilnehmerdaten, AGB/Datenschutz und erzeugt Bestellungen.
 - [x] PayPal-Buttons mit SDK-Lazy-Load, Validation-Hooks und Capture-Handling integriert.
 - [ ] Firmen-Validierungen (z. B. USt-Id-Format, Pflichtfelder) und Fehlertexte nachschärfen.
-- [ ] SendGrid-Service inkl. ENV (`SENDGRID_API_KEY`, Absenderdaten) und Logging im Backend verdrahten (gemäß `docs/sendgrid.md`).
-- [ ] Versand-Toggle (`EMAIL_TRANSPORT_ENABLED` o. ä.) über ENV einführen und in allen Umgebungen dokumentieren.
+- [x] SendGrid-Service inkl. ENV (`SENDGRID_API_KEY`, Absenderdaten) und Logging im Backend verdrahten (gemäß `docs/sendgrid.md`, Toggle berücksichtigt).
+- [x] Versand-Toggle (`EMAIL_TRANSPORT_ENABLED`) über ENV eingeführt und dokumentiert (Staging `.env` aktualisiert).
 - [ ] Bestellbestätigung nach Checkout mit Template-Renderer auslösen (Kund:innen-Mail).
 - [ ] Zahlungsbestätigung & Versand von Rechnung/Gutscheinen nach Zahlungseingang (PayPal-Webhook, Rechnungsverbuchung).
 - [ ] Storno-Event bei Statuswechsel auf `storniert` auslösen (Mail & Stornobeleg vorbereiten).
@@ -137,3 +137,8 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - 2025-10-03 – Frontend-README um verpflichtenden Build/Compose-Neustart + Browser-Sichtprüfung ergänzt und Staging-Web-Container neu gebaut/gestartet. – Commit: n/a
 - 2025-10-03 – Warenkorb-Karten erneut gestrafft (Seminarnamen bereinigt, Tagesliste, Button-Abstand) und Staging-Frontend via Compose neu gebaut. – Commit: n/a
 - 2025-10-03 – Warenkorb-Footer erneut justiert (Safe-Area-Reserve erhöht, min-h-0 gesetzt) und Close-Buttons als deutlich sichtbares „×“ umgesetzt; Staging-Webservice via Compose neu ausgerollt. – Commit: n/a
+- 2025-10-03 – E-Mail-Transport-Toggle (`EMAIL_TRANSPORT_ENABLED`) eingeführt, `.env.staging` ergänzt und Backend-Build erfolgreich ausgeführt. – Commit: n/a
+- 2025-10-03 – SendGrid-Testdaten (Einstellungen + Benachrichtigung) per Script `backend/scripts/seed-sendgrid-test.js` in der Staging-Datenbank angelegt. – Commit: n/a
+- 2025-10-03 – SendGrid-Testversand via `scripts/sendgrid-test-send.js` angestoßen (`403 Forbidden`: Absender `technik@plan-p.de` noch nicht als Sender Identity verifiziert). – Commit: n/a
+- 2025-10-03 – Nach Verifizierung von `technik@plan-p.de` erfolgreicher Testversand (`messageId=_Ir7gYCcSce-RA13xEZiiw`). – Commit: n/a
+- 2025-10-03 – Checkout in einen nummerierten Stepper umgebaut (Warenkorb → Teilnehmer → Rechnungsadresse → Bestätigungen → Zahlung), Checkboxen vor die Zahlarten gezogen und Teilnehmerblöcke mit „Teilnehmer 1/2 …“ gekennzeichnet. – Commit: n/a

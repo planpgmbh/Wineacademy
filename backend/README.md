@@ -8,7 +8,7 @@ Strapi liefert die Inhalte (Seminare, Termine, Produkte, Gutscheine) und wickelt
   - Strapi-Secrets: `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `ENCRYPTION_KEY`.
   - Datenbank: `DATABASE_*`, `POSTGRES_*` (Host `db_wineacadamy` bzw. `db_wineacadamy_staging`).
   - Public URLs: `PUBLIC_URL`, `API_INTERNAL_URL`, optional `ASSETS_INTERNAL_URL`.
-  - Zahlungen & Kommunikation: `PAYPAL_*`, `SENDGRID_API_KEY`, `EMAIL_FROM`, optional `EMAIL_REPLY_TO`, `SEVDESK_API_TOKEN`.
+  - Zahlungen & Kommunikation: `PAYPAL_*`, `SENDGRID_API_KEY`, `EMAIL_FROM`, optional `EMAIL_REPLY_TO`, `EMAIL_TRANSPORT_ENABLED` (Standard `true`), `SEVDESK_API_TOKEN`.
   - Sonstiges: `VAT_RATE`, `ORDER_NUMBER_PREFIX`, `SEED_ON_BOOT`.
 - **Container neu starten:** Bei Schema- oder Plugin-Änderungen Strapi mit `docker compose -f docker-compose-staging.yml up -d --force-recreate service_wineacadamy_staging` neu aufsetzen.
 - **Seeds:** `backend/src/index.ts` erzeugt Demo-Daten, wenn `SEED_ON_BOOT=true` gesetzt ist (nicht in Produktion aktivieren).
@@ -82,6 +82,9 @@ curl -s -X POST http://localhost:1337/api/public/bestellungen \
   ```
   Übergebene Platzhalter überschreiben `Testdaten (JSON)` und Beispielwerte. Antwort enthält `messageId` des SendGrid-Transports.
 - **Service:** Implementiert in `src/api/benachrichtigung/services/benachrichtigung.ts`, Versand via `src/services/notification-email.ts` (SendGrid API). Einstellungen/Absender stammen aus `src/services/settings.ts` + Strapi-Single-Type "Einstellungen".
+- **Transport-Toggle:** `EMAIL_TRANSPORT_ENABLED=false` deaktiviert den Versand (Strapi loggt die unterdrückte Mail und liefert `202` zurück); ideal für lokale/Preview-Umgebungen.
+- **Seed-Script:** `node scripts/seed-sendgrid-test.js` (innerhalb des Containers) hinterlegt Absenderdaten & eine Testbenachrichtigung für den SendGrid-Testversand.
+- **Testversand-Skript:** `node scripts/sendgrid-test-send.js` löst den internen `testSend`-Service aus (`SENDGRID_TEST_RECIPIENT` oder Default `philipp@plan-p.de`).
 
 ## Entwicklung & Qualitätssicherung
 - **Tests:** E2E-Checkout über `node tests/checkout-puppeteer.js` (setzt laufenden Staging-Stack und PayPal-Sandbox-Zugangsdaten voraus).

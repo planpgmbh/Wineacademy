@@ -16,6 +16,15 @@ function ensureClient() {
   initialised = true;
 }
 
+function isTransportEnabled(): boolean {
+  const flag = process.env.EMAIL_TRANSPORT_ENABLED;
+  if (!flag) {
+    return true;
+  }
+  const normalised = flag.trim().toLowerCase();
+  return !['0', 'false', 'no', 'off', 'disabled'].includes(normalised);
+}
+
 export interface SendEmailOptions {
   to: string;
   subject?: string;
@@ -72,6 +81,27 @@ function buildBaseMessage(settings: SystemSettings, options: SendEmailOptions): 
 }
 
 export async function sendEmail(strapi: any, options: SendEmailOptions): Promise<SendEmailResult> {
+  if (!isTransportEnabled()) {
+    if (strapi?.log?.info) {
+      strapi.log.info('E-Mail-Versand deaktiviert, Nachricht wird nicht gesendet.', {
+        to: options.to,
+        subject: options.subject,
+        templateId: options.templateId,
+      });
+    }
+
+    const simulatedResponse = {
+      statusCode: 202,
+      body: { message: 'EMAIL_TRANSPORT_ENABLED=false' },
+      headers: {},
+    } as ClientResponse;
+
+    return {
+      messageId: null,
+      response: simulatedResponse,
+    };
+  }
+
   ensureClient();
   const settings = await getSystemSettings(strapi);
   if (!settings.fromEmail) {
