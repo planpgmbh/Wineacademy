@@ -147,6 +147,18 @@
       "relation": "manyToOne",
       "target": "api::kunde.kunde",
       "inversedBy": "bestellungen"
+    },
+    "sevdeskContactId": {
+      "type": "string"
+    },
+    "sevdeskInvoiceId": {
+      "type": "string"
+    },
+    "sevdeskDocumentId": {
+      "type": "string"
+    },
+    "sevdeskStornoDocumentId": {
+      "type": "string"
     }
   }
 }

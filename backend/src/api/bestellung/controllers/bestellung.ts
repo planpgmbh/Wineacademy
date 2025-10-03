@@ -1,4 +1,15 @@
 import { factories } from '@strapi/strapi';
+import {
+  saveContact,
+  createCommunicationWay,
+  createInvoiceDraft,
+  createInvoicePosition,
+  updateInvoiceStatus,
+  markInvoicePaid,
+  fetchInvoiceWithDocument,
+  extractDocumentId,
+  SevDeskError,
+} from '../../../services/sevdesk';
 
 type PositionInput = {
   typ?: 'seminar' | 'produkt' | 'gutschein';
@@ -88,6 +99,322 @@ const formatOrderNumber = (id: unknown) => {
   const suffix = Number.isFinite(numeric) ? String(numeric).padStart(6, '0') : String(id ?? '').padStart(6, '0');
   return `${prefix}-${suffix}`;
 };
+
+const parseSevDeskId = (payload: any): string | null => {
+  if (!payload) return null;
+  if (payload.id != null) return String(payload.id);
+  if (payload.object?.id != null) return String(payload.object.id);
+  if (payload.objects?.id != null) return String(payload.objects.id);
+  if (payload.data?.id != null) return String(payload.data.id);
+  if (Array.isArray(payload.objects)) {
+    for (const entry of payload.objects) {
+      if (entry?.id != null) return String(entry.id);
+    }
+  }
+  if (Array.isArray(payload.data)) {
+    for (const entry of payload.data) {
+      if (entry?.id != null) return String(entry.id);
+    }
+  }
+  return null;
+};
+
+const resolveSevDeskCategoryId = (rechnungstyp: string | undefined): number => {
+  const envValue =
+    rechnungstyp === 'firma' ? process.env.SEVDESK_CATEGORY_COMPANY_ID : process.env.SEVDESK_CATEGORY_PRIVATE_ID;
+  const fallback = rechnungstyp === 'firma' ? 4 : 3;
+  if (!envValue) {
+    return fallback;
+  }
+  const parsed = Number(envValue);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const resolveSevDeskTimeToPay = (): number | undefined => {
+  const raw = process.env.SEVDESK_DEFAULT_TIME_TO_PAY_DAYS;
+  if (!raw) return undefined;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+const toISODate = (input?: string | Date): string => {
+  if (!input) {
+    return new Date().toISOString().slice(0, 10);
+  }
+  const date = input instanceof Date ? input : new Date(input);
+  if (Number.isNaN(date.getTime())) {
+    return new Date().toISOString().slice(0, 10);
+  }
+  return date.toISOString().slice(0, 10);
+};
+
+const ensureSevDeskCommunicationWay = async (strapi: any, contactId: string, email: string) => {
+  try {
+    await createCommunicationWay(strapi, {
+      contactId,
+      type: 'EMAIL',
+      value: email,
+      main: true,
+    });
+  } catch (error: any) {
+    if (error instanceof SevDeskError && (error.status === 409 || error.status === 422)) {
+      if (strapi?.log?.debug) {
+        strapi.log.debug('SevDesk: Kommunikationseintrag bereits vorhanden oder abgelehnt.', {
+          contactId,
+          email,
+          status: error.status,
+        });
+      }
+      return;
+    }
+    throw error;
+  }
+};
+
+interface SevDeskSyncInput {
+  bestellungId: number;
+  bestellung: any;
+  kundeId?: string | number;
+  kunde?: any;
+  positions: any[];
+  dueTotals: { brutto: number; netto: number; steuer: number };
+  gutscheinBetrag: number;
+}
+
+const createDiscountInvoicePositions = (positions: any[], discountAmount: number) => {
+  const totalBrutto = positions.reduce((acc, pos) => acc + Number(pos?.summeBrutto ?? 0), 0);
+  const effectiveDiscount = Number.isFinite(Number(discountAmount))
+    ? Math.min(Math.max(Number(discountAmount), 0), totalBrutto)
+    : 0;
+  if (totalBrutto <= 0 || effectiveDiscount <= 0) {
+    return [] as Array<{ quantity: number; price: number; taxRate: number; name: string; text?: string }>;
+  }
+
+  const sumsByTax = new Map<number, number>();
+  const taxOrder: number[] = [];
+  for (const pos of positions) {
+    const taxRateRaw = pos?.steuerSatz;
+    const taxRate = Number.isFinite(Number(taxRateRaw)) ? Number(taxRateRaw) : 0;
+    const sumBrutto = Number(pos?.summeBrutto ?? 0);
+    if (sumBrutto <= 0) continue;
+    if (!sumsByTax.has(taxRate)) {
+      taxOrder.push(taxRate);
+      sumsByTax.set(taxRate, sumBrutto);
+    } else {
+      sumsByTax.set(taxRate, (sumsByTax.get(taxRate) ?? 0) + sumBrutto);
+    }
+  }
+
+  const discountPositions: Array<{ quantity: number; price: number; taxRate: number; name: string; text?: string }> = [];
+  let remaining = round2(effectiveDiscount);
+
+  taxOrder.forEach((taxRate, index) => {
+    const sumForRate = sumsByTax.get(taxRate) ?? 0;
+    if (sumForRate <= 0 || remaining <= 0) {
+      return;
+    }
+    let share = (sumForRate / totalBrutto) * effectiveDiscount;
+    if (index === taxOrder.length - 1) {
+      share = remaining;
+    } else {
+      share = round2(Math.min(remaining, share));
+    }
+
+    if (share <= 0) {
+      return;
+    }
+
+    remaining = round2(remaining - share);
+    const label = taxRate > 0 ? `Gutscheinrabatt (${taxRate}% MwSt)` : 'Gutscheinrabatt';
+
+    discountPositions.push({
+      quantity: 1,
+      price: -round2(share),
+      taxRate,
+      name: label,
+      text: 'Automatischer Gutscheinabzug',
+    });
+  });
+
+  if (remaining > 0.01 && discountPositions.length > 0) {
+    const last = discountPositions[discountPositions.length - 1];
+    discountPositions[discountPositions.length - 1] = {
+      ...last,
+      price: round2(last.price - remaining),
+    };
+    remaining = 0;
+  }
+
+  return discountPositions;
+};
+
+async function syncSevDeskOrder(strapi: any, input: SevDeskSyncInput): Promise<void> {
+  if (!process.env.SEVDESK_API_TOKEN) {
+    if (strapi?.log?.debug) {
+      strapi.log.debug('SevDesk-Synchronisation übersprungen: Kein API-Token konfiguriert.');
+    }
+    return;
+  }
+
+  const bestellung = input.bestellung ?? {};
+  const kunde = input.kunde ?? null;
+
+  const existingContactId = bestellung.sevdeskContactId || kunde?.sevdeskContactId;
+  const rechnungstyp = bestellung.rechnungstyp === 'firma' ? 'firma' : 'privat';
+  const companyName = rechnungstyp === 'firma' ? String(bestellung.firmenname || '').trim() : undefined;
+  const fallbackName = `${bestellung.vorname || ''} ${bestellung.nachname || ''}`.trim() || companyName || 'Kontakt';
+
+  const contactPayload: Record<string, unknown> = {
+    categoryId: resolveSevDeskCategoryId(rechnungstyp),
+    name: companyName || fallbackName,
+    status: 100,
+  };
+
+  if (existingContactId) {
+    contactPayload.id = existingContactId;
+  }
+
+  if (bestellung.bestellnummer) {
+    contactPayload.customerNumber = bestellung.bestellnummer;
+    contactPayload.description = `Bestellung ${bestellung.bestellnummer}`;
+  } else {
+    contactPayload.description = `Bestellung #${input.bestellungId}`;
+  }
+
+  if (rechnungstyp === 'firma') {
+    const name2 = `${bestellung.vorname || ''} ${bestellung.nachname || ''}`.trim();
+    if (name2) {
+      contactPayload.name2 = name2;
+    }
+    if (bestellung.ustId) {
+      contactPayload.vatNumber = String(bestellung.ustId).trim();
+    }
+  } else {
+    if (bestellung.vorname) contactPayload.surename = bestellung.vorname;
+    if (bestellung.nachname) contactPayload.familyname = bestellung.nachname;
+  }
+
+  const address: Record<string, unknown> = {};
+  if (bestellung.strasse) address.street = bestellung.strasse;
+  if (bestellung.plz) address.zip = bestellung.plz;
+  if (bestellung.stadt) address.city = bestellung.stadt;
+  const rawCountry = process.env.SEVDESK_DEFAULT_COUNTRY_ID;
+  if (rawCountry) {
+    const countryId = Number(rawCountry);
+    if (Number.isFinite(countryId)) {
+      address.countryId = countryId;
+    }
+  }
+  if (Object.keys(address).length > 0) {
+    contactPayload.address = address;
+  }
+
+  const contactResponse = await saveContact(strapi, contactPayload as any);
+  const contactId = parseSevDeskId(contactResponse) ?? (existingContactId ? String(existingContactId) : null);
+  if (!contactId) {
+    throw new Error('SevDesk: Kontakt-ID konnte nicht ermittelt werden.');
+  }
+
+  await strapi.entityService.update('api::bestellung.bestellung', input.bestellungId, {
+    data: { sevdeskContactId: contactId },
+  });
+
+  if (input.kundeId && (!kunde?.sevdeskContactId || String(kunde.sevdeskContactId) !== contactId)) {
+    await strapi.entityService.update('api::kunde.kunde', input.kundeId, {
+      data: { sevdeskContactId: contactId },
+    });
+  }
+
+  const primaryEmail =
+    rechnungstyp === 'firma'
+      ? bestellung.rechnungsEmail || bestellung.email
+      : bestellung.email;
+  if (primaryEmail) {
+    await ensureSevDeskCommunicationWay(strapi, contactId, primaryEmail);
+  }
+
+  if (!input.positions || input.positions.length === 0) {
+    strapi.log.warn('SevDesk-Sync übersprungen: Keine Positionen vorhanden, Rechnung nicht erzeugt.', {
+      bestellungId: input.bestellungId,
+    });
+    return;
+  }
+
+  const timeToPay = resolveSevDeskTimeToPay();
+  const invoicePayload: Record<string, unknown> = {
+    contactId,
+    invoiceDate: toISODate(bestellung.createdAt),
+    currency: bestellung.waehrung || 'EUR',
+    invoiceType: 'RE',
+    status: 100,
+  };
+  if (timeToPay !== undefined) {
+    invoicePayload.timeToPay = timeToPay;
+  }
+  if (bestellung.bestellnummer) {
+    invoicePayload.customerInternalNote = `Bestellung ${bestellung.bestellnummer}`;
+  }
+
+  const invoiceResponse = await createInvoiceDraft(strapi, invoicePayload as any);
+  const invoiceId = parseSevDeskId(invoiceResponse);
+  if (!invoiceId) {
+    throw new Error('SevDesk: Rechnungs-ID konnte nicht ermittelt werden.');
+  }
+
+  const invoicePositions: Array<{ quantity: number; price: number; taxRate: number; name: string; text?: string }> = [];
+
+  for (const rawPos of input.positions) {
+    const quantityRaw = Number(rawPos?.menge ?? 1);
+    const quantity = Number.isFinite(quantityRaw) && quantityRaw > 0 ? quantityRaw : 1;
+    const priceRaw = Number(rawPos?.einzelpreisBrutto ?? rawPos?.summeBrutto ?? 0);
+    const price = Number.isFinite(priceRaw) ? priceRaw : 0;
+    const taxRateRaw = Number(rawPos?.steuerSatz ?? 0);
+    const taxRate = Number.isFinite(taxRateRaw) ? taxRateRaw : 0;
+
+    invoicePositions.push({
+      quantity,
+      price,
+      taxRate,
+      name: rawPos?.titel || 'Position',
+      text: rawPos?.beschreibung,
+    });
+  }
+
+  const discountPositions = createDiscountInvoicePositions(input.positions, input.gutscheinBetrag);
+  if (discountPositions.length > 0) {
+    invoicePositions.push(...discountPositions);
+  }
+
+  for (const position of invoicePositions) {
+    await createInvoicePosition(strapi, {
+      invoiceId,
+      quantity: position.quantity,
+      price: position.price,
+      taxRate: position.taxRate,
+      name: position.name,
+      text: position.text,
+      unityId: 1,
+    });
+  }
+
+  await updateInvoiceStatus(strapi, invoiceId, 200);
+
+  if (bestellung.bestellstatus === 'bezahlt') {
+    await markInvoicePaid(strapi, invoiceId, toISODate(new Date()), Number(input.dueTotals?.brutto ?? 0));
+  }
+
+  const invoiceWithDocument = await fetchInvoiceWithDocument(strapi, invoiceId);
+  const documentRef = extractDocumentId(invoiceWithDocument);
+
+  const updateData: Record<string, unknown> = {
+    sevdeskContactId: contactId,
+    sevdeskInvoiceId: invoiceId,
+  };
+  if (documentRef?.id) {
+    updateData.sevdeskDocumentId = String(documentRef.id);
+  }
+  await strapi.entityService.update('api::bestellung.bestellung', input.bestellungId, { data: updateData });
+}
 
 export default factories.createCoreController('api::bestellung.bestellung', ({ strapi }) => ({
   async publicGet(ctx) {
@@ -478,6 +805,8 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         }
       }
 
+      let kundeId: string | number | undefined;
+
       try {
         const email: string | undefined = rechnungstyp === 'firma' ? (bestellungData.rechnungsEmail || bestellungData.email) : bestellungData.email;
         if (email) {
@@ -485,7 +814,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
             where: { email },
             select: ['id', 'newsletterOptIn', 'newsletterOptInAt'],
           });
-          let kundeId = existingCustomer?.id;
+          kundeId = existingCustomer?.id;
           if (!kundeId) {
             const createdCustomer = await strapi.entityService.create('api::kunde.kunde', {
               data: {
@@ -566,6 +895,35 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
       });
 
       const fullAny = full as any;
+
+      let kundeEntity: any = null;
+      if (kundeId) {
+        try {
+          kundeEntity = await strapi.entityService.findOne('api::kunde.kunde', kundeId);
+        } catch (kundeLoadErr) {
+          strapi.log.warn(
+            `[publicCreate Bestellung] Kunde für SevDesk konnte nicht geladen werden: ${(kundeLoadErr as any)?.message || kundeLoadErr}`
+          );
+        }
+      }
+
+      try {
+        await syncSevDeskOrder(strapi, {
+          bestellungId,
+          bestellung: fullAny,
+          kundeId,
+          kunde: kundeEntity,
+          positions: normalisedPositions,
+          dueTotals: { brutto: dueBrutto, netto: dueNetto, steuer: dueSteuer },
+          gutscheinBetrag: summeGutschein,
+        });
+      } catch (sevdeskErr) {
+        strapi.log.error('[publicCreate Bestellung] SevDesk-Synchronisation fehlgeschlagen', {
+          bestellungId,
+          error: sevdeskErr instanceof Error ? sevdeskErr.message : sevdeskErr,
+        });
+      }
+
       const gutscheine = Array.isArray(fullAny?.gutscheine) ? fullAny.gutscheine : [];
       ctx.body = {
         id: fullAny.id,

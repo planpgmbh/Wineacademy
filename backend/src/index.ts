@@ -701,42 +701,58 @@ const seminarSeeds: SeminarSeed[] = [
   },
 ];
 
-const ensureTermine = async (seminarId: number, termine: typeof seminarSeeds[number]['termine']) => {
-  await strapi.db.query('api::termin.termin').deleteMany({ where: { seminar: seminarId } });
-  for (const termin of termine) {
-    const baseDate = new Date();
-    baseDate.setHours(12, 0, 0, 0);
-    baseDate.setDate(baseDate.getDate() + termin.tageVersatz);
-
-    const defaultStart = termin.startzeit ?? '10:00:00';
-    const defaultEnd = termin.endzeit ?? '17:00:00';
-    const tageSeeds = Array.isArray(termin.tage) && termin.tage.length > 0
-      ? termin.tage
-      : [{ offset: 0, startzeit: defaultStart, endzeit: defaultEnd }];
-
-    const tageMitUhrzeit = tageSeeds.map((tag) => {
-      const dayDate = new Date(baseDate);
-      dayDate.setDate(baseDate.getDate() + Number(tag.offset ?? 0));
-      return {
-        datum: dayDate.toISOString().slice(0, 10),
-        startzeit: tag.startzeit ?? defaultStart,
-        endzeit: tag.endzeit ?? defaultEnd,
-      };
+  const ensureTermine = async (seminarId: number, termine: typeof seminarSeeds[number]['termine']) => {
+    const existingTermine = await strapi.documents('api::termin.termin').findMany({
+      filters: { seminar: seminarId },
+      pageSize: 200,
     });
 
-    await strapi.entityService.create('api::termin.termin', {
-      data: {
-        planungsstatus: termin.planungsstatus,
-        kapazitaet: termin.kapazitaet,
-        starttag: tageMitUhrzeit[0]?.datum ?? baseDate.toISOString().slice(0, 10),
-        tageMitUhrzeit,
-        seminar: seminarId,
-        standort: standortIdByName[termin.standort],
-        publishedAt: nowIso(),
-      },
-    });
-  }
-};
+    if (Array.isArray(existingTermine) && existingTermine.length > 0) {
+      for (const existing of existingTermine) {
+        if (existing?.documentId) {
+          await strapi.documents('api::termin.termin').delete({ documentId: existing.documentId });
+        }
+      }
+    }
+
+    for (const termin of termine) {
+      const baseDate = new Date();
+      baseDate.setHours(12, 0, 0, 0);
+      baseDate.setDate(baseDate.getDate() + termin.tageVersatz);
+
+      const defaultStart = termin.startzeit ?? '10:00:00';
+      const defaultEnd = termin.endzeit ?? '17:00:00';
+      const tageSeeds = Array.isArray(termin.tage) && termin.tage.length > 0
+        ? termin.tage
+        : [{ offset: 0, startzeit: defaultStart, endzeit: defaultEnd }];
+
+      const tageMitUhrzeit = tageSeeds.map((tag) => {
+        const dayDate = new Date(baseDate);
+        dayDate.setDate(baseDate.getDate() + Number(tag.offset ?? 0));
+        return {
+          datum: dayDate.toISOString().slice(0, 10),
+          startzeit: tag.startzeit ?? defaultStart,
+          endzeit: tag.endzeit ?? defaultEnd,
+        };
+      });
+
+      const createdTermin = await strapi.documents('api::termin.termin').create({
+        data: {
+          planungsstatus: termin.planungsstatus,
+          kapazitaet: termin.kapazitaet,
+          starttag: tageMitUhrzeit[0]?.datum ?? baseDate.toISOString().slice(0, 10),
+          tageMitUhrzeit,
+          seminar: seminarId,
+          standort: standortIdByName[termin.standort],
+        },
+        status: 'draft',
+      });
+
+      if (createdTermin?.documentId) {
+        await strapi.documents('api::termin.termin').publish({ documentId: createdTermin.documentId });
+      }
+    }
+  };
   for (const seminardata of seminarSeeds) {
     const catIdsForSeminar = (seminardata.kategorien || [])
       .map((name) => catIds[name])

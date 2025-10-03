@@ -1,4 +1,8 @@
+import { cancelInvoice, fetchInvoiceWithDocument, extractDocumentId } from '../../../../services/sevdesk';
+
 const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+
+declare const strapi: any;
 
 const ensureFirmaFieldsIfNeeded = (data: Record<string, unknown>) => {
   if (data.rechnungstyp === 'firma') {
@@ -97,6 +101,49 @@ const normalisePositionen = (data: Record<string, any>) => {
   return normalised;
 };
 
+async function handleSevDeskStorno(bestellungId: number) {
+  if (!process.env.SEVDESK_API_TOKEN) {
+    return;
+  }
+
+  try {
+    const order = await strapi.entityService.findOne('api::bestellung.bestellung', bestellungId, {
+      fields: ['id', 'bestellstatus', 'sevdeskInvoiceId', 'sevdeskStornoDocumentId'],
+    });
+
+    if (!order?.sevdeskInvoiceId) {
+      strapi.log.warn('[Bestellung lifecycles] SevDesk-Storno übersprungen: Keine Rechnungs-ID vorhanden.', {
+        bestellungId,
+      });
+      return;
+    }
+
+    await cancelInvoice(strapi, order.sevdeskInvoiceId);
+
+    try {
+      const invoiceWithDocument = await fetchInvoiceWithDocument(strapi, order.sevdeskInvoiceId);
+      const documentRef = extractDocumentId(invoiceWithDocument);
+      if (documentRef?.id && String(documentRef.id) !== order.sevdeskStornoDocumentId) {
+        await strapi.entityService.update('api::bestellung.bestellung', bestellungId, {
+          data: {
+            sevdeskStornoDocumentId: String(documentRef.id),
+          },
+        });
+      }
+    } catch (docErr) {
+      strapi.log.warn('[Bestellung lifecycles] SevDesk-Storno Dokument konnte nicht geladen werden.', {
+        bestellungId,
+        error: docErr instanceof Error ? docErr.message : docErr,
+      });
+    }
+  } catch (err) {
+    strapi.log.error('[Bestellung lifecycles] SevDesk-Storno fehlgeschlagen.', {
+      bestellungId,
+      error: err instanceof Error ? err.message : err,
+    });
+  }
+}
+
 export default {
   async beforeCreate(event) {
     const data = event.params?.data ?? {};
@@ -108,5 +155,32 @@ export default {
     if (!data) return;
     ensureFirmaFieldsIfNeeded(data);
     normalisePositionen(data);
+
+    const id = event.params?.where?.id;
+    if (id) {
+      try {
+        const previous = await strapi.entityService.findOne('api::bestellung.bestellung', id, {
+          fields: ['id', 'bestellstatus'],
+        });
+        event.state = {
+          ...(event.state || {}),
+          previousBestellung: previous,
+        };
+      } catch (err) {
+        strapi.log.warn('[Bestellung lifecycles] Vorherige Bestellung konnte nicht geladen werden.', {
+          id,
+          error: err instanceof Error ? err.message : err,
+        });
+      }
+    }
+  },
+  async afterUpdate(event) {
+    const previousStatus: string | undefined = event.state?.previousBestellung?.bestellstatus;
+    const currentStatus: string | undefined = event.result?.bestellstatus;
+    const bestellungId = event.result?.id;
+
+    if (bestellungId && currentStatus === 'storniert' && previousStatus !== 'storniert') {
+      await handleSevDeskStorno(bestellungId);
+    }
   },
 };

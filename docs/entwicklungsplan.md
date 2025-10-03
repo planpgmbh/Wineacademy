@@ -53,8 +53,8 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 
 4. SevDesk API-Discovery & Dokumentation
 - [x] SevDesk-Spezifikation (Auth, Limits, relevante Endpoints, Datenfelder) analysieren und offene Fragen sammeln.
-- [ ] Authentifizierung & einfache GET-Requests (z. B. `/contacts`) mit gültigem Token prüfen.
-- [ ] Erstellung/Update von Privat- und Firmenkontakten samt Dublettenprüfung testen.
+- [x] Authentifizierung & einfache GET-Requests (z. B. `/contacts`) mit gültigem Token prüfen.
+- [x] Erstellung/Update von Privat- und Firmenkontakten samt Dublettenprüfung testen.
 - [ ] Anlage einer Rechnung über `/vouchers/invoices` inkl. Positionen, Steuerlogik und Zahlungsziel validieren.
 - [ ] Abruf des generierten PDF-Belegs (`/vouchers/invoices/{id}/document`) und Ablage im Filesystem nachvollziehen.
 - [ ] Statusabfragen & Zahlungsmarkierung (z. B. `bookingCategory=payment`) oder Storno simulieren, Fehlercodes dokumentieren.
@@ -148,3 +148,4 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - 2025-10-03 – Checkout speist SevDesk mit Kontakten & Rechnungen (inkl. Gutscheinrabatt-Verteilung), neue ENV-Parameter dokumentiert, Backend-Build grün. – Commit: n/a
 - 2025-10-03 – Storni bereitgestellt: Statuswechsel aktualisiert SevDesk-Rechnung, Storno-Dokument-ID wird gespeichert. – Commit: n/a
 - 2025-10-03 – Seed-Logik erweitert (Termine, Benachrichtigungen, Einstellungen) und Testdaten für vollständige Systemtests hinterlegt. – Commit: n/a
+- 2025-10-03 – Staging-Datenbank zurückgesetzt, Seeds ausgeführt (Termine/Benachrichtigungen geprüft) und Strapi-Service neu gestartet. – Commit: n/a

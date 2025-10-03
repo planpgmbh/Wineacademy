@@ -52,6 +52,9 @@
       "relation": "oneToMany",
       "target": "api::bestellung.bestellung",
       "mappedBy": "kunde"
+    },
+    "sevdeskContactId": {
+      "type": "string"
     }
   }
 }
