@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "node node_modules/next/dist/bin/next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postlint": "npm run deploy:staging",
+    "deploy:staging": "../scripts/deploy-frontend-staging.sh"
   },
   "dependencies": {
     "next": "15.5.2",

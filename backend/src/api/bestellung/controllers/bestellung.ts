@@ -2,8 +2,7 @@ import { factories } from '@strapi/strapi';
 import {
   saveContact,
   createCommunicationWay,
-  createInvoiceDraft,
-  createInvoicePosition,
+  createInvoiceViaFactory,
   updateInvoiceStatus,
   markInvoicePaid,
   fetchInvoiceWithDocument,
@@ -11,6 +10,11 @@ import {
   SevDeskError,
   isSevDeskSyncEnabled,
 } from '../../../services/sevdesk';
+import {
+  fetchOrderWithDetails,
+  sendOrderCreatedEmails,
+  sendPaymentConfirmedEmails,
+} from '../../../services/order-notifications';
 
 type PositionInput = {
   typ?: 'seminar' | 'produkt' | 'gutschein';
@@ -119,6 +123,8 @@ const parseSevDeskId = (payload: any): string | null => {
   }
   return null;
 };
+
+const makeObjectRef = (id: string | number, objectName: string) => ({ id, objectName });
 
 const resolveSevDeskCategoryId = (rechnungstyp: string | undefined): number => {
   const envValue =
@@ -252,7 +258,7 @@ const createDiscountInvoicePositions = (positions: any[], discountAmount: number
 async function syncSevDeskOrder(strapi: any, input: SevDeskSyncInput): Promise<void> {
   if (!isSevDeskSyncEnabled()) {
     if (strapi?.log?.debug) {
-      strapi.log.debug('SevDesk-Synchronisation deaktiviert (SEVDESK_SYNC_ENABLED=false).');
+    strapi.log.debug('SevDesk-Synchronisation deaktiviert (SEVDESK_ENABLED=false).');
     }
     return;
   }
@@ -348,27 +354,6 @@ async function syncSevDeskOrder(strapi: any, input: SevDeskSyncInput): Promise<v
     return;
   }
 
-  const timeToPay = resolveSevDeskTimeToPay();
-  const invoicePayload: Record<string, unknown> = {
-    contactId,
-    invoiceDate: toISODate(bestellung.createdAt),
-    currency: bestellung.waehrung || 'EUR',
-    invoiceType: 'RE',
-    status: 100,
-  };
-  if (timeToPay !== undefined) {
-    invoicePayload.timeToPay = timeToPay;
-  }
-  if (bestellung.bestellnummer) {
-    invoicePayload.customerInternalNote = `Bestellung ${bestellung.bestellnummer}`;
-  }
-
-  const invoiceResponse = await createInvoiceDraft(strapi, invoicePayload as any);
-  const invoiceId = parseSevDeskId(invoiceResponse);
-  if (!invoiceId) {
-    throw new Error('SevDesk: Rechnungs-ID konnte nicht ermittelt werden.');
-  }
-
   const invoicePositions: Array<{ quantity: number; price: number; taxRate: number; name: string; text?: string }> = [];
 
   for (const rawPos of input.positions) {
@@ -393,16 +378,74 @@ async function syncSevDeskOrder(strapi: any, input: SevDeskSyncInput): Promise<v
     invoicePositions.push(...discountPositions);
   }
 
-  for (const position of invoicePositions) {
-    await createInvoicePosition(strapi, {
-      invoiceId,
-      quantity: position.quantity,
-      price: position.price,
-      taxRate: position.taxRate,
-      name: position.name,
-      text: position.text,
-      unityId: 1,
-    });
+  const primaryTaxRate = invoicePositions.find((pos) => Number.isFinite(pos.taxRate))?.taxRate ?? 0;
+  const taxText = primaryTaxRate > 0 ? `Umsatzsteuer ${primaryTaxRate}%` : 'Umsatzsteuer 0%';
+
+  const addressName = rechnungstyp === 'firma'
+    ? bestellung.firmenname || `${bestellung.vorname} ${bestellung.nachname}`
+    : `${bestellung.vorname ?? ''} ${bestellung.nachname ?? ''}`.trim() || primaryEmail;
+
+  const addressLines = [addressName, bestellung.strasse, `${bestellung.plz ?? ''} ${bestellung.stadt ?? ''}`.trim()].filter(
+    (value) => value && value.trim().length > 0
+  );
+
+  const sevdeskCountryId = Number(process.env.SEVDESK_DEFAULT_COUNTRY_ID ?? '1');
+  const contactPersonIdRaw = process.env.SEVDESK_CONTACT_PERSON_ID;
+  const parsedContactPersonId = contactPersonIdRaw && contactPersonIdRaw.trim().length > 0
+    ? Number(contactPersonIdRaw)
+    : undefined;
+  const contactPersonRef = Number.isFinite(parsedContactPersonId)
+    ? makeObjectRef(parsedContactPersonId as number, 'SevUser')
+    : undefined;
+
+  const timeToPay = resolveSevDeskTimeToPay();
+
+  const takeDefaultAddress: 'true' | 'false' = addressLines.length === 0 ? 'true' : 'false';
+
+  const invoiceFactoryPayload = {
+    invoice: {
+      objectName: 'Invoice',
+      contact: makeObjectRef(contactId, 'Contact'),
+      invoiceDate: toISODate(bestellung.createdAt),
+      deliveryDate: toISODate(bestellung.createdAt),
+      status: 100,
+      invoiceType: 'RE',
+      currency: bestellung.waehrung || 'EUR',
+      taxRule: makeObjectRef(Number(process.env.SEVDESK_TAX_RULE_ID ?? '1') || 1, 'TaxRule'),
+      taxRate: primaryTaxRate,
+      taxText,
+      timeToPay: timeToPay ?? undefined,
+      discountTime: bestellung.bestellstatus === 'bezahlt' ? 0 : undefined,
+      discount: bestellung.gutscheinBetrag ?? 0,
+      addressName: addressName ?? undefined,
+      addressStreet: bestellung.strasse ?? undefined,
+      addressZip: bestellung.plz ?? undefined,
+      addressCity: bestellung.stadt ?? undefined,
+      addressCountry: makeObjectRef(Number.isFinite(sevdeskCountryId) ? sevdeskCountryId : 1, 'StaticCountry'),
+      address: addressLines.join('\n') || undefined,
+      contactPerson: contactPersonRef,
+      showNet: '1',
+      mapAll: 'true',
+      customerInternalNote: bestellung.bestellnummer ? `Bestellung ${bestellung.bestellnummer}` : undefined,
+    },
+    invoicePosSave: invoicePositions.map((pos) => ({
+      objectName: 'InvoicePos',
+      mapAll: 'true',
+      quantity: pos.quantity,
+      price: pos.price,
+      priceGross: pos.price,
+      name: pos.name,
+      text: pos.text ?? undefined,
+      taxRate: pos.taxRate,
+      unity: makeObjectRef(1, 'Unity'),
+    })),
+    takeDefaultAddress,
+  };
+
+  const invoiceResponse = await createInvoiceViaFactory(strapi, invoiceFactoryPayload, undefined);
+  const invoiceId = parseSevDeskId(invoiceResponse);
+  if (!invoiceId) {
+    throw new Error('SevDesk: Rechnungs-ID konnte nicht ermittelt werden.');
   }
 
   await updateInvoiceStatus(strapi, invoiceId, 200);
@@ -932,6 +975,19 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         });
       }
 
+      let orderForNotifications = fullAny;
+      try {
+        const reloaded = await fetchOrderWithDetails(strapi, bestellungId);
+        if (reloaded) {
+          orderForNotifications = reloaded;
+        }
+      } catch (reloadErr) {
+        strapi.log.warn('[publicCreate Bestellung] Bestellung konnte für Benachrichtigungen nicht neu geladen werden.', {
+          bestellungId,
+          error: reloadErr instanceof Error ? reloadErr.message : reloadErr,
+        });
+      }
+
       const gutscheine = Array.isArray(fullAny?.gutscheine) ? fullAny.gutscheine : [];
       ctx.body = {
         id: fullAny.id,
@@ -946,6 +1002,21 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         },
         gutscheine: gutscheine.map((g: any) => ({ code: g.code, betrag: g.betrag })),
       };
+
+      try {
+        await sendOrderCreatedEmails(strapi, orderForNotifications);
+        if (bestellstatus === 'bezahlt') {
+          await sendPaymentConfirmedEmails(strapi, orderForNotifications, {
+            paymentAmount: dueBrutto,
+            paymentDate: new Date(),
+          });
+        }
+      } catch (notificationErr) {
+        strapi.log.error('[publicCreate Bestellung] Benachrichtigungen fehlgeschlagen.', {
+          bestellungId,
+          error: notificationErr instanceof Error ? notificationErr.message : notificationErr,
+        });
+      }
     } catch (err: any) {
       strapi.log.error('[publicCreate Bestellung] Fehler', err);
       return ctx.badRequest(err?.message || 'Bestellung fehlgeschlagen');

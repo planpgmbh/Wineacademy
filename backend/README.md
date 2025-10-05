@@ -10,7 +10,7 @@ Strapi liefert die Inhalte (Seminare, Termine, Produkte, Gutscheine) und wickelt
   - Public URLs: `PUBLIC_URL`, `API_INTERNAL_URL`, optional `ASSETS_INTERNAL_URL`.
   - Zahlungen & Kommunikation: `PAYPAL_*`, `SENDGRID_API_KEY`, `EMAIL_FROM`, optional `EMAIL_REPLY_TO`, `EMAIL_TRANSPORT_ENABLED` (Standard `true`), `SEVDESK_API_TOKEN`.
   - Sonstiges: `VAT_RATE`, `ORDER_NUMBER_PREFIX`, `SEED_ON_BOOT`.
-  - SevDesk: `SEVDESK_API_TOKEN` (Pflicht), optional `SEVDESK_SYNC_ENABLED` (Standard `true` – `false` deaktiviert alle Syncs), `SEVDESK_API_BASE_URL` (Standard `https://my.sevdesk.de/api/v1`), `SEVDESK_CATEGORY_PRIVATE_ID`, `SEVDESK_CATEGORY_COMPANY_ID`, `SEVDESK_DEFAULT_TIME_TO_PAY_DAYS`, `SEVDESK_DEFAULT_COUNTRY_ID`, `SEVDESK_TAX_RULE_ID`.
+  - SevDesk: `SEVDESK_ENABLED` (Standard `true`, `false` deaktiviert die Anbindung), `SEVDESK_API_TOKEN` (Pflicht), optional `SEVDESK_API_BASE_URL` (Standard `https://my.sevdesk.de/api/v1`), `SEVDESK_CATEGORY_PRIVATE_ID`, `SEVDESK_CATEGORY_COMPANY_ID`, `SEVDESK_DEFAULT_TIME_TO_PAY_DAYS`, `SEVDESK_DEFAULT_COUNTRY_ID`, `SEVDESK_TAX_RULE_ID`, `SEVDESK_CONTACT_PERSON_ID`.
 - **Container neu starten:** Bei Schema- oder Plugin-Änderungen Strapi mit `docker compose -f docker-compose-staging.yml up -d --force-recreate service_wineacadamy_staging` neu aufsetzen.
 - **Seeds:** `backend/src/index.ts` erzeugt Demo-Daten, wenn `SEED_ON_BOOT=true` gesetzt ist (nicht in Produktion aktivieren).
 
@@ -76,7 +76,7 @@ curl -s -X POST http://localhost:1337/api/public/bestellungen \
 ## SevDesk-Service
 - Der Service `src/services/sevdesk.ts` kapselt die SevDesk-REST-API (Token-Auth, Retries bei 429/503).
 - Exporte u. a.: `saveContact`, `createCommunicationWay`, `createInvoiceDraft`, `createInvoicePosition`, `updateInvoiceStatus`, `markInvoicePaid`, `fetchInvoiceWithDocument`, `downloadDocument`.
-- `SEVDESK_API_TOKEN` muss im Backend-ENV hinterlegt sein; optional `SEVDESK_SYNC_ENABLED=false` deaktiviert die komplette Synchronisation (auch Storni). Zusätzlich `SEVDESK_API_BASE_URL` für Sandbox/Staging.
+- `SEVDESK_ENABLED=false` deaktiviert die komplette Synchronisation (auch Storni); `SEVDESK_API_TOKEN` muss im Backend-ENV hinterlegt sein. Zusätzlich `SEVDESK_API_BASE_URL` für Sandbox/Staging.
 - Rückgaben enthalten das SevDesk-JSON; Fehler werden als `SevDeskError` (mit Status/Details) geworfen.
 - Der öffentliche Checkout erzeugt nach erfolgreicher Bestellung automatisch SevDesk-Kontakte und Rechnungen (Rechnung finalisiert, bei Status `bezahlt` sofort markiert); Gutscheinrabatte werden pro Steuersatz als Rabattpositionen abgebildet.
 - Statuswechsel auf `storniert` stoßen automatisch das Stornieren der SevDesk-Rechnung an und merken sich die (optionale) Storno-Dokument-ID.
@@ -94,6 +94,7 @@ curl -s -X POST http://localhost:1337/api/public/bestellungen \
 - **Transport-Toggle:** `EMAIL_TRANSPORT_ENABLED=false` deaktiviert den Versand (Strapi loggt die unterdrückte Mail und liefert `202` zurück); ideal für lokale/Preview-Umgebungen.
 - **Seed-Script:** `node scripts/seed-sendgrid-test.js` (innerhalb des Containers) hinterlegt Absenderdaten & eine Testbenachrichtigung für den SendGrid-Testversand.
 - **Testversand-Skript:** `node scripts/sendgrid-test-send.js` löst den internen `testSend`-Service aus (`SENDGRID_TEST_RECIPIENT` oder Default `philipp@plan-p.de`).
+- **Trigger:** Bestellbestätigungen (Kund:innen + Backoffice) laufen direkt nach Checkout; Zahlungs- und Dokumentenversand folgt bei Statuswechsel auf `bezahlt`, Stornobestätigungen inkl. PDF-Anhang bei `storniert`. Grundlage ist `src/services/order-notifications.ts`.
 
 ## Entwicklung & Qualitätssicherung
 - **Tests:** E2E-Checkout über `node tests/checkout-puppeteer.js` (setzt laufenden Staging-Stack und PayPal-Sandbox-Zugangsdaten voraus).
