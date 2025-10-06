@@ -3,6 +3,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 const DEFAULT_BASE_URL = 'https://my.sevdesk.de/api/v1';
 const MAX_RETRIES = 3;
 const RETRY_BASE_DELAY_MS = 500;
+const DEFAULT_INVOICE_START = process.env.SEVDESK_INVOICE_START || 'WA-20251';
 
 const DISABLED_FLAGS = ['0', 'false', 'no', 'off', 'disabled'];
 
@@ -228,6 +229,12 @@ type SevDeskObjectRef = { id: number | string; objectName: string };
 
 let cachedContactPersonRef: SevDeskObjectRef | null | undefined;
 
+type InvoiceNumberParts = {
+  prefix: string;
+  numeric: number;
+  width: number;
+};
+
 function hasUsableSevDeskId(value: unknown): boolean {
   if (value === null || value === undefined) {
     return false;
@@ -318,6 +325,32 @@ export async function resolveDefaultContactPerson(
 
   cachedContactPersonRef = null;
   return null;
+}
+
+function parseInvoiceNumber(value: string | null | undefined): InvoiceNumberParts | null {
+  if (!value) {
+    return null;
+  }
+  const trimmed = value.trim();
+  const match = /^([A-Za-z]+)-(\d+)$/.exec(trimmed);
+  if (!match) {
+    return null;
+  }
+  const prefix = match[1].toUpperCase();
+  const digits = match[2];
+  const numeric = Number(digits);
+  if (!Number.isFinite(numeric)) {
+    return null;
+  }
+  return {
+    prefix,
+    numeric,
+    width: digits.length,
+  };
+}
+
+function formatInvoiceNumber(parts: InvoiceNumberParts, numeric: number): string {
+  return `${parts.prefix}-${String(numeric).padStart(parts.width, '0')}`;
 }
 
 export interface ContactPayload {
@@ -485,6 +518,63 @@ export async function createInvoiceByFactory(
     path: '/Invoice/Factory/saveInvoice',
     body: payload,
   }, clientOptions);
+}
+
+export async function fetchLastInvoiceNumber(
+  strapi: StrapiLike,
+  clientOptions?: SevDeskClientOptions
+): Promise<string | null> {
+  const response = await sevDeskRequest<any>(
+    strapi,
+    {
+      method: 'GET',
+      path: '/Invoice',
+      query: {
+        limit: 1,
+        'order[field]': 'invoiceNumber',
+        'order[direction]': 'desc',
+      },
+    },
+    clientOptions
+  );
+
+  const list = Array.isArray(response?.objects)
+    ? response.objects
+    : Array.isArray(response?.data)
+      ? response.data
+      : [];
+
+  const candidate = Array.isArray(list) && list.length > 0 ? list[0] : response?.object || response;
+  const invoiceNumber = candidate?.invoiceNumber ?? candidate?.number ?? candidate?.documentNumber;
+  return typeof invoiceNumber === 'string' && invoiceNumber.trim() ? invoiceNumber.trim() : null;
+}
+
+export async function getNextInvoiceNumber(
+  strapi: StrapiLike,
+  clientOptions?: SevDeskClientOptions
+): Promise<string> {
+  const startParts = parseInvoiceNumber(DEFAULT_INVOICE_START);
+  if (!startParts) {
+    throw new Error('SEVDESK_INVOICE_START hat ein ungültiges Format. Erwartet wird z. B. "WA-20251".');
+  }
+
+  const lastNumber = await fetchLastInvoiceNumber(strapi, clientOptions);
+  if (!lastNumber) {
+    return DEFAULT_INVOICE_START;
+  }
+
+  const lastParts = parseInvoiceNumber(lastNumber);
+  if (!lastParts) {
+    throw new Error(`SevDesk: Rechnungsnummer "${lastNumber}" hat ein unerwartetes Format.`);
+  }
+
+  const width = Math.max(lastParts.width, startParts.width);
+  let nextNumeric = lastParts.numeric + 1;
+  if (lastParts.prefix === startParts.prefix) {
+    nextNumeric = Math.max(nextNumeric, startParts.numeric);
+  }
+
+  return `${lastParts.prefix}-${String(nextNumeric).padStart(width, '0')}`;
 }
 
 function parsePositiveNumber(value: unknown): number | null {

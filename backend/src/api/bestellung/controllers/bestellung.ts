@@ -10,6 +10,7 @@ import {
   SevDeskError,
   isSevDeskSyncEnabled,
   resolveDefaultContactPerson,
+  getNextInvoiceNumber,
 } from '../../../services/sevdesk';
 
 type PositionInput = {
@@ -92,13 +93,6 @@ const generateVoucherCode = async (strapi: any): Promise<string> => {
     if (!existing) return code;
   }
   throw new Error('Konnte keinen eindeutigen Gutscheincode erzeugen');
-};
-
-const formatOrderNumber = (id: unknown) => {
-  const prefix = process.env.ORDER_NUMBER_PREFIX || 'WA';
-  const numeric = Number(id);
-  const suffix = Number.isFinite(numeric) ? String(numeric).padStart(6, '0') : String(id ?? '').padStart(6, '0');
-  return `${prefix}-${suffix}`;
 };
 
 const isValidSevDeskId = (value: unknown): boolean => {
@@ -843,6 +837,8 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
       const newsletterOptIn = !!body.newsletterOptIn;
       const newsletterOptInAt = newsletterOptIn ? new Date().toISOString() : undefined;
 
+      const nextInvoiceNumber = await getNextInvoiceNumber(strapi);
+
       const bestellungData: any = {
         rechnungstyp,
         firmenname: body.firmenname,
@@ -874,12 +870,13 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         notizen: body.notizen,
         bestellstatus,
         waehrung: body.waehrung || 'EUR',
+        bestellnummer: nextInvoiceNumber,
       };
 
       const created = await strapi.entityService.create('api::bestellung.bestellung', { data: bestellungData });
       const createdAny = created as any;
       const bestellungId = createdAny.id;
-      let bestellnummer = createdAny.bestellnummer as string | undefined;
+      const bestellnummer = createdAny.bestellnummer as string | undefined;
 
       if (buchungenPayload.length > 0) {
         for (const teilnehmer of buchungenPayload) {
@@ -936,17 +933,6 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         }
       } catch (linkErr) {
         strapi.log.warn(`[publicCreate Bestellung] Kunde-Verknüpfung übersprungen: ${(linkErr as any)?.message || linkErr}`);
-      }
-
-      try {
-        if (!bestellnummer) {
-          bestellnummer = formatOrderNumber(bestellungId);
-          await strapi.entityService.update('api::bestellung.bestellung', bestellungId, {
-            data: { bestellnummer },
-          });
-        }
-      } catch (titleErr) {
-        strapi.log.warn(`[publicCreate Bestellung] Nummer-Setzung übersprungen: ${(titleErr as any)?.message || titleErr}`);
       }
 
       let generatedCodes: string[] = [];
