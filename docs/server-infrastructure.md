@@ -39,7 +39,7 @@ Gemeinsam:
 - Postgres: `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
 - Strapi: `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `ENCRYPTION_KEY`
 - E-Mail: `SENDGRID_API_KEY`, `EMAIL_FROM`, optional `EMAIL_TRANSPORT_ENABLED` (Default `true`, `false` deaktiviert Versand)
-- SevDesk: `SEVDESK_ENABLED` (Default `true`, `false` unterbindet Syncs/Storni), `SEVDESK_API_TOKEN`
+- SevDesk: `SEVDESK_API_TOKEN`, optional `SEVDESK_SYNC_ENABLED` (Default `true`, `false` unterbindet Syncs/Storni)
 - Stripe: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
 - Frontend intern: `API_INTERNAL_URL` (`http://backend:1337` bzw. `http://backend-staging:1337`)
 

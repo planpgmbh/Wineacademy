@@ -73,19 +73,17 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - [x] Clientseitige Warenkorbverwaltung inkl. Teilnehmerdaten (LocalStorage) umgesetzt.
 - [x] Checkout validiert Rechnungs-/Teilnehmerdaten, AGB/Datenschutz und erzeugt Bestellungen.
 - [x] PayPal-Buttons mit SDK-Lazy-Load, Validation-Hooks und Capture-Handling integriert.
+- [ ] Firmen-Validierungen (z. B. USt-Id-Format, Pflichtfelder) und Fehlertexte nachschärfen.
 - [x] SendGrid-Service inkl. ENV (`SENDGRID_API_KEY`, Absenderdaten) und Logging im Backend verdrahten (gemäß `docs/sendgrid.md`, Toggle berücksichtigt).
-- [x] Bestellbestätigung nach Checkout mit Template-Renderer auslösen (Kund:innen-Mail).
-- [x] Zahlungsbestätigung & Versand von Rechnung/Gutscheinen nach Zahlungseingang (PayPal-Webhook, Rechnungsverbuchung).
-- [x] Storno-Event bei Statuswechsel auf `storniert` auslösen (Mail & Stornobeleg vorbereiten).
-- [x] Interne Benachrichtigung bei neuen Bestellungen an definierte Backoffice-Empfänger:innen senden.
-- [x] SevDesk-API-Client (Token-Auth) im Backend kapseln und Bestell-Payload für Rechnungsanlage vorbereiten.
-
-7. Betriebsmodi & Toggles
 - [x] Versand-Toggle (`EMAIL_TRANSPORT_ENABLED`) über ENV eingeführt und dokumentiert (Staging `.env` aktualisiert).
-- [x] SevDesk-Sync-Toggle (`SEVDESK_ENABLED`) über ENV eingeführt, inklusive Dokumentation und Fallback-Verhalten.
-- [ ] Weitere Integrationen (z. B. Zahlungsanbieter) über ENV für Sandbox/Live umschaltbar dokumentieren.
+- [ ] Bestellbestätigung nach Checkout mit Template-Renderer auslösen (Kund:innen-Mail).
+- [ ] Zahlungsbestätigung & Versand von Rechnung/Gutscheinen nach Zahlungseingang (PayPal-Webhook, Rechnungsverbuchung).
+- [ ] Storno-Event bei Statuswechsel auf `storniert` auslösen (Mail & Stornobeleg vorbereiten).
+- [ ] Interne Benachrichtigung bei neuen Bestellungen an definierte Backoffice-Empfänger:innen senden.
+- [x] SevDesk-API-Client (Token-Auth) im Backend kapseln und Bestell-Payload für Rechnungsanlage vorbereiten.
+- [x] SevDesk-Sync-Toggle (`SEVDESK_SYNC_ENABLED`) über ENV eingeführt und dokumentiert (Staging `.env` aktualisiert).
 
-8. Backoffice & Automatisierung
+7. Backoffice & Automatisierung
 - [x] Kundenverknüpfung/Newsletter-Opt-in beim Bestell-Write-Through im Backend umgesetzt.
 - [ ] SevDesk-Anbindung vervollständigen (ENV `SEVDESK_API_TOKEN`, Sandbox/Prod-Konfiguration, Secrets-Handling) gemäß `docs/sevdesk.md`.
 - [ ] Kontakte (Privat/Firma) aus Bestelldaten in SevDesk synchronisieren bzw. wiederverwenden.
@@ -94,23 +92,23 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - [x] ENV-Fallbacks für sensible Mail-Credentials (z. B. API-Key, Default-Absender) dokumentieren und in allen Umgebungen pflegen.
 - [x] Benachrichtigungs-Empfänger (z. B. "Neue Bestellung") in Strapi konfigurierbar machen und dokumentieren.
 - [ ] Webhook- oder Polling-Strategie für Zahlungsstatus/Storno etablieren und Fehler-Retry dokumentieren.
-- [x] Storno-Benachrichtigungen (Mail, Stornobeleg) über zentrales Event bei Statuswechsel auf `storniert` auslösen.
+- [ ] Storno-Benachrichtigungen (Mail, Stornobeleg) über zentrales Event bei Statuswechsel auf `storniert` auslösen.
 - [ ] Strapi-Admin konfigurieren (Collection-Ansichten, Rollen/Rechte, Default-Filter).
 - [ ] Prozess-Doku für Inhalte/Termine (inkl. Media-Upload) erstellen.
 
-9. Testing & Qualitätssicherung
+8. Testing & Qualitätssicherung
 - [x] Puppeteer-End-to-End-Testskript für Rechnung & PayPal vorhanden.
 - [ ] CI-Integration des Puppeteer-Skripts (z. B. GitHub Actions mit Secrets) aufsetzen.
 - [ ] Backend-Integrationstests für `bestellung`/`gutschein`-Flows hinzufügen.
 - [ ] Frontend-Lint/Format-Setup (ESLint, Prettier/Tailwind) und Konsistenz-Checks aktivieren.
 
-10. Deployment & Monitoring
+9. Deployment & Monitoring
 - [x] Traefik-Routing (Host + PathPrefix) für API, Admin & Uploads definiert.
 - [ ] Automatisierte Build/Deploy-Pipeline etablieren (Branch → Staging → Prod).
 - [ ] Monitoring/Alerting (Container-Health, PayPal-Webhook-Fehler, Strapi-Logs) konfigurieren.
 - [ ] Uptime/Smoke-Checks (curl/Playwright) nach Deploys automatisieren.
 
-11. Content & Marketing Enablement
+10. Content & Marketing Enablement
 - [ ] Finales Content-Set (Texte, Bilder, Terminlisten) in Strapi pflegen.
 - [ ] Tracking/Analytics (Matomo/GTM) definieren und technisch integrieren.
 - [ ] Newsletter-/CRM-Flows (Double-Opt-in, Segmentierung) klären und implementieren.
@@ -152,10 +150,4 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - 2025-10-03 – Storni bereitgestellt: Statuswechsel aktualisiert SevDesk-Rechnung, Storno-Dokument-ID wird gespeichert. – Commit: n/a
 - 2025-10-03 – Seed-Logik erweitert (Termine, Benachrichtigungen, Einstellungen) und Testdaten für vollständige Systemtests hinterlegt. – Commit: n/a
 - 2025-10-03 – Staging-Datenbank zurückgesetzt, Seeds ausgeführt (Termine/Benachrichtigungen geprüft) und Strapi-Service neu gestartet. – Commit: n/a
-- 2025-10-03 – SevDesk-Sync-Toggle (`SEVDESK_ENABLED`) implementiert, `.env`-Vorlagen aktualisiert und Backend-Guards ergänzt. – Commit: e053de0
-- 2025-10-04 – Mail-Trigger für Bestellung/Zahlung/Storno umgesetzt (SendGrid-Service erweitert, SevDesk-Anhänge, neue Templates, Backoffice-Notifications). – Commit: n/a
-- 2025-10-05 – Checkout-UI nachjustiert (Überschrift entfernt, Stepper optisch entschlackt, Warenkorb mit Netto/Brutto, Rechnungsadresse & Newsletter-Checkbox überarbeitet). – Commit: n/a
-- 2025-10-05 – Stepper nummeriert wieder klar, Warenkorb-Detailzeilen reduziert und Lint geprüft. – Commit: n/a
-- 2025-10-05 – Automatisches Frontend-Staging-Deploy an `npm run lint` gekoppelt, Deploy-Skript & README-Hinweis ergänzt. – Commit: n/a
-- 2025-10-05 – Checkout-Styling weiter verfeinert (Mengenanzeige entfernt, Stepper-Farben neutralisiert) und Staging-Deploy ausgelöst. – Commit: n/a
-- 2025-10-05 – Checkout-Warenkorb typografisch aufgeräumt (Trennlinie, konsistente Summenbeschriftungen) und neu deployed. – Commit: n/a
+- 2025-10-03 – SevDesk-Sync-Toggle (`SEVDESK_SYNC_ENABLED`) implementiert, `.env`-Vorlagen aktualisiert und Backend-Guards ergänzt. – Commit: e053de0

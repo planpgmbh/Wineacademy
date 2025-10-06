@@ -4,18 +4,20 @@ const DEFAULT_BASE_URL = 'https://my.sevdesk.de/api/v1';
 const MAX_RETRIES = 3;
 const RETRY_BASE_DELAY_MS = 500;
 
+const DISABLED_FLAGS = ['0', 'false', 'no', 'off', 'disabled'];
+
 const fetchFn: typeof globalThis.fetch = (globalThis as any).fetch;
 if (!fetchFn) {
   throw new Error('Global fetch ist nicht verfügbar. Node 18+ wird benötigt.');
 }
 
 export function isSevDeskSyncEnabled(): boolean {
-  const flag = process.env.SEVDESK_ENABLED;
-  if (flag == null) {
+  const flag = process.env.SEVDESK_SYNC_ENABLED;
+  if (!flag) {
     return true;
   }
   const normalised = flag.trim().toLowerCase();
-  return !['0', 'false', 'no', 'off', 'disabled'].includes(normalised);
+  return !DISABLED_FLAGS.includes(normalised);
 }
 
 export interface SevDeskClientOptions {
@@ -298,24 +300,85 @@ export async function createCommunicationWay(
   }, clientOptions);
 }
 
-export interface InvoiceFactoryPayload {
-  invoice: Record<string, unknown>;
-  invoicePosSave: Array<Record<string, unknown>>;
-  invoicePosDelete?: unknown;
-  discountSave?: unknown;
-  discountDelete?: unknown;
-  takeDefaultAddress?: 'true' | 'false';
+export interface InvoiceDraftPayload {
+  contactId: number | string;
+  invoiceDate: string;
+  timeToPay?: number;
+  currency?: string;
+  invoiceType?: 'RE' | 'RECUR';
+  status?: number;
+  customerInternalNote?: string;
+  deliveryDate?: string;
+  deliveryDateUntil?: string;
 }
 
-export async function createInvoiceViaFactory(
+export async function createInvoiceDraft(
   strapi: StrapiLike,
-  payload: InvoiceFactoryPayload,
+  payload: InvoiceDraftPayload,
   clientOptions?: SevDeskClientOptions
 ) {
+  const body: Record<string, unknown> = {
+    objectName: 'Invoice',
+    contact: buildObjectRef(payload.contactId, 'Contact'),
+    invoiceDate: payload.invoiceDate,
+    currency: payload.currency ?? 'EUR',
+    invoiceType: payload.invoiceType ?? 'RE',
+    status: payload.status ?? 100,
+  };
+
+  const taxRuleIdRaw = process.env.SEVDESK_TAX_RULE_ID;
+  const taxRuleId = taxRuleIdRaw ? Number(taxRuleIdRaw) : 1;
+  body.taxRule = buildObjectRef(Number.isFinite(taxRuleId) ? taxRuleId : 1, 'TaxRule');
+
+  if (payload.timeToPay !== undefined) body.timeToPay = payload.timeToPay;
+  if (payload.customerInternalNote) body.customerInternalNote = payload.customerInternalNote;
+  if (payload.deliveryDate) body.deliveryDate = payload.deliveryDate;
+  if (payload.deliveryDateUntil) body.deliveryDateUntil = payload.deliveryDateUntil;
+
   return sevDeskRequest(strapi, {
     method: 'POST',
-    path: '/Invoice/Factory/createInvoiceByFactory',
-    body: payload,
+    path: '/Invoice',
+    body,
+  }, clientOptions);
+}
+
+export interface InvoicePositionPayload {
+  invoiceId: number | string;
+  quantity: number;
+  price: number;
+  taxRate: number;
+  name: string;
+  unityId?: number;
+  text?: string;
+  discount?: number;
+  isPercentageDiscount?: boolean;
+}
+
+export async function createInvoicePosition(
+  strapi: StrapiLike,
+  payload: InvoicePositionPayload,
+  clientOptions?: SevDeskClientOptions
+) {
+  const body: Record<string, unknown> = {
+    objectName: 'InvoicePos',
+    invoice: buildObjectRef(payload.invoiceId, 'Invoice'),
+    quantity: payload.quantity,
+    price: payload.price,
+    taxRate: payload.taxRate,
+    name: payload.name,
+    unity: buildObjectRef(payload.unityId ?? 1, 'Unity'),
+  };
+
+  if (payload.text) body.text = payload.text;
+  if (payload.discount !== undefined) {
+    body.discount = payload.discount;
+    body.isPercentage = payload.isPercentageDiscount ?? false;
+  }
+
+  return sevDeskRequest(strapi, {
+    method: 'POST',
+    path: '/InvoicePos',
+    body,
   }, clientOptions);
 }
 

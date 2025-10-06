@@ -4,11 +4,6 @@ import {
   extractDocumentId,
   isSevDeskSyncEnabled,
 } from '../../../../services/sevdesk';
-import {
-  fetchOrderWithDetails,
-  sendPaymentConfirmedEmails,
-  sendStornoEmails,
-} from '../../../../services/order-notifications';
 
 const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
@@ -161,41 +156,6 @@ async function handleSevDeskStorno(bestellungId: number) {
   }
 }
 
-async function notifyPaymentReceived(bestellungId: number) {
-  try {
-    const order = await fetchOrderWithDetails(strapi, bestellungId);
-    if (!order) {
-      return;
-    }
-    await sendPaymentConfirmedEmails(strapi, order, {
-      paymentAmount: order.zuZahlenBrutto ?? order.summePositionenBrutto,
-      paymentDate: order.updatedAt ?? new Date().toISOString(),
-    });
-  } catch (err) {
-    strapi.log?.error?.('[Bestellung lifecycles] Zahlungsbenachrichtigung fehlgeschlagen.', {
-      bestellungId,
-      error: err instanceof Error ? err.message : err,
-    });
-  }
-}
-
-async function notifyStorno(bestellungId: number) {
-  try {
-    const order = await fetchOrderWithDetails(strapi, bestellungId);
-    if (!order) {
-      return;
-    }
-    await sendStornoEmails(strapi, order, {
-      stornoDate: order.updatedAt ?? new Date().toISOString(),
-    });
-  } catch (err) {
-    strapi.log?.error?.('[Bestellung lifecycles] Stornobenachrichtigung fehlgeschlagen.', {
-      bestellungId,
-      error: err instanceof Error ? err.message : err,
-    });
-  }
-}
-
 export default {
   async beforeCreate(event) {
     const data = event.params?.data ?? {};
@@ -233,11 +193,6 @@ export default {
 
     if (bestellungId && currentStatus === 'storniert' && previousStatus !== 'storniert') {
       await handleSevDeskStorno(bestellungId);
-      await notifyStorno(bestellungId);
-    }
-
-    if (bestellungId && currentStatus === 'bezahlt' && previousStatus !== 'bezahlt') {
-      await notifyPaymentReceived(bestellungId);
     }
   },
 };

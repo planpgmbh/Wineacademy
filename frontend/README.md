@@ -43,11 +43,10 @@ Alle Datenabrufe laufen über `lib/api.ts`:
 ## Entwicklung & Qualitätssicherung
 - **Start/Staging:** `docker compose -f docker-compose-staging.yml up -d web_wineacadamy_staging`.
 - **Tests:** Puppeteer-Checkout (`node tests/checkout-puppeteer.js`) deckt Invoice/PayPal ab.
-- **Linting & Auto-Deploy:** `npm run lint` führt ESLint aus und stößt im Anschluss (via `postlint`) automatisch `npm run deploy:staging` an. Dadurch wird jedes Mal der Staging-Webcontainer neu gebaut.
-- **Manueller Deploy:** Falls nur das Deployment notwendig ist (`postlint` nicht ausgeführt wurde), `npm run deploy:staging` oder `scripts/deploy-frontend-staging.sh` aufrufen. Beide Kommandos kapseln `docker compose -f docker-compose-staging.yml up -d --build web_wineacadamy_staging`.
+- **Linting:** `npm run lint` (ESLint + Next.js-Konfiguration).
 - **Styling:** Tailwind 4; bestehende Utility-Nutzung übernehmen, keine manuellen Reset-Overwrites.
 - **PayPal Sandbox:** Für lokale Tests `NEXT_PUBLIC_PAYPAL_CLIENT_ID` setzen und Checkout gegen Staging-Backend laufen lassen.
-- **Sichtprüfung:** Nach jedem Deploy die Staging-Seite im Browser öffnen (Hard Reload), um Layout/Interaktion visuell zu verifizieren.
+- **Build & Sichtprüfung:** Nach jeder Frontend-Änderung das Staging-Frontend via `docker compose -f docker-compose-staging.yml up -d --build web_wineacadamy_staging` neu deployen und danach automatisch ein Browserfenster mit der aktualisierten Seite öffnen, um die sichtbare Änderung zu bestätigen.
 
 ## Weiterführende Ressourcen
 - Root-README für Gesamtüberblick & Compose-Kommandos.
