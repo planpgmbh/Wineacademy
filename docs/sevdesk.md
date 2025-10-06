@@ -8,7 +8,7 @@ Dieser Leitfaden beschreibt die wichtigsten Aspekte der SevDesk-Anbindung im Bac
 - `SEVDESK_CONTACT_PERSON_ID` – ID des `SevUser`, der als Kontaktperson auf Rechnungen erscheint. Ohne gültige ID verweigert die Factory-API die Rechnungsanlage.
 - `SEVDESK_CHECK_ACCOUNT_ID` – ID des Bank-/Kassenkontos, auf das Zahlungen verbucht werden (für `bookAmount`).
 - `SEVDESK_SEND_TYPE` – Übergabe für `/Invoice/{id}/sendBy` (`VPDF` | `VM` | `VP` | `VPR`). Standard ist `VPDF`.
-- `SEVDESK_INVOICE_START` – Startnummer des Rechnungs-/Bestellnummernkreises (z. B. `WA-20251`). Wird verwendet, falls SevDesk noch keine Rechnungen besitzt.
+- `SEVDESK_INVOICE_PREFIX` – Präfix der Rechnungs-/Bestellnummern (Default `WA`). Der Shop erzeugt laufende Nummern pro Jahr (`<PREFIX>-<Jahr><laufende Nummer>`).
 - Optionale Defaults: `SEVDESK_DEFAULT_TIME_TO_PAY_DAYS`, `SEVDESK_DEFAULT_COUNTRY_ID` (intern nutzen wir `1` = Deutschland), `SEVDESK_TAX_RULE_ID`, `SEVDESK_API_BASE_URL`.
 
 ### IDs ermitteln
@@ -31,7 +31,7 @@ curl -s "https://my.sevdesk.de/api/v1/CheckAccount?token=$SEVDESK_API_TOKEN" | j
    - `createInvoiceByFactory` nutzt `/Invoice/Factory/saveInvoice`.
    - Pflichtfelder: `contact`, `contactPerson`, `invoiceDate` (`dd.mm.yyyy`), `invoiceNumber`, `deliveryDate`, `taxRule`, `taxType`, Adresse, `mapAll`.
    - Positionen werden vollständig in `invoicePosSave` übertragen; Bruttopreis wird in Netto + Steuer (`price`, `priceGross`, `priceTax`) aufgeteilt.
-   - Die Rechnungsnummer wird vor jeder Bestellung aus SevDesk ermittelt: Wir lesen die höchste `invoiceNumber`, erhöhen sie und verwenden sie als Bestell-/Rechnungsnummer. Bei leeren Konten starten wir mit `SEVDESK_INVOICE_START` (Default `WA-20251`).
+   - Die Rechnungsnummer wird vor jeder Bestellung aus SevDesk ermittelt: Wir durchsuchen alle Rechnungen mit dem konfigurierten Präfix und dem aktuellen Jahr (`<PREFIX>-<YYYY><NNNN>`). Falls für dieses Jahr keine Nummer existiert, starten wir mit `<PREFIX>-<YYYY>0001`.
 
 3. **Versand markieren**
    - Direkt im Anschluss ruft das Backend `markInvoiceSent` (`/Invoice/{id}/sendBy`) auf. Standard ist `VPDF`, kann via `SEVDESK_SEND_TYPE` überschrieben werden.

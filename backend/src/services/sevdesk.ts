@@ -520,35 +520,6 @@ export async function createInvoiceByFactory(
   }, clientOptions);
 }
 
-export async function fetchLastInvoiceNumber(
-  strapi: StrapiLike,
-  clientOptions?: SevDeskClientOptions
-): Promise<string | null> {
-  const response = await sevDeskRequest<any>(
-    strapi,
-    {
-      method: 'GET',
-      path: '/Invoice',
-      query: {
-        limit: 1,
-        'order[field]': 'invoiceNumber',
-        'order[direction]': 'desc',
-      },
-    },
-    clientOptions
-  );
-
-  const list = Array.isArray(response?.objects)
-    ? response.objects
-    : Array.isArray(response?.data)
-      ? response.data
-      : [];
-
-  const candidate = Array.isArray(list) && list.length > 0 ? list[0] : response?.object || response;
-  const invoiceNumber = candidate?.invoiceNumber ?? candidate?.number ?? candidate?.documentNumber;
-  return typeof invoiceNumber === 'string' && invoiceNumber.trim() ? invoiceNumber.trim() : null;
-}
-
 export async function getNextInvoiceNumber(
   strapi: StrapiLike,
   clientOptions?: SevDeskClientOptions
@@ -558,23 +529,62 @@ export async function getNextInvoiceNumber(
     throw new Error('SEVDESK_INVOICE_START hat ein ungültiges Format. Erwartet wird z. B. "WA-20251".');
   }
 
-  const lastNumber = await fetchLastInvoiceNumber(strapi, clientOptions);
-  if (!lastNumber) {
-    return DEFAULT_INVOICE_START;
+  const response = await sevDeskRequest<any>(
+    strapi,
+    {
+      method: 'GET',
+      path: '/Invoice',
+      query: {
+        limit: 100,
+        'order[field]': 'create',
+        'order[direction]': 'desc',
+      },
+    },
+    clientOptions
+  );
+
+  const list: any[] = Array.isArray(response?.objects)
+    ? response.objects
+    : Array.isArray(response?.data)
+      ? response.data
+      : response?.object
+        ? [response.object]
+        : [];
+
+  let bestForPrefix: InvoiceNumberParts | null = null;
+  let bestOther: InvoiceNumberParts | null = null;
+
+  for (const entry of list) {
+    const rawNumber = entry?.invoiceNumber ?? entry?.number ?? entry?.documentNumber;
+    const parts = parseInvoiceNumber(typeof rawNumber === 'string' ? rawNumber : null);
+    if (!parts) continue;
+
+    if (parts.prefix === startParts.prefix) {
+      if (
+        !bestForPrefix ||
+        parts.numeric > bestForPrefix.numeric ||
+        (parts.numeric === bestForPrefix.numeric && parts.width < bestForPrefix.width)
+      ) {
+        bestForPrefix = parts;
+      }
+    } else if (!bestOther || parts.numeric > bestOther.numeric) {
+      bestOther = parts;
+    }
   }
 
-  const lastParts = parseInvoiceNumber(lastNumber);
-  if (!lastParts) {
-    throw new Error(`SevDesk: Rechnungsnummer "${lastNumber}" hat ein unerwartetes Format.`);
+  if (bestForPrefix) {
+    const width = Math.max(startParts.width, String(bestForPrefix.numeric).length);
+    const nextNumeric = Math.max(bestForPrefix.numeric + 1, startParts.numeric);
+    return formatInvoiceNumber({ prefix: startParts.prefix, numeric: nextNumeric, width }, nextNumeric);
   }
 
-  const width = Math.max(lastParts.width, startParts.width);
-  let nextNumeric = lastParts.numeric + 1;
-  if (lastParts.prefix === startParts.prefix) {
-    nextNumeric = Math.max(nextNumeric, startParts.numeric);
+  if (bestOther) {
+    const width = Math.max(bestOther.width, String(bestOther.numeric).length);
+    const nextNumeric = bestOther.numeric + 1;
+    return formatInvoiceNumber({ prefix: bestOther.prefix, numeric: nextNumeric, width }, nextNumeric);
   }
 
-  return `${lastParts.prefix}-${String(nextNumeric).padStart(width, '0')}`;
+  return DEFAULT_INVOICE_START;
 }
 
 function parsePositiveNumber(value: unknown): number | null {

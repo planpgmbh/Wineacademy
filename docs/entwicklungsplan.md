@@ -153,4 +153,4 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - 2025-10-03 – SevDesk-Sync-Toggle (`SEVDESK_SYNC_ENABLED`) implementiert, `.env`-Vorlagen aktualisiert und Backend-Guards ergänzt. – Commit: e053de0
 - 2025-10-05 – SevDesk-Rechnungsanlage korrigiert (Kontaktpersonen-ID ermittelt, Payload ergänzt, Env-Doku aktualisiert). – Commit: n/a
 - 2025-10-06 – SevDesk-Rechnungserstellung auf Factory/saveInvoice umgestellt, auto-Versand (`sendBy`) + Zahlungsbuchung (`bookAmount`) integriert und erfolgreich im Staging getestet. – Commit: n/a
-- 2025-10-06 – Rechnungsnummern synchronisiert (letzte SevDesk-Nummer auslesen, nächste hochzählen, Startwert `WA-20251`). – Commit: n/a
+- 2025-10-06 – Rechnungsnummern synchronisiert (letzte SevDesk-Nummer pro Jahr ermitteln, Präfix `WA`, automatische Jahreswechsel). – Commit: n/a
