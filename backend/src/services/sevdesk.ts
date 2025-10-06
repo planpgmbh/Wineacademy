@@ -11,6 +11,8 @@ if (!fetchFn) {
   throw new Error('Global fetch ist nicht verfügbar. Node 18+ wird benötigt.');
 }
 
+const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+
 export function isSevDeskSyncEnabled(): boolean {
   const flag = process.env.SEVDESK_SYNC_ENABLED;
   if (!flag) {
@@ -87,12 +89,10 @@ function buildUrl(baseUrl: string, path: string, query?: RequestOptions['query']
 }
 
 function createHeaders(
-  token: string,
   userAgent?: string,
   extra?: Record<string, string>
 ): Record<string, string> {
   const headers: Record<string, string> = {
-    Authorization: `Token ${token}`,
     Accept: 'application/json',
   };
   if (userAgent) {
@@ -148,7 +148,7 @@ async function sevDeskRequest<T>(
   while (attempt < MAX_RETRIES) {
     attempt += 1;
     try {
-      const headers = createHeaders(token, clientOptions?.userAgent, options.headers);
+      const headers = createHeaders(clientOptions?.userAgent, options.headers);
       let body: any;
 
       if (options.body !== undefined && options.body !== null) {
@@ -205,8 +205,119 @@ async function sevDeskRequest<T>(
   throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }
 
+function normaliseSevDeskId(id: string | number): string | number {
+  if (typeof id === 'number') {
+    return Number.isFinite(id) ? id : String(id);
+  }
+  const trimmed = id.trim();
+  if (trimmed === '') {
+    return trimmed;
+  }
+  const numeric = Number(trimmed);
+  if (Number.isFinite(numeric) && numeric > 0) {
+    return numeric;
+  }
+  return trimmed;
+}
+
 function buildObjectRef(id: string | number, objectName: string) {
-  return { id, objectName };
+  return { id: normaliseSevDeskId(id), objectName };
+}
+
+type SevDeskObjectRef = { id: number | string; objectName: string };
+
+let cachedContactPersonRef: SevDeskObjectRef | null | undefined;
+
+function hasUsableSevDeskId(value: unknown): boolean {
+  if (value === null || value === undefined) {
+    return false;
+  }
+  const numeric = Number(value);
+  if (Number.isFinite(numeric)) {
+    return numeric > 0;
+  }
+  return String(value).trim() !== '';
+}
+
+function pickFirstEntityWithId(payload: any): SevDeskObjectRef | null {
+  if (!payload) {
+    return null;
+  }
+
+  const directCandidate = payload.id != null ? payload : payload.object;
+  if (hasUsableSevDeskId(directCandidate?.id)) {
+    return buildObjectRef(directCandidate.id, directCandidate.objectName ?? 'SevUser');
+  }
+
+  const list = Array.isArray(payload.objects)
+    ? payload.objects
+    : Array.isArray(payload.data)
+      ? payload.data
+      : [];
+
+  if (Array.isArray(list)) {
+    for (const entry of list) {
+      if (hasUsableSevDeskId(entry?.id)) {
+        return buildObjectRef(entry.id, entry.objectName ?? 'SevUser');
+      }
+    }
+  }
+
+  return null;
+}
+
+export async function resolveDefaultContactPerson(
+  strapi: StrapiLike,
+  clientOptions?: SevDeskClientOptions
+): Promise<SevDeskObjectRef | null> {
+  if (cachedContactPersonRef !== undefined) {
+    return cachedContactPersonRef;
+  }
+
+  const envRaw = process.env.SEVDESK_CONTACT_PERSON_ID;
+  if (envRaw) {
+    const trimmed = envRaw.trim();
+    if (hasUsableSevDeskId(trimmed)) {
+      cachedContactPersonRef = buildObjectRef(trimmed, 'SevUser');
+      return cachedContactPersonRef;
+    }
+    if (strapi?.log?.warn) {
+      strapi.log.warn('SevDesk: SEVDESK_CONTACT_PERSON_ID ist ungültig und wird ignoriert.', {
+        value: trimmed,
+      });
+    }
+  }
+
+  try {
+    const response = await sevDeskRequest<any>(
+      strapi,
+      {
+        method: 'GET',
+        path: '/SevUser',
+        query: { limit: 1 },
+      },
+      clientOptions
+    );
+
+    const candidate = pickFirstEntityWithId(response);
+    if (candidate) {
+      cachedContactPersonRef = candidate;
+      return candidate;
+    }
+
+    if (strapi?.log?.warn) {
+      strapi.log.warn('SevDesk: Keine Kontaktperson gefunden (GET /SevUser lieferte keine ID).');
+    }
+  } catch (error) {
+    if (strapi?.log?.warn) {
+      strapi.log.warn('SevDesk: Kontaktperson konnte nicht automatisch ermittelt werden.', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  cachedContactPersonRef = null;
+  return null;
 }
 
 export interface ContactPayload {
@@ -275,7 +386,7 @@ export interface CommunicationWayPayload {
   contactId: number | string;
   type: 'EMAIL' | 'PHONE' | 'FAX' | 'MOBILE' | 'WEBSITE';
   value: string;
-  key?: string;
+  keyId?: number | string;
   main?: boolean;
 }
 
@@ -289,7 +400,7 @@ export async function createCommunicationWay(
     type: payload.type,
     value: payload.value,
     object: buildObjectRef(payload.contactId, 'Contact'),
-    key: payload.key ?? 'MAIN',
+    key: buildObjectRef(payload.keyId ?? 2, 'CommunicationWayKey'),
     main: payload.main ?? true,
   };
 
@@ -302,7 +413,10 @@ export async function createCommunicationWay(
 
 export interface InvoiceDraftPayload {
   contactId: number | string;
+  contactPersonId?: number | string;
+  contactPerson?: { id: number | string; objectName?: string };
   invoiceDate: string;
+  invoiceNumber?: string;
   timeToPay?: number;
   currency?: string;
   invoiceType?: 'RE' | 'RECUR';
@@ -330,6 +444,16 @@ export async function createInvoiceDraft(
   const taxRuleId = taxRuleIdRaw ? Number(taxRuleIdRaw) : 1;
   body.taxRule = buildObjectRef(Number.isFinite(taxRuleId) ? taxRuleId : 1, 'TaxRule');
 
+  if (payload.invoiceNumber) {
+    body.invoiceNumber = payload.invoiceNumber;
+  }
+
+  if (payload.contactPerson) {
+    body.contactPerson = buildObjectRef(payload.contactPerson.id, payload.contactPerson.objectName ?? 'SevUser');
+  } else if (payload.contactPersonId !== undefined && payload.contactPersonId !== null) {
+    body.contactPerson = buildObjectRef(payload.contactPersonId, 'SevUser');
+  }
+
   if (payload.timeToPay !== undefined) body.timeToPay = payload.timeToPay;
   if (payload.customerInternalNote) body.customerInternalNote = payload.customerInternalNote;
   if (payload.deliveryDate) body.deliveryDate = payload.deliveryDate;
@@ -339,6 +463,112 @@ export async function createInvoiceDraft(
     method: 'POST',
     path: '/Invoice',
     body,
+  }, clientOptions);
+}
+
+export interface InvoiceFactoryPayload {
+  invoice: Record<string, unknown>;
+  invoicePosSave: Array<Record<string, unknown>>;
+  invoicePosDelete?: null;
+  discountSave?: null;
+  discountDelete?: null;
+  takeDefaultAddress?: 'true' | 'false';
+}
+
+export async function createInvoiceByFactory(
+  strapi: StrapiLike,
+  payload: InvoiceFactoryPayload,
+  clientOptions?: SevDeskClientOptions
+) {
+  return sevDeskRequest(strapi, {
+    method: 'POST',
+    path: '/Invoice/Factory/saveInvoice',
+    body: payload,
+  }, clientOptions);
+}
+
+function parsePositiveNumber(value: unknown): number | null {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return null;
+  }
+  return parsed;
+}
+
+function toUnixTimestamp(date?: string | Date): number {
+  const inputDate = date ? new Date(date) : new Date();
+  if (Number.isNaN(inputDate.getTime())) {
+    return Math.floor(Date.now() / 1000);
+  }
+  return Math.floor(inputDate.getTime() / 1000);
+}
+
+export async function markInvoicePaid(
+  strapi: StrapiLike,
+  invoiceId: number | string,
+  amount: number,
+  bookingDate?: string | Date,
+  clientOptions?: SevDeskClientOptions
+) {
+  const checkAccountRaw = process.env.SEVDESK_CHECK_ACCOUNT_ID;
+  const checkAccountId = parsePositiveNumber(checkAccountRaw);
+  if (!checkAccountId) {
+    if (strapi?.log?.warn) {
+      strapi.log.warn('SevDesk: Zahlung konnte nicht gebucht werden – SEVDESK_CHECK_ACCOUNT_ID fehlt oder ist ungültig.');
+    }
+    return;
+  }
+
+  const resolvedAmount = parsePositiveNumber(amount);
+  if (!resolvedAmount) {
+    if (strapi?.log?.warn) {
+      strapi.log.warn('SevDesk: Zahlung konnte nicht gebucht werden – Betrag ist ungültig.', {
+        invoiceId,
+        amount,
+      });
+    }
+    return;
+  }
+
+  const payload = {
+    amount: round2(resolvedAmount),
+    date: toUnixTimestamp(bookingDate),
+    type: 'FULL_PAYMENT',
+    checkAccount: buildObjectRef(checkAccountId, 'CheckAccount'),
+    createFeed: false,
+  };
+
+  await sevDeskRequest(strapi, {
+    method: 'PUT',
+    path: `/Invoice/${invoiceId}/bookAmount`,
+    body: payload,
+  }, clientOptions);
+}
+
+function normaliseSendType(input?: string): 'VPR' | 'VP' | 'VM' | 'VPDF' {
+  const allowed = new Set(['VPR', 'VP', 'VM', 'VPDF']);
+  if (!input) {
+    return 'VPDF';
+  }
+  const upper = input.trim().toUpperCase();
+  return allowed.has(upper) ? (upper as any) : 'VPDF';
+}
+
+export async function markInvoiceSent(
+  strapi: StrapiLike,
+  invoiceId: number | string,
+  sendType?: string,
+  clientOptions?: SevDeskClientOptions
+) {
+  const resolvedType = normaliseSendType(sendType);
+
+  await sevDeskRequest(strapi, {
+    method: 'PUT',
+    path: `/Invoice/${invoiceId}/sendBy`,
+    body: {
+      sendType: resolvedType,
+      sendDraft: false,
+    },
   }, clientOptions);
 }
 
@@ -382,50 +612,16 @@ export async function createInvoicePosition(
   }, clientOptions);
 }
 
-export async function updateInvoiceStatus(
-  strapi: StrapiLike,
-  invoiceId: number | string,
-  status: number,
-  additionalFields?: Record<string, unknown>,
-  clientOptions?: SevDeskClientOptions
-) {
-  const body = {
-    status,
-    ...(additionalFields ?? {}),
-  };
-
-  return sevDeskRequest(strapi, {
-    method: 'PUT',
-    path: `/Invoice/${invoiceId}`,
-    body,
-  }, clientOptions);
-}
-
-export async function markInvoicePaid(
-  strapi: StrapiLike,
-  invoiceId: number | string,
-  payDate: string,
-  paidAmount: number,
-  clientOptions?: SevDeskClientOptions
-) {
-  return updateInvoiceStatus(
-    strapi,
-    invoiceId,
-    200,
-    {
-      payDate,
-      paidAmount,
-    },
-    clientOptions
-  );
-}
-
 export async function cancelInvoice(
   strapi: StrapiLike,
   invoiceId: number | string,
   clientOptions?: SevDeskClientOptions
 ) {
-  return updateInvoiceStatus(strapi, invoiceId, 1000, undefined, clientOptions);
+  return sevDeskRequest(strapi, {
+    method: 'POST',
+    path: `/Invoice/${invoiceId}/cancelInvoice`,
+    body: {},
+  }, clientOptions);
 }
 
 export interface InvoiceWithDocument {
