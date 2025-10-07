@@ -8,9 +8,11 @@ Strapi liefert die Inhalte (Seminare, Termine, Produkte, Gutscheine) und wickelt
   - Strapi-Secrets: `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET`, `TRANSFER_TOKEN_SALT`, `ENCRYPTION_KEY`.
   - Datenbank: `DATABASE_*`, `POSTGRES_*` (Host `db_wineacadamy` bzw. `db_wineacadamy_staging`).
   - Public URLs: `PUBLIC_URL`, `API_INTERNAL_URL`, optional `ASSETS_INTERNAL_URL`.
+  - Frontend-Links: optional `FRONTEND_BASE_URL` (Basis für Kunden-Links), `CUSTOMER_PORTAL_BASE_URL` (Standard: `<FRONTEND_BASE_URL>/konto/bestellungen`), `ADMIN_BASE_URL` (Standard: `<FRONTEND_BASE_URL>/admin`).
   - Zahlungen & Kommunikation: `PAYPAL_*`, `SENDGRID_API_KEY`, `EMAIL_FROM`, optional `EMAIL_REPLY_TO`, `EMAIL_TRANSPORT_ENABLED` (Standard `true`), `SEVDESK_API_TOKEN`.
   - Sonstiges: `VAT_RATE`, `SEED_ON_BOOT`.
-  - SevDesk: `SEVDESK_API_TOKEN` (Pflicht), optional `SEVDESK_SYNC_ENABLED` (Standard `true` – `false` deaktiviert alle Syncs), `SEVDESK_API_BASE_URL` (Standard `https://my.sevdesk.de/api/v1`), `SEVDESK_CATEGORY_PRIVATE_ID`, `SEVDESK_CATEGORY_COMPANY_ID`, `SEVDESK_DEFAULT_TIME_TO_PAY_DAYS`, `SEVDESK_DEFAULT_COUNTRY_ID` (Default `1` = Deutschland), `SEVDESK_TAX_RULE_ID`, `SEVDESK_CONTACT_PERSON_ID` (Pflicht für die Factory-API; fällt auf den ersten `SevUser` zurück, sofern abrufbar), `SEVDESK_CHECK_ACCOUNT_ID` (Kontonummer für die Verbuchung bezahlter Rechnungen über `bookAmount`), `SEVDESK_SEND_TYPE` (optional; Standard `VPDF`, mögliche Werte `VPR`, `VP`, `VM`, `VPDF`), `SEVDESK_INVOICE_PREFIX` (Präfix für Rechnungsnummern, Default `WA`).
+  - SevDesk: `SEVDESK_API_TOKEN` (Pflicht), optional `SEVDESK_SYNC_ENABLED` (Standard `true` – `false` deaktiviert alle Syncs), `SEVDESK_API_BASE_URL` (Standard `https://my.sevdesk.de/api/v1`), `SEVDESK_CATEGORY_PRIVATE_ID`, `SEVDESK_CATEGORY_COMPANY_ID`, `SEVDESK_DEFAULT_TIME_TO_PAY_DAYS`, `SEVDESK_DEFAULT_COUNTRY_ID` (Default `1` = Deutschland), `SEVDESK_TAX_RULE_ID`, `SEVDESK_CONTACT_PERSON_ID` (Pflicht für die Factory-API; fällt auf den ersten `SevUser` zurück, sofern abrufbar), `SEVDESK_CHECK_ACCOUNT_ID` (Kontonummer für die Verbuchung bezahlter Rechnungen über `bookAmount`), `SEVDESK_SEND_TYPE` (optional; Standard `VPDF`, mögliche Werte `VPR`, `VP`, `VM`, `VPDF`).
+  - Download-Links: optional `INVOICE_DOWNLOAD_SECRET` (HMAC-Secret für signierte Rechnungs-/Stornodownloads; fällt sonst auf das erste `APP_KEY` zurück), `ORDER_DOWNLOAD_TOKEN_TTL_SECONDS` (Gültigkeit der Download-Token in Sekunden, Default 14 Tage).
 - **Container neu starten:** Bei Schema- oder Plugin-Änderungen Strapi mit `docker compose -f docker-compose-staging.yml up -d --force-recreate service_wineacadamy_staging` neu aufsetzen.
 - **Seeds:** `backend/src/index.ts` erzeugt Demo-Daten, wenn `SEED_ON_BOOT=true` gesetzt ist (nicht in Produktion aktivieren).
 
@@ -65,6 +67,15 @@ curl -s -X POST http://localhost:1337/api/public/bestellungen \
 ```
 
 ## Bestell- & PayPal-Workflow
+
+### Architektur der Public-Bestellung
+- Controller `src/api/bestellung/controllers/bestellung.ts` ist schlank gehalten und delegiert an Hilfsmodule.
+- Gutschein-Validierung & Betragsberechnung: `src/api/bestellung/utils/gutschein.ts`.
+- PayPal-Capture-Prüfung: `src/api/bestellung/utils/paypal.ts`.
+- SevDesk-Sync (Kontakt, Rechnung, Dokument): `src/api/bestellung/services/sevdesk-order.ts`.
+- Benachrichtigungen & Platzhalter: `src/api/bestellung/utils/notifications.ts`.
+- Link-/Dateinamen-Helfer: `src/api/bestellung/utils/order-links.ts`.
+- Neue Logik bitte als Helper/Service ergänzen statt direkt im Controller.
 - Strapi validiert Positionen (Seminar/Produkt/Gutschein), berechnet Netto/Brutto/Steuer und prüft Terminverfügbarkeit.
 - `buchungen` müssen pro Termin die Menge der Seminar-Position widerspiegeln; fehlende Teilnehmerdaten führen zu `400`.
 - PayPal-Zahlungen: `paypalCaptureId`/`paypalOrderId` mitliefern. Capture wird per REST verifiziert (Betrag, Währung, Status `COMPLETED`).
@@ -87,7 +98,7 @@ curl -s -X POST http://localhost:1337/api/public/bestellungen \
 - **Layouts:** Das Feld `layout` (Default/Rechnung/Backoffice) bestimmt das HTML-Grundgerüst, `bodyHtml`/`bodyText` verwenden Platzhalter wie `{{kunde.vorname}}`. Optional kann eine `sendgridVorlagenId` gesetzt werden, dann werden `dynamicTemplateData` an SendGrid übergeben.
 - **Admin-Testversand:** `POST /admin/benachrichtigungen/:id/test-send` (authentifizierte Admin-Session) löst einen Einzelversand via SendGrid aus. Payload:
   ```json
-  { "email": "ziel@example.com", "platzhalter": { "bestellung.bestellnummer": "WA-000123" } }
+  { "email": "ziel@example.com", "platzhalter": { "bestellung.bestellnummer": "WA-20251001" } }
   ```
   Übergebene Platzhalter überschreiben `Testdaten (JSON)` und Beispielwerte. Antwort enthält `messageId` des SendGrid-Transports.
 - **Service:** Implementiert in `src/api/benachrichtigung/services/benachrichtigung.ts`, Versand via `src/services/notification-email.ts` (SendGrid API). Einstellungen/Absender stammen aus `src/services/settings.ts` + Strapi-Single-Type "Einstellungen".

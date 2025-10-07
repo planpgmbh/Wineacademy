@@ -34,7 +34,7 @@ curl -X POST https://api.sendgrid.com/v3/mail/send \
       {
         "to": [{ "email": "kunde@example.com" }],
         "dynamic_template_data": {
-          "bestellung": { "bestellnummer": "WA-000123" }
+          "bestellung": { "bestellnummer": "WA-20251001" }
         }
       }
     ],

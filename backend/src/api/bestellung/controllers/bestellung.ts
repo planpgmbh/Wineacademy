@@ -1,17 +1,15 @@
 import { factories } from '@strapi/strapi';
+import { SevDeskError, downloadDocument } from '../../../services/sevdesk';
+import { GutscheinHelper, calculateGutscheinTotals } from '../utils/gutschein';
+import { verifyPayPalCapture } from '../utils/paypal';
+import { syncSevDeskOrder, SevDeskSyncInput } from '../services/sevdesk-order';
+import { resolveInvoiceDownloadUrl, buildDocumentFilename, resolveOrderIdentifier } from '../utils/order-links';
+import { verifyDownloadToken } from '../utils/download-token';
 import {
-  saveContact,
-  createCommunicationWay,
-  createInvoiceByFactory,
-  markInvoicePaid,
-  markInvoiceSent,
-  fetchInvoiceWithDocument,
-  extractDocumentId,
-  SevDeskError,
-  isSevDeskSyncEnabled,
-  resolveDefaultContactPerson,
-  getNextInvoiceNumber,
-} from '../../../services/sevdesk';
+  summarisePositionsForMail,
+  sendOrderNotifications,
+  getOrderNotificationFetchOptions,
+} from '../utils/notifications';
 
 type PositionInput = {
   typ?: 'seminar' | 'produkt' | 'gutschein';
@@ -38,466 +36,147 @@ type TeilnehmerInput = {
 
 const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
-const normalisePosition = (entry: any) => {
-  const menge = Math.max(1, Number(entry?.menge ?? 1));
-  const steuerSatz = Number.isFinite(Number(entry?.steuerSatz)) ? Number(entry.steuerSatz) : Number(process.env.VAT_RATE ?? 19);
+const findOrderByIdentifier = async (
+  strapi: any,
+  identifier: string,
+  options: Record<string, unknown> = {}
+): Promise<any | null> => {
+  if (!identifier) return null;
+  const trimmed = String(identifier).trim();
+  if (!trimmed) return null;
 
-  let brutto = Number(entry?.einzelpreisBrutto);
-  let netto = Number(entry?.einzelpreisNetto);
-
-  if (!Number.isFinite(brutto) && Number.isFinite(Number(entry?.summeBrutto))) {
-    brutto = round2(Number(entry.summeBrutto) / menge);
-  }
-  if (!Number.isFinite(netto) && Number.isFinite(Number(entry?.summeNetto))) {
-    netto = round2(Number(entry.summeNetto) / menge);
-  }
-  if (!Number.isFinite(brutto) && Number.isFinite(netto)) {
-    brutto = round2(netto * (1 + steuerSatz / 100));
-  }
-  if (!Number.isFinite(netto) && Number.isFinite(brutto)) {
-    netto = steuerSatz > 0 ? round2(brutto / (1 + steuerSatz / 100)) : round2(brutto);
-  }
-
-  if (!Number.isFinite(brutto) || !Number.isFinite(netto)) {
-    throw new Error(`Position '${entry?.titel ?? ''}' benötigt einen Einzelpreis (netto oder brutto)`);
-  }
-
-  const resolvedBrutto = round2(brutto);
-  const resolvedNetto = round2(netto);
-  const summeBrutto = Number.isFinite(Number(entry?.summeBrutto)) ? round2(Number(entry.summeBrutto)) : round2(resolvedBrutto * menge);
-  const summeNetto = Number.isFinite(Number(entry?.summeNetto)) ? round2(Number(entry.summeNetto)) : round2(resolvedNetto * menge);
-  const summeSteuer = Number.isFinite(Number(entry?.summeSteuer)) ? round2(Number(entry.summeSteuer)) : round2(summeBrutto - summeNetto);
-
-  return {
-    ...entry,
-    menge,
-    steuerSatz,
-    einzelpreisBrutto: resolvedBrutto,
-    einzelpreisNetto: resolvedNetto,
-    summeBrutto,
-    summeNetto,
-    summeSteuer,
+  const baseOptions = {
+    fields: ['id', 'bestellnummer', 'documentId', 'sevdeskDocumentId', 'sevdeskStornoDocumentId', 'updatedAt'],
+    ...options,
   };
-};
 
-const generateVoucherCode = async (strapi: any): Promise<string> => {
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  for (let attempt = 0; attempt < 20; attempt += 1) {
-    let code = '';
-    for (let i = 0; i < 4; i += 1) {
-      const block = Array.from({ length: 4 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
-      code += block;
-      if (i < 3) code += '-';
+  const isNumeric = /^\d+$/.test(trimmed);
+  if (isNumeric) {
+    const byId = await strapi.entityService.findOne(
+      'api::bestellung.bestellung',
+      Number.parseInt(trimmed, 10),
+      baseOptions
+    );
+    if (byId) {
+      return byId;
     }
-    const existing = await strapi.db.query('api::gutschein.gutschein').findOne({ where: { code } });
-    if (!existing) return code;
   }
-  throw new Error('Konnte keinen eindeutigen Gutscheincode erzeugen');
-};
 
-const isValidSevDeskId = (value: unknown): boolean => {
-  if (value === null || value === undefined) return false;
-  const numeric = Number(value);
-  if (Number.isFinite(numeric)) {
-    return numeric > 0;
-  }
-  return String(value).trim() !== '';
-};
+  const findByFilter = async (filters: Record<string, unknown>) => {
+    const result = await strapi.entityService.findMany('api::bestellung.bestellung', {
+      filters,
+      limit: 1,
+      ...baseOptions,
+    });
+    if (Array.isArray(result)) {
+      return result[0] ?? null;
+    }
+    return result as any;
+  };
 
-const parseSevDeskId = (payload: any): string | null => {
-  if (!payload) return null;
-  if (isValidSevDeskId(payload.id)) return String(payload.id);
-  if (isValidSevDeskId(payload.object?.id)) return String(payload.object.id);
-  if (isValidSevDeskId(payload.objects?.id)) return String(payload.objects.id);
-  if (isValidSevDeskId(payload.data?.id)) return String(payload.data.id);
-  if (payload.objects && typeof payload.objects === 'object' && !Array.isArray(payload.objects)) {
-    for (const value of Object.values(payload.objects)) {
-      if (isValidSevDeskId((value as any)?.id)) {
-        return String((value as any).id);
-      }
-      if (isValidSevDeskId((value as any)?.object?.id)) {
-        return String((value as any).object.id);
-      }
-    }
-  }
-  if (Array.isArray(payload.objects)) {
-    for (const entry of payload.objects) {
-      if (isValidSevDeskId(entry?.id)) return String(entry.id);
-    }
-  }
-  if (Array.isArray(payload.data)) {
-    for (const entry of payload.data) {
-      if (isValidSevDeskId(entry?.id)) return String(entry.id);
-    }
-  }
+  const byDocument = await findByFilter({ documentId: trimmed });
+  if (byDocument) return byDocument;
+
+  const byOrderNumber = await findByFilter({ bestellnummer: trimmed });
+  if (byOrderNumber) return byOrderNumber;
+
   return null;
 };
 
-const resolveSevDeskCategoryId = (rechnungstyp: string | undefined): number => {
-  const envValue =
-    rechnungstyp === 'firma' ? process.env.SEVDESK_CATEGORY_COMPANY_ID : process.env.SEVDESK_CATEGORY_PRIVATE_ID;
-  const fallback = rechnungstyp === 'firma' ? 4 : 3;
-  if (!envValue) {
-    return fallback;
+async function streamOrderDocument(
+  strapi: any,
+  ctx: any,
+  order: any,
+  variant: 'invoice' | 'storno'
+): Promise<void> {
+  const documentId =
+    variant === 'invoice' ? order?.sevdeskDocumentId : order?.sevdeskStornoDocumentId;
+  if (!documentId) {
+    ctx.notFound('Dokument nicht vorhanden.');
+    return;
   }
-  const parsed = Number(envValue);
-  return Number.isFinite(parsed) ? parsed : fallback;
-};
 
-const resolveSevDeskTimeToPay = (): number | undefined => {
-  const raw = process.env.SEVDESK_DEFAULT_TIME_TO_PAY_DAYS;
-  if (!raw) return undefined;
-  const parsed = Number(raw);
-  return Number.isFinite(parsed) ? parsed : undefined;
-};
-
-const toISODate = (input?: string | Date): string => {
-  if (!input) {
-    return new Date().toISOString().slice(0, 10);
-  }
-  const date = input instanceof Date ? input : new Date(input);
-  if (Number.isNaN(date.getTime())) {
-    return new Date().toISOString().slice(0, 10);
-  }
-  return date.toISOString().slice(0, 10);
-};
-
-const toSevDeskDate = (input?: string | Date): string => {
-  const iso = toISODate(input);
-  const [year, month, day] = iso.split('-');
-  return `${day}.${month}.${year}`;
-};
-
-const ensureSevDeskCommunicationWay = async (strapi: any, contactId: string, email: string) => {
+  const filename = buildDocumentFilename(order, variant);
   try {
-    await createCommunicationWay(strapi, {
-      contactId,
-      type: 'EMAIL',
-      value: email,
-      main: true,
-    });
+    const download = await downloadDocument(strapi, documentId, filename);
+    ctx.set('Content-Type', download.contentType || 'application/pdf');
+    ctx.set('Content-Disposition', `attachment; filename="${filename}"`);
+    ctx.set('Cache-Control', 'no-store');
+    ctx.status = 200;
+    ctx.body = download.buffer;
   } catch (error: any) {
-    if (error instanceof SevDeskError && (error.status === 409 || error.status === 422)) {
-      if (strapi?.log?.debug) {
-        strapi.log.debug('SevDesk: Kommunikationseintrag bereits vorhanden oder abgelehnt.', {
-          contactId,
-          email,
-          status: error.status,
-        });
-      }
-      return;
-    }
-    throw error;
-  }
-};
-
-interface SevDeskSyncInput {
-  bestellungId: number;
-  bestellung: any;
-  kundeId?: string | number;
-  kunde?: any;
-  positions: any[];
-  dueTotals: { brutto: number; netto: number; steuer: number };
-  gutscheinBetrag: number;
-}
-
-const createDiscountInvoicePositions = (positions: any[], discountAmount: number) => {
-  const totalBrutto = positions.reduce((acc, pos) => acc + Number(pos?.summeBrutto ?? 0), 0);
-  const effectiveDiscount = Number.isFinite(Number(discountAmount))
-    ? Math.min(Math.max(Number(discountAmount), 0), totalBrutto)
-    : 0;
-  if (totalBrutto <= 0 || effectiveDiscount <= 0) {
-    return [] as Array<{ quantity: number; price: number; taxRate: number; name: string; text?: string }>;
-  }
-
-  const sumsByTax = new Map<number, number>();
-  const taxOrder: number[] = [];
-  for (const pos of positions) {
-    const taxRateRaw = pos?.steuerSatz;
-    const taxRate = Number.isFinite(Number(taxRateRaw)) ? Number(taxRateRaw) : 0;
-    const sumBrutto = Number(pos?.summeBrutto ?? 0);
-    if (sumBrutto <= 0) continue;
-    if (!sumsByTax.has(taxRate)) {
-      taxOrder.push(taxRate);
-      sumsByTax.set(taxRate, sumBrutto);
-    } else {
-      sumsByTax.set(taxRate, (sumsByTax.get(taxRate) ?? 0) + sumBrutto);
-    }
-  }
-
-  const discountPositions: Array<{ quantity: number; price: number; taxRate: number; name: string; text?: string }> = [];
-  let remaining = round2(effectiveDiscount);
-
-  taxOrder.forEach((taxRate, index) => {
-    const sumForRate = sumsByTax.get(taxRate) ?? 0;
-    if (sumForRate <= 0 || remaining <= 0) {
-      return;
-    }
-    let share = (sumForRate / totalBrutto) * effectiveDiscount;
-    if (index === taxOrder.length - 1) {
-      share = remaining;
-    } else {
-      share = round2(Math.min(remaining, share));
-    }
-
-    if (share <= 0) {
-      return;
-    }
-
-    remaining = round2(remaining - share);
-    const label = taxRate > 0 ? `Gutscheinrabatt (${taxRate}% MwSt)` : 'Gutscheinrabatt';
-
-    discountPositions.push({
-      quantity: 1,
-      price: -round2(share),
-      taxRate,
-      name: label,
-      text: 'Automatischer Gutscheinabzug',
+    strapi.log.error(`[publicDownload ${variant}] Dokument konnte nicht geladen werden.`, {
+      identifier: resolveOrderIdentifier(order),
+      documentId,
+      error: error?.message ?? error,
     });
-  });
-
-  if (remaining > 0.01 && discountPositions.length > 0) {
-    const last = discountPositions[discountPositions.length - 1];
-    discountPositions[discountPositions.length - 1] = {
-      ...last,
-      price: round2(last.price - remaining),
-    };
-    remaining = 0;
+    ctx.internalServerError('Dokument konnte nicht geladen werden.');
   }
-
-  return discountPositions;
-};
-
-async function syncSevDeskOrder(strapi: any, input: SevDeskSyncInput): Promise<void> {
-  if (!isSevDeskSyncEnabled()) {
-    if (strapi?.log?.debug) {
-      strapi.log.debug('SevDesk-Synchronisation deaktiviert (SEVDESK_SYNC_ENABLED=false).');
-    }
-    return;
-  }
-
-  if (!process.env.SEVDESK_API_TOKEN) {
-    if (strapi?.log?.debug) {
-      strapi.log.debug('SevDesk-Synchronisation übersprungen: Kein API-Token konfiguriert.');
-    }
-    return;
-  }
-
-  const bestellung = input.bestellung ?? {};
-  const kunde = input.kunde ?? null;
-
-  const existingContactId = bestellung.sevdeskContactId || kunde?.sevdeskContactId;
-  const rechnungstyp = bestellung.rechnungstyp === 'firma' ? 'firma' : 'privat';
-  const companyName = rechnungstyp === 'firma' ? String(bestellung.firmenname || '').trim() : undefined;
-  const fallbackName = `${bestellung.vorname || ''} ${bestellung.nachname || ''}`.trim() || companyName || 'Kontakt';
-
-  const contactPayload: Record<string, unknown> = {
-    categoryId: resolveSevDeskCategoryId(rechnungstyp),
-    name: companyName || fallbackName,
-    status: 100,
-  };
-
-  if (existingContactId) {
-    contactPayload.id = existingContactId;
-  }
-
-  if (bestellung.bestellnummer) {
-    contactPayload.customerNumber = bestellung.bestellnummer;
-    contactPayload.description = `Bestellung ${bestellung.bestellnummer}`;
-  } else {
-    contactPayload.description = `Bestellung #${input.bestellungId}`;
-  }
-
-  if (rechnungstyp === 'firma') {
-    const name2 = `${bestellung.vorname || ''} ${bestellung.nachname || ''}`.trim();
-    if (name2) {
-      contactPayload.name2 = name2;
-    }
-    if (bestellung.ustId) {
-      contactPayload.vatNumber = String(bestellung.ustId).trim();
-    }
-  } else {
-    if (bestellung.vorname) contactPayload.surename = bestellung.vorname;
-    if (bestellung.nachname) contactPayload.familyname = bestellung.nachname;
-  }
-
-  const address: Record<string, unknown> = {};
-  if (bestellung.strasse) address.street = bestellung.strasse;
-  if (bestellung.plz) address.zip = bestellung.plz;
-  if (bestellung.stadt) address.city = bestellung.stadt;
-  const rawCountry = process.env.SEVDESK_DEFAULT_COUNTRY_ID;
-  if (rawCountry) {
-    const countryId = Number(rawCountry);
-    if (Number.isFinite(countryId)) {
-      address.countryId = countryId;
-    }
-  }
-  if (Object.keys(address).length > 0) {
-    contactPayload.address = address;
-  }
-
-  const contactResponse = await saveContact(strapi, contactPayload as any);
-  const contactId = parseSevDeskId(contactResponse) ?? (existingContactId ? String(existingContactId) : null);
-  if (!contactId) {
-    throw new Error('SevDesk: Kontakt-ID konnte nicht ermittelt werden.');
-  }
-
-  await strapi.entityService.update('api::bestellung.bestellung', input.bestellungId, {
-    data: { sevdeskContactId: contactId },
-  });
-
-  if (input.kundeId && (!kunde?.sevdeskContactId || String(kunde.sevdeskContactId) !== contactId)) {
-    await strapi.entityService.update('api::kunde.kunde', input.kundeId, {
-      data: { sevdeskContactId: contactId },
-    });
-  }
-
-  const primaryEmail =
-    rechnungstyp === 'firma'
-      ? bestellung.rechnungsEmail || bestellung.email
-      : bestellung.email;
-  if (primaryEmail) {
-    await ensureSevDeskCommunicationWay(strapi, contactId, primaryEmail);
-  }
-
-  if (!input.positions || input.positions.length === 0) {
-    strapi.log.warn('SevDesk-Sync übersprungen: Keine Positionen vorhanden, Rechnung nicht erzeugt.', {
-      bestellungId: input.bestellungId,
-    });
-    return;
-  }
-
-  const timeToPay = resolveSevDeskTimeToPay();
-  const contactPersonRef = await resolveDefaultContactPerson(strapi);
-  if (!contactPersonRef) {
-    throw new Error(
-      'SevDesk: Keine Kontaktperson konfiguriert (SEVDESK_CONTACT_PERSON_ID setzen oder SevUser abrufbar machen).'
-    );
-  }
-  const invoicePositions: Array<{ quantity: number; price: number; taxRate: number; name: string; text?: string }> = [];
-
-  for (const rawPos of input.positions) {
-    const quantityRaw = Number(rawPos?.menge ?? 1);
-    const quantity = Number.isFinite(quantityRaw) && quantityRaw > 0 ? quantityRaw : 1;
-    const priceRaw = Number(rawPos?.einzelpreisBrutto ?? rawPos?.summeBrutto ?? 0);
-    const price = Number.isFinite(priceRaw) ? priceRaw : 0;
-    const taxRateRaw = Number(rawPos?.steuerSatz ?? 0);
-    const taxRate = Number.isFinite(taxRateRaw) ? taxRateRaw : 0;
-
-    invoicePositions.push({
-      quantity,
-      price,
-      taxRate,
-      name: rawPos?.titel || 'Position',
-      text: rawPos?.beschreibung,
-    });
-  }
-
-  const discountPositions = createDiscountInvoicePositions(input.positions, input.gutscheinBetrag);
-  if (discountPositions.length > 0) {
-    invoicePositions.push(...discountPositions);
-  }
-
-  const taxRuleIdEnv = process.env.SEVDESK_TAX_RULE_ID;
-  const parsedTaxRuleId = taxRuleIdEnv ? Number(taxRuleIdEnv) : 1;
-  const defaultCountryRaw = process.env.SEVDESK_DEFAULT_COUNTRY_ID;
-  const parsedCountryId = defaultCountryRaw ? Number(defaultCountryRaw) : NaN;
-  const resolvedCountryId = Number.isFinite(parsedCountryId) && parsedCountryId > 0 ? parsedCountryId : 1;
-  const invoiceFactoryPayload = {
-    invoice: {
-      objectName: 'Invoice',
-      contact: { id: contactId, objectName: 'Contact' },
-      contactPerson: contactPersonRef,
-      invoiceDate: toSevDeskDate(bestellung.createdAt),
-      invoiceNumber: bestellung.bestellnummer,
-      deliveryDate: toSevDeskDate(bestellung.createdAt),
-      status: 100,
-      invoiceType: 'RE',
-      currency: bestellung.waehrung || 'EUR',
-      timeToPay: timeToPay !== undefined ? timeToPay : undefined,
-      customerInternalNote: bestellung.bestellnummer ? `Bestellung ${bestellung.bestellnummer}` : undefined,
-      taxRule: {
-        id: Number.isFinite(parsedTaxRuleId) ? parsedTaxRuleId : 1,
-        objectName: 'TaxRule',
-      },
-      discount: 0,
-      taxRate: 0,
-      taxText: `Umsatzsteuer ${round2(Number(process.env.VAT_RATE ?? 19))}%`,
-      taxType: 'default',
-      mapAll: true,
-      showNet: false,
-      addressCountry: { id: resolvedCountryId, objectName: 'StaticCountry' },
-      addressStreet: bestellung.strasse || undefined,
-      addressZip: bestellung.plz || undefined,
-      addressCity: bestellung.stadt || undefined,
-      addressName: rechnungstyp === 'firma' ? companyName : fallbackName,
-    },
-    invoicePosSave: invoicePositions.map((position) => {
-      const gross = round2(position.price);
-      const taxRate = Number.isFinite(position.taxRate) ? position.taxRate : 0;
-      const net = taxRate > 0 ? round2(gross / (1 + taxRate / 100)) : gross;
-      const taxAmount = round2(gross - net);
-      return {
-        objectName: 'InvoicePos',
-        mapAll: true,
-        quantity: position.quantity,
-        price: net,
-        priceGross: gross,
-        taxRate,
-        priceTax: taxAmount,
-        name: position.name,
-        text: position.text,
-        unity: { id: 1, objectName: 'Unity' },
-      };
-    }),
-    invoicePosDelete: null,
-    discountSave: null,
-    discountDelete: null,
-    takeDefaultAddress: true,
-  };
-
-  const invoiceResponse = await createInvoiceByFactory(strapi, invoiceFactoryPayload as any);
-  const invoiceId = parseSevDeskId(invoiceResponse);
-  if (!invoiceId) {
-    throw new Error('SevDesk: Rechnungs-ID konnte nicht ermittelt werden.');
-  }
-
-  try {
-    await markInvoiceSent(strapi, invoiceId, process.env.SEVDESK_SEND_TYPE);
-  } catch (sendErr) {
-    strapi.log.error('[SevDesk] Rechnung konnte nicht als versendet markiert werden', {
-      bestellungId: input.bestellungId,
-      invoiceId,
-      error: sendErr instanceof Error ? sendErr.message : sendErr,
-    });
-  }
-
-  if (bestellung.bestellstatus === 'bezahlt') {
-    try {
-      await markInvoicePaid(strapi, invoiceId, Number(input.dueTotals?.brutto ?? 0), bestellung.updatedAt);
-    } catch (bookErr) {
-      strapi.log.error('[SevDesk] Zahlung konnte nicht gebucht werden', {
-        bestellungId: input.bestellungId,
-        invoiceId,
-        error: bookErr instanceof Error ? bookErr.message : bookErr,
-      });
-    }
-  }
-
-  const invoiceWithDocument = await fetchInvoiceWithDocument(strapi, invoiceId);
-  const documentRef = extractDocumentId(invoiceWithDocument);
-
-  const updateData: Record<string, unknown> = {
-    sevdeskContactId: contactId,
-    sevdeskInvoiceId: invoiceId,
-  };
-  if (documentRef?.id) {
-    updateData.sevdeskDocumentId = String(documentRef.id);
-  }
-  await strapi.entityService.update('api::bestellung.bestellung', input.bestellungId, { data: updateData });
 }
 
 export default factories.createCoreController('api::bestellung.bestellung', ({ strapi }) => ({
+  async publicDownloadInvoice(ctx) {
+    const identifier = ctx.params?.id;
+    if (!identifier) {
+      return ctx.badRequest('Ungültige Bestellung.');
+    }
+    const tokenParam = ctx.query?.token;
+    const token = Array.isArray(tokenParam) ? tokenParam[0] : tokenParam;
+    if (!verifyDownloadToken(String(identifier), 'invoice', token)) {
+      return ctx.forbidden('Download-Link ist ungültig oder abgelaufen.');
+    }
+    try {
+      const order = await findOrderByIdentifier(
+        strapi,
+        identifier,
+        getOrderNotificationFetchOptions()
+      );
+      if (!order) {
+        return ctx.notFound('Bestellung nicht gefunden.');
+      }
+      await streamOrderDocument(strapi, ctx, order, 'invoice');
+    } catch (error: any) {
+      strapi.log.error('[publicDownloadInvoice] Fehler beim Versand der Rechnung.', {
+        identifier,
+        error: error?.message ?? error,
+      });
+      if (!ctx.body) {
+        ctx.internalServerError('Rechnung konnte nicht geladen werden.');
+      }
+    }
+  },
+
+  async publicDownloadStorno(ctx) {
+    const identifier = ctx.params?.id;
+    if (!identifier) {
+      return ctx.badRequest('Ungültige Bestellung.');
+    }
+    const tokenParam = ctx.query?.token;
+    const token = Array.isArray(tokenParam) ? tokenParam[0] : tokenParam;
+    if (!verifyDownloadToken(String(identifier), 'storno', token)) {
+      return ctx.forbidden('Download-Link ist ungültig oder abgelaufen.');
+    }
+    try {
+      const order = await findOrderByIdentifier(
+        strapi,
+        identifier,
+        getOrderNotificationFetchOptions()
+      );
+      if (!order) {
+        return ctx.notFound('Bestellung nicht gefunden.');
+      }
+      await streamOrderDocument(strapi, ctx, order, 'storno');
+    } catch (error: any) {
+      strapi.log.error('[publicDownloadStorno] Fehler beim Versand der Stornorechnung.', {
+        identifier,
+        error: error?.message ?? error,
+      });
+      if (!ctx.body) {
+        ctx.internalServerError('Stornorechnung konnte nicht geladen werden.');
+      }
+    }
+  },
+
   async publicGet(ctx) {
     const id = Number(ctx.params?.id);
     if (!Number.isFinite(id)) return ctx.badRequest('Ungültige ID');
@@ -571,8 +250,6 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
 
     const seminarSeats = new Map<number, { menge: number; brutto: number; netto: number; titel: string; steuerSatz: number }>();
     const positionen: any[] = [];
-    const voucherRequests: Array<{ betrag: number; name: string; beschreibung?: string; produktId?: number; menge: number }> = [];
-
     const loadProdukt = async (id: number) => {
       return strapi.db.query('api::produkt.produkt').findOne({
         where: { id, aktiv: true },
@@ -592,15 +269,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
       });
     };
 
-    const loadGutscheinTemplate = async () => {
-      return strapi.db.query('api::gutschein.gutschein').findOne({
-        where: { istTemplate: true },
-        select: ['id', 'minBetrag', 'maxBetrag', 'name'],
-      });
-    };
-
-    const templatePromise = loadGutscheinTemplate();
-
+    const gutscheinHelper = new GutscheinHelper(strapi);
     for (const raw of positionsInput) {
       const menge = Math.max(1, Number(raw.menge ?? 1));
       const typ = raw.typ === 'seminar' || raw.typ === 'gutschein' || raw.typ === 'produkt'
@@ -662,7 +331,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         const produkt = await loadProdukt(produktId);
         if (!produkt) return ctx.badRequest('Produkt nicht verfügbar');
 
-        const istGutschein = !!produkt.gutschein || typ === 'gutschein';
+        const istGutschein = gutscheinHelper.isGutscheinPosition(raw, produkt);
         let brutto: number | undefined = produkt.preisBrutto != null ? Number(produkt.preisBrutto) : undefined;
         let netto: number | undefined = produkt.preisNetto != null ? Number(produkt.preisNetto) : undefined;
         let steuerSatz = produkt.steuerSatz != null ? Number(produkt.steuerSatz) : Number(process.env.VAT_RATE ?? 19);
@@ -670,29 +339,15 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
           steuerSatz = 0;
         }
 
-        if (istGutschein) {
-          const template = await templatePromise;
-          if (!template) {
-            return ctx.badRequest('Kein Gutschein-Template konfiguriert');
+        try {
+          const gutscheinAdjustment = await gutscheinHelper.applyAdjustments(raw, produkt);
+          if (gutscheinAdjustment) {
+            brutto = gutscheinAdjustment.brutto;
+            netto = gutscheinAdjustment.netto;
+            steuerSatz = gutscheinAdjustment.steuerSatz;
           }
-          const betrag = raw.betrag != null ? Number(raw.betrag) : Number(raw.einzelpreisBrutto ?? brutto);
-          if (!Number.isFinite(betrag) || betrag <= 0) {
-            return ctx.badRequest('Gutscheinbetrag ungültig');
-          }
-          const min = template.minBetrag != null ? Number(template.minBetrag) : undefined;
-          const max = template.maxBetrag != null ? Number(template.maxBetrag) : undefined;
-          if (min != null && betrag < min) return ctx.badRequest(`Gutscheinbetrag muss mindestens ${min} sein`);
-          if (max != null && betrag > max) return ctx.badRequest(`Gutscheinbetrag darf höchstens ${max} sein`);
-          brutto = round2(betrag);
-          netto = brutto;
-          steuerSatz = 0;
-          voucherRequests.push({
-            betrag: brutto,
-            name: raw.titel?.trim() || produkt.name,
-            beschreibung: raw.beschreibung,
-            produktId,
-            menge,
-          });
+        } catch (voucherError: any) {
+          return ctx.badRequest(voucherError?.message ?? 'Gutschein ungültig');
         }
 
         if (!Number.isFinite(brutto as number) && Number.isFinite(netto as number)) {
@@ -726,8 +381,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
       }
     }
 
-    // Teilnehmer prüfen und vorbereiten
-    const buchungenPayload: any[] = [];
+        const buchungenPayload: any[] = [];
     if (teilnehmerInput.length > 0) {
       const counter = new Map<number, number>();
       for (const teilnehmer of teilnehmerInput) {
@@ -772,74 +426,28 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
     const summePositionenBrutto = round2(normalisedPositions.reduce((acc, p) => acc + (p.summeBrutto ?? 0), 0));
     const summeSteuer = round2(normalisedPositions.reduce((acc, p) => acc + (p.summeSteuer ?? 0), 0));
 
-    const expectedBrutto = summePositionenBrutto;
-    const expectedTotal = round2(Math.max(0, expectedBrutto - gutscheinBetrag));
+        const gutscheinTotals = calculateGutscheinTotals(
+      summePositionenBrutto,
+      summePositionenNetto,
+      summeSteuer,
+      gutscheinBetrag
+    );
+    const expectedTotal = gutscheinTotals.dueBrutto;
 
     const zahlungsmethode = body.zahlungsmethode === 'paypal' ? 'paypal' : (body.zahlungsmethode === 'rechnung' ? 'rechnung' : body.zahlungsmethode || 'rechnung');
     let zahlungsreferenz: string | undefined = body.zahlungsreferenz ? String(body.zahlungsreferenz) : undefined;
-    let bestellstatus: 'offen' | 'bezahlt' | 'storniert' = 'offen';
-
-    const verifyPayPalCapture = async (captureId: string) => {
-      const mode = String(process.env.PAYPAL_MODE || 'sandbox').toLowerCase();
-      const base = mode === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
-      const client = process.env.PAYPAL_CLIENT_ID || '';
-      const secret = process.env.PAYPAL_CLIENT_SECRET || process.env.PAYPAL_SECRET || '';
-      if (!client || !secret) throw new Error('PayPal Credentials fehlen');
-      const tokenRes = await fetch(`${base}/v1/oauth2/token`, {
-        method: 'POST',
-        headers: {
-          Authorization: 'Basic ' + Buffer.from(`${client}:${secret}`).toString('base64'),
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'grant_type=client_credentials',
-      });
-      if (!tokenRes.ok) throw new Error(`PayPal Token Fehler ${tokenRes.status}`);
-      const tokenJson = (await tokenRes.json()) as { access_token?: string };
-      const accessToken = tokenJson.access_token;
-      if (!accessToken) throw new Error('PayPal Token fehlt');
-
-      const capRes = await fetch(`${base}/v2/payments/captures/${encodeURIComponent(captureId)}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      if (!capRes.ok) {
-        const txt = await capRes.text();
-        throw new Error(`PayPal Capture Fehler ${capRes.status}: ${txt}`);
-      }
-      const cap = (await capRes.json()) as { status?: string; amount?: { value?: string; currency_code?: string } };
-      if ((cap.status || '').toUpperCase() !== 'COMPLETED') throw new Error('PayPal Capture nicht abgeschlossen');
-      if ((cap.amount?.currency_code || '').toUpperCase() !== 'EUR') throw new Error('PayPal-Währung ist nicht EUR');
-      const value = cap.amount?.value ? Number(cap.amount.value) : NaN;
-      if (!Number.isFinite(value)) throw new Error('PayPal-Wert ungültig');
-      if (Math.abs(value - expectedTotal) > 0.01) {
-        throw new Error('PayPal-Betrag weicht vom erwarteten Betrag ab');
-      }
-    };
+    const bestellstatus: 'offen' | 'bezahlt' | 'storniert' = 'offen';
 
     try {
-      if (zahlungsmethode === 'paypal') {
-        if (body.paypalCaptureId) {
-          await verifyPayPalCapture(String(body.paypalCaptureId));
-          bestellstatus = 'bezahlt';
-          zahlungsreferenz = String(body.paypalCaptureId);
-        } else {
-          bestellstatus = 'offen';
-        }
+      if (zahlungsmethode === 'paypal' && body.paypalCaptureId) {
+        const captureId = await verifyPayPalCapture(String(body.paypalCaptureId), expectedTotal);
+        zahlungsreferenz = captureId;
       }
 
-      const summeGutschein = round2(gutscheinBetrag);
-      const dueBrutto = round2(Math.max(0, summePositionenBrutto - summeGutschein));
-      const ratio = summePositionenBrutto > 0 ? summePositionenNetto / summePositionenBrutto : 1;
-      const gutscheinNetto = round2(summeGutschein * ratio);
-      const gutscheinSteuer = round2(summeGutschein - gutscheinNetto);
-      const dueNetto = round2(Math.max(0, summePositionenNetto - gutscheinNetto));
-      const dueSteuer = round2(Math.max(0, summeSteuer - gutscheinSteuer));
-
+      const { summeGutschein, dueBrutto, dueNetto, dueSteuer } = gutscheinTotals;
       const newsletterOptIn = !!body.newsletterOptIn;
-      const newsletterOptInAt = newsletterOptIn ? new Date().toISOString() : undefined;
 
-      const nextInvoiceNumber = await getNextInvoiceNumber(strapi);
-
-      const bestellungData: any = {
+            const bestellungData: any = {
         rechnungstyp,
         firmenname: body.firmenname,
         ustId: body.ustId,
@@ -870,16 +478,13 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         notizen: body.notizen,
         bestellstatus,
         waehrung: body.waehrung || 'EUR',
-        bestellnummer: nextInvoiceNumber,
       };
 
-      const created = await strapi.entityService.create('api::bestellung.bestellung', { data: bestellungData });
+            const created = await strapi.entityService.create('api::bestellung.bestellung', { data: bestellungData });
       const createdAny = created as any;
       const bestellungId = createdAny.id;
-      const bestellnummer = createdAny.bestellnummer as string | undefined;
-
       if (buchungenPayload.length > 0) {
-        for (const teilnehmer of buchungenPayload) {
+                for (const teilnehmer of buchungenPayload) {
           await strapi.entityService.create('api::buchung.buchung', {
             data: {
               ...teilnehmer,
@@ -889,107 +494,25 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         }
       }
 
-      let kundeId: string | number | undefined;
+      const orderFetchOptions: any = getOrderNotificationFetchOptions();
+      const full = await strapi.entityService.findOne('api::bestellung.bestellung', bestellungId, orderFetchOptions);
+
+      let orderSnapshot = full as any;
 
       try {
-        const email: string | undefined = rechnungstyp === 'firma' ? (bestellungData.rechnungsEmail || bestellungData.email) : bestellungData.email;
-        if (email) {
-          const existingCustomer = await strapi.db.query('api::kunde.kunde').findOne({
-            where: { email },
-            select: ['id', 'newsletterOptIn', 'newsletterOptInAt'],
-          });
-          kundeId = existingCustomer?.id;
-          if (!kundeId) {
-            const createdCustomer = await strapi.entityService.create('api::kunde.kunde', {
-              data: {
-                vorname: bestellungData.vorname || '—',
-                nachname: bestellungData.nachname || (rechnungstyp === 'firma' ? bestellungData.firmenname || '—' : '—'),
-                email,
-                telefon: bestellungData.telefon,
-                strasse: bestellungData.strasse,
-                plz: bestellungData.plz,
-                stadt: bestellungData.stadt,
-                land: bestellungData.land,
-                ...(newsletterOptIn
-                  ? {
-                      newsletterOptIn: true,
-                      newsletterOptInAt: newsletterOptInAt || new Date().toISOString(),
-                    }
-                  : {}),
-              },
-            });
-            kundeId = createdCustomer.id;
-          } else if (newsletterOptIn && (!existingCustomer?.newsletterOptIn || !existingCustomer?.newsletterOptInAt)) {
-            await strapi.entityService.update('api::kunde.kunde', kundeId, {
-              data: {
-                newsletterOptIn: true,
-                newsletterOptInAt: existingCustomer?.newsletterOptInAt || newsletterOptInAt || new Date().toISOString(),
-              },
-            });
-          }
-          if (kundeId) {
-            await strapi.entityService.update('api::bestellung.bestellung', bestellungId, { data: { kunde: kundeId } });
-          }
-        }
-      } catch (linkErr) {
-        strapi.log.warn(`[publicCreate Bestellung] Kunde-Verknüpfung übersprungen: ${(linkErr as any)?.message || linkErr}`);
-      }
-
-      let generatedCodes: string[] = [];
-      if (bestellstatus === 'bezahlt' && voucherRequests.length > 0) {
-        for (const req of voucherRequests) {
-          const count = Math.max(1, Number(req.menge));
-          for (let i = 0; i < count; i += 1) {
-            const code = await generateVoucherCode(strapi);
-            generatedCodes.push(code);
-            await strapi.entityService.create('api::gutschein.gutschein', {
-              data: {
-                name: req.name,
-                beschreibung: req.beschreibung,
-                code,
-                betrag: req.betrag,
-                istTemplate: false,
-                aktiv: true,
-                bestellung: bestellungId,
-              },
-            });
-          }
-        }
-        if (generatedCodes.length > 0) {
-          await strapi.entityService.update('api::bestellung.bestellung', bestellungId, {
-            data: { gutscheinCode: generatedCodes.join(', ') },
-          });
-        }
-      }
-
-      const full = await strapi.entityService.findOne('api::bestellung.bestellung', bestellungId, {
-        populate: { gutscheine: { filters: { istTemplate: false }, fields: ['code', 'betrag'] } },
-        fields: ['*'] as any,
-      });
-
-      const fullAny = full as any;
-
-      let kundeEntity: any = null;
-      if (kundeId) {
-        try {
-          kundeEntity = await strapi.entityService.findOne('api::kunde.kunde', kundeId);
-        } catch (kundeLoadErr) {
-          strapi.log.warn(
-            `[publicCreate Bestellung] Kunde für SevDesk konnte nicht geladen werden: ${(kundeLoadErr as any)?.message || kundeLoadErr}`
-          );
-        }
-      }
-
-      try {
-        await syncSevDeskOrder(strapi, {
+                await syncSevDeskOrder(strapi, {
           bestellungId,
-          bestellung: fullAny,
-          kundeId,
-          kunde: kundeEntity,
+          bestellung: orderSnapshot,
           positions: normalisedPositions,
           dueTotals: { brutto: dueBrutto, netto: dueNetto, steuer: dueSteuer },
           gutscheinBetrag: summeGutschein,
         });
+        const refreshed = await strapi.entityService.findOne(
+          'api::bestellung.bestellung',
+          bestellungId,
+          orderFetchOptions
+        );
+        orderSnapshot = refreshed as any;
       } catch (sevdeskErr) {
         const meta: Record<string, unknown> = {
           bestellungId,
@@ -1005,17 +528,38 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         );
       }
 
-      const gutscheine = Array.isArray(fullAny?.gutscheine) ? fullAny.gutscheine : [];
+      const positionsForNotifications = Array.isArray(orderSnapshot?.positionen) && orderSnapshot.positionen.length
+        ? orderSnapshot.positionen
+        : normalisedPositions;
+      try {
+        await sendOrderNotifications(strapi, {
+          order: orderSnapshot,
+          positions: summarisePositionsForMail(positionsForNotifications),
+          totals: {
+            brutto: dueBrutto,
+            netto: dueNetto,
+            steuer: dueSteuer,
+            gutschein: summeGutschein,
+          },
+        });
+      } catch (notificationErr: any) {
+        strapi.log.error('[publicCreate Bestellung] Benachrichtigungen fehlgeschlagen.', {
+          bestellungId,
+          error: notificationErr?.message ?? notificationErr,
+        });
+      }
+
+      const gutscheine = Array.isArray(orderSnapshot?.gutscheine) ? orderSnapshot.gutscheine : [];
       ctx.body = {
-        id: fullAny.id,
-        bestellnummer: fullAny.bestellnummer,
-        status: fullAny.bestellstatus,
-        zahlungsmethode: fullAny.zahlungsmethode,
+        id: orderSnapshot.id,
+        bestellnummer: orderSnapshot.bestellnummer,
+        status: orderSnapshot.bestellstatus,
+        zahlungsmethode: orderSnapshot.zahlungsmethode,
         totals: {
-          brutto: fullAny.zuZahlenBrutto ?? fullAny.summePositionenBrutto,
-          netto: fullAny.zuZahlenNetto ?? fullAny.summePositionenNetto,
-          steuer: fullAny.zuZahlenSteuer ?? fullAny.summeSteuer,
-          gutschein: fullAny.gutscheinBetrag ?? 0,
+          brutto: orderSnapshot.zuZahlenBrutto ?? orderSnapshot.summePositionenBrutto,
+          netto: orderSnapshot.zuZahlenNetto ?? orderSnapshot.summePositionenNetto,
+          steuer: orderSnapshot.zuZahlenSteuer ?? orderSnapshot.summeSteuer,
+          gutschein: orderSnapshot.gutscheinBetrag ?? 0,
         },
         gutscheine: gutscheine.map((g: any) => ({ code: g.code, betrag: g.betrag })),
       };

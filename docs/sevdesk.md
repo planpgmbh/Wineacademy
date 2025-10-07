@@ -8,7 +8,6 @@ Dieser Leitfaden beschreibt die wichtigsten Aspekte der SevDesk-Anbindung im Bac
 - `SEVDESK_CONTACT_PERSON_ID` – ID des `SevUser`, der als Kontaktperson auf Rechnungen erscheint. Ohne gültige ID verweigert die Factory-API die Rechnungsanlage.
 - `SEVDESK_CHECK_ACCOUNT_ID` – ID des Bank-/Kassenkontos, auf das Zahlungen verbucht werden (für `bookAmount`).
 - `SEVDESK_SEND_TYPE` – Übergabe für `/Invoice/{id}/sendBy` (`VPDF` | `VM` | `VP` | `VPR`). Standard ist `VPDF`.
-- `SEVDESK_INVOICE_PREFIX` – Präfix der Rechnungs-/Bestellnummern (Default `WA`). Der Shop erzeugt laufende Nummern pro Jahr (`<PREFIX>-<Jahr><laufende Nummer>`).
 - Optionale Defaults: `SEVDESK_DEFAULT_TIME_TO_PAY_DAYS`, `SEVDESK_DEFAULT_COUNTRY_ID` (intern nutzen wir `1` = Deutschland), `SEVDESK_TAX_RULE_ID`, `SEVDESK_API_BASE_URL`.
 
 ### IDs ermitteln
@@ -29,9 +28,8 @@ curl -s "https://my.sevdesk.de/api/v1/CheckAccount?token=$SEVDESK_API_TOKEN" | j
 
 2. **Rechnung via Factory**
    - `createInvoiceByFactory` nutzt `/Invoice/Factory/saveInvoice`.
-   - Pflichtfelder: `contact`, `contactPerson`, `invoiceDate` (`dd.mm.yyyy`), `invoiceNumber`, `deliveryDate`, `taxRule`, `taxType`, Adresse, `mapAll`.
+   - Pflichtfelder: `contact`, `contactPerson`, `invoiceDate` (`dd.mm.yyyy`), `deliveryDate`, `taxRule`, `taxType`, Adresse, `mapAll`.
    - Positionen werden vollständig in `invoicePosSave` übertragen; Bruttopreis wird in Netto + Steuer (`price`, `priceGross`, `priceTax`) aufgeteilt.
-   - Die Rechnungsnummer wird vor jeder Bestellung aus SevDesk ermittelt: Wir durchsuchen alle Rechnungen mit dem konfigurierten Präfix und dem aktuellen Jahr (`<PREFIX>-<YYYY><NNNN>`). Falls für dieses Jahr keine Nummer existiert, starten wir mit `<PREFIX>-<YYYY>0001`.
 
 3. **Versand markieren**
    - Direkt im Anschluss ruft das Backend `markInvoiceSent` (`/Invoice/{id}/sendBy`) auf. Standard ist `VPDF`, kann via `SEVDESK_SEND_TYPE` überschrieben werden.
@@ -49,7 +47,6 @@ curl -s "https://my.sevdesk.de/api/v1/CheckAccount?token=$SEVDESK_API_TOKEN" | j
 ## 3. Fehlerbilder & Troubleshooting
 - **401 „Authentication required“** – Token fehlt/ist falsch. Prüfen, ob in der Umgebung wirklich das aktuelle Token geladen wird.
 - **„ContactPerson ID …“ oder 422 bei `saveInvoice`** – `SEVDESK_CONTACT_PERSON_ID` fehlt oder verweist auf einen gelöschten Benutzer. Wert prüfen.
-- **„Invoice: Correct number abort. Timeout“** – tritt auf, wenn eine Rechnungsnummer bereits existiert. Derzeit verhindern wir das mit unserem WA-Präfix.
 - **„A draft can not be paid“ bei `bookAmount`** – die Rechnung wurde noch nicht finalisiert. Sicherstellen, dass `markInvoiceSent` ohne Fehler durchläuft.
 - **Rate-Limit (429) oder 503** – die Requests besitzen automatisches Retry (max. 3 Versuche, exponentieller Delay). Bei dauerhaften Fehlern im Log prüfen.
 

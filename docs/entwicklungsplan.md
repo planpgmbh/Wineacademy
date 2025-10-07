@@ -76,23 +76,23 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - [ ] Firmen-Validierungen (z. B. USt-Id-Format, Pflichtfelder) und Fehlertexte nachschärfen.
 - [x] SendGrid-Service inkl. ENV (`SENDGRID_API_KEY`, Absenderdaten) und Logging im Backend verdrahten (gemäß `docs/sendgrid.md`, Toggle berücksichtigt).
 - [x] Versand-Toggle (`EMAIL_TRANSPORT_ENABLED`) über ENV eingeführt und dokumentiert (Staging `.env` aktualisiert).
-- [ ] Bestellbestätigung nach Checkout mit Template-Renderer auslösen (Kund:innen-Mail).
-- [ ] Zahlungsbestätigung & Versand von Rechnung/Gutscheinen nach Zahlungseingang (PayPal-Webhook, Rechnungsverbuchung).
-- [ ] Storno-Event bei Statuswechsel auf `storniert` auslösen (Mail & Stornobeleg vorbereiten).
-- [ ] Interne Benachrichtigung bei neuen Bestellungen an definierte Backoffice-Empfänger:innen senden.
+- [x] Bestellbestätigung nach Checkout mit Template-Renderer auslösen (Kund:innen-Mail).
+- [x] Zahlungsbestätigung & Versand von Rechnung/Gutscheinen nach Zahlungseingang (PayPal-Webhook, Rechnungsverbuchung).
+- [x] Storno-Event bei Statuswechsel auf `storniert` auslösen (Mail & Stornobeleg vorbereiten).
+- [x] Interne Benachrichtigung bei neuen Bestellungen an definierte Backoffice-Empfänger:innen senden.
 - [x] SevDesk-API-Client (Token-Auth) im Backend kapseln und Bestell-Payload für Rechnungsanlage vorbereiten.
 - [x] SevDesk-Sync-Toggle (`SEVDESK_SYNC_ENABLED`) über ENV eingeführt und dokumentiert (Staging `.env` aktualisiert).
 
 7. Backoffice & Automatisierung
 - [x] Kundenverknüpfung/Newsletter-Opt-in beim Bestell-Write-Through im Backend umgesetzt.
-- [ ] SevDesk-Anbindung vervollständigen (ENV `SEVDESK_API_TOKEN`, Sandbox/Prod-Konfiguration, Secrets-Handling) gemäß `docs/sevdesk.md`.
-- [ ] Kontakte (Privat/Firma) aus Bestelldaten in SevDesk synchronisieren bzw. wiederverwenden.
+- [x] SevDesk-Anbindung vervollständigen (ENV `SEVDESK_API_TOKEN`, Sandbox/Prod-Konfiguration, Secrets-Handling) gemäß `docs/sevdesk.md`.
+- [x] Kontakte (Privat/Firma) aus Bestelldaten in SevDesk synchronisieren bzw. wiederverwenden.
 - [ ] Rechnungen/Belege via `vouchers/invoices` erzeugen, PDF abrufen und in Strapi/Storage verlinken.
 - [x] Strapi-Systemeinstellungen für Absenderadresse und Antwort-E-Mail dokumentieren und im Admin pflegen (Single-Type "Einstellungen").
 - [x] ENV-Fallbacks für sensible Mail-Credentials (z. B. API-Key, Default-Absender) dokumentieren und in allen Umgebungen pflegen.
 - [x] Benachrichtigungs-Empfänger (z. B. "Neue Bestellung") in Strapi konfigurierbar machen und dokumentieren.
 - [ ] Webhook- oder Polling-Strategie für Zahlungsstatus/Storno etablieren und Fehler-Retry dokumentieren.
-- [ ] Storno-Benachrichtigungen (Mail, Stornobeleg) über zentrales Event bei Statuswechsel auf `storniert` auslösen.
+- [x] Storno-Benachrichtigungen (Mail, Stornobeleg) über zentrales Event bei Statuswechsel auf `storniert` auslösen.
 - [ ] Strapi-Admin konfigurieren (Collection-Ansichten, Rollen/Rechte, Default-Filter).
 - [ ] Prozess-Doku für Inhalte/Termine (inkl. Media-Upload) erstellen.
 
@@ -154,3 +154,30 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - 2025-10-05 – SevDesk-Rechnungsanlage korrigiert (Kontaktpersonen-ID ermittelt, Payload ergänzt, Env-Doku aktualisiert). – Commit: n/a
 - 2025-10-06 – SevDesk-Rechnungserstellung auf Factory/saveInvoice umgestellt, auto-Versand (`sendBy`) + Zahlungsbuchung (`bookAmount`) integriert und erfolgreich im Staging getestet. – Commit: n/a
 - 2025-10-06 – Rechnungsnummern synchronisiert (letzte SevDesk-Nummer pro Jahr ermitteln, Präfix `WA`, automatische Jahreswechsel). – Commit: n/a
+- 2025-10-06 – Staging-Datenbank zurückgesetzt und neu gesät, Mail-/Empfänger-ENV auf reale Adressen gestellt; Puppeteer-Skript `tests/sevdesk-puppeteer.js` für Rechnung/Bezahlt/Storno erweitert. SevDesk-Konto-ID via API ermittelt (`CheckAccount` 6046545) und `SEVDESK_CHECK_ACCOUNT_ID` aktualisiert; Skript-Postaktionen optimiert (Strapi-Instanz mit reduziertem Pool & manueller Storno-Lifecycle-Aufruf) – Knex-Timeout beseitigt. – Commit: n/a
+- 2025-10-06 – Rechnungsnummern-Logik auf Jahreslauf (`<PREFIX>-YYYY1NNN`) umgestellt, Kundennummern werden als `KN-1xxx` vergeben; Funktion `getNextInvoiceNumber` berücksichtigt lokale Bestellungen und SevDesk-Daten, Storno-Nummern verbleiben im SevDesk-Standard. – Commit: n/a
+- 2025-10-07 – Zahlungsziel für Rechnungsbestellungen auf 15 Tage festgelegt und automatische PayPal-Zahlungsverbuchung in SevDesk gesichert. – Commit: n/a
+- 2025-10-07 – SevDesk markiert PayPal-Rechnungen nun auch bei nachträglicher Zahlungsbestätigung via Webhook als bezahlt. – Commit: n/a
+- 2025-10-07 – SevDesk-CheckAccount wird automatisch erkannt; Zahlungsverbuchung idempotent gemacht und Puppeteer-E2E erfolgreich durchlaufen. – Commit: n/a
+- 2025-10-07 – SevDesk-Kontakte unterscheiden jetzt zwischen Privatperson (Person) und Firmenkontakt (Organisation). – Commit: n/a
+- 2025-10-07 – Puppeteer-Test um PayPal-/Aufrechnungs-Storno sowie Zwei-Teilnehmer-Seminar ergänzt; Stornobelege werden in SevDesk verifiziert. – Commit: n/a
+- 2025-10-07 – Lifecycle-Logging für SevDesk-Storno erweitert, Szenario-Filter/PayPal-Zwang für SevDesk-Puppeteer eingeführt und separaten PayPal-Storno-Test-Skripteintrag ergänzt; Ausführung lokale PayPal-Creds noch ausstehend. – Commit: n/a
+- 2025-10-08 – PayPal-Bestellungen setzen den Bestellstatus nicht mehr automatisch auf „bezahlt“; Strapi überlässt die Zahlungsverbuchung ausschließlich SevDesk, PayPal-Webhook aktualisiert nur noch die Referenz. – Commit: n/a
+- 2025-10-08 – Bestellbestätigung und Backoffice-Mailversand nach Checkout reaktiviert (Benachrichtigungs-Service erweitert, neue Helper für Platzhalter & Links). – Commit: n/a
+- 2025-10-08 – Rechnungs- und Kundennummern werden vollständig durch SevDesk vergeben; Shop-Logik zur eigenen Nummernvergabe entfernt und Rückübernahme der SevDesk-Rechnungsnummer in Strapi ergänzt. – Commit: n/a
+- 2025-10-08 – Platzhalter-Auflösung der Benachrichtigungs-Templates an Content-Type-Daten angepasst (Deep-Merge & Nested Lookup), Strapi-Build erfolgreich geprüft. – Commit: n/a
+- 2025-10-08 – Fallback-Handling der Benachrichtigungs-Platzhalter überarbeitet, damit Testdaten nur ohne Runtime-Daten greifen; Backend neu gebaut und Service neu gestartet. – Commit: n/a
+- 2025-10-08 – Fallbacks für Benachrichtigungs-Platzhalter vollständig entfernt (nur noch Runtime-Daten in E-Mails), Backend mit Force-Recreate neu deployed. – Commit: n/a
+- 2025-10-08 – Rechnungs-/Stornorechnungs-Links in Kunden- und Backoffice-Mails verankert, neue Download-Endpoints für PDF-Belege erstellt und Storno-Benachrichtigungen (Kunde/Backoffice) samt Seeds implementiert. – Commit: n/a
+- 2025-10-08 – Staging-Datenbank neu aufgesetzt (DROP/CREATE), Seeds mit neuen Benachrichtigungen durchgeführt und Backend-Service anschließend mit deaktiviertem SEED_ON_BOOT neu gestartet. – Commit: n/a
+- 2025-10-08 – Kundenmails von Portal-Hinweisen befreit, Rechnungslink im Seed aktualisiert und Staging-Seed erneut eingespielt. – Commit: n/a
+- 2025-10-07 – Gutschein-Logik aus dem Bestell-Controller in Utility ausgelagert, Berechnungen vereinheitlicht. – Commit: n/a
+- 2025-10-07 – PayPal-Verifikation, SevDesk-Sync und Benachrichtigungslogik aus `bestellung.ts` in Hilfsmodule ausgelagert; Controller aufgeräumt. – Commit: n/a
+- 2025-10-07 – Download-Link-Test für Rechnungen durchgeführt: SevDesk-Dokument-ID in Staging nachgetragen, Backend-Container via `docker compose ... --build --force-recreate` neu ausgerollt; Endpoint `/api/public/bestellungen/KN-1002/rechnung` liefert weiterhin Base64-JSON statt PDF, Fix erforderlich. – Commit: n/a
+- 2025-10-07 – SevDesk-Download-Helper passt Base64-Antworten nun an (`downloadDocument` dekodiert JSON-Response, setzt Dateiname/MIME); Ende-zu-Ende-Test via `npm run build` blockiert durch bestehenden Fehler in `src/index.ts`. – Commit: n/a
+- 2025-10-07 – Staging-Datenbank zurückgesetzt (`DROP SCHEMA public CASCADE`), Seeds mit temporärem `SEED_ON_BOOT=true` erneut ausgeführt und Strapi-Service frisch gestartet; lokale SevDesk-Verknüpfungen damit entfernt. – Commit: n/a
+- 2025-10-07 – Neue Bestellung (#1 / WA-20251000) für Download-Test angelegt, SevDesk-Dokument-ID manuell gesetzt (`245009217`); nach `downloadDocument`-Fix liefert `/api/public/bestellungen/WA-20251000/rechnung` jetzt direkt ein PDF. – Commit: n/a
+- 2025-10-07 – Rechnungs-/Storno-Downloads abgesichert: `bestellnummer` priorisiert, HMAC-Token in Links eingebettet (14 Tage gültig), Controller validiert Token; Links in Benachrichtigungen bleiben unverändert, liefern aber nun sichere, klickbare PDFs. – Commit: n/a
+- 2025-10-07 – SevDesk-Sync ergänzt Fallback auf `/Document`-Endpoint, setzt `sevdesk_document_id` automatisiert; neue Bestellung `WA-20251002` verifiziert (PDF-Link direkt in Mail verfügbar). – Commit: n/a
+- 2025-10-07 – `resolveApiBaseUrl` korrigiert: `PUBLIC_URL` ohne `/api` wird nun erweitert, Mail-Links zeigen wieder auf `/api/public/...`. – Commit: n/a
+- 2025-10-07 – Storno-Lifecycle holt PDF-ID jetzt über `/Document` (auch für Cancel-Rechnungen); bestehende Bestellung `WA-20251003` aktualisiert (`sevdesk_storno_document_id=245014128`). – Commit: n/a

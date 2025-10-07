@@ -40,7 +40,7 @@ Authorization: Bearer <Admin-Token>
   "email": "anna@example.com",
   "platzhalter": {
     "kunde.vorname": "Anna",
-    "bestellung.bestellnummer": "WA-000123"
+    "bestellung.bestellnummer": "WA-20251001"
   }
 }
 ```

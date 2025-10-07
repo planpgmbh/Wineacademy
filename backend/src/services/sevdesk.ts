@@ -3,8 +3,6 @@ import { setTimeout as delay } from 'node:timers/promises';
 const DEFAULT_BASE_URL = 'https://my.sevdesk.de/api/v1';
 const MAX_RETRIES = 3;
 const RETRY_BASE_DELAY_MS = 500;
-const DEFAULT_INVOICE_START = process.env.SEVDESK_INVOICE_START || 'WA-20251';
-
 const DISABLED_FLAGS = ['0', 'false', 'no', 'off', 'disabled'];
 
 const fetchFn: typeof globalThis.fetch = (globalThis as any).fetch;
@@ -13,6 +11,14 @@ if (!fetchFn) {
 }
 
 const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+
+function parsePositiveNumber(value: unknown): number | null {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return null;
+  }
+  return parsed;
+}
 
 export function isSevDeskSyncEnabled(): boolean {
   const flag = process.env.SEVDESK_SYNC_ENABLED;
@@ -44,11 +50,16 @@ export interface DocumentDownloadResult {
   buffer: Buffer;
 }
 
+const WHITESPACE_BYTES = new Set([0x09, 0x0a, 0x0d, 0x20]);
+
 type StrapiLike = {
   log?: {
     debug?: (msg: string, meta?: Record<string, unknown>) => void;
     warn?: (msg: string, meta?: Record<string, unknown>) => void;
     error?: (msg: string, meta?: Record<string, unknown>) => void;
+  };
+  entityService?: {
+    findMany: (...args: any[]) => Promise<any>;
   };
 };
 
@@ -206,6 +217,55 @@ async function sevDeskRequest<T>(
   throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }
 
+let cachedCheckAccountId: number | null | undefined;
+const invalidCheckAccountIds = new Set<number>();
+
+async function fetchDefaultCheckAccountId(strapi: StrapiLike): Promise<number | null> {
+  try {
+    const response = await sevDeskRequest<{ objects?: Array<Record<string, any>> }>(
+      strapi,
+      {
+        method: 'GET',
+        path: '/CheckAccount',
+        query: { limit: 100, status: 100 },
+      }
+    );
+    const accounts = Array.isArray(response?.objects) ? response.objects : [];
+    if (accounts.length === 0) {
+      return null;
+    }
+
+    const preferDefault =
+      accounts.find((account) => String(account?.defaultAccount ?? account?.baseAccount) === '1') ||
+      accounts[0];
+    const id = parsePositiveNumber(preferDefault?.id ?? preferDefault?.object?.id);
+    if (id) {
+      return id;
+    }
+  } catch (error) {
+    if (strapi?.log?.warn) {
+      strapi.log.warn('SevDesk: Standard-Konto konnte nicht ermittelt werden.', {
+        error: error instanceof Error ? error.message : error,
+      });
+    }
+  }
+  return null;
+}
+
+async function resolveCheckAccountId(strapi: StrapiLike): Promise<number | null> {
+  const envValue = parsePositiveNumber(process.env.SEVDESK_CHECK_ACCOUNT_ID);
+  if (envValue && !invalidCheckAccountIds.has(envValue)) {
+    return envValue;
+  }
+
+  if (cachedCheckAccountId !== undefined) {
+    return cachedCheckAccountId;
+  }
+
+  cachedCheckAccountId = await fetchDefaultCheckAccountId(strapi);
+  return cachedCheckAccountId ?? null;
+}
+
 function normaliseSevDeskId(id: string | number): string | number {
   if (typeof id === 'number') {
     return Number.isFinite(id) ? id : String(id);
@@ -228,12 +288,6 @@ function buildObjectRef(id: string | number, objectName: string) {
 type SevDeskObjectRef = { id: number | string; objectName: string };
 
 let cachedContactPersonRef: SevDeskObjectRef | null | undefined;
-
-type InvoiceNumberParts = {
-  prefix: string;
-  numeric: number;
-  width: number;
-};
 
 function hasUsableSevDeskId(value: unknown): boolean {
   if (value === null || value === undefined) {
@@ -327,40 +381,14 @@ export async function resolveDefaultContactPerson(
   return null;
 }
 
-function parseInvoiceNumber(value: string | null | undefined): InvoiceNumberParts | null {
-  if (!value) {
-    return null;
-  }
-  const trimmed = value.trim();
-  const match = /^([A-Za-z]+)-(\d+)$/.exec(trimmed);
-  if (!match) {
-    return null;
-  }
-  const prefix = match[1].toUpperCase();
-  const digits = match[2];
-  const numeric = Number(digits);
-  if (!Number.isFinite(numeric)) {
-    return null;
-  }
-  return {
-    prefix,
-    numeric,
-    width: digits.length,
-  };
-}
-
-function formatInvoiceNumber(parts: InvoiceNumberParts, numeric: number): string {
-  return `${parts.prefix}-${String(numeric).padStart(parts.width, '0')}`;
-}
-
 export interface ContactPayload {
   id?: number | string;
   categoryId: number;
   name: string;
+  customerType?: 'PERSON' | 'COMPANY';
   surename?: string;
   familyname?: string;
   name2?: string;
-  customerNumber?: string;
   status?: number;
   vatNumber?: string;
   address?: {
@@ -384,10 +412,10 @@ export async function saveContact(
     status: payload.status ?? 100,
   };
 
+  if (payload.customerType) body.customerType = payload.customerType;
   if (payload.surename) body.surename = payload.surename;
   if (payload.familyname) body.familyname = payload.familyname;
   if (payload.name2) body.name2 = payload.name2;
-  if (payload.customerNumber) body.customerNumber = payload.customerNumber;
   if (payload.vatNumber) body.vatNumber = payload.vatNumber;
   if (payload.description) body.description = payload.description;
 
@@ -520,81 +548,6 @@ export async function createInvoiceByFactory(
   }, clientOptions);
 }
 
-export async function getNextInvoiceNumber(
-  strapi: StrapiLike,
-  clientOptions?: SevDeskClientOptions
-): Promise<string> {
-  const startParts = parseInvoiceNumber(DEFAULT_INVOICE_START);
-  if (!startParts) {
-    throw new Error('SEVDESK_INVOICE_START hat ein ungültiges Format. Erwartet wird z. B. "WA-20251".');
-  }
-
-  const response = await sevDeskRequest<any>(
-    strapi,
-    {
-      method: 'GET',
-      path: '/Invoice',
-      query: {
-        limit: 100,
-        'order[field]': 'create',
-        'order[direction]': 'desc',
-      },
-    },
-    clientOptions
-  );
-
-  const list: any[] = Array.isArray(response?.objects)
-    ? response.objects
-    : Array.isArray(response?.data)
-      ? response.data
-      : response?.object
-        ? [response.object]
-        : [];
-
-  let bestForPrefix: InvoiceNumberParts | null = null;
-  let bestOther: InvoiceNumberParts | null = null;
-
-  for (const entry of list) {
-    const rawNumber = entry?.invoiceNumber ?? entry?.number ?? entry?.documentNumber;
-    const parts = parseInvoiceNumber(typeof rawNumber === 'string' ? rawNumber : null);
-    if (!parts) continue;
-
-    if (parts.prefix === startParts.prefix) {
-      if (
-        !bestForPrefix ||
-        parts.numeric > bestForPrefix.numeric ||
-        (parts.numeric === bestForPrefix.numeric && parts.width < bestForPrefix.width)
-      ) {
-        bestForPrefix = parts;
-      }
-    } else if (!bestOther || parts.numeric > bestOther.numeric) {
-      bestOther = parts;
-    }
-  }
-
-  if (bestForPrefix) {
-    const width = Math.max(startParts.width, String(bestForPrefix.numeric).length);
-    const nextNumeric = Math.max(bestForPrefix.numeric + 1, startParts.numeric);
-    return formatInvoiceNumber({ prefix: startParts.prefix, numeric: nextNumeric, width }, nextNumeric);
-  }
-
-  if (bestOther) {
-    const width = Math.max(bestOther.width, String(bestOther.numeric).length);
-    const nextNumeric = bestOther.numeric + 1;
-    return formatInvoiceNumber({ prefix: bestOther.prefix, numeric: nextNumeric, width }, nextNumeric);
-  }
-
-  return DEFAULT_INVOICE_START;
-}
-
-function parsePositiveNumber(value: unknown): number | null {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    return null;
-  }
-  return parsed;
-}
-
 function toUnixTimestamp(date?: string | Date): number {
   const inputDate = date ? new Date(date) : new Date();
   if (Number.isNaN(inputDate.getTime())) {
@@ -610,11 +563,10 @@ export async function markInvoicePaid(
   bookingDate?: string | Date,
   clientOptions?: SevDeskClientOptions
 ) {
-  const checkAccountRaw = process.env.SEVDESK_CHECK_ACCOUNT_ID;
-  const checkAccountId = parsePositiveNumber(checkAccountRaw);
+  let checkAccountId = await resolveCheckAccountId(strapi);
   if (!checkAccountId) {
     if (strapi?.log?.warn) {
-      strapi.log.warn('SevDesk: Zahlung konnte nicht gebucht werden – SEVDESK_CHECK_ACCOUNT_ID fehlt oder ist ungültig.');
+      strapi.log.warn('SevDesk: Zahlung konnte nicht gebucht werden – kein gültiges CheckAccount ermittelbar.');
     }
     return;
   }
@@ -630,19 +582,59 @@ export async function markInvoicePaid(
     return;
   }
 
-  const payload = {
-    amount: round2(resolvedAmount),
-    date: toUnixTimestamp(bookingDate),
-    type: 'FULL_PAYMENT',
-    checkAccount: buildObjectRef(checkAccountId, 'CheckAccount'),
-    createFeed: false,
+  const attemptBooking = async (accountId: number) => {
+    const payload = {
+      amount: round2(resolvedAmount),
+      date: toUnixTimestamp(bookingDate),
+      type: 'FULL_PAYMENT',
+      checkAccount: buildObjectRef(accountId, 'CheckAccount'),
+      createFeed: false,
+    };
+
+    await sevDeskRequest(strapi, {
+      method: 'PUT',
+      path: `/Invoice/${invoiceId}/bookAmount`,
+      body: payload,
+    }, clientOptions);
   };
 
-  await sevDeskRequest(strapi, {
-    method: 'PUT',
-    path: `/Invoice/${invoiceId}/bookAmount`,
-    body: payload,
-  }, clientOptions);
+  try {
+    await attemptBooking(checkAccountId);
+  } catch (error) {
+    if (error instanceof SevDeskError) {
+      if (error.status === 404) {
+        const fallbackAccountId = await fetchDefaultCheckAccountId(strapi);
+        if (fallbackAccountId && fallbackAccountId !== checkAccountId) {
+          invalidCheckAccountIds.add(checkAccountId);
+          if (strapi?.log?.warn) {
+            strapi.log.warn('SevDesk: Fallback-CheckAccount wird zur Zahlungsbuchung verwendet.', {
+              invoiceId,
+              previousAccountId: checkAccountId,
+              fallbackAccountId,
+            });
+          }
+          cachedCheckAccountId = fallbackAccountId;
+          await attemptBooking(fallbackAccountId);
+          return;
+        }
+      }
+
+      const bodyText =
+        typeof error.details === 'object' && error.details && 'body' in (error.details as any)
+          ? String((error.details as any).body)
+          : '';
+
+      if (error.status === 422 && bodyText.includes('Payment difference amount must be 0.0')) {
+        if (strapi?.log?.warn) {
+          strapi.log.warn('SevDesk: Rechnung bereits vollständig ausgeglichen – Zahlungsbuchung übersprungen.', {
+            invoiceId,
+          });
+        }
+        return;
+      }
+    }
+    throw error;
+  }
 }
 
 function normaliseSendType(input?: string): 'VPR' | 'VP' | 'VM' | 'VPDF' {
@@ -730,6 +722,10 @@ export interface InvoiceWithDocument {
   document?: { id: number | string; filename?: string };
 }
 
+export interface DocumentListResponse {
+  objects?: Array<Record<string, any>>;
+}
+
 export function extractDocumentId(payload: InvoiceWithDocument): { id: number | string; filename?: string } | null {
   if (payload?.document) {
     return payload.document;
@@ -747,6 +743,42 @@ export function extractDocumentId(payload: InvoiceWithDocument): { id: number | 
   return null;
 }
 
+export function extractInvoiceNumber(payload: any): string | null {
+  const extract = (value: any): string | null => {
+    if (!value) return null;
+    const keys = ['invoiceNumber', 'number', 'documentNumber'];
+    for (const key of keys) {
+      const candidate = value[key];
+      if (typeof candidate === 'string' && candidate.trim() !== '') {
+        return candidate.trim();
+      }
+    }
+    return null;
+  };
+
+  if (!payload) {
+    return null;
+  }
+
+  const direct = extract(payload);
+  if (direct) return direct;
+  const objectValue = extract(payload.object);
+  if (objectValue) return objectValue;
+  if (Array.isArray(payload.objects)) {
+    for (const entry of payload.objects) {
+      const nested = extract(entry);
+      if (nested) return nested;
+    }
+  }
+  if (Array.isArray(payload.data)) {
+    for (const entry of payload.data) {
+      const nested = extract(entry);
+      if (nested) return nested;
+    }
+  }
+  return null;
+}
+
 export async function fetchInvoiceWithDocument(
   strapi: StrapiLike,
   invoiceId: number | string,
@@ -757,6 +789,38 @@ export async function fetchInvoiceWithDocument(
     path: `/Invoice/${invoiceId}`,
     query: { embed: 'document' },
   }, clientOptions);
+}
+
+export async function findDocumentForInvoice(
+  strapi: StrapiLike,
+  invoiceId: number | string,
+  clientOptions?: SevDeskClientOptions
+): Promise<{ id: number | string; filename?: string } | null> {
+  const response = await sevDeskRequest<DocumentListResponse>(
+    strapi,
+    {
+      method: 'GET',
+      path: '/Document',
+      query: { objectName: 'Invoice', objectId: invoiceId, limit: 5 },
+    },
+    clientOptions
+  );
+  const objects = Array.isArray(response?.objects) ? response.objects : [];
+  if (!objects.length) {
+    return null;
+  }
+  const entry = objects.find((obj) => {
+    const baseObjectId = obj?.baseObject?.id ?? obj?.object?.id;
+    if (!baseObjectId) return false;
+    return String(baseObjectId) === String(invoiceId);
+  }) ?? objects[0];
+  if (!entry?.id) {
+    return null;
+  }
+  return {
+    id: entry.id,
+    filename: entry.filename || entry.documentNumber || entry.name,
+  };
 }
 
 export async function downloadDocument(
@@ -777,10 +841,56 @@ export async function downloadDocument(
     clientOptions
   );
 
+  let resolvedFilename = filename;
+  let contentType = 'application/pdf';
+  let buffer = response;
+
+  // SevDesk liefert PDFs über die API häufig als JSON (Base64-kodiert). Erkennen & dekodieren.
+  let firstNonWsByte: number | null = null;
+  for (const byte of response) {
+    if (!WHITESPACE_BYTES.has(byte)) {
+      firstNonWsByte = byte;
+      break;
+    }
+  }
+
+  if (firstNonWsByte === 0x7b /* '{' */) {
+    try {
+      const asText = response.toString('utf-8');
+      const parsed = JSON.parse(asText);
+      const candidate =
+        parsed?.objects && !Array.isArray(parsed.objects) ? parsed.objects : Array.isArray(parsed?.objects) ? parsed.objects[0] : parsed?.object;
+      const base64Content = candidate?.content;
+      const isBase64 = candidate?.base64Encoded === true || candidate?.base64Encoded === 'true';
+
+      if (base64Content && isBase64) {
+        const cleaned = String(base64Content).replace(/\s+/g, '');
+        buffer = Buffer.from(cleaned, 'base64');
+      } else if (typeof base64Content === 'string') {
+        buffer = Buffer.from(base64Content, 'utf-8');
+      }
+
+      if (!resolvedFilename) {
+        const candidateFilename = candidate?.filename;
+        if (candidateFilename) {
+          resolvedFilename = String(candidateFilename);
+        }
+      }
+      if (candidate?.mimetype) {
+        contentType = String(candidate.mimetype);
+      }
+    } catch (error) {
+      strapi?.log?.warn?.('SevDesk-Download konnte nicht als JSON interpretiert werden – Rohdaten werden verwendet.', {
+        documentId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
   return {
-    filename,
-    contentType: 'application/pdf',
-    buffer: response,
+    filename: resolvedFilename,
+    contentType,
+    buffer,
   };
 }
 

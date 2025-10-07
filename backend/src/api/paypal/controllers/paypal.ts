@@ -55,21 +55,6 @@ async function verifySignature(headers: Record<string, string | undefined>, webh
   return out.verification_status === 'SUCCESS';
 }
 
-async function generateVoucherCode(strapi: any): Promise<string> {
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  for (let attempt = 0; attempt < 20; attempt += 1) {
-    let code = '';
-    for (let i = 0; i < 4; i += 1) {
-      const block = Array.from({ length: 4 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
-      code += block;
-      if (i < 3) code += '-';
-    }
-    const existing = await strapi.db.query('api::gutschein.gutschein').findOne({ where: { code } });
-    if (!existing) return code;
-  }
-  throw new Error('Konnte keinen eindeutigen Gutscheincode erzeugen');
-}
-
 export default factories.createCoreController('api::bestellung.bestellung', ({ strapi }) => ({
   async handleWebhook(ctx) {
     try {
@@ -122,61 +107,8 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
               strapi.log.warn(`[paypal webhook] Currency mismatch for capture ${captureId}: ${ccy}!=EUR`);
             } else if (Number.isFinite(val) && Math.abs(val - expected) <= 0.01) {
               await strapi.entityService.update('api::bestellung.bestellung', existing.id, {
-                data: { bestellstatus: 'bezahlt', zahlungsmethode: 'paypal', zahlungsreferenz: captureId },
+                data: { zahlungsmethode: 'paypal', zahlungsreferenz: captureId },
               });
-
-              const full = await strapi.entityService.findOne('api::bestellung.bestellung', existing.id, {
-                populate: {
-                  positionen: true,
-                  gutscheine: { filters: { istTemplate: false }, fields: ['code', 'betrag'] },
-                },
-              });
-
-              const fullAny = full as any;
-              const existingCodesByAmount = new Map<number, number>();
-              const currentVouchers = Array.isArray(fullAny?.gutscheine) ? fullAny.gutscheine : [];
-              for (const g of currentVouchers) {
-                const amount = g.betrag != null ? Number(g.betrag) : NaN;
-                if (Number.isFinite(amount)) {
-                  existingCodesByAmount.set(amount, (existingCodesByAmount.get(amount) || 0) + 1);
-                }
-              }
-
-              const newCodes: string[] = [];
-              const positionen = Array.isArray(fullAny?.positionen) ? fullAny.positionen : [];
-              for (const pos of positionen) {
-                if (pos.typ !== 'gutschein') continue;
-                const menge = Math.max(1, Number(pos.menge ?? 1));
-                const betrag = pos.einzelpreisBrutto != null ? Number(pos.einzelpreisBrutto) : NaN;
-                if (!Number.isFinite(betrag)) continue;
-                const key = betrag;
-                const already = existingCodesByAmount.get(key) || 0;
-                const missing = Math.max(0, menge - already);
-                for (let i = 0; i < missing; i += 1) {
-                  const code = await generateVoucherCode(strapi);
-                  newCodes.push(code);
-                  await strapi.entityService.create('api::gutschein.gutschein', {
-                    data: {
-                      name: pos.titel,
-                      beschreibung: pos.beschreibung,
-                      code,
-                      betrag,
-                      istTemplate: false,
-                      aktiv: true,
-                      bestellung: existing.id,
-                    },
-                  });
-                }
-                existingCodesByAmount.set(key, already + missing);
-              }
-
-              if (newCodes.length > 0) {
-                const existingCodes = (fullAny?.gutscheinCode ? String(fullAny.gutscheinCode).split(',').map((c: string) => c.trim()).filter(Boolean) : []);
-                const merged = [...existingCodes, ...newCodes];
-                await strapi.entityService.update('api::bestellung.bestellung', existing.id, {
-                  data: { gutscheinCode: merged.join(', ') },
-                });
-              }
             } else {
               strapi.log.warn(`[paypal webhook] Amount mismatch for capture ${captureId}: received=${valStr} expected=${expected}`);
             }

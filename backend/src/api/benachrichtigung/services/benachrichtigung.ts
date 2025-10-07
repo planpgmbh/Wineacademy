@@ -25,32 +25,140 @@ interface TemplateEntity {
   aktiv?: boolean | null;
 }
 
-interface TestSendOptions {
-  template: TemplateEntity;
-  recipient: string;
-  overridePlatzhalter?: Record<string, unknown>;
+interface SendOptions {
+  anwendungsfall: string;
+  recipients: string[];
+  platzhalter?: Record<string, unknown>;
+  categories?: string[];
 }
 
 const PLATZHALTER_REGEX = /{{\s*([\w.-]+)\s*}}/g;
 
-function compilePlatzhalterPayload(template: TemplateEntity, overridePlatzhalter?: Record<string, unknown>) {
-  const base: Record<string, unknown> = {};
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== 'object') {
+    return false;
+  }
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
 
-  if (template.platzhalter) {
-    for (const eintrag of template.platzhalter) {
-      if (!eintrag?.schluessel) continue;
-      if (eintrag.beispiel && typeof eintrag.beispiel !== 'undefined') {
-        base[eintrag.schluessel] = eintrag.beispiel;
+function flattenPayload(
+  source: Record<string, unknown> | unknown[],
+  prefix = '',
+  target: Record<string, unknown> = {}
+): Record<string, unknown> {
+  if (Array.isArray(source)) {
+    if (prefix) {
+      target[prefix] = source;
+    }
+    source.forEach((entry, index) => {
+      const path = prefix ? `${prefix}.${index}` : `${index}`;
+      if (isPlainObject(entry) || Array.isArray(entry)) {
+        flattenPayload(entry as any, path, target);
+      } else {
+        target[path] = entry;
       }
+    });
+    return target;
+  }
+
+  if (!isPlainObject(source)) {
+    return target;
+  }
+
+  if (prefix) {
+    target[prefix] = source;
+  }
+
+  Object.entries(source).forEach(([key, value]) => {
+    const path = prefix ? `${prefix}.${key}` : key;
+    if (isPlainObject(value) || Array.isArray(value)) {
+      flattenPayload(value as any, path, target);
+    } else {
+      target[path] = value;
+    }
+  });
+
+  return target;
+}
+
+function mergePlatzhalterPayload(
+  base: Record<string, unknown>,
+  additions: Record<string, unknown> | null | undefined,
+  { overwrite = true }: { overwrite?: boolean } = {}
+) {
+  if (!additions || typeof additions !== 'object') {
+    return;
+  }
+  Object.entries(additions).forEach(([key, value]) => {
+    const existing = (base as any)[key];
+    if (overwrite || typeof existing === 'undefined') {
+      (base as any)[key] = value;
+    } else if (isPlainObject(existing) && isPlainObject(value)) {
+      mergePlatzhalterPayload(existing as Record<string, unknown>, value as Record<string, unknown>, {
+        overwrite,
+      });
+    }
+  });
+  const flattened = flattenPayload(additions as Record<string, unknown>);
+  Object.entries(flattened).forEach(([key, value]) => {
+    if (overwrite || typeof base[key] === 'undefined') {
+      base[key] = value;
+    }
+  });
+}
+
+function resolvePlatzhalterValue(platzhalter: Record<string, unknown>, key: string) {
+  if (Object.prototype.hasOwnProperty.call(platzhalter, key)) {
+    return platzhalter[key];
+  }
+  if (!key.includes('.')) {
+    return undefined;
+  }
+  const segments = key.split('.');
+  let current: any = platzhalter;
+  for (const segment of segments) {
+    if (current && typeof current === 'object' && segment in current) {
+      current = (current as any)[segment];
+    } else {
+      return undefined;
     }
   }
+  return current;
+}
 
-  if (template.testPayload && typeof template.testPayload === 'object') {
-    Object.assign(base, template.testPayload);
-  }
+interface CompilePlatzhalterOptions {
+  enableFallbacks?: boolean;
+}
+
+function compilePlatzhalterPayload(
+  template: TemplateEntity,
+  overridePlatzhalter?: Record<string, unknown>,
+  options: CompilePlatzhalterOptions = {}
+) {
+  const base: Record<string, unknown> = {};
 
   if (overridePlatzhalter && typeof overridePlatzhalter === 'object') {
-    Object.assign(base, overridePlatzhalter);
+    mergePlatzhalterPayload(base, overridePlatzhalter, { overwrite: true });
+  }
+
+  if (options.enableFallbacks) {
+    const fallbackData: Record<string, unknown> = {};
+
+    if (template.testPayload && typeof template.testPayload === 'object') {
+      mergePlatzhalterPayload(fallbackData, template.testPayload, { overwrite: true });
+    }
+
+    if (template.platzhalter) {
+      for (const eintrag of template.platzhalter) {
+        if (!eintrag?.schluessel) continue;
+        if (typeof eintrag.beispiel !== 'undefined') {
+          fallbackData[eintrag.schluessel] = eintrag.beispiel;
+        }
+      }
+    }
+
+    mergePlatzhalterPayload(base, fallbackData, { overwrite: false });
   }
 
   return base;
@@ -61,7 +169,7 @@ function renderTemplateString(value: string | null | undefined, platzhalter: Rec
     return '';
   }
   return value.replace(PLATZHALTER_REGEX, (_match, key) => {
-    const raw = platzhalter[key];
+    const raw = resolvePlatzhalterValue(platzhalter, key);
     if (raw === null || typeof raw === 'undefined') {
       return '';
     }
@@ -102,37 +210,84 @@ function toPlainText(html: string) {
 
 const CONTENT_UID = 'api::benachrichtigung.benachrichtigung' as UID.ContentType;
 
-export default factories.createCoreService(CONTENT_UID, ({ strapi }) => ({
-  async testSend(options: TestSendOptions) {
-    const { template, recipient, overridePlatzhalter } = options;
-    if (template.aktiv === false) {
-      throw new Error('Benachrichtigung ist deaktiviert.');
-    }
-
-    const platzhalterDaten = compilePlatzhalterPayload(template, overridePlatzhalter);
-
-    if (template.sendgridVorlagenId) {
-      const response = await sendEmail(strapi, {
-        to: recipient,
-        templateId: template.sendgridVorlagenId,
-        dynamicTemplateData: platzhalterDaten,
-      });
-      return { messageId: response.messageId ?? undefined, transport: 'sendgrid' };
-    }
-
-    const subject = renderTemplateString(template.betreff || template.name || 'Benachrichtigung', platzhalterDaten);
-    const vorschauzeile = renderTemplateString(template.vorschauzeile ?? '', platzhalterDaten) || undefined;
-    const rawHtml = renderTemplateString(template.bodyHtml ?? '', platzhalterDaten);
-    const html = applyLayout(template.layout, rawHtml, vorschauzeile);
-    const text = template.bodyText ? renderTemplateString(template.bodyText, platzhalterDaten) : toPlainText(rawHtml);
-
+async function dispatchTemplate(
+  strapi: any,
+  template: TemplateEntity,
+  recipient: string,
+  platzhalterDaten: Record<string, unknown>,
+  categories?: string[]
+) {
+  if (template.sendgridVorlagenId) {
     const response = await sendEmail(strapi, {
       to: recipient,
-      subject,
-      html,
-      text,
+      templateId: template.sendgridVorlagenId,
+      dynamicTemplateData: platzhalterDaten,
+      categories,
+    });
+    return { messageId: response.messageId ?? undefined, transport: 'sendgrid' as const };
+  }
+
+  const subject = renderTemplateString(template.betreff || template.name || 'Benachrichtigung', platzhalterDaten);
+  const vorschauzeile = renderTemplateString(template.vorschauzeile ?? '', platzhalterDaten) || undefined;
+  const rawHtml = renderTemplateString(template.bodyHtml ?? '', platzhalterDaten);
+  const html = applyLayout(template.layout, rawHtml, vorschauzeile);
+  const text = template.bodyText ? renderTemplateString(template.bodyText, platzhalterDaten) : toPlainText(rawHtml);
+
+  const response = await sendEmail(strapi, {
+    to: recipient,
+    subject,
+    html,
+    text,
+    categories,
+  });
+
+  return { messageId: response.messageId ?? undefined, transport: 'sendgrid' as const };
+}
+
+export default factories.createCoreService(CONTENT_UID, ({ strapi }) => ({
+  async send(options: SendOptions) {
+    const { anwendungsfall, recipients, platzhalter, categories } = options;
+    const uniqueRecipients = Array.from(new Set((recipients || []).map((email) => email?.trim()).filter(Boolean)));
+    if (uniqueRecipients.length === 0) {
+      return [];
+    }
+
+    const templates = await strapi.entityService.findMany(CONTENT_UID, {
+      filters: { anwendungsfall } as any,
+      populate: { platzhalter: true } as any,
+      limit: 1,
     });
 
-    return { messageId: response.messageId ?? undefined, transport: 'sendgrid' };
+    const template = (Array.isArray(templates) ? templates[0] : templates) as TemplateEntity | undefined;
+
+    if (!template) {
+      strapi.log.warn(`[benachrichtigung.send] Template nicht gefunden: ${anwendungsfall}`);
+      return [];
+    }
+
+    if (template.aktiv === false) {
+      strapi.log.info(`[benachrichtigung.send] Template deaktiviert, Versand übersprungen: ${anwendungsfall}`);
+      return [];
+    }
+
+    const platzhalterDaten = compilePlatzhalterPayload(template, platzhalter, { enableFallbacks: false });
+    const results: Array<{ recipient: string; messageId?: string; error?: string }> = [];
+
+    for (const recipient of uniqueRecipients) {
+      try {
+        const response = await dispatchTemplate(strapi, template, recipient, platzhalterDaten, categories);
+        results.push({ recipient, messageId: response.messageId });
+      } catch (error: any) {
+        const details = error?.response?.body ?? error?.message ?? String(error);
+        strapi.log.error('[benachrichtigung.send] Versand fehlgeschlagen', {
+          anwendungsfall,
+          recipient,
+          error: details,
+        });
+        results.push({ recipient, error: error?.message ?? String(error) });
+      }
+    }
+
+    return results;
   },
 }));

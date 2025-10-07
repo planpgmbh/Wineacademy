@@ -24,7 +24,9 @@
         "bestellbestaetigung",
         "zahlungsbestaetigung",
         "rechnung_gutschein",
-        "backoffice_benachrichtigung"
+        "backoffice_benachrichtigung",
+        "storno_bestaetigung",
+        "storno_backoffice"
       ],
       "required": true,
       "unique": true,

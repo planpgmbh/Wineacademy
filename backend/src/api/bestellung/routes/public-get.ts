@@ -6,5 +6,17 @@ export default {
       handler: 'bestellung.publicGet',
       config: { auth: false },
     },
+    {
+      method: 'GET',
+      path: '/public/bestellungen/:id/rechnung',
+      handler: 'bestellung.publicDownloadInvoice',
+      config: { auth: false },
+    },
+    {
+      method: 'GET',
+      path: '/public/bestellungen/:id/storno',
+      handler: 'bestellung.publicDownloadStorno',
+      config: { auth: false },
+    },
   ],
 };
