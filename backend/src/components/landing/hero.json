@@ -1,0 +1,28 @@
+{
+  "collectionName": "components_landing_heroes",
+  "info": {
+    "displayName": "Hero (Video)",
+    "description": "Großes Hero-Element mit Video-Hintergrund und Call-to-Action."
+  },
+  "attributes": {
+    "titel": {
+      "type": "string",
+      "required": true
+    },
+    "text": {
+      "type": "text"
+    },
+    "videoUrl": {
+      "type": "string"
+    },
+    "posterUrl": {
+      "type": "string"
+    },
+    "buttonLabel": {
+      "type": "string"
+    },
+    "buttonLink": {
+      "type": "string"
+    }
+  }
+}

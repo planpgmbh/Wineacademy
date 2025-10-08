@@ -9,7 +9,8 @@ type UID =
   | 'api::benachrichtigung.benachrichtigung'
   | 'api::einstellung.einstellung'
   | 'api::navigation.navigation'
-  | 'api::footer.footer';
+  | 'api::footer.footer'
+  | 'api::landingpage.landingpage';
 
 function toBool(v: any): boolean {
   if (v == null) return false;
@@ -200,6 +201,35 @@ async function upsertSingleType(strapi: any, uid: UID, data: Record<string, unkn
     return updated.id as number;
   }
   const created = await strapi.entityService.create(uid, { data });
+  return created.id as number;
+}
+
+async function upsertLandingPage(
+  strapi: any,
+  values: {
+    titel: string;
+    slug: string;
+    abschnitte: Array<Record<string, unknown>>;
+  }
+) {
+  const slug = slugify(values.slug);
+  const existing = await strapi.db
+    .query('api::landingpage.landingpage')
+    .findOne({ where: { slug }, select: ['id'] });
+
+  const data = {
+    titel: values.titel,
+    slug,
+    abschnitte: values.abschnitte,
+    publishedAt: nowIso(),
+  };
+
+  if (existing) {
+    await strapi.entityService.update('api::landingpage.landingpage', existing.id, { data });
+    return existing.id as number;
+  }
+
+  const created = await strapi.entityService.create('api::landingpage.landingpage', { data });
   return created.id as number;
 }
 
@@ -1457,6 +1487,63 @@ Notizen: {{bestellung.notizen}}`,
     ],
   });
   log(`Einstellungen aktualisiert (ID ${einstellungenId})`);
+
+  const homepageSections = [
+    {
+      __component: 'landing.hero',
+      titel: 'Wein neu entdecken',
+      text: 'erleben – erfahren – genießen\nWeinausbildung nach Maß – individuell und zeitlich flexibel gestaltet',
+      videoUrl: 'https://www.wineacademy.de/wp-content/uploads/WineAcademy-Header_final.mp4',
+      buttonLabel: 'Kurse entdecken',
+      buttonLink: 'https://www.wineacademy.de/kurse/',
+    },
+    {
+      __component: 'landing.card-grid',
+      karten: [
+        { titel: 'Weinkurse', link: 'https://www.wineacademy.de/kurse/weinkurse/' },
+        { titel: 'Tastings & Events', link: 'https://www.wineacademy.de/tastings-events/' },
+        { titel: 'WSET® Ausbildung', link: 'https://www.wineacademy.de/kurse/wset/' },
+      ],
+    },
+    {
+      __component: 'landing.text-block',
+      titel: 'Wine Academy Hamburg – die Weinschule',
+      text: `<p>Die Wine Academy Hamburg ist die Adresse für erstklassige Weinausbildung. „Weinausbildung nach Maß – individuell und zeitlich flexibel gestaltet“ bedeutet ein umfangreiches Kursangebot, das sowohl Fachleuten aus der Weinbranche als auch leidenschaftlichen Endverbraucher*innen den Schlüssel zu tiefgreifendem Weinwissen bietet.</p>
+<p>Unsere Weinschule in Hamburg zeichnet sich durch ein vielfältiges Lehrangebot aus, einschließlich akkreditierter Kurse des renommierten Wine and Spirit Education Trust (WSET®), spezialisierter Masterclasses und gezielter Prüfungsvorbereitung – nicht nur für WSET®-Zertifizierungen. Ob eine Karriere mit der Ausbildung zur Sommelière bzw. zum Sommelier vorangetrieben oder einfach das Weinwissen erweitert werden soll, unsere maßgeschneiderten Kurse bieten für alle etwas.</p>
+<p>Neben formalen Ausbildungen lädt die Wine Academy Hamburg zu inspirierenden Weinseminaren, Weintastings und Events ein, bei denen in entspannter Atmosphäre neue Weine entdeckt und der Austausch mit Gleichgesinnten gepflegt wird. Unsere erfahrenen Dozent*innen und Weinexpert*innen teilen ihr umfassendes Wissen und ihre Leidenschaft für Wein in einer unvergesslichen Ausbildungserfahrung auf höchstem Niveau.</p>
+<p>Starte deine Weinausbildung in Hamburg und werde Teil einer lebendigen Community, die deine Liebe zum Wein teilt – flexibel, individuell und auf höchstem Niveau.</p>`,
+      buttonLabel: 'Unsere Kurse →',
+      buttonLink: 'https://www.wineacademy.de/kurse/',
+    },
+    {
+      __component: 'landing.icon-grid',
+      titel: 'Warum Wine Academy?',
+      items: [
+        {
+          icon: 'globe',
+          titel: 'Flexible Formate',
+          text: 'Online oder Präsenz – die Teilnehmerinnen und Teilnehmer gestalten ihre Kursformate frei.',
+        },
+        {
+          icon: 'certificate',
+          titel: 'Weltweit anerkannt',
+          text: 'Der WSET® ist der führende Anbieter internationaler Getränkequalifikationen und inspiriert Profis wie Enthusiasten.',
+        },
+        {
+          icon: 'fingerprint',
+          titel: 'Individuell anpassbar',
+          text: 'Alle Kurse lassen sich auf persönliche Voraussetzungen und Ziele zuschneiden.',
+        },
+      ],
+    },
+  ];
+
+  const landingpageId = await upsertLandingPage(strapi, {
+    titel: 'Homepage',
+    slug: 'homepage',
+    abschnitte: homepageSections,
+  });
+  log(`Landingpage 'homepage' aktualisiert (ID ${landingpageId})`);
 
   log('Seeding abgeschlossen');
 }

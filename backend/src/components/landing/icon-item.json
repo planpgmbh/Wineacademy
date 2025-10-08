@@ -1,0 +1,31 @@
+{
+  "collectionName": "components_landing_icon_items",
+  "info": {
+    "displayName": "Icon-Element",
+    "description": "Eintrag für ein Icon-Grid."
+  },
+  "attributes": {
+    "icon": {
+      "type": "enumeration",
+      "enum": [
+        "award",
+        "book",
+        "calendar",
+        "certificate",
+        "fingerprint",
+        "globe",
+        "sparkles",
+        "users",
+        "wine-glass"
+      ],
+      "default": "wine-glass"
+    },
+    "titel": {
+      "type": "string",
+      "required": true
+    },
+    "text": {
+      "type": "text"
+    }
+  }
+}

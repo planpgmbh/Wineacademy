@@ -123,3 +123,70 @@ export function resolveMediaUrl(path: string | null): string | null {
   }
   return `${ASSETS_BASE}${path.startsWith("/") ? path : `/${path}`}`;
 }
+
+export type LandingHeroSection = {
+  __component: "landing.hero";
+  titel: string;
+  text?: string | null;
+  videoUrl?: string | null;
+  posterUrl?: string | null;
+  buttonLabel?: string | null;
+  buttonLink?: string | null;
+};
+
+export type LandingCard = {
+  titel: string;
+  untertitel?: string | null;
+  link?: string | null;
+};
+
+export type LandingCardGridSection = {
+  __component: "landing.card-grid";
+  titel?: string | null;
+  beschreibung?: string | null;
+  karten: LandingCard[];
+};
+
+export type LandingTextBlockSection = {
+  __component: "landing.text-block";
+  titel: string;
+  text?: string | null;
+  buttonLabel?: string | null;
+  buttonLink?: string | null;
+};
+
+export type LandingIconItem = {
+  icon: string;
+  titel: string;
+  text?: string | null;
+};
+
+export type LandingIconGridSection = {
+  __component: "landing.icon-grid";
+  titel?: string | null;
+  beschreibung?: string | null;
+  items: LandingIconItem[];
+};
+
+export type LandingSection =
+  | LandingHeroSection
+  | LandingCardGridSection
+  | LandingTextBlockSection
+  | LandingIconGridSection;
+
+export type LandingPageResponse = {
+  id: number;
+  titel: string;
+  slug: string;
+  abschnitte: LandingSection[];
+  updatedAt: string | null;
+};
+
+export async function fetchLandingPage(slug: string): Promise<LandingPageResponse | null> {
+  try {
+    return await cmsFetch<LandingPageResponse>(`/public/landing-pages/${slug}`);
+  } catch (error) {
+    console.error("[cms] Landingpage konnte nicht geladen werden", error);
+    return null;
+  }
+}

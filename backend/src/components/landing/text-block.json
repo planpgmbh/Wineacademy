@@ -1,0 +1,22 @@
+{
+  "collectionName": "components_landing_text_blocks",
+  "info": {
+    "displayName": "Textblock",
+    "description": "Überschrift mit Fließtext und optionalem CTA."
+  },
+  "attributes": {
+    "titel": {
+      "type": "string",
+      "required": true
+    },
+    "text": {
+      "type": "richtext"
+    },
+    "buttonLabel": {
+      "type": "string"
+    },
+    "buttonLink": {
+      "type": "string"
+    }
+  }
+}

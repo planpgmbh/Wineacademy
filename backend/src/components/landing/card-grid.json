@@ -1,0 +1,21 @@
+{
+  "collectionName": "components_landing_card_grids",
+  "info": {
+    "displayName": "Karten-Grid",
+    "description": "Mehrspaltiges Grid aus einfachen Karten."
+  },
+  "attributes": {
+    "titel": {
+      "type": "string"
+    },
+    "beschreibung": {
+      "type": "text"
+    },
+    "karten": {
+      "type": "component",
+      "repeatable": true,
+      "component": "landing.card",
+      "min": 1
+    }
+  }
+}

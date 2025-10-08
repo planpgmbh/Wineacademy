@@ -27,6 +27,7 @@ Strapi liefert die Inhalte (Seminare, Termine, Produkte, Gutscheine) und wickelt
 - **Kategorie/Kunde:** Klassifizierung der Seminare bzw. CRM-Einträge inkl. Newsletter-Opt-in.
 - **Einstellung:** Single-Type für Kommunikations-Defaults (Absendername/-adresse, Antwort-Adresse, Benachrichtigungsempfänger) mit ENV-Fallback (`EMAIL_FROM`, `EMAIL_REPLY_TO`).
 - **Benachrichtigungen:** Collection-Type für transaktionale E-Mail-Layouts inkl. Platzhalterdokumentation, Testdaten und optionaler SendGrid-Vorlagen-ID.
+- **Landingpage:** Collection-Type für frei gestaltbare Seiten (Homepage, Kategorien etc.) mit Dynamic-Zone-Bausteinen (Hero, Karten, Textblock, Icon-Grid).
 
 Namenskonvention: Für Terminstatus `planungsstatus` verwenden und Relationen laut Schema (`schema.json`) pflegen.
 

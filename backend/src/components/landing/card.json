@@ -1,0 +1,19 @@
+{
+  "collectionName": "components_landing_cards",
+  "info": {
+    "displayName": "Karte",
+    "description": "Einfache Karte für Teaser-Abschnitte."
+  },
+  "attributes": {
+    "titel": {
+      "type": "string",
+      "required": true
+    },
+    "untertitel": {
+      "type": "string"
+    },
+    "link": {
+      "type": "string"
+    }
+  }
+}

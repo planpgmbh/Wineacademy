@@ -1,0 +1,22 @@
+{
+  "collectionName": "components_landing_icon_grids",
+  "info": {
+    "displayName": "Icon-Grid",
+    "description": "Grid mit drei hervorgehobenen Vorteilen inklusive Icon."
+  },
+  "attributes": {
+    "titel": {
+      "type": "string"
+    },
+    "beschreibung": {
+      "type": "text"
+    },
+    "items": {
+      "type": "component",
+      "repeatable": true,
+      "component": "landing.icon-item",
+      "min": 1,
+      "max": 6
+    }
+  }
+}
