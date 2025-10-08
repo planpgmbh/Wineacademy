@@ -122,6 +122,7 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - Staging-/Produktiv-Stacks sind über Traefik erreichbar; Deploy-Anleitung und Fehlerbehandlung sind dokumentiert.
 
 ## Arbeitsprotokoll
+- 2025-10-08 – Warenkorb-Slideout im Frontend neu aufgebaut (CartProvider, Slideout mit Seminartagen, Summenberechnung, Button „Jetzt bezahlen“) und an LocalStorage/Cart-Events angebunden; ESLint erfolgreich ausgeführt. – Commit: n/a
 - 2025-10-08 – Frontend auf DaisyUI v5 Basis zurückgesetzt (Altstrukturen entfernt, Navigation & Landingpage mit Standardkomponenten neu aufgebaut). – Commit: n/a
 - 2025-10-02 – Entwicklungsplan erstellt, bisherige Architektur erfasst und nächste Arbeitsschritte priorisiert. – Commit: n/a
 - 2025-10-02 – SendGrid-E-Mail-Konzept abgestimmt; Template-Struktur und Umsetzungsschritte im Plan ergänzt. – Commit: n/a
@@ -184,3 +185,4 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - 2025-10-07 – Storno-Lifecycle holt PDF-ID jetzt über `/Document` (auch für Cancel-Rechnungen); bestehende Bestellung `WA-20251003` aktualisiert (`sevdesk_storno_document_id=245014128`). – Commit: n/a
 - 2025-10-08 – AGENTS-Regeln um Umgebungsprüfung und Marker-Datei ergänzt, `.environment` eingeführt und `.gitignore` erweitert. – Commit: n/a
 - 2025-10-08 – Navbar ersetzt Kontakt-CTA durch DaisyUI-Warenkorb-Button mit Badge (Cart-Count via LocalStorage/Custom-Event), lokale Sichtprüfung im Frontend-README dokumentiert. – Commit: n/a
+- 2025-10-08 – Figma-Navigation übernommen: Neue Navbar-Komponente mit Hauptmenü, Social-Links (Instagram, Facebook, Mail) und Warenkorb-Badge implementiert; layout.tsx bereinigt und Linting lokal erfolgreich ausgeführt. – Commit: n/a

@@ -1,117 +1,15 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
-
-const CART_STORAGE_KEYS = ["wineacademy-cart", "wineacademy.cart", "cart"];
-const CART_UPDATE_EVENT = "wineacademy:cart:update";
-
-type CartLike =
-  | { items?: unknown }
-  | { products?: unknown }
-  | { length?: number }
-  | Array<unknown>;
-
-const parseCartCount = (value: unknown): number => {
-  if (!value) {
-    return 0;
-  }
-
-  if (Array.isArray(value)) {
-    return value.reduce<number>((acc, item) => {
-      if (item && typeof item === "object" && "quantity" in item) {
-        const quantity = Number((item as { quantity?: unknown }).quantity);
-        return acc + (Number.isFinite(quantity) ? quantity : 1);
-      }
-      return acc + 1;
-    }, 0);
-  }
-
-  if (typeof value === "object") {
-    if ("items" in value && Array.isArray((value as { items?: CartLike }).items)) {
-      return parseCartCount((value as { items?: CartLike }).items);
-    }
-    if ("products" in value && Array.isArray((value as { products?: CartLike }).products)) {
-      return parseCartCount((value as { products?: CartLike }).products);
-    }
-    if (typeof (value as { length?: unknown }).length === "number") {
-      return Number((value as { length?: number }).length);
-    }
-  }
-
-  if (typeof value === "number") {
-    return value;
-  }
-
-  if (typeof value === "string") {
-    const parsedNumber = Number(value);
-    return Number.isFinite(parsedNumber) ? parsedNumber : 0;
-  }
-
-  return 0;
-};
-
-const readCartCount = (): number => {
-  if (typeof window === "undefined") {
-    return 0;
-  }
-
-  for (const key of CART_STORAGE_KEYS) {
-    try {
-      const rawValue = window.localStorage.getItem(key);
-      if (!rawValue) {
-        continue;
-      }
-
-      try {
-        const parsed = JSON.parse(rawValue) as CartLike;
-        const count = parseCartCount(parsed);
-        if (count > 0) {
-          return count;
-        }
-      } catch {
-        const numeric = Number(rawValue);
-        if (Number.isFinite(numeric) && numeric > 0) {
-          return numeric;
-        }
-      }
-    } catch {
-      // Ignorieren – bei Zugriffproblemen einfach weiterprobieren.
-    }
-  }
-
-  return 0;
-};
+import { useMemo } from "react";
+import { useCart } from "./CartProvider";
 
 export function CartButton() {
-  const [cartCount, setCartCount] = useState(0);
+  const { items, openCart } = useCart();
 
-  useEffect(() => {
-    setCartCount(readCartCount());
-
-    const handleStorage = (event: StorageEvent) => {
-      if (!event.key || CART_STORAGE_KEYS.includes(event.key)) {
-        setCartCount(readCartCount());
-      }
-    };
-
-    const handleCartEvent = (event: Event) => {
-      const customEvent = event as CustomEvent<{ count?: number }>;
-      if (customEvent.detail && typeof customEvent.detail.count === "number") {
-        setCartCount(Math.max(0, Math.floor(customEvent.detail.count)));
-      } else {
-        setCartCount(readCartCount());
-      }
-    };
-
-    window.addEventListener("storage", handleStorage);
-    window.addEventListener(CART_UPDATE_EVENT, handleCartEvent as EventListener);
-
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      window.removeEventListener(CART_UPDATE_EVENT, handleCartEvent as EventListener);
-    };
-  }, []);
+  const cartCount = useMemo(
+    () => items.reduce((sum, item) => sum + item.quantity, 0),
+    [items],
+  );
 
   const badgeLabel = cartCount > 99 ? "99+" : `${cartCount}`;
   const ariaLabel =
@@ -120,11 +18,11 @@ export function CartButton() {
       : "Warenkorb öffnen";
 
   return (
-    <Link
-      href="/checkout"
+    <button
+      type="button"
       className="btn btn-ghost btn-circle"
       aria-label={ariaLabel}
-      prefetch={false}
+      onClick={openCart}
     >
       <div className="indicator">
         {cartCount > 0 && (
@@ -147,6 +45,6 @@ export function CartButton() {
           <circle cx="17" cy="19" r="1" />
         </svg>
       </div>
-    </Link>
+    </button>
   );
 }
