@@ -1,0 +1,25 @@
+{
+  "collectionName": "components_navigation_sub_items",
+  "info": {
+    "displayName": "Unterpunkt",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "titel": {
+      "type": "string",
+      "required": true
+    },
+    "link": {
+      "type": "string"
+    },
+    "ziel": {
+      "type": "enumeration",
+      "enum": [
+        "_self",
+        "_blank"
+      ],
+      "default": "_self"
+    }
+  }
+}

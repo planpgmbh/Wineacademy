@@ -7,7 +7,9 @@ type UID =
   | 'api::gutschein.gutschein'
   | 'api::produkt.produkt'
   | 'api::benachrichtigung.benachrichtigung'
-  | 'api::einstellung.einstellung';
+  | 'api::einstellung.einstellung'
+  | 'api::navigation.navigation'
+  | 'api::footer.footer';
 
 function toBool(v: any): boolean {
   if (v == null) return false;
@@ -188,6 +190,16 @@ async function upsertEinstellungen(
   }
 
   const created = await strapi.entityService.create('api::einstellung.einstellung', { data });
+  return created.id as number;
+}
+
+async function upsertSingleType(strapi: any, uid: UID, data: Record<string, unknown>) {
+  const existing = await strapi.db.query(uid).findOne({ select: ['id'] });
+  if (existing?.id) {
+    const updated = await strapi.entityService.update(uid, existing.id, { data });
+    return updated.id as number;
+  }
+  const created = await strapi.entityService.create(uid, { data });
   return created.id as number;
 }
 
@@ -873,6 +885,96 @@ const seminarSeeds: SeminarSeed[] = [
     aktiv: true,
   });
   log('Gutschein-Template aktualisiert');
+
+  const navigationItems = [
+    {
+      titel: 'Wine Academy',
+      link: '/wine-academy',
+      ziel: '_self',
+      unterpunkte: [
+        { titel: 'Wine Academy', link: '/wine-academy', ziel: '_self' },
+        { titel: 'Studio', link: '/wine-academy/studio', ziel: '_self' },
+        { titel: 'Team', link: '/wine-academy/team', ziel: '_self' },
+        { titel: 'Unsere Philosophie', link: '/wine-academy/philosophie', ziel: '_self' },
+      ],
+    },
+    {
+      titel: 'Ausbildung',
+      link: '/ausbildung',
+      ziel: '_self',
+      unterpunkte: [
+        { titel: 'Sommeliere', link: '/ausbildung/sommeliere', ziel: '_self' },
+        { titel: 'WSET', link: '/ausbildung/wset', ziel: '_self' },
+      ],
+    },
+    {
+      titel: 'Kurse',
+      link: '/kurse',
+      ziel: '_self',
+      unterpunkte: [
+        { titel: 'Masterclasses', link: '/kurse/masterclasses', ziel: '_self' },
+        { titel: 'Weinkurse', link: '/kurse/weinkurse', ziel: '_self' },
+      ],
+    },
+    { titel: 'Events', link: '/events', ziel: '_self', unterpunkte: [] },
+    { titel: 'Gutscheine', link: '/gutscheine', ziel: '_self', unterpunkte: [] },
+    { titel: 'Kontakt', link: '/kontakt', ziel: '_self', unterpunkte: [] },
+  ];
+
+  const navigationId = await upsertSingleType(strapi, 'api::navigation.navigation', {
+    items: navigationItems,
+    publishedAt: nowIso(),
+  });
+  log(`Navigation aktualisiert (ID ${navigationId})`);
+
+  const footerSections = [
+    {
+      titel: 'Post an uns',
+      typ: 'kontakt',
+      text: ['Eimsbütteler Chaussee 37', '20259 Hamburg', 'Tel.: 040-88 12 80 27', 'post@wineacademy.de'].join('\n'),
+      links: [],
+      logos: [],
+    },
+    {
+      titel: 'Rechtliches',
+      typ: 'links',
+      links: [
+        { label: 'AGB', href: '/agb', ziel: '_self' },
+        { label: 'Widerruf', href: '/widerruf', ziel: '_self' },
+        { label: 'Zahlungsarten', href: '/zahlungsarten', ziel: '_self' },
+        { label: 'Bildnachweise', href: '/bildnachweise', ziel: '_self' },
+        { label: 'Impressum', href: '/impressum', ziel: '_self' },
+        { label: 'Datenschutz', href: '/datenschutz', ziel: '_self' },
+      ],
+      logos: [],
+    },
+    {
+      titel: 'Wine Academy',
+      typ: 'links',
+      links: [
+        { label: 'Weinkurse', href: '/kurse/weinkurse', ziel: '_self' },
+        { label: 'WSET', href: '/ausbildung/wset', ziel: '_self' },
+        { label: 'Sommelier', href: '/ausbildung/sommeliere', ziel: '_self' },
+        { label: 'Tastings & Events', href: '/events', ziel: '_self' },
+      ],
+      logos: [],
+    },
+    {
+      titel: 'Zertifikate',
+      typ: 'logos',
+      links: [],
+      logos: [
+        { name: 'WSET', href: 'https://www.wsetglobal.com/' },
+        { name: 'Certuria', href: 'https://www.certuria.de/' },
+      ],
+    },
+  ];
+
+  const footerId = await upsertSingleType(strapi, 'api::footer.footer', {
+    sections: footerSections,
+    publishedAt: nowIso(),
+  });
+  log(`Footer aktualisiert (ID ${footerId})`);
 
 
   const notificationSeeds: BenachrichtigungSeedInput[] = [

@@ -186,3 +186,6 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - 2025-10-08 – AGENTS-Regeln um Umgebungsprüfung und Marker-Datei ergänzt, `.environment` eingeführt und `.gitignore` erweitert. – Commit: n/a
 - 2025-10-08 – Navbar ersetzt Kontakt-CTA durch DaisyUI-Warenkorb-Button mit Badge (Cart-Count via LocalStorage/Custom-Event), lokale Sichtprüfung im Frontend-README dokumentiert. – Commit: n/a
 - 2025-10-08 – Figma-Navigation übernommen: Neue Navbar-Komponente mit Hauptmenü, Social-Links (Instagram, Facebook, Mail) und Warenkorb-Badge implementiert; layout.tsx bereinigt und Linting lokal erfolgreich ausgeführt. – Commit: n/a
+- 2025-10-08 – Navigation/Footer als Strapi-Single-Types modelliert (inkl. Komponenten) und Seeds für Menü-/Footer-Inhalte ergänzt; ausschließlich Backend aktualisiert. – Commit: n/a
+- 2025-10-08 – CMS-Navigation/Footer an Frontend angebunden: neue Public-Endpoints, Fetch-Helper, dynamische Navbar mit Untermenüs sowie Footer-Rendering inklusive Medienauflösung, `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-08 – Navigation/Footer-Fetch auf „no-store“ umgestellt, Layout auf `revalidate = 0` gesetzt und Staging-Frontend neu gebaut, damit CMS-Daten sofort erscheinen. – Commit: n/a

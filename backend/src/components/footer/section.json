@@ -1,0 +1,36 @@
+{
+  "collectionName": "components_footer_sections",
+  "info": {
+    "displayName": "Abschnitt",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "titel": {
+      "type": "string",
+      "required": true
+    },
+    "typ": {
+      "type": "enumeration",
+      "enum": [
+        "kontakt",
+        "links",
+        "logos"
+      ],
+      "default": "links"
+    },
+    "text": {
+      "type": "text"
+    },
+    "links": {
+      "type": "component",
+      "repeatable": true,
+      "component": "footer.link"
+    },
+    "logos": {
+      "type": "component",
+      "repeatable": true,
+      "component": "footer.logo"
+    }
+  }
+}
