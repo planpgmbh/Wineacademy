@@ -183,3 +183,4 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - 2025-10-07 – `resolveApiBaseUrl` korrigiert: `PUBLIC_URL` ohne `/api` wird nun erweitert, Mail-Links zeigen wieder auf `/api/public/...`. – Commit: n/a
 - 2025-10-07 – Storno-Lifecycle holt PDF-ID jetzt über `/Document` (auch für Cancel-Rechnungen); bestehende Bestellung `WA-20251003` aktualisiert (`sevdesk_storno_document_id=245014128`). – Commit: n/a
 - 2025-10-08 – AGENTS-Regeln um Umgebungsprüfung und Marker-Datei ergänzt, `.environment` eingeführt und `.gitignore` erweitert. – Commit: n/a
+- 2025-10-08 – Navbar ersetzt Kontakt-CTA durch DaisyUI-Warenkorb-Button mit Badge (Cart-Count via LocalStorage/Custom-Event), lokale Sichtprüfung im Frontend-README dokumentiert. – Commit: n/a

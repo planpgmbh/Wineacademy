@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
+import { CartButton } from "./_components/CartButton";
 
 export const metadata: Metadata = {
   title: "Wine Academy Hamburg",
@@ -74,9 +75,7 @@ export default function RootLayout({
                 </ul>
               </div>
               <div className="navbar-end gap-2">
-                <Link href="#" className="btn btn-primary">
-                  Kontakt
-                </Link>
+                <CartButton />
               </div>
             </div>
           </header>
