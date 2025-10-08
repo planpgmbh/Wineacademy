@@ -122,7 +122,7 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - Staging-/Produktiv-Stacks sind über Traefik erreichbar; Deploy-Anleitung und Fehlerbehandlung sind dokumentiert.
 
 ## Arbeitsprotokoll
-- 2025-10-08 – Warenkorb-Slideout im Frontend neu aufgebaut (CartProvider, Slideout mit Seminartagen, Summenberechnung, Button „Jetzt bezahlen“) und an LocalStorage/Cart-Events angebunden; ESLint erfolgreich ausgeführt. – Commit: n/a
+- 2025-10-08 – Warenkorb-Slideout im Frontend neu aufgebaut (CartProvider, Slideout mit Seminartagen, Summenberechnung, Button „Jetzt bezahlen“) und an LocalStorage/Cart-Events angebunden; ESLint erfolgreich ausgeführt. – Commit: 976e26c
 - 2025-10-08 – Frontend auf DaisyUI v5 Basis zurückgesetzt (Altstrukturen entfernt, Navigation & Landingpage mit Standardkomponenten neu aufgebaut). – Commit: n/a
 - 2025-10-02 – Entwicklungsplan erstellt, bisherige Architektur erfasst und nächste Arbeitsschritte priorisiert. – Commit: n/a
 - 2025-10-02 – SendGrid-E-Mail-Konzept abgestimmt; Template-Struktur und Umsetzungsschritte im Plan ergänzt. – Commit: n/a
