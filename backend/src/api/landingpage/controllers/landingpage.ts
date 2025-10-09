@@ -16,6 +16,8 @@ export default factories.createCoreController(CONTENT_UID, ({ strapi }) => ({
       populate: {
         abschnitte: {
           on: {
+            "landing.hero": true,
+            "landing.text-block": true,
             "landing.card-grid": { populate: { karten: true } },
             "landing.icon-grid": { populate: { items: true } },
           },
