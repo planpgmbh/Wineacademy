@@ -117,4 +117,4 @@ curl -s -X POST http://localhost:1337/api/public/bestellungen \
 ## Weiterführende Ressourcen
 - Root-README für Gesamtüberblick & Compose-Kommandos.
 - `docs/server-infrastructure.md` für Traefik, Netzwerke und Backup-Hinweise.
-- `docs/entwicklungsplan.md` für Roadmap und offene Backend-Aufgaben.
+- `docs/entwicklungsplan.md` für Roadmap und Entscheidungen; `docs/backend-arbeitsprotokoll.md` für laufende Backend-Aufgaben & Commit-Notizen.

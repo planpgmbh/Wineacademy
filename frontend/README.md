@@ -52,4 +52,4 @@ Alle Datenabrufe laufen über `lib/api.ts`:
 ## Weiterführende Ressourcen
 - Root-README für Gesamtüberblick & Compose-Kommandos.
 - `backend/README.md` für Payload-Details und Public-API-Spezifikation.
-- `docs/entwicklungsplan.md` für offene Frontend-Aufgaben (Landingpage, SEO etc.).
+- `docs/entwicklungsplan.md` für Roadmap & Entscheidungen, `docs/frontend-arbeitsprotokoll.md` für offene Frontend-Aufgaben (Landingpage, SEO etc.).

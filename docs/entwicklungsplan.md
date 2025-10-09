@@ -7,6 +7,8 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - backend/README.md – Content-Modelle, Public API, Bestell- und PayPal-Workflow.
 - frontend/README.md – Next.js-Routen, Warenkorb-/Checkout-Logik, API-Verbrauch.
 - AGENTS.md – Arbeitsregeln und Pflichtlektüre für Agenten/KI.
+- docs/backend-arbeitsprotokoll.md – Laufende Backend-Arbeiten & Commit-Verweise.
+- docs/frontend-arbeitsprotokoll.md – Laufende Frontend-Arbeiten & Commit-Verweise.
 - docs/server-infrastructure.md – Traefik-Setup, Domains, Deploy-Abläufe.
 - docker-compose-staging.yml – Staging-Stack mit Strapi, Next.js und Postgres.
 - tests/checkout-puppeteer.js – Puppeteer-E2E für Rechnung/PayPal.
@@ -121,72 +123,7 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - Puppeteer-End-to-End-Szenarien für Rechnung und PayPal laufen gegen Staging erfolgreich durch.
 - Staging-/Produktiv-Stacks sind über Traefik erreichbar; Deploy-Anleitung und Fehlerbehandlung sind dokumentiert.
 
-## Arbeitsprotokoll
-- 2025-10-08 – Landingpage-Modul mit Dynamic-Zone-Komponenten (Hero, Karten-Grid, Textblock, Icon-Grid) eingeführt, Seeds auf Inhalte der alten Homepage übertragen und Frontend-Renderer inkl. `/landing/:slug` bereitgestellt. – Commit: n/a
-- 2025-10-08 – Warenkorb-Slideout im Frontend neu aufgebaut (CartProvider, Slideout mit Seminartagen, Summenberechnung, Button „Jetzt bezahlen“) und an LocalStorage/Cart-Events angebunden; ESLint erfolgreich ausgeführt. – Commit: 976e26c
-- 2025-10-08 – Frontend auf DaisyUI v5 Basis zurückgesetzt (Altstrukturen entfernt, Navigation & Landingpage mit Standardkomponenten neu aufgebaut). – Commit: n/a
-- 2025-10-02 – Entwicklungsplan erstellt, bisherige Architektur erfasst und nächste Arbeitsschritte priorisiert. – Commit: n/a
-- 2025-10-02 – SendGrid-E-Mail-Konzept abgestimmt; Template-Struktur und Umsetzungsschritte im Plan ergänzt. – Commit: n/a
-- 2025-10-02 – SevDesk-API recherchiert und Integrationsschritte (Kontakt-/Rechnungsanlage, PDFs, Status-Rücklauf) in den Plan aufgenommen. – Commit: n/a
-- 2025-10-02 – Rechnungsintegration auf SevDesk umgestellt (ENV & Dokumentation aktualisiert). – Commit: 030507b
-- 2025-10-02 – Storno-Event-Anforderung (E-Mail/Stornobeleg) in Plan und Backend-Doku ergänzt. – Commit: 030507b
-- 2025-10-02 – Strapi-Systemeinstellungen (Absender/Benachrichtigung) im Plan ergänzt. – Commit: 030507b
-- 2025-10-02 – Strapi-Settings-Aufteilung (ENV vs. Single-Type) konkretisiert. – Commit: 030507b
-- 2025-10-02 – Strapi-Single-Type "Einstellungen" implementiert und Service für Mail-Fallbacks ergänzt. – Commit: 9125913
-- 2025-10-02 – Benachrichtigungstemplates + Admin-Testversand umgesetzt; API-/Admin-Doku ergänzt. – Commit: 5dad24c
-- 2025-10-02 – Termin-Relation von "Ort" auf "Standort" umbenannt (Strapi-Schema, Seeds, Admin-Übersetzung, Frontend, TS-Typen); ESLint & TypeScript-Check ausgeführt. – Commit: n/a
-- 2025-10-02 – Veraltete "Ort"-Artefakte im Strapi-Build (dist) entfernt, Backend & Staging-Stack neu gebaut. – Commit: n/a
-- 2025-10-02 – Content-Type „Benachrichtigungen“ im Strapi-Admin umbenannt, Feld-Beschriftungen & Hilfetexte in Deutsch ergänzt; Doku aktualisiert. – Commit: 1b5d199
-- 2025-10-03 – Content-Type „Benachrichtigungen“ (UID, Felder, Platzhalter, SendGrid) und Einstellungen vollständig eingedeutscht; Admin-Endpunkt, Component & Typdefinitionen angepasst. – Commit: 591ac3f
-- 2025-10-03 – Warenkorb-Slideout im Frontend entschlackt (Seminar-Termine mit Uhrzeiten, vereinheitlichte Karten für Produkte/Gutscheine) und Safe-Area-Padding für den Kassen-Button ergänzt; ESLint mangels Projektkonfiguration nicht lauffähig. – Commit: n/a
-- 2025-10-03 – Frontend-README um verpflichtenden Build/Compose-Neustart + Browser-Sichtprüfung ergänzt und Staging-Web-Container neu gebaut/gestartet. – Commit: n/a
-- 2025-10-03 – Warenkorb-Karten erneut gestrafft (Seminarnamen bereinigt, Tagesliste, Button-Abstand) und Staging-Frontend via Compose neu gebaut. – Commit: n/a
-- 2025-10-03 – Warenkorb-Footer erneut justiert (Safe-Area-Reserve erhöht, min-h-0 gesetzt) und Close-Buttons als deutlich sichtbares „×“ umgesetzt; Staging-Webservice via Compose neu ausgerollt. – Commit: n/a
-- 2025-10-03 – E-Mail-Transport-Toggle (`EMAIL_TRANSPORT_ENABLED`) eingeführt, `.env.staging` ergänzt und Backend-Build erfolgreich ausgeführt. – Commit: n/a
-- 2025-10-03 – SendGrid-Testdaten (Einstellungen + Benachrichtigung) per Script `backend/scripts/seed-sendgrid-test.js` in der Staging-Datenbank angelegt. – Commit: n/a
-- 2025-10-03 – SendGrid-Testversand via `scripts/sendgrid-test-send.js` angestoßen (`403 Forbidden`: Absender `technik@plan-p.de` noch nicht als Sender Identity verifiziert). – Commit: n/a
-- 2025-10-03 – Nach Verifizierung von `technik@plan-p.de` erfolgreicher Testversand (`messageId=_Ir7gYCcSce-RA13xEZiiw`). – Commit: n/a
-- 2025-10-03 – Checkout in einen nummerierten Stepper umgebaut (Warenkorb → Teilnehmer → Rechnungsadresse → Bestätigungen → Zahlung), Checkboxen vor die Zahlarten gezogen und Teilnehmerblöcke mit „Teilnehmer 1/2 …“ gekennzeichnet. – Commit: n/a
-- 2025-10-03 – SevDesk-API-Discovery dokumentiert (`docs/sevdesk.md`), offene Punkte & Testplan für Integration erfasst. – Commit: n/a
-- 2025-10-03 – Backend-Service `src/services/sevdesk.ts` angelegt (Token-Auth, Retries, PDF-Download), Readmes aktualisiert und Build erfolgreich durchlaufen. – Commit: n/a
-- 2025-10-03 – Checkout speist SevDesk mit Kontakten & Rechnungen (inkl. Gutscheinrabatt-Verteilung), neue ENV-Parameter dokumentiert, Backend-Build grün. – Commit: n/a
-- 2025-10-03 – Storni bereitgestellt: Statuswechsel aktualisiert SevDesk-Rechnung, Storno-Dokument-ID wird gespeichert. – Commit: n/a
-- 2025-10-03 – Seed-Logik erweitert (Termine, Benachrichtigungen, Einstellungen) und Testdaten für vollständige Systemtests hinterlegt. – Commit: n/a
-- 2025-10-03 – Staging-Datenbank zurückgesetzt, Seeds ausgeführt (Termine/Benachrichtigungen geprüft) und Strapi-Service neu gestartet. – Commit: n/a
-- 2025-10-03 – SevDesk-Sync-Toggle (`SEVDESK_SYNC_ENABLED`) implementiert, `.env`-Vorlagen aktualisiert und Backend-Guards ergänzt. – Commit: e053de0
-- 2025-10-05 – SevDesk-Rechnungsanlage korrigiert (Kontaktpersonen-ID ermittelt, Payload ergänzt, Env-Doku aktualisiert). – Commit: n/a
-- 2025-10-06 – SevDesk-Rechnungserstellung auf Factory/saveInvoice umgestellt, auto-Versand (`sendBy`) + Zahlungsbuchung (`bookAmount`) integriert und erfolgreich im Staging getestet. – Commit: n/a
-- 2025-10-06 – Rechnungsnummern synchronisiert (letzte SevDesk-Nummer pro Jahr ermitteln, Präfix `WA`, automatische Jahreswechsel). – Commit: n/a
-- 2025-10-06 – Staging-Datenbank zurückgesetzt und neu gesät, Mail-/Empfänger-ENV auf reale Adressen gestellt; Puppeteer-Skript `tests/sevdesk-puppeteer.js` für Rechnung/Bezahlt/Storno erweitert. SevDesk-Konto-ID via API ermittelt (`CheckAccount` 6046545) und `SEVDESK_CHECK_ACCOUNT_ID` aktualisiert; Skript-Postaktionen optimiert (Strapi-Instanz mit reduziertem Pool & manueller Storno-Lifecycle-Aufruf) – Knex-Timeout beseitigt. – Commit: n/a
-- 2025-10-06 – Rechnungsnummern-Logik auf Jahreslauf (`<PREFIX>-YYYY1NNN`) umgestellt, Kundennummern werden als `KN-1xxx` vergeben; Funktion `getNextInvoiceNumber` berücksichtigt lokale Bestellungen und SevDesk-Daten, Storno-Nummern verbleiben im SevDesk-Standard. – Commit: n/a
-- 2025-10-07 – Zahlungsziel für Rechnungsbestellungen auf 15 Tage festgelegt und automatische PayPal-Zahlungsverbuchung in SevDesk gesichert. – Commit: n/a
-- 2025-10-07 – SevDesk markiert PayPal-Rechnungen nun auch bei nachträglicher Zahlungsbestätigung via Webhook als bezahlt. – Commit: n/a
-- 2025-10-07 – SevDesk-CheckAccount wird automatisch erkannt; Zahlungsverbuchung idempotent gemacht und Puppeteer-E2E erfolgreich durchlaufen. – Commit: n/a
-- 2025-10-07 – SevDesk-Kontakte unterscheiden jetzt zwischen Privatperson (Person) und Firmenkontakt (Organisation). – Commit: n/a
-- 2025-10-07 – Puppeteer-Test um PayPal-/Aufrechnungs-Storno sowie Zwei-Teilnehmer-Seminar ergänzt; Stornobelege werden in SevDesk verifiziert. – Commit: n/a
-- 2025-10-07 – Lifecycle-Logging für SevDesk-Storno erweitert, Szenario-Filter/PayPal-Zwang für SevDesk-Puppeteer eingeführt und separaten PayPal-Storno-Test-Skripteintrag ergänzt; Ausführung lokale PayPal-Creds noch ausstehend. – Commit: n/a
-- 2025-10-08 – PayPal-Bestellungen setzen den Bestellstatus nicht mehr automatisch auf „bezahlt“; Strapi überlässt die Zahlungsverbuchung ausschließlich SevDesk, PayPal-Webhook aktualisiert nur noch die Referenz. – Commit: n/a
-- 2025-10-08 – Bestellbestätigung und Backoffice-Mailversand nach Checkout reaktiviert (Benachrichtigungs-Service erweitert, neue Helper für Platzhalter & Links). – Commit: n/a
-- 2025-10-08 – Rechnungs- und Kundennummern werden vollständig durch SevDesk vergeben; Shop-Logik zur eigenen Nummernvergabe entfernt und Rückübernahme der SevDesk-Rechnungsnummer in Strapi ergänzt. – Commit: n/a
-- 2025-10-08 – Platzhalter-Auflösung der Benachrichtigungs-Templates an Content-Type-Daten angepasst (Deep-Merge & Nested Lookup), Strapi-Build erfolgreich geprüft. – Commit: n/a
-- 2025-10-08 – Fallback-Handling der Benachrichtigungs-Platzhalter überarbeitet, damit Testdaten nur ohne Runtime-Daten greifen; Backend neu gebaut und Service neu gestartet. – Commit: n/a
-- 2025-10-08 – Fallbacks für Benachrichtigungs-Platzhalter vollständig entfernt (nur noch Runtime-Daten in E-Mails), Backend mit Force-Recreate neu deployed. – Commit: n/a
-- 2025-10-08 – Rechnungs-/Stornorechnungs-Links in Kunden- und Backoffice-Mails verankert, neue Download-Endpoints für PDF-Belege erstellt und Storno-Benachrichtigungen (Kunde/Backoffice) samt Seeds implementiert. – Commit: n/a
-- 2025-10-08 – Staging-Datenbank neu aufgesetzt (DROP/CREATE), Seeds mit neuen Benachrichtigungen durchgeführt und Backend-Service anschließend mit deaktiviertem SEED_ON_BOOT neu gestartet. – Commit: n/a
-- 2025-10-08 – Kundenmails von Portal-Hinweisen befreit, Rechnungslink im Seed aktualisiert und Staging-Seed erneut eingespielt. – Commit: n/a
-- 2025-10-07 – Gutschein-Logik aus dem Bestell-Controller in Utility ausgelagert, Berechnungen vereinheitlicht. – Commit: n/a
-- 2025-10-07 – PayPal-Verifikation, SevDesk-Sync und Benachrichtigungslogik aus `bestellung.ts` in Hilfsmodule ausgelagert; Controller aufgeräumt. – Commit: n/a
-- 2025-10-07 – Download-Link-Test für Rechnungen durchgeführt: SevDesk-Dokument-ID in Staging nachgetragen, Backend-Container via `docker compose ... --build --force-recreate` neu ausgerollt; Endpoint `/api/public/bestellungen/KN-1002/rechnung` liefert weiterhin Base64-JSON statt PDF, Fix erforderlich. – Commit: n/a
-- 2025-10-07 – SevDesk-Download-Helper passt Base64-Antworten nun an (`downloadDocument` dekodiert JSON-Response, setzt Dateiname/MIME); Ende-zu-Ende-Test via `npm run build` blockiert durch bestehenden Fehler in `src/index.ts`. – Commit: n/a
-- 2025-10-07 – Staging-Datenbank zurückgesetzt (`DROP SCHEMA public CASCADE`), Seeds mit temporärem `SEED_ON_BOOT=true` erneut ausgeführt und Strapi-Service frisch gestartet; lokale SevDesk-Verknüpfungen damit entfernt. – Commit: n/a
-- 2025-10-07 – Neue Bestellung (#1 / WA-20251000) für Download-Test angelegt, SevDesk-Dokument-ID manuell gesetzt (`245009217`); nach `downloadDocument`-Fix liefert `/api/public/bestellungen/WA-20251000/rechnung` jetzt direkt ein PDF. – Commit: n/a
-- 2025-10-07 – Rechnungs-/Storno-Downloads abgesichert: `bestellnummer` priorisiert, HMAC-Token in Links eingebettet (14 Tage gültig), Controller validiert Token; Links in Benachrichtigungen bleiben unverändert, liefern aber nun sichere, klickbare PDFs. – Commit: n/a
-- 2025-10-07 – SevDesk-Sync ergänzt Fallback auf `/Document`-Endpoint, setzt `sevdesk_document_id` automatisiert; neue Bestellung `WA-20251002` verifiziert (PDF-Link direkt in Mail verfügbar). – Commit: n/a
-- 2025-10-07 – `resolveApiBaseUrl` korrigiert: `PUBLIC_URL` ohne `/api` wird nun erweitert, Mail-Links zeigen wieder auf `/api/public/...`. – Commit: n/a
-- 2025-10-07 – Storno-Lifecycle holt PDF-ID jetzt über `/Document` (auch für Cancel-Rechnungen); bestehende Bestellung `WA-20251003` aktualisiert (`sevdesk_storno_document_id=245014128`). – Commit: n/a
-- 2025-10-08 – AGENTS-Regeln um Umgebungsprüfung und Marker-Datei ergänzt, `.environment` eingeführt und `.gitignore` erweitert. – Commit: n/a
-- 2025-10-08 – Navbar ersetzt Kontakt-CTA durch DaisyUI-Warenkorb-Button mit Badge (Cart-Count via LocalStorage/Custom-Event), lokale Sichtprüfung im Frontend-README dokumentiert. – Commit: n/a
-- 2025-10-08 – Figma-Navigation übernommen: Neue Navbar-Komponente mit Hauptmenü, Social-Links (Instagram, Facebook, Mail) und Warenkorb-Badge implementiert; layout.tsx bereinigt und Linting lokal erfolgreich ausgeführt. – Commit: n/a
-- 2025-10-08 – Navigation/Footer als Strapi-Single-Types modelliert (inkl. Komponenten) und Seeds für Menü-/Footer-Inhalte ergänzt; ausschließlich Backend aktualisiert. – Commit: n/a
-- 2025-10-08 – CMS-Navigation/Footer an Frontend angebunden: neue Public-Endpoints, Fetch-Helper, dynamische Navbar mit Untermenüs sowie Footer-Rendering inklusive Medienauflösung, `npm run lint` erfolgreich. – Commit: n/a
-- 2025-10-08 – Navigation/Footer-Fetch auf „no-store“ umgestellt, Layout auf `revalidate = 0` gesetzt und Staging-Frontend neu gebaut, damit CMS-Daten sofort erscheinen. – Commit: n/a
+## Arbeitsprotokolle
+Die laufenden Arbeitsnotizen liegen jeweils in eigenen Protokollen:
+- Backend: `docs/backend-arbeitsprotokoll.md`
+- Frontend: `docs/frontend-arbeitsprotokoll.md`
