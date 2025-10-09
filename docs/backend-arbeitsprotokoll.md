@@ -1,6 +1,7 @@
 # Backend-Arbeitsprotokoll
 
-- 2025-10-09 – Dokumentation auf getrennte Backend-/Frontend-Arbeitsprotokolle umgestellt; Verweise in README und Plan aktualisiert. – Commit: n/a
+- 2025-10-09 – Dokumentation auf getrennte Backend-/Frontend-Arbeitsprotokolle umgestellt; Verweise in README und Plan aktualisiert. – Commit: d00b931
+- 2025-10-09 – Landingpage-Controller populiert alle Abschnittsvarianten (Hero, Textblock, Karten-, Icon-Grids) für vollständige API-Antworten. – Commit: b948550
 - 2025-10-08 – Landingpage-Modul in Strapi als Dynamic-Zone-Komponenten umgesetzt, Seeds auf Inhalte der alten Homepage übertragen (Renderer-Anbindung siehe Frontend-Protokoll). – Commit: n/a
 - 2025-10-02 – Entwicklungsplan erstellt, bisherige Architektur erfasst und nächste Arbeitsschritte priorisiert. – Commit: n/a
 - 2025-10-02 – SendGrid-E-Mail-Konzept abgestimmt; Template-Struktur und Umsetzungsschritte im Plan ergänzt. – Commit: n/a
