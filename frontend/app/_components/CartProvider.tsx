@@ -24,6 +24,7 @@ export type CartItem = {
   imageUrl: string;
   type: CartItemType;
   seminarDays?: string[];
+  quantityEditable?: boolean;
 };
 
 type CartContextValue = {
@@ -45,23 +46,38 @@ const CART_STORAGE_KEYS = ["wineacademy-cart", "wineacademy.cart", "cart"];
 const CART_UPDATE_EVENT = "wineacademy:cart:update";
 const PLACEHOLDER_ITEMS: CartItem[] = [
   {
-    id: "seminar-001",
-    title: "Weinseminar: Einführung in die Welt der Rieslinge",
-    description: "Intensiver Abend mit 5 Riesling-Weinen, Sensorik-Training und Food-Pairing.",
-    price: 129,
-    quantity: 2,
-    imageUrl: "/images/cart/weinseminar-riesling.jpg",
+    id: "cart-placeholder-seminar-1",
+    title: "Seminar Level 1 Weine Tasting Set Klein (2cl)",
+    description: "Seminartage",
+    price: 98.9,
+    quantity: 1,
+    imageUrl:
+      "https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&w=180&q=80",
     type: "seminar",
-    seminarDays: ["Donnerstag, 14. November 2024", "Freitag, 15. November 2024"],
+    seminarDays: ["Do. 16.08.2025", "Fr. 17.08.2025", "Sa. 18.08.2025"],
+    quantityEditable: true,
   },
   {
-    id: "produkt-101",
-    title: "Weinpaket \"Hamburger Klassiker\"",
-    description: "Sechs Flaschen norddeutscher Winzer*innen, ideal als Geschenk.",
-    price: 89,
+    id: "cart-placeholder-seminar-2",
+    title: "Seminar Level 1 Weine Tasting Set Klein (2cl)",
+    description: "",
+    price: 98.9,
     quantity: 1,
-    imageUrl: "/images/cart/hamburger-klassiker.jpg",
+    imageUrl:
+      "https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&w=180&q=80",
+    type: "seminar",
+    quantityEditable: true,
+  },
+  {
+    id: "cart-placeholder-gift-card",
+    title: "Geschenkgutschein",
+    description: "Hier steht die Beschreibung zum Geschenkgutschein",
+    price: 98.9,
+    quantity: 1,
+    imageUrl:
+      "https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&w=180&q=80",
     type: "product",
+    quantityEditable: false,
   },
 ];
 
@@ -253,6 +269,16 @@ const toCartItem = (raw: unknown, index: number): CartItem | null => {
   );
   const price = normalizePrice(record.price ?? record.unitPrice ?? record.total ?? record.grossTotal ?? 0);
   const type = detectType(record, seminarDays);
+  const quantityEditableRaw =
+    typeof record.quantityEditable === "boolean"
+      ? record.quantityEditable
+      : typeof record.allowQuantity === "boolean"
+        ? record.allowQuantity
+        : typeof record.quantityEditable === "string"
+          ? record.quantityEditable.toLowerCase() !== "false"
+          : typeof record.allowQuantity === "string"
+            ? record.allowQuantity.toLowerCase() !== "false"
+            : true;
 
   return {
     id: idCandidate || uniqueIdFromIndex(index),
@@ -263,6 +289,7 @@ const toCartItem = (raw: unknown, index: number): CartItem | null => {
     quantity,
     type,
     seminarDays: seminarDays.length > 0 ? seminarDays : undefined,
+    quantityEditable: quantityEditableRaw,
   };
 };
 

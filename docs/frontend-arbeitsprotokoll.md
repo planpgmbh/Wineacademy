@@ -1,6 +1,6 @@
 # Frontend-Arbeitsprotokoll
 
-- 2025-10-10 – Delete-Icon im Cart-Slideout vergrößert, paddingfrei in Titel-/Preiszeile positioniert und Abstände auf Figma „cart_slideout_new“ ausgerichtet; `npm run lint` erfolgreich. – Commit: f30bce7
+- 2025-10-10 – Delete-Icon im Cart-Slideout vergrößert, paddingfrei in Titel-/Preiszeile positioniert und Abstände auf Figma „cart_slideout_new“ ausgerichtet; `npm run lint` erfolgreich. – Commit: b7e249c
 - 2025-10-10 – Arbeitsrichtlinien für KI-Agenten im Frontend-README aktualisiert (Figma-Workflow konsolidiert). – Commit: n/a
 - 2025-10-10 – Trash-Icon im Warenkorb durch neues Asset aus `public/icons` ersetzt, Icons verkleinert und Entfernen-Button absolut mit Pufferfläche positioniert; `npm run lint` erfolgreich. – Commit: n/a
 - 2025-10-10 – Cart-Slideout-Styling (Header, Typografie, Mengensteuerung, Gutschein-Variante) an Figma „cart_slideout_new“ angenähert; `npm run lint`, `node tests/cart-slideout-screenshot.mjs`, `node tests/cart-compare.mjs` ausgeführt. – Commit: n/a
