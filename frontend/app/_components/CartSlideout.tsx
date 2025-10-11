@@ -1,75 +1,189 @@
 "use client";
 
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect } from "react";
-import { useCart } from "./CartProvider";
+import { useEffect, useMemo, useState } from "react";
+import { useCart, type CartItem } from "./CartProvider";
 
-const priceFormatter = new Intl.NumberFormat("de-DE", {
+const currencyFormatter = new Intl.NumberFormat("de-DE", {
   style: "currency",
   currency: "EUR",
-  minimumFractionDigits: 2,
 });
 
-const calendarIcon = (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.5"
-    className="h-4 w-4"
-    aria-hidden="true"
-  >
-    <rect x="3" y="4" width="18" height="17" rx="2" />
-    <path d="M8 2v4M16 2v4M3 10h18" />
-  </svg>
-);
+const formatCurrency = (value: number) => currencyFormatter.format(value);
 
-function renderImage(src: string, alt: string) {
-  if (!src) {
-    return (
-      <div className="flex h-24 w-24 items-center justify-center rounded-xl bg-base-200 text-sm text-base-content/60">
-        Kein Bild
-      </div>
-    );
-  }
+type QuantityControlProps = {
+  item: CartItem;
+  onIncrement: (id: string) => void;
+  onDecrement: (id: string) => void;
+};
+
+const baseShadow = "shadow-[0_1px_3px_rgba(0,0,0,0.12),0_1px_6px_rgba(0,0,0,0.08)]";
+const panelShadow = "shadow-[0_4px_4px_rgba(0,0,0,0.15)]";
+const panelShadowTop = "shadow-[0_-4px_4px_rgba(0,0,0,0.15)]";
+
+function QuantityControl({ item, onIncrement, onDecrement }: QuantityControlProps) {
+  return (
+    <div className="flex min-w-[104px] items-center gap-0 rounded-full border border-[#e6e6e6] px-[6px] py-[4px]">
+      <button
+        type="button"
+        className="flex h-[30px] w-[30px] items-center justify-center rounded-full border border-[#e6e6e6] text-base-content transition hover:border-base-300 hover:text-base-content"
+        onClick={() => onDecrement(item.id)}
+        aria-label={`${item.title} Menge verringern`}
+      >
+        <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3">
+          <path d="M2 6h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      </button>
+      <span className="w-8 text-center text-xs font-semibold leading-tight text-base-content">
+        {item.quantity}
+      </span>
+      <button
+        type="button"
+        className="flex h-[30px] w-[30px] items-center justify-center rounded-full border border-[#e6e6e6] text-base-content transition hover:border-base-300 hover:text-base-content"
+        onClick={() => onIncrement(item.id)}
+        aria-label={`${item.title} Menge erhöhen`}
+      >
+        <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3">
+          <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+type CartItemCardProps = {
+  item: CartItem;
+  onIncrement: (id: string) => void;
+  onDecrement: (id: string) => void;
+  onRemove: (id: string) => void;
+};
+
+function CartItemCard({ item, onIncrement, onDecrement, onRemove }: CartItemCardProps) {
+  const hasSeminarDays = item.type === "seminar" && item.seminarDays && item.seminarDays.length > 0;
+  const hasDescription = Boolean(item.description && item.description.trim().length > 0);
+  const descriptionLabel = hasSeminarDays ? "Seminartage" : null;
+  const showQuantityControl = item.quantityEditable !== false;
 
   return (
-    <Image
-      src={src}
-      alt={alt}
-      width={96}
-      height={96}
-      className="h-24 w-24 rounded-xl object-cover shadow-sm"
-      priority={false}
-    />
+    <article className={`rounded-2xl bg-white p-5 ${baseShadow}`}>
+      <div className="flex items-start gap-4">
+        <div className="relative h-[90px] w-[90px] shrink-0 overflow-hidden rounded-2xl bg-base-300">
+          {/* Die Bildquelle kann aus Strapi oder Platzhaltern stammen; Next/Image wäre hier ohne zusätzliche Remote-Konfiguration nicht einsetzbar. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={item.imageUrl || "/placeholder.png"}
+            alt={item.title}
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        </div>
+        <div className="flex flex-1 flex-col gap-4">
+          <div className="flex items-start justify-between gap-4">
+            <h3 className="flex-1 text-base font-semibold leading-6 text-base-content">{item.title}</h3>
+            <button
+              type="button"
+              onClick={() => onRemove(item.id)}
+              aria-label={`${item.title} aus Warenkorb entfernen`}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-base-content/70 transition hover:text-base-content"
+            >
+              {/* SVG-Icon aus dem öffentlichen Icon-Verzeichnis, damit es konsistent mehrfach genutzt werden kann. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/icons/trash3.svg"
+                alt=""
+                aria-hidden="true"
+                className="h-5 w-[18px]"
+                loading="lazy"
+              />
+            </button>
+          </div>
+          <div className="flex-1">
+            {hasSeminarDays && (
+              <div className="mt-3 space-y-1.5">
+                <p className="text-sm font-semibold text-base-content/70">
+                  {descriptionLabel}
+                </p>
+                <ul className="space-y-1 text-sm text-base-content/80">
+                  {item.seminarDays!.map((day) => (
+                    <li key={day}>{day}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {!hasSeminarDays && hasDescription && (
+              <p className="mt-2 text-sm leading-6 text-base-content/80">{item.description}</p>
+            )}
+          </div>
+
+          {showQuantityControl ? (
+            <div className="flex items-center justify-between gap-4">
+              <QuantityControl item={item} onIncrement={onIncrement} onDecrement={onDecrement} />
+              <span className="text-base font-semibold text-base-content">
+                {formatCurrency(item.price)}
+              </span>
+            </div>
+          ) : (
+            <div className="flex justify-end">
+              <span className="text-base font-semibold text-base-content">
+                {formatCurrency(item.price)}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function CartSlideoutEmpty() {
+  return (
+    <div className="flex flex-1 items-center justify-center px-6 text-center text-base-content/70">
+      <div className="space-y-2">
+        <p className="text-base font-semibold">Dein Warenkorb ist leer</p>
+        <p className="text-sm leading-6">Füge Produkte oder Seminare hinzu, um hier fortzufahren.</p>
+      </div>
+    </div>
   );
 }
 
 export function CartSlideout() {
   const {
-    items,
     isOpen,
     closeCart,
+    items,
     incrementQuantity,
     decrementQuantity,
     removeItem,
     total,
   } = useCart();
-  const router = useRouter();
-  const checkoutDisabled = items.length === 0;
 
-  const checkoutHandler = useCallback(() => {
-    if (checkoutDisabled) {
-      return;
-    }
-    closeCart();
-    router.push("/checkout");
-  }, [checkoutDisabled, closeCart, router]);
+  const [shouldRender, setShouldRender] = useState(isOpen);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
+      setShouldRender(true);
+    } else {
+      const timeout = window.setTimeout(() => {
+        setShouldRender(false);
+      }, 250);
+      return () => window.clearTimeout(timeout);
+    }
+    return undefined;
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen) {
+      const raf = window.requestAnimationFrame(() => {
+        setIsVisible(true);
+      });
+      return () => window.cancelAnimationFrame(raf);
+    }
+    setIsVisible(false);
+    return undefined;
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (shouldRender) {
       document.body.classList.add("overflow-hidden");
       return () => {
         document.body.classList.remove("overflow-hidden");
@@ -77,153 +191,70 @@ export function CartSlideout() {
     }
     document.body.classList.remove("overflow-hidden");
     return undefined;
-  }, [isOpen]);
+  }, [shouldRender]);
 
-  if (!isOpen) {
+  const hasItems = items.length > 0;
+
+  const sumLabel = useMemo(
+    () => (hasItems ? formatCurrency(total) : formatCurrency(0)),
+    [hasItems, total],
+  );
+
+  if (!shouldRender) {
     return null;
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex">
+    <div className="fixed inset-0 z-40 flex items-stretch justify-end">
       <button
         type="button"
-        className="absolute inset-0 bg-base-content/30 backdrop-blur-sm"
-        aria-label="Warenkorb schließen"
+        className={`absolute inset-0 cursor-pointer bg-black/50 transition-opacity duration-300 ease-out ${isVisible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
         onClick={closeCart}
+        aria-label="Warenkorb schließen"
       />
-      <aside className="relative ml-auto flex h-full w-full max-w-xl flex-col bg-base-100 shadow-2xl">
-        <header className="border-b border-base-200 px-8 pb-6 pt-8">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm uppercase tracking-[0.2em] text-base-content/60">Ihr Einkauf</p>
-              <h2 className="mt-2 text-3xl font-semibold text-base-content">Warenkorb</h2>
-            </div>
-            <button
-              type="button"
-              onClick={closeCart}
-              className="btn btn-ghost btn-sm rounded-full"
-              aria-label="Warenkorb schließen"
-            >
-              ×
-            </button>
-          </div>
+      <aside
+        className={`relative z-10 flex h-full w-full max-w-[400px] flex-col bg-[#eeeeee] transition-transform duration-300 ease-out ${isVisible ? "translate-x-0" : "translate-x-full"}`}
+      >
+        <header className={`relative flex h-16 items-center justify-center bg-white px-4 ${panelShadow}`}>
+          <h2 className="text-center text-xl font-semibold text-base-content">Warenkorb</h2>
+          <button
+            type="button"
+            onClick={closeCart}
+            aria-label="Warenkorb schließen"
+            className="absolute right-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-base-content/70 transition hover:text-base-content"
+          >
+            <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5">
+              <path d="M5 5l10 10M15 5 5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
         </header>
 
-        <div className="flex-1 overflow-y-auto px-8 py-6">
-          {items.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center text-center text-base-content/70">
-              <h3 className="text-xl font-semibold text-base-content">Ihr Warenkorb ist leer</h3>
-              <p className="mt-2 max-w-xs text-sm">
-                Fügen Sie Produkte oder Seminare hinzu, um mit dem Checkout fortzufahren.
-              </p>
-            </div>
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+          {hasItems ? (
+            items.map((item) => (
+              <CartItemCard
+                key={item.id}
+                item={item}
+                onIncrement={incrementQuantity}
+                onDecrement={decrementQuantity}
+                onRemove={removeItem}
+              />
+            ))
           ) : (
-            <div className="space-y-6">
-              {items.map((item) => (
-                <article
-                  key={item.id}
-                  className="flex flex-col gap-6 rounded-3xl border border-base-200 bg-base-100 p-6 shadow-sm"
-                >
-                  <div className="flex flex-wrap gap-6">
-                    {renderImage(item.imageUrl, item.title)}
-                    <div className="flex min-w-[12rem] flex-1 flex-col gap-3">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <h3 className="text-lg font-semibold text-base-content">{item.title}</h3>
-                          <p className="mt-1 text-sm text-base-content/70">{item.description}</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeItem(item.id)}
-                          className="btn btn-ghost btn-xs rounded-full text-base-content/60 hover:text-error"
-                          aria-label={`${item.title} entfernen`}
-                          title="Entfernen"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            className="h-4 w-4"
-                            aria-hidden="true"
-                          >
-                            <path d="M3 6h18" />
-                            <path d="M8 6V4h8v2" />
-                            <path d="M10 11v6" />
-                            <path d="M14 11v6" />
-                            <path d="M5 6l1 14h12l1-14" />
-                          </svg>
-                        </button>
-                      </div>
-
-                      {item.type === "seminar" && item.seminarDays && item.seminarDays.length > 0 && (
-                        <div className="rounded-2xl bg-base-200/60 p-4">
-                          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-base-content/60">
-                            {calendarIcon}
-                            Seminartage
-                          </p>
-                          <ul className="mt-2 space-y-1 text-sm text-base-content/80">
-                            {item.seminarDays.map((day) => (
-                              <li key={day}>{day}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center justify-between gap-6">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm uppercase tracking-widest text-base-content/60">Anzahl</span>
-                      <div className="join">
-                        <button
-                          type="button"
-                          className="btn join-item btn-ghost btn-sm"
-                          onClick={() => decrementQuantity(item.id)}
-                          aria-label={`${item.title} Anzahl verringern`}
-                        >
-                          -
-                        </button>
-                        <span className="join-item flex min-w-[3rem] items-center justify-center bg-base-200 text-sm font-semibold">
-                          {item.quantity}
-                        </span>
-                        <button
-                          type="button"
-                          className="btn join-item btn-ghost btn-sm"
-                          onClick={() => incrementQuantity(item.id)}
-                          aria-label={`${item.title} Anzahl erhöhen`}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm uppercase tracking-widest text-base-content/60">Preis</p>
-                      <p className="mt-1 text-xl font-semibold text-base-content">
-                        {priceFormatter.format(item.price * item.quantity)}
-                      </p>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
+            <CartSlideoutEmpty />
           )}
         </div>
 
-        <footer className="border-t border-base-200 px-8 pb-8 pt-6">
-          <div className="flex items-center justify-between text-lg font-semibold text-base-content">
-            <span>Summe</span>
-            <span>{priceFormatter.format(total)}</span>
+        <footer className={`bg-white px-6 py-6 ${panelShadowTop}`}>
+          <div className="flex items-center justify-between pb-6">
+            <span className="text-lg font-semibold text-base-content">Summe</span>
+            <span className="text-lg font-semibold text-base-content">{sumLabel}</span>
           </div>
           <button
             type="button"
-            className="btn btn-primary btn-lg mt-6 w-full"
-            onClick={checkoutHandler}
-            disabled={checkoutDisabled}
-            aria-disabled={checkoutDisabled}
+            className="btn h-14 w-full rounded-[4px] border-0 bg-[#8bb5d7] text-lg font-semibold text-white normal-case transition hover:bg-[#7aa6ce] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#568fc0]"
           >
-            Jetzt bezahlen
+            Weiter zur Kasse
           </button>
         </footer>
       </aside>

@@ -1,5 +1,19 @@
 # Frontend-Arbeitsprotokoll
 
+- 2025-10-10 – Delete-Icon im Cart-Slideout vergrößert, paddingfrei in Titel-/Preiszeile positioniert und Abstände auf Figma „cart_slideout_new“ ausgerichtet; `npm run lint` erfolgreich. – Commit: f30bce7
+- 2025-10-10 – Arbeitsrichtlinien für KI-Agenten im Frontend-README aktualisiert (Figma-Workflow konsolidiert). – Commit: n/a
+- 2025-10-10 – Trash-Icon im Warenkorb durch neues Asset aus `public/icons` ersetzt, Icons verkleinert und Entfernen-Button absolut mit Pufferfläche positioniert; `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-10 – Cart-Slideout-Styling (Header, Typografie, Mengensteuerung, Gutschein-Variante) an Figma „cart_slideout_new“ angenähert; `npm run lint`, `node tests/cart-slideout-screenshot.mjs`, `node tests/cart-compare.mjs` ausgeführt. – Commit: n/a
+- 2025-10-10 – Headerhöhe, Quantity-Control-Kreise und Delete-Icon exakt nach Figma korrigiert; Screenshots/Diff aktualisiert (`node tests/cart-slideout-screenshot.mjs`, `node tests/cart-compare.mjs`, `npm run lint`). – Commit: n/a
+- 2025-10-10 – Menge-Controls ohne Lücke und Bootstrap-Icon „trash3“ integriert, erneute Screenshots & Lint (`node tests/cart-slideout-screenshot.mjs`, `node tests/cart-compare.mjs`, `npm run lint`). – Commit: n/a
+- 2025-10-10 – Slideout mit sanfter Translate-Animation versehen und Bootstrap-Icon per `fillRule` korrigiert; aktuelle Screenshots & Lint erstellt (`node tests/cart-slideout-screenshot.mjs`, `node tests/cart-compare.mjs`, `npm run lint`). – Commit: n/a
+- 2025-10-10 – Figma-Vorlage „cart_slideout_new“ via Puppeteer-Screenshot (localhost) und Figma-Export gegengeprüft; Diffs in `artifacts/` abgelegt und Analyse dokumentiert (`node tests/cart-slideout-screenshot.mjs`, `node tests/cart-compare.mjs`). – Commit: n/a
+- 2025-10-09 – Platzhalter-Inhalte im CartProvider an Figma-Frame „cart_slideout_new“ angepasst, um das neue Warenkorb-Design vorzubereiten. – Commit: n/a
+- 2025-10-09 – Cart-Slideout per MCP-Figma-Vorlage „cart_slideout_new“ vollständig neu aufgebaut (Header, Karten, Summenbereich, Controls) und mit `npm run lint` geprüft. – Commit: n/a
+- 2025-10-09 – Warenkorb-Slideout geleert, bestehende Inhalte entfernt und Platzhalter-Struktur vorbereitet; `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-09 – Warenkorb-Slideout anhand des Figma-Frames „warenkorb_slideout“ komplett neu umgesetzt (Header, Kartenlayout, Footer) und `npm run lint` erfolgreich ausgeführt. – Commit: n/a
+- 2025-10-09 – Warenkorb-Slideout vollständig geleert, damit der Neuaufbau von Grund auf erfolgen kann; `npm run lint` erfolgreich. – Commit: n/a
+
 - 2025-10-09 – Eigenes Frontend-Arbeitsprotokoll angelegt und Referenzen in README/Plan aktualisiert. – Commit: n/a
 - 2025-10-08 – Landingpage-Renderer im App Router aufgebaut; Dynamic-Zone-Komponenten (Hero, Karten-Grid, Textblock, Icon-Grid) konsumieren die neuen Strapi-Daten unter `/landing/:slug`. – Commit: n/a
 - 2025-10-08 – Warenkorb-Slideout im Frontend neu aufgebaut (CartProvider, Slideout mit Seminartagen, Summenberechnung, Button „Jetzt bezahlen“) und an LocalStorage/Cart-Events angebunden; ESLint erfolgreich ausgeführt. – Commit: 976e26c
