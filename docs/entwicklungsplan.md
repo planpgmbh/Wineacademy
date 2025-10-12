@@ -65,11 +65,11 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - [x] Ergebnisse als Implementierungsleitfaden in `docs/sevdesk.md` dokumentieren (Workflows, Payload-Mapping, Fehlerszenarien).
 
 5. Frontend Grundgerüst
-- [x] App Router mit Navigation, CartProvider und CartSidebar implementiert.
-- [x] Seiten für Seminare (Liste/Detail mit Terminwahl), Produkte und Gutscheinbetrag aufgebaut.
-- [ ] Landingpage/Home austauschen (zzt. Next.js-Placeholder) inklusive Markenauftritt & CTA.
-- [ ] Footer, SEO-Metadaten und rechtliche Seiten (Impressum/Datenschutz) ergänzen.
-- [ ] Landingpages via Dynamic-Zone-Komponentenbibliothek modellieren; Visual-Editing-Preview (Vercel → Strapi Edit-Link) implementieren (Backlog).
+- [x] App Router auf Minimalzustand zurückgesetzt (Tailwind-Defaults, leeres Layout & Page).
+- [ ] Brand-Tokens (Farben, Typo, Spacing, Radii) mit Figma-MCP synchronisieren und als Tailwind-Preset erfassen.
+- [ ] Navigations- und Footer-Komponenten anhand des neuen Designs rekreieren.
+- [ ] Landingpage/Home nach Figma neu aufbauen (Hero, Content-Sektionen, CTA).
+- [ ] CMS-Anbindung für Navigation/Footer/Landingpages nach Struktur-Reset wieder integrieren.
 
 6. Warenkorb & Checkout
 - [x] Clientseitige Warenkorbverwaltung inkl. Teilnehmerdaten (LocalStorage) umgesetzt.

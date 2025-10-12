@@ -9,7 +9,6 @@ const nextConfig: NextConfig = {
       { protocol: 'http', hostname: 'backend-staging', port: '1337' },
       { protocol: 'https', hostname: 'wineacademymain.plan-p.de' },
       { protocol: 'https', hostname: 'wineacademy.plan-p.de' },
-      { protocol: 'https', hostname: 'images.daisyui.com' },
     ],
   },
 };
