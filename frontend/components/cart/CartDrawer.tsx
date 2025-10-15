@@ -14,14 +14,14 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
       <div className="drawer-side">
         <label htmlFor={id} className="drawer-overlay" onClick={onClose} />
         <aside className="flex h-full w-96 max-w-full flex-col bg-base-100 shadow-xl">
-          <header className="flex items-center justify-between gap-4 border-b border-base-300 px-6 py-4">
+          <header className="flex items-center justify-between gap-4 border-b border-base-300 px-6 py-4 shadow-sm shadow-base-200/70">
             <h2 className="text-lg font-semibold">Warenkorb</h2>
             <button type="button" aria-label="Schließen" className="btn btn-ghost btn-sm" onClick={onClose}>
               ✕
             </button>
           </header>
           <div className="flex-1 overflow-y-auto bg-base-200" />
-          <footer className="flex flex-col gap-4 border-t border-base-300 px-6 py-6">
+          <footer className="flex flex-col gap-4 border-t border-base-300 px-6 py-6 shadow-[0_-6px_12px_-8px_rgb(15_23_42_/_0.12)]">
             <dl className="flex justify-between text-sm font-medium">
               <dt>Summe</dt>
               <dd>98,90 €</dd>
