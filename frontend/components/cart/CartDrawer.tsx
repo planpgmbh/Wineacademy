@@ -14,7 +14,7 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
       <div className="drawer-side">
         <label htmlFor={id} className="drawer-overlay" onClick={onClose} />
         <aside className="flex h-full w-96 max-w-full flex-col bg-base-100 shadow-xl">
-          <header className="flex items-center justify-between gap-4 border-b border-base-300 px-6 py-4 shadow-[0_6px_14px_-6px_rgba(15,23,42,0.2)]">
+          <header className="relative flex items-center justify-between gap-4 overflow-visible border-b border-base-300 bg-base-100 px-6 py-4 after:absolute after:inset-x-3 after:-bottom-3 after:h-4 after:rounded-full after:content-[''] after:shadow-[0_14px_18px_-12px_rgba(15,23,42,0.45)] after:pointer-events-none">
             <h2 className="text-lg font-semibold">Warenkorb</h2>
             <button type="button" aria-label="Schließen" className="btn btn-ghost btn-sm" onClick={onClose}>
               ✕
