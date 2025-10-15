@@ -1,0 +1,10 @@
+node_modules
+.next
+artifacts
+.git
+.gitignore
+.env
+.env.local
+Dockerfile
+build
+coverage
