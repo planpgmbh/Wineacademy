@@ -1,7 +1,7 @@
 # Frontend-Arbeitsprotokoll
 
 - 2025-10-15 – Tailwind/DaisyUI Build-Check (`npm run build`, `npx @tailwindcss/cli`) erfolgreich, DaisyUI GitMCP in `.vscode/mcp.json` ergänzt; Build warnte einmalig vor `@property`-At-Regel aus DaisyUI (informativ). – Commit: 25d5906
-- 2025-10-15 – DaisyUI-Navbar mit Wine-Academy-Logo, Dropdown-Menü und Icon-Leiste (Mail, Instagram, LinkedIn, Warenkorb mit Badge-Platzhalter) implementiert; WineAcademy-Theme in DaisyUI registriert/aktiviert und Warenkorb-Drawer via DaisyUI aufgebaut (Header/Footer nach Screenshot, Platzhalterinhalt). `npm run build` erfolgreich. – Commit: eaea33c
+- 2025-10-15 – DaisyUI-Navbar mit Wine-Academy-Logo, Dropdown-Menü und Icon-Leiste (Mail, Instagram, LinkedIn, Warenkorb mit Badge-Platzhalter) implementiert; WineAcademy-Theme in DaisyUI registriert/aktiviert und Warenkorb-Drawer via DaisyUI aufgebaut (Header/Footer nach Screenshot, Platzhalterinhalt). `npm run build` erfolgreich. – Commit: 4bdd129
 
 - 2025-10-12 – Frontend vollständig geleert (Tailwind-Config, Global Styles, Layout/Page auf Basiszustand reduziert), Entwicklungsplan aktualisiert, `npm run lint` erfolgreich. – Commit: bebb749
 - 2025-10-10 – Delete-Icon im Cart-Slideout vergrößert, paddingfrei in Titel-/Preiszeile positioniert und Abstände auf Figma „cart_slideout_new“ ausgerichtet; `npm run lint` erfolgreich. – Commit: b7e249c
