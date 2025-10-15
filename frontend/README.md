@@ -127,6 +127,25 @@ Bei gültiger Konfiguration liefert der Aufruf Metadaten zum Root-Frame. Fehlerm
 ### Tip: MCP-Tools im Chat testen
 Nach erfolgreicher Anbindung sollten Kommandos wie `#get_code`, `#get_metadata` oder `#get_variable_defs` im jeweiligen Agenten verfügbar sein. Falls die Tools nicht erscheinen, Figma Desktop und den IDE-Agent neu starten.
 
+## DaisyUI-Komponenten mit MCP erstellen
+Für neue UI-Bausteine auf DaisyUI-Basis kommt der offizielle DaisyUI-GitMCP-Server zum Einsatz.
+
+1. **Server-Konfiguration:** In `.vscode/mcp.json` muss ein Eintrag gemäß  
+   ```json
+   {
+     "servers": {
+       "daisyUI": {
+         "type": "sse",
+         "url": "https://gitmcp.io/saadeghi/daisyui"
+       }
+     }
+   }
+   ```  
+   vorhanden sein. Fehlt die Datei, wird sie im Projektstamm neu angelegt.
+2. **Agent-Prompting:** In VS Code/Cursor/Claude den Agent Mode aktivieren und Prompts mit `use context7` beenden, damit die DaisyUI-spezifische Wissensbasis geladen wird (z. B. „Erzeuge einen `card`-Block mit Titel, Bild und Call-to-Action. use context7“).
+3. **Output überprüfen:** Der generierte Code muss auf Tailwind v4 + DaisyUI v5 beruhen. Vor dem Einchecken lokal builden (`npm run build`) oder bei Bedarf CSS via `npx @tailwindcss/cli` erzeugen, um sicherzustellen, dass alle benötigten Klassen erzeugt werden.
+4. **DaisyUI-Varianten dokumentieren:** Neue oder angepasste Komponenten erhalten im PR/Arbeitsprotokoll einen Hinweis auf verwendete DaisyUI-Komponententypen und ggf. aktivierte Themes, damit spätere Anpassungen nachvollziehbar bleiben.
+
 ## Weiterführende Ressourcen
 - Root-README für Gesamtüberblick & Compose-Kommandos.
 - `backend/README.md` für Payload-Details und Public-API-Spezifikation.
