@@ -1,5 +1,6 @@
 # Frontend-Arbeitsprotokoll
 
+- 2025-10-15 – Standalone-Build repariert, indem die leere `next.config.mjs` (überschrieb `next.config.ts`) entfernt wurde; `npm run build` wieder erfolgreich. – Commit: n/a
 - 2025-10-15 – `.dockerignore` im Frontend ergänzt (u. a. `node_modules`, `.next`), damit Docker-Builds nicht mehr lokale Artefakte kopieren; Next-Binary wieder ausführbar gemacht und `npm run build` erfolgreich getestet. – Commit: n/a
 - 2025-10-15 – Tailwind/DaisyUI Build-Check (`npm run build`, `npx @tailwindcss/cli`) erfolgreich, DaisyUI GitMCP in `.vscode/mcp.json` ergänzt; Build warnte einmalig vor `@property`-At-Regel aus DaisyUI (informativ). – Commit: 25d5906
 - 2025-10-15 – DaisyUI-Navbar mit Wine-Academy-Logo, Dropdown-Menü und Icon-Leiste (Mail, Instagram, LinkedIn, Warenkorb mit Badge-Platzhalter) implementiert; WineAcademy-Theme in DaisyUI registriert/aktiviert und Warenkorb-Drawer via DaisyUI aufgebaut (Header/Footer nach Screenshot, Platzhalterinhalt). `npm run build` erfolgreich. – Commit: 4bdd129
