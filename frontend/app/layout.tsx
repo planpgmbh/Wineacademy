@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CartDrawerProvider } from "@/components/cart/CartDrawerProvider";
 import { Navbar } from "@/components/navigation/Navbar";
+import { getNavigation } from "@/lib/navigation";
 import type { ReactNode } from "react";
 import "./globals.css";
 
@@ -9,11 +10,13 @@ export const metadata: Metadata = {
   description: "Frischer Next.js-Start mit Tailwind CSS und DaisyUI."
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const navigationItems = await getNavigation();
+
   return (
     <html lang="de" data-theme="WineAcademy">
       <body className="bg-base-200 text-base-content antialiased">
-        <Navbar />
+        <Navbar items={navigationItems} />
         <main className="mx-auto min-h-[calc(100vh-4rem)] max-w-6xl px-8 py-12">{children}</main>
         <CartDrawerProvider />
       </body>

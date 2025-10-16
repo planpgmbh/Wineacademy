@@ -1,5 +1,6 @@
 # Frontend-Arbeitsprotokoll
 
+- 2025-10-16 – Navbar lädt Navigation aus Strapi (`getNavigation`), Submenüs für Desktop/Mobil inkl. Dropdown/Accordion umgesetzt, Fallback-Navigation hinterlegt und Cart-Badge über Custom-Event/LocalStorage angebunden; `npm run build` erfolgreich (bekannte DaisyUI-`@property`-Warnung). – Commit: n/a
 - 2025-10-15 – Standalone-Build repariert, indem die leere `next.config.mjs` (überschrieb `next.config.ts`) entfernt wurde; `npm run build` wieder erfolgreich. – Commit: n/a
 - 2025-10-15 – `.dockerignore` im Frontend ergänzt (u. a. `node_modules`, `.next`), damit Docker-Builds nicht mehr lokale Artefakte kopieren; Next-Binary wieder ausführbar gemacht und `npm run build` erfolgreich getestet. – Commit: n/a
 - 2025-10-15 – Tailwind/DaisyUI Build-Check (`npm run build`, `npx @tailwindcss/cli`) erfolgreich, DaisyUI GitMCP in `.vscode/mcp.json` ergänzt; Build warnte einmalig vor `@property`-At-Regel aus DaisyUI (informativ). – Commit: 25d5906

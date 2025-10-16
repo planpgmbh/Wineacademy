@@ -58,5 +58,6 @@
 - 2025-10-07 – `resolveApiBaseUrl` korrigiert: `PUBLIC_URL` ohne `/api` wird nun erweitert, Mail-Links zeigen wieder auf `/api/public/...`. – Commit: n/a
 - 2025-10-07 – Storno-Lifecycle holt PDF-ID jetzt über `/Document` (auch für Cancel-Rechnungen); bestehende Bestellung `WA-20251003` aktualisiert (`sevdesk_storno_document_id=245014128`). – Commit: n/a
 - 2025-10-08 – AGENTS-Regeln um Umgebungsprüfung und Marker-Datei ergänzt, `.environment` eingeführt und `.gitignore` erweitert. – Commit: n/a
+- 2025-10-16 – Navigation-Single-Type geprüft, Seed-Einträge (Wine Academy, Ausbildung, Kurse, Events, Gutscheine, Kontakt) entsprechen gewünschter Menüstruktur. – Commit: n/a
 - 2025-10-08 – Navigation/Footer als Strapi-Single-Types modelliert (inkl. Komponenten) und Seeds für Menü-/Footer-Inhalte ergänzt; ausschließlich Backend aktualisiert. – Commit: n/a
 - 2025-10-08 – CMS-Navigation/Footer mit neuen Public-Endpoints und Resolvern für Medien verfügbar gemacht (Frontend-Integration im Frontend-Protokoll dokumentiert). – Commit: n/a
