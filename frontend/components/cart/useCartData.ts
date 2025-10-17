@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 
 import { fetchJson, mediaUrl } from "@/lib/api";
 import { BOOKING_SELECTION_STORAGE_KEY } from "@/components/seminar/bookingUtils";
+import {
+  readVoucherSelection,
+  VOUCHER_SELECTION_STORAGE_KEY,
+  type VoucherSelection
+} from "@/components/voucher/voucherBookingUtils";
 
 type SeminarListItem = {
   id: number;
@@ -70,6 +75,15 @@ export type ProductSelection = {
   priceValue?: number | null;
   priceFormatted?: string | null;
   isVoucher?: boolean;
+};
+
+export type VoucherCartItem = {
+  title: string;
+  description?: string | null;
+  amount: number;
+  formattedValue: string;
+  imageUrl: string | null;
+  imageAlt: string | null;
 };
 
 const PRICE_FORMATTER = new Intl.NumberFormat("de-DE", {
@@ -240,11 +254,27 @@ function mapProduct(item: ProductDetailItem | null | undefined): ProductCartItem
   };
 }
 
+function mapVoucher(selection: VoucherSelection | null): VoucherCartItem | null {
+  if (!selection) {
+    return null;
+  }
+  return {
+    title: selection.title,
+    description: selection.description ?? null,
+    amount: selection.amount,
+    formattedValue: PRICE_FORMATTER.format(selection.amount),
+    imageUrl: selection.imageUrl ?? null,
+    imageAlt: selection.imageAlt ?? null
+  };
+}
+
 type CartData = {
   seminar: SeminarCartItem | null;
   seminarSelection: BookingSelection | null;
   product: ProductCartItem | null;
   productSelection: ProductSelection | null;
+  voucher: VoucherCartItem | null;
+  voucherSelection: VoucherSelection | null;
 };
 
 type CartState =
@@ -256,18 +286,23 @@ const EXTENDED_EMPTY_DATA: CartData = {
   seminar: null,
   seminarSelection: null,
   product: null,
-  productSelection: null
+  productSelection: null,
+  voucher: null,
+  voucherSelection: null
 };
 
 export function useCartData(): CartState {
   const [seminarSelection, setSeminarSelection] = useState<BookingSelection | null>(() => readBookingSelection());
   const [productSelection, setProductSelection] = useState<ProductSelection | null>(() => readProductSelection());
+  const [voucherSelection, setVoucherSelection] = useState<VoucherSelection | null>(() => readVoucherSelection());
   const [state, setState] = useState<CartState>({
     status: "loading",
     data: {
       ...EXTENDED_EMPTY_DATA,
       seminarSelection,
-      productSelection
+      productSelection,
+      voucherSelection,
+      voucher: mapVoucher(voucherSelection)
     }
   });
 
@@ -280,6 +315,10 @@ export function useCartData(): CartState {
       setProductSelection(readProductSelection());
     };
 
+    const handleVoucherPending = () => {
+      setVoucherSelection(readVoucherSelection());
+    };
+
     const handleStorage = (event: StorageEvent) => {
       if (event.key === BOOKING_SELECTION_STORAGE_KEY) {
         setSeminarSelection(readBookingSelection());
@@ -287,15 +326,20 @@ export function useCartData(): CartState {
       if (event.key === PRODUCT_SELECTION_STORAGE_KEY) {
         setProductSelection(readProductSelection());
       }
+      if (event.key === VOUCHER_SELECTION_STORAGE_KEY) {
+        setVoucherSelection(readVoucherSelection());
+      }
     };
 
     document.addEventListener("booking:pending", handleBookingPending);
     document.addEventListener("product:pending", handleProductPending);
+    document.addEventListener("voucher:pending", handleVoucherPending);
     window.addEventListener("storage", handleStorage);
 
     return () => {
       document.removeEventListener("booking:pending", handleBookingPending);
       document.removeEventListener("product:pending", handleProductPending);
+      document.removeEventListener("voucher:pending", handleVoucherPending);
       window.removeEventListener("storage", handleStorage);
     };
   }, []);
@@ -303,7 +347,11 @@ export function useCartData(): CartState {
   useEffect(() => {
     let active = true;
 
-    async function load(currentSeminarSelection: BookingSelection | null, currentProductSelection: ProductSelection | null) {
+    async function load(
+      currentSeminarSelection: BookingSelection | null,
+      currentProductSelection: ProductSelection | null,
+      currentVoucherSelection: VoucherSelection | null
+    ) {
       try {
         const seminarPromise = currentSeminarSelection?.seminarSlug
           ? fetchJson<SeminarDetailItem>(
@@ -340,6 +388,7 @@ export function useCartData(): CartState {
           : Promise.resolve(null);
 
         const [seminar, product] = await Promise.all([seminarPromise, productPromise]);
+        const voucher = mapVoucher(currentVoucherSelection);
 
         if (!active) return;
 
@@ -349,7 +398,9 @@ export function useCartData(): CartState {
             seminar,
             seminarSelection: currentSeminarSelection,
             product,
-            productSelection: currentProductSelection
+            productSelection: currentProductSelection,
+            voucher,
+            voucherSelection: currentVoucherSelection
           }
         });
       } catch (error) {
@@ -360,19 +411,21 @@ export function useCartData(): CartState {
           data: {
             ...EXTENDED_EMPTY_DATA,
             seminarSelection: currentSeminarSelection,
-            productSelection: currentProductSelection
+            productSelection: currentProductSelection,
+            voucherSelection: currentVoucherSelection,
+            voucher: mapVoucher(currentVoucherSelection)
           },
           error
         });
       }
     }
 
-    load(seminarSelection, productSelection);
+    load(seminarSelection, productSelection, voucherSelection);
 
     return () => {
       active = false;
     };
-  }, [seminarSelection, productSelection]);
+  }, [seminarSelection, productSelection, voucherSelection]);
 
   return state;
 }

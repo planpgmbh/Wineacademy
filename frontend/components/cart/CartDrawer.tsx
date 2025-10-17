@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { BOOKING_SELECTION_STORAGE_KEY } from "@/components/seminar/bookingUtils";
 import { CartItemSeminar } from "./CartItemSeminar";
 import { CartItemProduct } from "./CartItemProduct";
+import { CartItemGutschein } from "./CartItemGutschein";
 import { useCartData } from "./useCartData";
 
 type CartDrawerProps = {
@@ -15,6 +16,7 @@ type CartDrawerProps = {
 };
 
 const PRODUCT_SELECTION_STORAGE_KEY = "cart:productSelection";
+const VOUCHER_SELECTION_STORAGE_KEY = "voucher:lastSelection";
 
 function updateStoredBookingSelection(
   updater: (current: Record<string, unknown> | null) => Record<string, unknown> | null
@@ -84,6 +86,21 @@ function updateStoredProductSelection(
   return next;
 }
 
+function clearStoredVoucherSelection() {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    window.localStorage.removeItem(VOUCHER_SELECTION_STORAGE_KEY);
+  } catch (error) {
+    console.warn("[cart] Konnte Gutschein-Auswahl nicht entfernen:", error);
+  }
+
+  if (typeof document !== "undefined") {
+    document.dispatchEvent(new CustomEvent("voucher:pending", { detail: null }));
+  }
+}
+
 export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
   const { status, data } = useCartData();
   const [seminarQuantity, setSeminarQuantity] = useState(() => data.seminarSelection?.quantity ?? 1);
@@ -100,21 +117,21 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-    const count =
-      (data.seminar ? seminarQuantity : 0) +
-      (data.product ? productQuantity : 0);
+    const voucherCount = data.voucher ? 1 : 0;
+    const count = (data.seminar ? seminarQuantity : 0) + (data.product ? productQuantity : 0) + voucherCount;
     document.dispatchEvent(new CustomEvent("cart:set", { detail: { count } }));
-  }, [data.product, data.seminar, productQuantity, seminarQuantity]);
+  }, [data.seminar, data.product, data.voucher, productQuantity, seminarQuantity]);
 
   const totalFormatted = useMemo(() => {
     const seminarTotal = (data.seminar?.price.value ?? 0) * seminarQuantity;
     const productTotal = (data.product?.price.value ?? 0) * productQuantity;
-    const sum = seminarTotal + productTotal;
+    const voucherTotal = data.voucher?.amount ?? 0;
+    const sum = seminarTotal + productTotal + voucherTotal;
     if (!Number.isFinite(sum) || sum <= 0) {
       return "–";
     }
     return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(sum);
-  }, [data.product?.price.value, data.seminar?.price.value, productQuantity, seminarQuantity]);
+  }, [data.product?.price.value, data.seminar?.price.value, data.voucher?.amount, productQuantity, seminarQuantity]);
 
   const handleSeminarQuantityChange = useCallback(
     (quantity: number) => {
@@ -228,9 +245,14 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
     updateStoredProductSelection(() => null);
   }, []);
 
+  const handleVoucherRemove = useCallback(() => {
+    clearStoredVoucherSelection();
+  }, []);
+
   const canCheckout = Boolean(
     (data.seminar && seminarQuantity > 0) ||
-      (data.product && productQuantity > 0)
+      (data.product && productQuantity > 0) ||
+      data.voucher
   );
 
   const handleCheckoutClick = useCallback(() => {
@@ -299,6 +321,18 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
                     quantity={productQuantity}
                     onQuantityChange={handleProductQuantityChange}
                     onRemove={handleProductRemove}
+                  />
+                ) : null}
+                {data.voucher ? (
+                  <CartItemGutschein
+                    voucher={{
+                      title: data.voucher.title,
+                      description: data.voucher.description,
+                      formattedValue: data.voucher.formattedValue,
+                      imageUrl: data.voucher.imageUrl,
+                      imageAlt: data.voucher.imageAlt
+                    }}
+                    onRemove={handleVoucherRemove}
                   />
                 ) : null}
               </div>

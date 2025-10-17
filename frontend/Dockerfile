@@ -1,6 +1,10 @@
 # Build-Stage
 FROM node:20-alpine AS builder
 WORKDIR /app
+ARG NEXT_PUBLIC_API_URL
+ARG API_INTERNAL_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV API_INTERNAL_URL=$API_INTERNAL_URL
 COPY package*.json ./
 RUN npm install && chmod +x node_modules/.bin/next
 COPY . .

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { BOOKING_SELECTION_STORAGE_KEY } from "@/components/seminar/bookingUtils";
 import { readBookingSelection, readProductSelection } from "@/components/cart/useCartData";
 import { PRODUCT_SELECTION_STORAGE_KEY } from "@/components/product/productBookingUtils";
+import { readVoucherSelection, VOUCHER_SELECTION_STORAGE_KEY } from "@/components/voucher/voucherBookingUtils";
 import {
   fetchProductCheckoutData,
   fetchSeminarCheckoutData,
@@ -35,6 +36,13 @@ type ProductSelectionState = {
   isVoucher: boolean;
 };
 
+type VoucherSelectionState = {
+  selection: NonNullable<ReturnType<typeof readVoucherSelection>>;
+  amount: number;
+  title: string;
+  description?: string | null;
+};
+
 type Participant = {
   firstName: string;
   lastName: string;
@@ -48,6 +56,7 @@ export function CheckoutClient() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [seminarState, setSeminarState] = useState<SeminarSelectionState | null>(null);
   const [productState, setProductState] = useState<ProductSelectionState | null>(null);
+  const [voucherState, setVoucherState] = useState<VoucherSelectionState | null>(null);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -69,6 +78,7 @@ export function CheckoutClient() {
       try {
         const bookingSelection = readBookingSelection();
         const productSelection = readProductSelection();
+        const voucherSelection = readVoucherSelection();
 
         if (bookingSelection?.seminarSlug && bookingSelection.dateId) {
           const detail = await fetchSeminarCheckoutData(bookingSelection.seminarSlug);
@@ -102,6 +112,17 @@ export function CheckoutClient() {
           });
         } else {
           setProductState(null);
+        }
+
+        if (voucherSelection) {
+          setVoucherState({
+            selection: voucherSelection,
+            amount: voucherSelection.amount,
+            title: voucherSelection.title,
+            description: voucherSelection.description ?? null
+          });
+        } else {
+          setVoucherState(null);
         }
       } catch (error) {
         console.error("[checkout] Laden der Auswahl fehlgeschlagen", error);
@@ -166,8 +187,16 @@ export function CheckoutClient() {
         description: productState.isVoucher ? "Gutschein" : undefined
       });
     }
+    if (voucherState) {
+      items.push({
+        title: voucherState.title,
+        quantity: 1,
+        price: formatCurrency(voucherState.amount),
+        description: voucherState.description ?? "Geschenkgutschein"
+      });
+    }
     return items;
-  }, [productState, seminarState]);
+  }, [productState, seminarState, voucherState]);
 
   const totalFormatted = useMemo(() => {
     let total = 0;
@@ -177,13 +206,16 @@ export function CheckoutClient() {
     if (productState?.preisBrutto != null) {
       total += productState.preisBrutto * productState.selection.quantity;
     }
+    if (voucherState?.amount != null) {
+      total += voucherState.amount;
+    }
     if (!Number.isFinite(total) || total <= 0) {
       return "Preis auf Anfrage";
     }
     return formatCurrency(total);
-  }, [productState, seminarState]);
+  }, [productState, seminarState, voucherState]);
 
-  const hasSelections = Boolean(seminarState || productState);
+  const hasSelections = Boolean(seminarState || productState || voucherState);
 
   const canSubmit =
     hasSelections &&
@@ -213,6 +245,7 @@ export function CheckoutClient() {
     try {
       window.localStorage.removeItem(BOOKING_SELECTION_STORAGE_KEY);
       window.localStorage.removeItem(PRODUCT_SELECTION_STORAGE_KEY);
+      window.localStorage.removeItem(VOUCHER_SELECTION_STORAGE_KEY);
       window.localStorage.setItem("cart:count", "0");
     } catch (storageError) {
       console.warn("[checkout] Konnte Warenkorb nicht zurücksetzen:", storageError);
@@ -221,6 +254,7 @@ export function CheckoutClient() {
     if (typeof document !== "undefined") {
       document.dispatchEvent(new CustomEvent("booking:pending", { detail: null }));
       document.dispatchEvent(new CustomEvent("product:pending", { detail: null }));
+      document.dispatchEvent(new CustomEvent("voucher:pending", { detail: null }));
       document.dispatchEvent(new CustomEvent("cart:set", { detail: { count: 0 } }));
     }
   }, []);
@@ -282,6 +316,16 @@ export function CheckoutClient() {
           });
         }
 
+        if (voucherState) {
+          positionen.push({
+            typ: "gutschein",
+            titel: voucherState.title,
+            beschreibung: voucherState.description ?? undefined,
+            menge: 1,
+            betrag: voucherState.amount
+          });
+        }
+
         const payload: OrderPayload = {
           rechnungstyp: "privat",
           vorname: firstName.trim(),
@@ -302,6 +346,7 @@ export function CheckoutClient() {
         setSubmissionState("success");
         setSeminarState(null);
         setProductState(null);
+        setVoucherState(null);
       } catch (error) {
         console.error("[checkout] Bestellung fehlgeschlagen", error);
         setSubmissionError(error instanceof Error ? error.message : "Bestellung konnte nicht abgeschlossen werden.");
@@ -317,6 +362,7 @@ export function CheckoutClient() {
       lastName,
       email,
       productState,
+      voucherState,
       agbAccepted,
       privacyAccepted,
       newsletter,

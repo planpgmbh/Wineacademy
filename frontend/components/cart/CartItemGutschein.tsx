@@ -10,9 +10,10 @@ type CartItemGutscheinProps = {
     imageUrl: string | null;
     imageAlt: string | null;
   } | null;
+  onRemove?: () => void;
 };
 
-export function CartItemGutschein({ voucher }: CartItemGutscheinProps) {
+export function CartItemGutschein({ voucher, onRemove }: CartItemGutscheinProps) {
   if (!voucher) {
     return null;
   }
@@ -23,6 +24,7 @@ export function CartItemGutschein({ voucher }: CartItemGutscheinProps) {
         type="button"
         aria-label="Entfernen"
         className="btn btn-ghost btn-circle btn-xs absolute right-3 top-3"
+        onClick={onRemove}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

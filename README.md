@@ -12,6 +12,7 @@ Diese Codebasis liefert die Wine Academy Hamburg Website: ein Strapi-Backend fü
 1. **Pflichtlektüre:** `AGENTS.md`, `docs/entwicklungsplan.md` sowie die Readmes und Arbeitsprotokolle von Backend (`docs/backend-arbeitsprotokoll.md`) und Frontend (`docs/frontend-arbeitsprotokoll.md`) lesen.
 2. **Plan erstellen:** Vor jeder Änderung einen 2–5 Schritte umfassenden Plan formulieren, geplante Kommandos/Tests notieren.
 3. **Staging nutzen:** Alle Container-Kommandos mit `docker compose -f docker-compose-staging.yml ...` ausführen.
+   - **Nur bei `.environment = staging`:** Nach jeder Änderung am Frontend oder Backend sofort `docker compose -f docker-compose-staging.yml up -d --build` ausführen, damit die Staging-Container den aktuellen Stand ausliefern.
 4. **Tests ausführen:** Nach Änderungen eigenständig die relevanten Tests/Checks laufen lassen (z. B. Puppeteer, Linting) und Ergebnisse protokollieren.
 5. **Dokumente aktualisieren:** Bei Workflow-, Infrastruktur- oder Content-Modell-Änderungen den Entwicklungsplan und zugehörige Docs anpassen.
 

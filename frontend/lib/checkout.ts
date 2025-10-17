@@ -155,6 +155,7 @@ export type OrderPositionInput = {
   einzelpreisBrutto?: number;
   einzelpreisNetto?: number;
   steuerSatz?: number;
+  betrag?: number;
 };
 
 export type OrderParticipantInput = {

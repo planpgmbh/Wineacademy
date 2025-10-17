@@ -77,6 +77,9 @@ services:
   web_wineacadamy:
     build:
       context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        API_INTERNAL_URL: ${API_INTERNAL_URL}
     container_name: web_wineacadamy
     env_file:
       - .env

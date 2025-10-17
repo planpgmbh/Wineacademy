@@ -38,7 +38,7 @@ function resolveRuntimeBase(): string | null {
 }
 
 export function getApiBaseUrl(): string | null {
-  const envBase = process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL;
+  const envBase = process.env.NEXT_PUBLIC_API_URL ?? process.env.API_INTERNAL_URL;
   if (envBase) {
     return normaliseBase(envBase);
   }
