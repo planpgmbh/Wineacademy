@@ -1,13 +1,22 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-export function CartItemProduct() {
+import { QuantitySelector } from "../shared/QuantitySelector";
+import type { ProductCartItem } from "./useCartData";
+
+type CartItemProductProps = {
+  product: ProductCartItem | null;
+  onQuantityChange?: (quantity: number) => void;
+};
+
+export function CartItemProduct({ product, onQuantityChange }: CartItemProductProps) {
   const [quantity, setQuantity] = useState(1);
 
-  const decrease = () => setQuantity((prev) => Math.max(1, prev - 1));
-  const increase = () => setQuantity((prev) => prev + 1);
+  useEffect(() => {
+    onQuantityChange?.(quantity);
+  }, [onQuantityChange, quantity]);
 
   return (
     <article className="relative flex items-start gap-4 rounded-2xl bg-base-100 p-4 shadow-sm">
@@ -32,44 +41,36 @@ export function CartItemProduct() {
         </svg>
       </button>
       <div className="relative size-20 flex-shrink-0 overflow-hidden rounded-2xl bg-primary/10">
-        <Image
-          src="https://picsum.photos/seed/product/200"
-          alt="Produkt"
-          fill
-          sizes="80px"
-          className="object-cover"
-          unoptimized
-        />
+        {product?.imageUrl ? (
+          <Image
+            src={product.imageUrl}
+            alt={product.imageAlt ?? product.title}
+            fill
+            sizes="80px"
+            className="object-cover"
+            unoptimized
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-sm font-medium text-primary">WA</div>
+        )}
       </div>
       <div className="flex flex-1 flex-col gap-3 pr-4">
         <header className="flex items-start justify-between gap-2">
-          <h3 className="text-base font-semibold leading-snug">Cart Item Product</h3>
+          <h3 className="text-base font-medium leading-snug">
+            {product?.title ?? "Produkt"}
+          </h3>
         </header>
-        <p className="text-sm text-base-content/80">Hier die Beschreibung</p>
+        <p className="text-sm text-base-content/80">
+          {product?.description ?? "Aktuell keine Beschreibung verfügbar."}
+        </p>
         <footer className="flex items-center justify-start">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 rounded-full border border-base-300 bg-base-100 px-2 py-1">
-              <button
-                type="button"
-                className="flex size-8 items-center justify-center rounded-full border border-base-300 text-lg leading-none transition-colors hover:bg-base-200"
-                onClick={decrease}
-                aria-label="Menge verringern"
-              >
-                −
-              </button>
-              <span className="min-w-[1.5rem] text-center text-sm font-medium">{quantity}</span>
-              <button
-                type="button"
-                className="flex size-8 items-center justify-center rounded-full border border-base-300 text-lg leading-none transition-colors hover:bg-base-200"
-                onClick={increase}
-                aria-label="Menge erhöhen"
-              >
-                +
-              </button>
-            </div>
+            <QuantitySelector value={quantity} onChange={setQuantity} />
           </div>
         </footer>
-        <p className="absolute bottom-4 right-4 text-base font-semibold">98,90 €</p>
+        <p className="absolute bottom-4 right-4 text-base font-semibold">
+          {product?.price.formatted ?? "Preis auf Anfrage"}
+        </p>
       </div>
     </article>
   );

@@ -1,3 +1,5 @@
+import { buildApiUrl, getApiBaseUrl } from "./api";
+
 export type NavigationLink = {
   title: string;
   href: string | null;
@@ -69,11 +71,6 @@ function normaliseItems(rawItems: any): NavigationItem[] {
   });
 }
 
-function getApiBaseUrl() {
-  const base = process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL;
-  return base ? base.replace(/\/$/, "") : null;
-}
-
 export async function getNavigation(): Promise<NavigationItem[]> {
   const baseUrl = getApiBaseUrl();
   if (!baseUrl) {
@@ -82,7 +79,7 @@ export async function getNavigation(): Promise<NavigationItem[]> {
   }
 
   try {
-    const response = await fetch(`${baseUrl}/api/public/navigation`, {
+    const response = await fetch(buildApiUrl("/public/navigation"), {
       next: { revalidate: 60 },
       cache: "force-cache",
       headers: { Accept: "application/json" },

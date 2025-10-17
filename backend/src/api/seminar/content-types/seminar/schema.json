@@ -45,6 +45,13 @@
       ],
       "multiple": false
     },
+    "hintergrundbild": {
+      "type": "media",
+      "allowedTypes": [
+        "images"
+      ],
+      "multiple": false
+    },
     "aktiv": {
       "type": "boolean",
       "default": true
@@ -60,6 +67,20 @@
       "relation": "manyToMany",
       "target": "api::kategorie.kategorie",
       "inversedBy": "seminare"
+    },
+    "bookingbox_topline": {
+      "type": "string"
+    },
+    "bookingbox_headline": {
+      "type": "string"
+    },
+    "bookingbox_body": {
+      "type": "text"
+    },
+    "seminarinhalte": {
+      "type": "component",
+      "repeatable": true,
+      "component": "seminar.tab"
     }
   }
 }

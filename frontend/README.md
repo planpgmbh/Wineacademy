@@ -11,6 +11,12 @@ Das Next.js-Frontend stellt die öffentliche Website der Wine Academy Hamburg be
   - `NEXT_PUBLIC_ASSETS_URL` / `ASSETS_INTERNAL_URL` – Medienbasis ohne `/api`.
   - `NEXT_PUBLIC_PAYPAL_CLIENT_ID`, optional `NEXT_PUBLIC_PAYPAL_CURRENCY`.
   - Entwicklungsdefaults in `.env.example`, Staging-Werte in `.env.staging.example`.
+  - Für lokale Entwicklung eine `.env.local` anlegen (siehe Commit), z. B.:
+    ```env
+    API_INTERNAL_URL=http://localhost:1337/api
+    NEXT_PUBLIC_API_URL=http://localhost:1337/api
+    NEXT_PUBLIC_ASSETS_URL=http://localhost:1337
+    ```
 
 ## Struktur & Verantwortlichkeiten
 - `app/` – App Router-Routen (`page.tsx`, `layout.tsx`, dynamische Seminarseiten, Checkout etc.).
@@ -48,7 +54,6 @@ Alle Datenabrufe laufen über `lib/api.ts`:
 - **PayPal Sandbox:** Für lokale Tests `NEXT_PUBLIC_PAYPAL_CLIENT_ID` setzen und Checkout gegen Staging-Backend laufen lassen.
 - **Lokale Sichtprüfung:** In der lokalen Umgebung nach jeder Frontend-Änderung die betroffene Seite mit `open http://localhost` (oder spezifischer Route) im Browser öffnen, um das Ergebnis zu kontrollieren.
 - **Build & Sichtprüfung:** Nach jeder Frontend-Änderung ein Browserfenster mit `open http://localhost:3000` öffnen, um die Änderung live zu prüfen
-**Agent-Prompting:** In VS Code/Cursor/Claude den Agent Mode aktivieren und Prompts mit `use context7` beenden, damit die DaisyUI-spezifische Wissensbasis geladen wird (z. B. „Erzeuge einen `card`-Block mit Titel, Bild und Call-to-Action. use context7“).
 **Output überprüfen:** Der generierte Code muss auf Tailwind v4 + DaisyUI v5 beruhen. Vor dem Einchecken lokal builden (`npm run build`) oder bei Bedarf CSS via `npx @tailwindcss/cli` erzeugen, um sicherzustellen, dass alle benötigten Klassen erzeugt werden.
 **DaisyUI-Varianten dokumentieren:** Neue oder angepasste Komponenten erhalten im PR/Arbeitsprotokoll einen Hinweis auf verwendete DaisyUI-Komponententypen und ggf. aktivierte Themes, damit spätere Anpassungen nachvollziehbar bleiben.
 

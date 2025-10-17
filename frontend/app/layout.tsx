@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
-import { CartDrawerProvider } from "@/components/cart/CartDrawerProvider";
 import { Navbar } from "@/components/navigation/Navbar";
 import { getNavigation } from "@/lib/navigation";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
+import { serifBabe } from "./fonts";
+import { CartDrawerProvider } from "@/components/cart/CartDrawerProvider";
 
 export const metadata: Metadata = {
   title: "Wine Academy Frontend",
@@ -14,10 +15,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const navigationItems = await getNavigation();
 
   return (
-    <html lang="de" data-theme="WineAcademy">
-      <body className="bg-base-200 text-base-content antialiased">
+    <html lang="de" data-theme="WineAcademy" className={serifBabe.variable}>
+      <body className="flex min-h-screen flex-col bg-base-200 text-base-content antialiased">
         <Navbar items={navigationItems} />
-        <main className="mx-auto min-h-[calc(100vh-4rem)] max-w-6xl px-8 py-12">{children}</main>
+        <div className="flex-1">{children}</div>
         <CartDrawerProvider />
       </body>
     </html>

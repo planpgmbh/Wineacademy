@@ -1,0 +1,17 @@
+{
+  "collectionName": "components_seminar_tabs",
+  "info": {
+    "displayName": "Tab",
+    "description": "Ein Inhaltstab für Seminardetails"
+  },
+  "options": {},
+  "attributes": {
+    "titel": {
+      "type": "string",
+      "required": true
+    },
+    "inhalt": {
+      "type": "richtext"
+    }
+  }
+}

@@ -27,7 +27,7 @@
   --color-error: oklch(71% 0.194 13.428);
   --color-error-content: oklch(27% 0.105 12.094);
   --radius-selector: 2rem;
-  --radius-field: 2rem;
+  --radius-field: 0.5rem;
   --radius-box: 0.5rem;
   --size-selector: 0.21875rem;
   --size-field: 0.25rem;
@@ -42,4 +42,28 @@
 
 body {
   @apply min-h-screen bg-base-200 text-base-content antialiased;
+}
+
+@layer utilities {
+  .select:focus,
+  .select:focus-visible,
+  .select:focus-within {
+    outline: none;
+  }
+
+  .btn.btn-ghost,
+  .btn.btn-ghost:hover,
+  .btn.btn-ghost:focus,
+  .btn.btn-ghost:focus-visible,
+  .btn.btn-ghost:active {
+    --btn-bg: transparent;
+    --btn-border: transparent;
+    --btn-noise: none;
+    --btn-shadow: none;
+    background-color: transparent;
+    background-image: none;
+    box-shadow: none;
+    border-color: transparent;
+    border-width: 0;
+  }
 }

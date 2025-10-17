@@ -2,7 +2,13 @@
 
 import Image from "next/image";
 
-export function CartItemGutschein() {
+import type { VoucherCartItem } from "./useCartData";
+
+type CartItemGutscheinProps = {
+  voucher: VoucherCartItem | null;
+};
+
+export function CartItemGutschein({ voucher }: CartItemGutscheinProps) {
   return (
     <article className="relative flex items-start gap-4 rounded-2xl bg-base-100 p-4 shadow-sm">
       <button
@@ -26,19 +32,27 @@ export function CartItemGutschein() {
         </svg>
       </button>
       <div className="relative size-20 flex-shrink-0 overflow-hidden rounded-2xl bg-primary/10">
-        <Image
-          src="https://picsum.photos/seed/voucher/200"
-          alt="Gutschein"
-          fill
-          sizes="80px"
-          className="object-cover"
-          unoptimized
-        />
+        {voucher?.imageUrl ? (
+          <Image
+            src={voucher.imageUrl}
+            alt={voucher.imageAlt ?? voucher.title}
+            fill
+            sizes="80px"
+            className="object-cover"
+            unoptimized
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-sm font-medium text-primary">WA</div>
+        )}
       </div>
       <div className="flex flex-1 flex-col gap-2 pr-4">
-        <h3 className="text-base font-semibold leading-snug">Cart Item Gutschein</h3>
-        <p className="text-sm text-base-content/80 pr-12">Hier die Beschreibung die etwas länger ist</p>
-        <p className="absolute bottom-4 right-4 text-base font-semibold">98,90 €</p>
+        <h3 className="text-base font-medium leading-snug">{voucher?.title ?? "Geschenkgutschein"}</h3>
+        <p className="text-sm text-base-content/80 pr-12">
+          {voucher?.description ?? "Dein Gutschein zum Verschenken"}
+        </p>
+        <p className="absolute bottom-4 right-4 text-base font-semibold">
+          {voucher?.formattedValue ?? "Wert frei wählbar"}
+        </p>
       </div>
     </article>
   );

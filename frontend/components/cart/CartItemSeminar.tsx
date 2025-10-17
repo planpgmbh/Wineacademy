@@ -1,19 +1,42 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-const seminarDays = [
-  "Do. 16.08.2025",
-  "Fr. 17.08.2025",
-  "Sa. 18.08.2025"
-];
+import { QuantitySelector } from "../shared/QuantitySelector";
+import type { BookingSelection, SeminarCartItem } from "./useCartData";
 
-export function CartItemSeminar() {
-  const [quantity, setQuantity] = useState(1);
+type CartItemSeminarProps = {
+  seminar: SeminarCartItem | null;
+  selection: BookingSelection | null;
+  onQuantityChange?: (quantity: number) => void;
+  onRemove?: () => void;
+};
 
-  const decrease = () => setQuantity((prev) => Math.max(1, prev - 1));
-  const increase = () => setQuantity((prev) => prev + 1);
+function useQuantity(initial: number, onChange?: (quantity: number) => void) {
+  const [quantity, setQuantity] = useState(() => Math.max(1, Math.trunc(initial)));
+
+  useEffect(() => {
+    setQuantity(Math.max(1, Math.trunc(initial)));
+  }, [initial]);
+
+  useEffect(() => {
+    onChange?.(quantity);
+  }, [onChange, quantity]);
+
+  return [quantity, setQuantity] as const;
+}
+
+export function CartItemSeminar({ seminar, selection, onQuantityChange }: CartItemSeminarProps) {
+  const [quantity, setQuantity] = useQuantity(selection?.quantity ?? 1, onQuantityChange);
+
+  const dates = useMemo(() => {
+    if (!seminar) return [] as { id: string; label: string; selected: boolean }[];
+    return seminar.dates.map((date) => ({
+      ...date,
+      selected: selection?.dateId ? selection.dateId === date.id : false
+    }));
+  }, [selection?.dateId, seminar]);
 
   return (
     <article className="relative flex items-start gap-4 rounded-2xl bg-base-100 p-4 shadow-sm">
@@ -38,55 +61,53 @@ export function CartItemSeminar() {
         </svg>
       </button>
       <div className="relative size-20 flex-shrink-0 overflow-hidden rounded-2xl bg-primary/10">
-        <Image
-          src="https://picsum.photos/seed/wineacademy/200"
-          alt="Seminar"
-          fill
-          sizes="80px"
-          className="object-cover"
-          unoptimized
-        />
+        {seminar?.imageUrl ? (
+          <Image
+            src={seminar.imageUrl}
+            alt={seminar.imageAlt ?? seminar.title}
+            fill
+            sizes="80px"
+            className="object-cover"
+            unoptimized
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-sm font-medium text-primary">WA</div>
+        )}
       </div>
       <div className="flex flex-1 flex-col gap-3 pr-4">
         <header className="flex items-start justify-between gap-2">
           <div>
-            <h3 className="text-base font-semibold leading-snug">
-              Seminar Level 1 Weine Tasting Set Klein (2cl)
+            <h3 className="text-base font-medium leading-snug">
+              {seminar?.title ?? "Seminar"}
             </h3>
-            <p className="mt-3 text-xs font-semibold uppercase tracking-wide">
-              Seminartage
-            </p>
+            {seminar?.description ? (
+              <p className="mt-1 text-sm text-base-content/70 line-clamp-2">
+                {seminar.description}
+              </p>
+            ) : null}
+            <p className="mt-3 text-xs font-semibold uppercase tracking-wide">Seminartage</p>
             <ul className="mt-1 space-y-1 text-sm text-base-content/80">
-              {seminarDays.map((day) => (
-                <li key={day}>{day}</li>
-              ))}
+              {dates.length > 0
+                ? dates.map((day) => (
+                    <li
+                      key={day.id}
+                      className={day.selected ? "font-semibold text-base-content" : undefined}
+                    >
+                      {day.label}
+                    </li>
+                  ))
+                : [<li key="placeholder">Termine folgen in Kürze</li>]}
             </ul>
           </div>
         </header>
         <footer className="flex items-center justify-start">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 rounded-full border border-base-300 bg-base-100 px-2 py-1">
-              <button
-                type="button"
-                className="flex size-8 items-center justify-center rounded-full border border-base-300 text-lg leading-none transition-colors hover:bg-base-200"
-                onClick={decrease}
-                aria-label="Menge verringern"
-              >
-                −
-              </button>
-              <span className="min-w-[1.5rem] text-center text-sm font-medium">{quantity}</span>
-              <button
-                type="button"
-                className="flex size-8 items-center justify-center rounded-full border border-base-300 text-lg leading-none transition-colors hover:bg-base-200"
-                onClick={increase}
-                aria-label="Menge erhöhen"
-              >
-                +
-              </button>
-            </div>
+            <QuantitySelector value={quantity} onChange={setQuantity} />
           </div>
         </footer>
-        <p className="absolute bottom-4 right-4 text-base font-semibold">98,90 €</p>
+        <p className="absolute bottom-4 right-4 text-base font-semibold">
+          {seminar?.price.formatted ?? "Preis auf Anfrage"}
+        </p>
       </div>
     </article>
   );

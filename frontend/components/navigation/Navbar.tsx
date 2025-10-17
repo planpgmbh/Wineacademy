@@ -169,7 +169,7 @@ export function Navbar({ items }: NavbarProps) {
   };
 
   return (
-    <nav className="navbar border-b border-base-200 bg-base-100 px-4 md:px-8">
+    <nav className="navbar sticky top-0 z-50 border-b border-base-200 bg-base-100 px-4 md:px-8">
       <div className="navbar-start gap-3">
         <div className="dropdown md:hidden">
           <button type="button" className="btn btn-ghost btn-circle" tabIndex={0}>

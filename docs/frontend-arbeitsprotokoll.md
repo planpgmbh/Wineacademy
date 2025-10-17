@@ -1,5 +1,23 @@
 # Frontend-Arbeitsprotokoll
 
+- 2025-10-17 – Warenkorb-Drawer per zusätzlichen z-Index-Klassen auf höchste Ebene gehoben (Overlay/Panel stehen nun über Sticky-Header & Booking-Sheet); `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-17 – Warenkorb-Slideout nutzt nun Strapi-Daten (Seminare, Produkte, Gutschein-Template) inkl. Booking-Auswahl & Fallback; CTA triggert `booking:pending`/`cart:add`, State liegt in LocalStorage und synchronisiert Cart-Anzeige inkl. Summe. – Commit: n/a
+- 2025-10-17 – Seminar-Fallback entfernt; `.env.local` mit API-Basis hinterlegt und README ergänzt. – Commit: n/a
+- 2025-10-17 – Warenkorb-Drawer per zusätzlichen z-Index-Klassen auf höchste Ebene gehoben (Overlay/Panel stehen nun über Sticky-Header & Booking-Sheet); `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-17 – Seminar-Detailseite nutzt nun Strapi-Kategorien für Breadcrumbs und öffnet beim Booking-CTA den Warenkorb inkl. gespeicherter Auswahl (`booking:lastSelection`); `npm run lint` ausgeführt. – Commit: n/a
+- 2025-10-17 – Seminar-Detailseite an Strapi angebunden (API-Helper, Hero-/Tab-/Booking-Anpassungen, dynamische Daten & Fehlerhandling); `npm run lint` ausgeführt. – Commit: n/a
+- 2025-10-16 – Booking-Card als eigenständige Overlay-Komponente nach der Navigation platziert (fix im Viewport, Content erhält rechten Puffer) und mobilen CTA ohne Rundungen mit symmetrischem Padding umgesetzt; `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-16 – Mobile Booking-CTA in eigenständige Sheet-Variante überführt (eigene Felder, Button 80 px hoch, erster Klick öffnet Panel, zweiter löst späteren Submit aus, Close-Button oben rechts); Desktop-Overlay bleibt unverändert, CTA-Label nun „Jetzt anmelden“. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-16 – Standard-Fokusrahmen für `.select`-Elemente global deaktiviert (kein schwarzer Outline mehr bei Terminwahl); `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-16 – Ghost-Buttons von DaisyUI global so angepasst, dass Hover/Focus keinen grauen Hintergrund oder Outline mehr zeigen; `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-16 – Booking-Card auf 360 px verbreitert, Grid-Spalte angepasst und Sticky-Offset auf 100 px gesetzt (Sticky-Logik auf `aside` gehoben); `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-16 – Navbar als Sticky-Header umgesetzt, Booking-Card ~100 px höher platziert und Hero-/Content-Grids auf gemeinsame 360 px-Sidebar mit 560 px Contentbreite abgestimmt; `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-16 – Hero-/Content-Grids vereinheitlicht (feste 28 rem-Abstände), linke Spalte ohne feste Max-Breite und Booking-Card-Startposition fixiert; `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-16 – Seminar-Booking-Card verschlankt (280 px-Säule, geringere Abstände), Sticky-Offset im Seminar-Layout justiert und ESLint (`npm run lint`) eingerichtet/erfolgreich ausgeführt; React-Hook-Aufruf in `SeminarContentTabs` korrigiert. – Commit: n/a
+- 2025-10-16 – Warenkorb-Karten-Überschriften auf Medium-Schnitt abgestimmt, `QuantitySelector`-Gap auf 0 gesetzt und Zahlen mit 3 px horizontalem Padding versehen; `npm run lint` scheiterte (Script fehlt weiterhin). – Commit: n/a
+- 2025-10-16 – Wiederverwendbare `QuantitySelector`-Komponente erstellt und in `CartItemProduct` sowie `CartItemSeminar` eingebunden; `npm run lint` nicht ausführbar (Skript fehlt). – Commit: n/a
+
+- 2025-10-17 – Seminar-Detail-Hero (`ProductDetailHero`) und Content-Tabs (`SeminarContentTabs`) aufgebaut, Booking-Card in separater Sticky-Spalte plus mobile Bottom-Sheet (`SeminarBookingMobile`) verlagert; Route `app/seminare/[slug]` nutzt weiterhin Platzhalterdaten. Font-Setup via `next/font/local` aktualisiert. `npm run lint` scheiterte (Script fehlt aktuell). – Commit: n/a
 - 2025-10-16 – Navbar lädt Navigation aus Strapi (`getNavigation`), Submenüs für Desktop/Mobil inkl. Dropdown/Accordion umgesetzt, Fallback-Navigation hinterlegt und Cart-Badge über Custom-Event/LocalStorage angebunden; `npm run build` erfolgreich (bekannte DaisyUI-`@property`-Warnung). – Commit: n/a
 - 2025-10-15 – Standalone-Build repariert, indem die leere `next.config.mjs` (überschrieb `next.config.ts`) entfernt wurde; `npm run build` wieder erfolgreich. – Commit: n/a
 - 2025-10-15 – `.dockerignore` im Frontend ergänzt (u. a. `node_modules`, `.next`), damit Docker-Builds nicht mehr lokale Artefakte kopieren; Next-Binary wieder ausführbar gemacht und `npm run build` erfolgreich getestet. – Commit: n/a

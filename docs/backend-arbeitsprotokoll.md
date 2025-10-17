@@ -1,5 +1,8 @@
 # Backend-Arbeitsprotokoll
 
+- 2025-10-17 – Seminar-Public-Detail liefert Kategorien (Name + Slug) für Breadcrumbs mit; Bookingbox-/Hero-Bilder behalten Fallbacks. – Commit: n/a
+- 2025-10-17 – Seminar-Content-Type um Bookingbox-Felder, Hero-Hintergrundbild und Tabs-Component `seminar.tab` ergänzt; Public-Detail-Endpoint liefert neue Daten. – Commit: n/a
+- 2025-10-17 – Seminar-Detailseiten-Content mit Strapi-Modell abgeglichen; fehlende Felder/Komponenten (Highlight-Badge, Tab-Struktur etc.) identifiziert und dokumentiert. – Commit: n/a
 - 2025-10-09 – Dokumentation auf getrennte Backend-/Frontend-Arbeitsprotokolle umgestellt; Verweise in README und Plan aktualisiert. – Commit: d00b931
 - 2025-10-09 – Landingpage-Controller populiert alle Abschnittsvarianten (Hero, Textblock, Karten-, Icon-Grids) für vollständige API-Antworten. – Commit: b948550
 - 2025-10-08 – Landingpage-Modul in Strapi als Dynamic-Zone-Komponenten umgesetzt, Seeds auf Inhalte der alten Homepage übertragen (Renderer-Anbindung siehe Frontend-Protokoll). – Commit: n/a
