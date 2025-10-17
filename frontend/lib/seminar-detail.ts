@@ -155,35 +155,22 @@ function extractParagraphsFromRichText(text: string | null | undefined): string[
     .filter((paragraph) => paragraph.length > 0);
 }
 
-function toContentTabs(
-  rawTabs: StrapiTab[] | null | undefined,
-  fallback: { id: string; title: string; html: string }[]
-): SeminarContentTab[] {
-  const tabs = Array.isArray(rawTabs)
-    ? rawTabs
-        .map((tab, index) => {
-          const title = typeof tab?.titel === "string" && tab.titel.trim().length > 0 ? tab.titel.trim() : `Abschnitt ${index + 1}`;
-          const contentHtml = ensureHtmlContent(tab?.inhalt);
-          if (contentHtml.length === 0) {
-            return null;
-          }
-          const tabId = typeof tab?.id === "number" || typeof tab?.id === "string" ? String(tab.id) : `tab-${index}`;
-          return { id: tabId, title, contentHtml };
-        })
-        .filter((tab): tab is SeminarContentTab => Boolean(tab))
-    : [];
-
-  if (tabs.length > 0) {
-    return tabs;
+function toContentTabs(rawTabs: StrapiTab[] | null | undefined): SeminarContentTab[] {
+  if (!Array.isArray(rawTabs)) {
+    return [];
   }
 
-  return fallback
-    .filter((entry) => entry.html.length > 0)
-    .map((entry, index) => ({
-      id: `fallback-${index}`,
-      title: entry.title,
-      contentHtml: entry.html,
-    }));
+  return rawTabs
+    .map((tab, index) => {
+      const title = typeof tab?.titel === "string" && tab.titel.trim().length > 0 ? tab.titel.trim() : `Abschnitt ${index + 1}`;
+      const contentHtml = ensureHtmlContent(tab?.inhalt);
+      if (contentHtml.length === 0) {
+        return null;
+      }
+      const tabId = typeof tab?.id === "number" || typeof tab?.id === "string" ? String(tab.id) : `tab-${index}`;
+      return { id: tabId, title, contentHtml };
+    })
+    .filter((tab): tab is SeminarContentTab => Boolean(tab));
 }
 
 function formatDateLabel(termin: StrapiTermin): string | null {
@@ -224,7 +211,7 @@ function mapDateOptions(termine: StrapiSeminarDetail["termine"]): SeminarDateOpt
     .filter((option): option is SeminarDateOption => Boolean(option));
 }
 
-function extractHeroParagraphs(seminar: StrapiSeminarDetail, fallbackTabs: SeminarContentTab[]): string[] {
+function extractHeroParagraphs(seminar: StrapiSeminarDetail): string[] {
   const fromDescription = extractParagraphsFromRichText(seminar.beschreibung);
   if (fromDescription.length > 0) {
     return fromDescription;
@@ -235,38 +222,7 @@ function extractHeroParagraphs(seminar: StrapiSeminarDetail, fallbackTabs: Semin
     return fromShortDescription;
   }
 
-  if (fallbackTabs.length > 0) {
-    return fallbackTabs
-      .map((tab) =>
-        tab.contentHtml
-          .replace(/<br\s*\/?>/gi, " ")
-          .replace(/<\/p>/gi, "\n")
-          .replace(/<[^>]*>/g, " ")
-      )
-      .join("\n")
-      .split(/\n+/)
-      .map((paragraph) => paragraph.trim())
-      .filter((paragraph) => paragraph.length > 0)
-      .slice(0, 2);
-  }
-
   return [];
-}
-
-function fallbackTabsFromTexts(seminar: StrapiSeminarDetail): { id: string; title: string; html: string }[] {
-  const entries: { id: string; title: string; html: string }[] = [];
-
-  const beschreibung = ensureHtmlContent(seminar.beschreibung);
-  if (beschreibung.length > 0) {
-    entries.push({ id: "beschreibung", title: "Überblick", html: beschreibung });
-  }
-
-  const infos = ensureHtmlContent(seminar.infos);
-  if (infos.length > 0) {
-    entries.push({ id: "infos", title: "Weitere Infos", html: infos });
-  }
-
-  return entries;
 }
 
 export async function getSeminarDetail(slug: string): Promise<SeminarDetail | null> {
@@ -303,11 +259,10 @@ function normaliseSeminarPayload(payload: StrapiSeminarDetail): SeminarDetail {
         .filter((category): category is { id: number; name: string; slug: string | null } => Boolean(category))
     : [];
 
-  const fallbackTabs = fallbackTabsFromTexts(payload);
-  const tabs = toContentTabs(payload.seminarinhalte, fallbackTabs);
+  const tabs = toContentTabs(payload.seminarinhalte);
   const dates = mapDateOptions(payload.termine);
 
-  const heroParagraphs = extractHeroParagraphs(payload, tabs);
+  const heroParagraphs = extractHeroParagraphs(payload);
 
   const highlightLabel = payload.bookingbox_topline?.trim() ?? undefined;
   const bookingHeadline =

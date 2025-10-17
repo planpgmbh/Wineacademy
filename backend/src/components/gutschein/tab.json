@@ -1,0 +1,17 @@
+{
+  "collectionName": "components_gutschein_tabs",
+  "info": {
+    "displayName": "Tab",
+    "description": "Inhaltstab für Gutschein-Details"
+  },
+  "options": {},
+  "attributes": {
+    "titel": {
+      "type": "string",
+      "required": true
+    },
+    "inhalt": {
+      "type": "richtext"
+    }
+  }
+}

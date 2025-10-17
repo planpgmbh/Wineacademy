@@ -10,6 +10,8 @@ type ProductDetailHeroProps = {
   withSidebarPlaceholder?: boolean;
   backgroundImageUrl?: string | null;
   backgroundImageAlt?: string | null;
+  mediaImageUrl?: string | null;
+  mediaImageAlt?: string | null;
 };
 
 export function ProductDetailHero({
@@ -20,7 +22,9 @@ export function ProductDetailHero({
   useContainer = true,
   withSidebarPlaceholder = true,
   backgroundImageUrl,
-  backgroundImageAlt
+  backgroundImageAlt,
+  mediaImageUrl,
+  mediaImageAlt
 }: ProductDetailHeroProps) {
   const layoutBase = "flex min-h-[500px] flex-col justify-center gap-12";
   const layoutClasses = withSidebarPlaceholder
@@ -40,6 +44,18 @@ export function ProductDetailHero({
               ))}
             </ul>
           </nav>
+
+          {mediaImageUrl ? (
+            <div className="relative h-[260px] w-full overflow-hidden rounded-3xl bg-base-200">
+              <Image
+                src={mediaImageUrl}
+                alt={mediaImageAlt ?? ""}
+                fill
+                sizes="(min-width: 768px) 40vw, 100vw"
+                className="object-cover"
+              />
+            </div>
+          ) : null}
 
           <h1 className={`${serifBabe.className} text-5xl font-light leading-tight text-base-content`}>
             {title}

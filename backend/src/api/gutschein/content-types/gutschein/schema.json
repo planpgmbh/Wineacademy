@@ -27,6 +27,27 @@
       ],
       "multiple": false
     },
+    "hintergrundbild": {
+      "type": "media",
+      "allowedTypes": [
+        "images"
+      ],
+      "multiple": false
+    },
+    "bookingbox_topline": {
+      "type": "string"
+    },
+    "bookingbox_headline": {
+      "type": "string"
+    },
+    "bookingbox_body": {
+      "type": "text"
+    },
+    "gutscheininhalte": {
+      "type": "component",
+      "repeatable": true,
+      "component": "gutschein.tab"
+    },
     "code": {
       "type": "string",
       "unique": true

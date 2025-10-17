@@ -1,5 +1,8 @@
 # Backend-Arbeitsprotokoll
 
+- 2025-10-17 – Gutschein-Content-Type um Hintergrundbild, Bookingbox-Felder und Gutschein-Tabs erweitert; Component `gutschein.tab` angelegt und Typdefinitionen angepasst. – Commit: n/a
+- 2025-10-17 – Public-Produktliste liefert Hintergründe/Bookingbox-Daten mit; neuer Detail-Endpoint `/api/public/produkte/:slug`; Gutschein-Template-Endpoint liefert neue Felder/Tabs. – Commit: n/a
+- 2025-10-17 – Produkt-Content-Type um Hintergrundbild, Bookingbox-Felder und Produkt-Tabs ergänzt; Component `produkt.tab` hinzugefügt und Typdefinitionen aktualisiert. – Commit: n/a
 - 2025-10-17 – Seminar-Public-Detail liefert Kategorien (Name + Slug) für Breadcrumbs mit; Bookingbox-/Hero-Bilder behalten Fallbacks. – Commit: n/a
 - 2025-10-17 – Seminar-Content-Type um Bookingbox-Felder, Hero-Hintergrundbild und Tabs-Component `seminar.tab` ergänzt; Public-Detail-Endpoint liefert neue Daten. – Commit: n/a
 - 2025-10-17 – Seminar-Detailseiten-Content mit Strapi-Modell abgeglichen; fehlende Felder/Komponenten (Highlight-Badge, Tab-Struktur etc.) identifiziert und dokumentiert. – Commit: n/a

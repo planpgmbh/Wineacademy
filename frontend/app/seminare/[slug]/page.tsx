@@ -57,13 +57,15 @@ export default async function SeminarDetailPage({ params }: SeminarDetailPagePro
         backgroundImageAlt={seminar.hero.backgroundImageAlt ?? undefined}
       />
 
-      <div className="relative">
-        <div className="mx-auto max-w-6xl px-6 md:px-8">
-          <div className="mt-12 space-y-10 md:mt-16 md:pr-[420px]">
-            <SeminarContentTabs tabs={seminar.tabs} />
+      {seminar.tabs.length > 0 ? (
+        <div className="relative">
+          <div className="mx-auto max-w-6xl px-6 md:px-8">
+            <div className="mt-12 space-y-10 md:mt-16 md:pr-[420px]">
+              <SeminarContentTabs tabs={seminar.tabs} />
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
 
       <SeminarBookingMobile {...bookingCardProps} />
     </>

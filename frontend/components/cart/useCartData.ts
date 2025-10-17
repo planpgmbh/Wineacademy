@@ -39,6 +39,39 @@ export type BookingSelection = {
   seminarTitle?: string | null;
 };
 
+const PRODUCT_SELECTION_STORAGE_KEY = "cart:productSelection";
+
+type ProductDetailItem = {
+  id: number;
+  name: string;
+  slug: string;
+  kurzbeschreibung?: string | null;
+  preisBrutto?: string | number | null;
+  preisNetto?: string | number | null;
+  gutschein?: boolean | null;
+  bild?: { url?: string | null; alternativeText?: string | null } | null;
+};
+
+export type ProductCartItem = {
+  id: number;
+  title: string;
+  slug: string;
+  description?: string | null;
+  price: { value: number | null; formatted: string };
+  imageUrl: string | null;
+  imageAlt: string | null;
+  isVoucher: boolean;
+};
+
+export type ProductSelection = {
+  quantity: number;
+  productSlug?: string | null;
+  productTitle?: string | null;
+  priceValue?: number | null;
+  priceFormatted?: string | null;
+  isVoucher?: boolean;
+};
+
 const PRICE_FORMATTER = new Intl.NumberFormat("de-DE", {
   style: "currency",
   currency: "EUR"
@@ -83,7 +116,7 @@ function formatSeminarDate(termin: SeminarTermin): string | null {
   return `${weekday} ${datePart}`;
 }
 
-function readBookingSelection(): BookingSelection | null {
+export function readBookingSelection(): BookingSelection | null {
   if (typeof window === "undefined") {
     return null;
   }
@@ -110,6 +143,50 @@ function readBookingSelection(): BookingSelection | null {
       dateId,
       seminarSlug: seminarSlug ?? parsed.seminarSlug ?? null,
       seminarTitle
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function readProductSelection(): ProductSelection | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(PRODUCT_SELECTION_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") {
+      return null;
+    }
+    const quantity = typeof parsed.quantity === "number" ? Math.max(1, Math.trunc(parsed.quantity)) : 1;
+    const productSlug =
+      typeof parsed.slug === "string" && parsed.slug.length > 0
+        ? parsed.slug
+        : typeof parsed.productSlug === "string" && parsed.productSlug.length > 0
+          ? parsed.productSlug
+          : undefined;
+    const productTitle =
+      typeof parsed.title === "string" && parsed.title.length > 0
+        ? parsed.title
+        : typeof parsed.productTitle === "string" && parsed.productTitle.length > 0
+          ? parsed.productTitle
+          : null;
+    const priceValue =
+      typeof parsed.priceValue === "number" && Number.isFinite(parsed.priceValue) ? parsed.priceValue : null;
+    const priceFormatted =
+      typeof parsed.priceFormatted === "string" && parsed.priceFormatted.length > 0 ? parsed.priceFormatted : null;
+    const isVoucher = Boolean(parsed.isVoucher);
+
+    return {
+      quantity,
+      productSlug: productSlug ?? null,
+      productTitle,
+      priceValue,
+      priceFormatted,
+      isVoucher
     };
   } catch {
     return null;
@@ -143,9 +220,31 @@ function mapSeminar(item: SeminarListItem | SeminarDetailItem | undefined): Semi
   };
 }
 
+function mapProduct(item: ProductDetailItem | null | undefined): ProductCartItem | null {
+  if (!item) {
+    return null;
+  }
+
+  const priceSource = item.preisBrutto ?? item.preisNetto ?? null;
+  const price = parseCurrency(priceSource);
+
+  return {
+    id: item.id,
+    title: item.name,
+    slug: item.slug,
+    description: item.kurzbeschreibung ?? null,
+    price,
+    imageUrl: mediaUrl(item.bild?.url),
+    imageAlt: item.bild?.alternativeText ?? null,
+    isVoucher: Boolean(item.gutschein)
+  };
+}
+
 type CartData = {
   seminar: SeminarCartItem | null;
-  selection: BookingSelection | null;
+  seminarSelection: BookingSelection | null;
+  product: ProductCartItem | null;
+  productSelection: ProductSelection | null;
 };
 
 type CartState =
@@ -153,31 +252,50 @@ type CartState =
   | { status: "ready"; data: CartData }
   | { status: "error"; data: CartData; error: unknown };
 
-const EMPTY_DATA: CartData = { seminar: null, selection: null };
+const EXTENDED_EMPTY_DATA: CartData = {
+  seminar: null,
+  seminarSelection: null,
+  product: null,
+  productSelection: null
+};
 
 export function useCartData(): CartState {
-  const [selection, setSelection] = useState<BookingSelection | null>(() => readBookingSelection());
+  const [seminarSelection, setSeminarSelection] = useState<BookingSelection | null>(() => readBookingSelection());
+  const [productSelection, setProductSelection] = useState<ProductSelection | null>(() => readProductSelection());
   const [state, setState] = useState<CartState>({
     status: "loading",
-    data: { ...EMPTY_DATA, selection }
+    data: {
+      ...EXTENDED_EMPTY_DATA,
+      seminarSelection,
+      productSelection
+    }
   });
 
   useEffect(() => {
     const handleBookingPending = () => {
-      setSelection(readBookingSelection());
+      setSeminarSelection(readBookingSelection());
+    };
+
+    const handleProductPending = () => {
+      setProductSelection(readProductSelection());
     };
 
     const handleStorage = (event: StorageEvent) => {
       if (event.key === BOOKING_SELECTION_STORAGE_KEY) {
-        setSelection(readBookingSelection());
+        setSeminarSelection(readBookingSelection());
+      }
+      if (event.key === PRODUCT_SELECTION_STORAGE_KEY) {
+        setProductSelection(readProductSelection());
       }
     };
 
     document.addEventListener("booking:pending", handleBookingPending);
+    document.addEventListener("product:pending", handleProductPending);
     window.addEventListener("storage", handleStorage);
 
     return () => {
       document.removeEventListener("booking:pending", handleBookingPending);
+      document.removeEventListener("product:pending", handleProductPending);
       window.removeEventListener("storage", handleStorage);
     };
   }, []);
@@ -185,18 +303,43 @@ export function useCartData(): CartState {
   useEffect(() => {
     let active = true;
 
-    async function load(currentSelection: BookingSelection | null) {
+    async function load(currentSeminarSelection: BookingSelection | null, currentProductSelection: ProductSelection | null) {
       try {
-        const seminarPromise = currentSelection?.seminarSlug
-          ? fetchJson<SeminarDetailItem>(`/public/seminare/${encodeURIComponent(currentSelection.seminarSlug)}`, {
-              next: { revalidate: 30 },
-              cache: "force-cache"
-            })
+        const seminarPromise = currentSeminarSelection?.seminarSlug
+          ? fetchJson<SeminarDetailItem>(
+              `/public/seminare/${encodeURIComponent(currentSeminarSelection.seminarSlug)}`,
+              {
+                next: { revalidate: 30 },
+                cache: "force-cache"
+              }
+            )
               .then((detail) => mapSeminar(detail))
-              .catch(() => null)
+              .catch((error) => {
+                if (error && typeof error === "object" && "status" in error && (error as { status?: number }).status === 404) {
+                  return null;
+                }
+                throw error;
+              })
           : Promise.resolve(null);
 
-        const [seminar] = await Promise.all([seminarPromise]);
+        const productPromise = currentProductSelection?.productSlug
+          ? fetchJson<ProductDetailItem>(
+              `/public/produkte/${encodeURIComponent(currentProductSelection.productSlug)}`,
+              {
+                next: { revalidate: 30 },
+                cache: "force-cache"
+              }
+            )
+              .then((detail) => mapProduct(detail))
+              .catch((error) => {
+                if (error && typeof error === "object" && "status" in error && (error as { status?: number }).status === 404) {
+                  return null;
+                }
+                throw error;
+              })
+          : Promise.resolve(null);
+
+        const [seminar, product] = await Promise.all([seminarPromise, productPromise]);
 
         if (!active) return;
 
@@ -204,7 +347,9 @@ export function useCartData(): CartState {
           status: "ready",
           data: {
             seminar,
-            selection: currentSelection
+            seminarSelection: currentSeminarSelection,
+            product,
+            productSelection: currentProductSelection
           }
         });
       } catch (error) {
@@ -213,20 +358,21 @@ export function useCartData(): CartState {
         setState({
           status: "error",
           data: {
-            ...EMPTY_DATA,
-            selection: currentSelection
+            ...EXTENDED_EMPTY_DATA,
+            seminarSelection: currentSeminarSelection,
+            productSelection: currentProductSelection
           },
           error
         });
       }
     }
 
-    load(selection);
+    load(seminarSelection, productSelection);
 
     return () => {
       active = false;
     };
-  }, [selection]);
+  }, [seminarSelection, productSelection]);
 
   return state;
 }

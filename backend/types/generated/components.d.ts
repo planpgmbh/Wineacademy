@@ -43,6 +43,30 @@ export interface BenachrichtigungPlatzhalter extends Struct.ComponentSchema {
   };
 }
 
+export interface GutscheinTab extends Struct.ComponentSchema {
+  collectionName: 'components_gutschein_tabs';
+  info: {
+    description: 'Inhaltstab für Gutschein-Details';
+    displayName: 'Tab';
+  };
+  attributes: {
+    inhalt: Schema.Attribute.RichText;
+    titel: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
+export interface ProduktTab extends Struct.ComponentSchema {
+  collectionName: 'components_produkt_tabs';
+  info: {
+    description: 'Inhaltstab für Produktdetails';
+    displayName: 'Tab';
+  };
+  attributes: {
+    inhalt: Schema.Attribute.RichText;
+    titel: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
 export interface TerminSeminartag extends Struct.ComponentSchema {
   collectionName: 'components_termin_seminartag';
   info: {
@@ -80,6 +104,8 @@ declare module '@strapi/strapi' {
     export interface ComponentSchemas {
       'benachrichtigung.platzhalter': BenachrichtigungPlatzhalter;
       'bestellung.position': BestellungPosition;
+      'gutschein.tab': GutscheinTab;
+      'produkt.tab': ProduktTab;
       'system.benachrichtigungsempfaenger': SystemBenachrichtigungsempfaenger;
       'termin.seminartag': TerminSeminartag;
     }

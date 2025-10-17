@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { BOOKING_SELECTION_STORAGE_KEY } from "@/components/seminar/bookingUtils";
 import { CartItemSeminar } from "./CartItemSeminar";
+import { CartItemProduct } from "./CartItemProduct";
 import { useCartData } from "./useCartData";
 
 type CartDrawerProps = {
@@ -12,6 +13,8 @@ type CartDrawerProps = {
   open: boolean;
   onClose: () => void;
 };
+
+const PRODUCT_SELECTION_STORAGE_KEY = "cart:productSelection";
 
 function updateStoredBookingSelection(
   updater: (current: Record<string, unknown> | null) => Record<string, unknown> | null
@@ -47,29 +50,71 @@ function updateStoredBookingSelection(
   return next;
 }
 
+function updateStoredProductSelection(
+  updater: (current: Record<string, unknown> | null) => Record<string, unknown> | null
+) {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  let current: Record<string, unknown> | null = null;
+  try {
+    const raw = window.localStorage.getItem(PRODUCT_SELECTION_STORAGE_KEY);
+    current = raw ? JSON.parse(raw) : null;
+  } catch {
+    current = null;
+  }
+
+  const next = updater(current);
+
+  try {
+    if (next) {
+      window.localStorage.setItem(PRODUCT_SELECTION_STORAGE_KEY, JSON.stringify(next));
+    } else {
+      window.localStorage.removeItem(PRODUCT_SELECTION_STORAGE_KEY);
+    }
+  } catch (error) {
+    console.warn("[cart] Konnte Produktauswahl nicht speichern:", error);
+  }
+
+  if (typeof document !== "undefined") {
+    document.dispatchEvent(new CustomEvent("product:pending", { detail: next ?? null }));
+  }
+
+  return next;
+}
+
 export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
   const { status, data } = useCartData();
-  const [seminarQuantity, setSeminarQuantity] = useState(() => data.selection?.quantity ?? 1);
+  const [seminarQuantity, setSeminarQuantity] = useState(() => data.seminarSelection?.quantity ?? 1);
+  const [productQuantity, setProductQuantity] = useState(() => data.productSelection?.quantity ?? 1);
   const router = useRouter();
 
   useEffect(() => {
-    setSeminarQuantity(data.selection?.quantity ?? 1);
-  }, [data.selection?.quantity]);
+    setSeminarQuantity(data.seminarSelection?.quantity ?? 1);
+  }, [data.seminarSelection?.quantity]);
+
+  useEffect(() => {
+    setProductQuantity(data.productSelection?.quantity ?? 1);
+  }, [data.productSelection?.quantity]);
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-    const count = data.seminar ? seminarQuantity : 0;
+    const count =
+      (data.seminar ? seminarQuantity : 0) +
+      (data.product ? productQuantity : 0);
     document.dispatchEvent(new CustomEvent("cart:set", { detail: { count } }));
-  }, [data.seminar, seminarQuantity]);
+  }, [data.product, data.seminar, productQuantity, seminarQuantity]);
 
   const totalFormatted = useMemo(() => {
     const seminarTotal = (data.seminar?.price.value ?? 0) * seminarQuantity;
-    const sum = seminarTotal;
+    const productTotal = (data.product?.price.value ?? 0) * productQuantity;
+    const sum = seminarTotal + productTotal;
     if (!Number.isFinite(sum) || sum <= 0) {
       return "–";
     }
     return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(sum);
-  }, [data.seminar?.price.value, seminarQuantity]);
+  }, [data.product?.price.value, data.seminar?.price.value, productQuantity, seminarQuantity]);
 
   const handleSeminarQuantityChange = useCallback(
     (quantity: number) => {
@@ -85,14 +130,14 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
         const base = (current && typeof current === "object") ? current : {};
         const slug =
           data.seminar?.slug ??
-          data.selection?.seminarSlug ??
+          data.seminarSelection?.seminarSlug ??
           (typeof (base as { slug?: unknown }).slug === "string" ? (base as { slug?: string }).slug : null);
         const createdAt =
           typeof (base as { createdAt?: unknown }).createdAt === "string"
             ? (base as { createdAt?: string }).createdAt
             : new Date().toISOString();
         const dateId =
-          data.selection?.dateId ??
+          data.seminarSelection?.dateId ??
           (typeof (base as { dateId?: unknown }).dateId === "string" ? (base as { dateId?: string }).dateId : null);
 
         return {
@@ -101,8 +146,8 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
           slug,
           seminarSlug: slug,
           title:
-            data.seminar?.title ??
-            data.selection?.seminarTitle ??
+          data.seminar?.title ??
+            data.seminarSelection?.seminarTitle ??
             ((base as { title?: unknown }).title as string | null | undefined) ??
             null,
           quantity: nextQuantity,
@@ -112,7 +157,7 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
         };
       });
     },
-    [data.seminar, data.selection?.dateId, data.selection?.seminarSlug, data.selection?.seminarTitle]
+    [data.seminar, data.seminarSelection?.dateId, data.seminarSelection?.seminarSlug, data.seminarSelection?.seminarTitle]
   );
 
   const handleSeminarRemove = useCallback(() => {
@@ -120,7 +165,73 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
     updateStoredBookingSelection(() => null);
   }, []);
 
-  const canCheckout = Boolean(data.seminar && seminarQuantity > 0);
+  const handleProductQuantityChange = useCallback(
+    (quantity: number) => {
+      if (!data.product) {
+        setProductQuantity(1);
+        return;
+      }
+
+      const nextQuantity = Math.max(1, quantity);
+      setProductQuantity(nextQuantity);
+
+      updateStoredProductSelection((current) => {
+        const base = (current && typeof current === "object") ? current : {};
+        const slug =
+          data.product?.slug ??
+          data.productSelection?.productSlug ??
+          (typeof (base as { slug?: unknown }).slug === "string" ? (base as { slug?: string }).slug : null);
+        const createdAt =
+          typeof (base as { createdAt?: unknown }).createdAt === "string"
+            ? (base as { createdAt?: string }).createdAt
+            : new Date().toISOString();
+        const priceValue =
+          data.product?.price.value ??
+          data.productSelection?.priceValue ??
+          (typeof (base as { priceValue?: unknown }).priceValue === "number"
+            ? (base as { priceValue?: number }).priceValue
+            : null);
+        const priceFormatted =
+          data.product?.price.formatted ??
+          data.productSelection?.priceFormatted ??
+          (typeof (base as { priceFormatted?: unknown }).priceFormatted === "string"
+            ? (base as { priceFormatted?: string }).priceFormatted
+            : null);
+
+        return {
+          ...base,
+          type: "product",
+          slug,
+          productSlug: slug,
+          title:
+            data.product?.title ??
+            data.productSelection?.productTitle ??
+            ((base as { title?: unknown }).title as string | null | undefined) ??
+            null,
+          quantity: nextQuantity,
+          priceValue,
+          priceFormatted,
+          isVoucher:
+            data.product?.isVoucher ??
+            data.productSelection?.isVoucher ??
+            Boolean((base as { isVoucher?: unknown }).isVoucher),
+          createdAt,
+          updatedAt: new Date().toISOString()
+        };
+      });
+    },
+    [data.product, data.productSelection?.isVoucher, data.productSelection?.priceFormatted, data.productSelection?.priceValue, data.productSelection?.productSlug, data.productSelection?.productTitle]
+  );
+
+  const handleProductRemove = useCallback(() => {
+    setProductQuantity(1);
+    updateStoredProductSelection(() => null);
+  }, []);
+
+  const canCheckout = Boolean(
+    (data.seminar && seminarQuantity > 0) ||
+      (data.product && productQuantity > 0)
+  );
 
   const handleCheckoutClick = useCallback(() => {
     if (!canCheckout) {
@@ -135,7 +246,7 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
     router.push("/checkout");
   }, [canCheckout, onClose, router]);
 
-  const isLoading = status === "loading" && !data.seminar;
+  const isLoading = status === "loading" && !data.seminar && !data.product;
   const hasError = status === "error";
 
   return (
@@ -170,9 +281,24 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
                 {data.seminar ? (
                   <CartItemSeminar
                     seminar={data.seminar}
-                    selection={data.selection}
+                    selection={data.seminarSelection}
                     onQuantityChange={handleSeminarQuantityChange}
                     onRemove={handleSeminarRemove}
+                  />
+                ) : null}
+                {data.product ? (
+                  <CartItemProduct
+                    product={{
+                      id: data.product.id,
+                      title: data.product.title,
+                      description: data.product.description,
+                      price: data.product.price,
+                      imageUrl: data.product.imageUrl,
+                      imageAlt: data.product.imageAlt
+                    }}
+                    quantity={productQuantity}
+                    onQuantityChange={handleProductQuantityChange}
+                    onRemove={handleProductRemove}
                   />
                 ) : null}
               </div>

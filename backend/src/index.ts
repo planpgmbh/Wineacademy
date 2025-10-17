@@ -244,6 +244,11 @@ async function upsertProduct(strapi: any, values: {
   mwst?: boolean;
   gutschein?: boolean;
   aktiv?: boolean;
+  hintergrundbild?: unknown;
+  bookingbox_topline?: string;
+  bookingbox_headline?: string;
+  bookingbox_body?: string;
+  produktinhalte?: Array<Record<string, unknown>>;
 }) {
   const slug = values.slug ? slugify(values.slug) : slugify(values.name);
   const existing = await strapi.db.query('api::produkt.produkt').findOne({ where: { slug }, select: ['id'] });
@@ -264,7 +269,18 @@ async function upsertProduct(strapi: any, values: {
 
 async function upsertGutschein(
   strapi: any,
-  values: { name: string; code: string; beschreibung?: string; betrag?: number; aktiv?: boolean }
+  values: {
+    name: string;
+    code: string;
+    beschreibung?: string;
+    betrag?: number;
+    aktiv?: boolean;
+    hintergrundbild?: unknown;
+    bookingbox_topline?: string;
+    bookingbox_headline?: string;
+    bookingbox_body?: string;
+    gutscheininhalte?: Array<Record<string, unknown>>;
+  }
 ) {
   const existing = await strapi.db.query('api::gutschein.gutschein').findOne({ where: { code: values.code }, select: ['id'] });
   const data: any = {
@@ -277,6 +293,21 @@ async function upsertGutschein(
   if (typeof values.betrag === 'number') {
     data.betrag = values.betrag;
   }
+  if ('hintergrundbild' in values) {
+    data.hintergrundbild = values.hintergrundbild ?? undefined;
+  }
+  if ('bookingbox_topline' in values) {
+    data.bookingbox_topline = values.bookingbox_topline ?? undefined;
+  }
+  if ('bookingbox_headline' in values) {
+    data.bookingbox_headline = values.bookingbox_headline ?? undefined;
+  }
+  if ('bookingbox_body' in values) {
+    data.bookingbox_body = values.bookingbox_body ?? undefined;
+  }
+  if (Array.isArray(values.gutscheininhalte)) {
+    data.gutscheininhalte = values.gutscheininhalte;
+  }
   if (existing) {
     await strapi.entityService.update('api::gutschein.gutschein', existing.id, { data });
     return existing.id as number;
@@ -287,7 +318,18 @@ async function upsertGutschein(
 
 async function upsertGutscheinTemplate(
   strapi: any,
-  values: { name: string; beschreibung?: string; minBetrag?: number; maxBetrag?: number; aktiv?: boolean }
+  values: {
+    name: string;
+    beschreibung?: string;
+    minBetrag?: number;
+    maxBetrag?: number;
+    aktiv?: boolean;
+    hintergrundbild?: unknown;
+    bookingbox_topline?: string;
+    bookingbox_headline?: string;
+    bookingbox_body?: string;
+    gutscheininhalte?: Array<Record<string, unknown>>;
+  }
 ) {
   const existing = await strapi.db.query('api::gutschein.gutschein').findOne({ where: { istTemplate: true }, select: ['id'] });
   const data: any = {
@@ -296,6 +338,21 @@ async function upsertGutscheinTemplate(
     aktiv: values.aktiv ?? true,
     publishedAt: nowIso(),
   };
+  if ('hintergrundbild' in values) {
+    data.hintergrundbild = values.hintergrundbild ?? undefined;
+  }
+  if ('bookingbox_topline' in values) {
+    data.bookingbox_topline = values.bookingbox_topline ?? undefined;
+  }
+  if ('bookingbox_headline' in values) {
+    data.bookingbox_headline = values.bookingbox_headline ?? undefined;
+  }
+  if ('bookingbox_body' in values) {
+    data.bookingbox_body = values.bookingbox_body ?? undefined;
+  }
+  if (Array.isArray(values.gutscheininhalte)) {
+    data.gutscheininhalte = values.gutscheininhalte;
+  }
   if (existing) {
     await strapi.entityService.update('api::gutschein.gutschein', existing.id, { data });
     return existing.id as number;

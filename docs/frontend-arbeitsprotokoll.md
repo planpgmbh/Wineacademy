@@ -1,5 +1,7 @@
 # Frontend-Arbeitsprotokoll
 
+- 2025-10-17 – Checkout verarbeitet Produktauswahlen (`cart:productSelection`); neue Checkout-Seite inkl. Formular, Teilnehmerverwaltung und Order-Submit. Warenkorb leert nach Erfolg beide Selektionen. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-17 – Produkt-Detailseite mit neuer Booking-Card ohne Terminwahl umgesetzt; Produktdaten-Helper, mobile Variante und Warenkorb-Unterstützung für Produkte ergänzt. `npm run lint` erfolgreich. – Commit: n/a
 - 2025-10-17 – Anzeige der Seminartermine im Warenkorb vereinfacht (Wochentag + Datum, Label „Termine“); `npm run lint` im Frontend erfolgreich ausgeführt. – Commit: n/a
 - 2025-10-17 – Fallback-Warenkorbinhalte entfernt; Drawer zeigt nur noch echte Seminar-/Produkt-/Gutscheindaten und meldet Fehlerzustände. `npm run lint` erfolgreich. – Commit: n/a
 - 2025-10-17 – API-Helper ergänzt Same-Origin-Fallback (`window.location.origin/api`), falls ENV beim Build fehlt; Warenkorb lädt nun auch nach Staging-Builds ohne INLINE-ENV. `npm run lint` erfolgreich. – Commit: n/a

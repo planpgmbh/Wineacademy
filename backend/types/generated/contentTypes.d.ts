@@ -640,12 +640,17 @@ export interface ApiGutscheinGutschein extends Struct.CollectionTypeSchema {
     >;
     betrag: Schema.Attribute.Decimal;
     bild: Schema.Attribute.Media<'images'>;
+    bookingboxBody: Schema.Attribute.Text;
+    bookingboxHeadline: Schema.Attribute.String;
+    bookingboxTopline: Schema.Attribute.String;
     code: Schema.Attribute.String & Schema.Attribute.Unique;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     eingeloest: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     eingeloestAm: Schema.Attribute.DateTime;
+    gutscheininhalte: Schema.Attribute.Component<'gutschein.tab', true>;
+    hintergrundbild: Schema.Attribute.Media<'images'>;
     istTemplate: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -790,10 +795,14 @@ export interface ApiProduktProdukt extends Struct.CollectionTypeSchema {
     aktiv: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     beschreibung: Schema.Attribute.RichText;
     bild: Schema.Attribute.Media<'images'>;
+    bookingboxBody: Schema.Attribute.Text;
+    bookingboxHeadline: Schema.Attribute.String;
+    bookingboxTopline: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     gutschein: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    hintergrundbild: Schema.Attribute.Media<'images'>;
     kurzbeschreibung: Schema.Attribute.Text;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -804,6 +813,7 @@ export interface ApiProduktProdukt extends Struct.CollectionTypeSchema {
     mwst: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     preisBrutto: Schema.Attribute.Decimal;
     preisNetto: Schema.Attribute.Decimal;
+    produktinhalte: Schema.Attribute.Component<'produkt.tab', true>;
     publishedAt: Schema.Attribute.DateTime;
     slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
     steuerSatz: Schema.Attribute.Decimal;

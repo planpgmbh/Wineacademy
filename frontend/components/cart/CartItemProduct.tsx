@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { QuantitySelector } from "../shared/QuantitySelector";
 
@@ -14,27 +14,50 @@ type CartItemProductProps = {
     imageUrl: string | null;
     imageAlt: string | null;
   } | null;
+  quantity?: number;
   onQuantityChange?: (quantity: number) => void;
+  onRemove?: () => void;
 };
 
-export function CartItemProduct({ product, onQuantityChange }: CartItemProductProps) {
-  const [quantity, setQuantity] = useState(1);
+export function CartItemProduct({ product, quantity = 1, onQuantityChange, onRemove }: CartItemProductProps) {
+  const [internalQuantity, setInternalQuantity] = useState(() => Math.max(1, Math.trunc(quantity)));
 
   useEffect(() => {
-    if (product) {
-      onQuantityChange?.(quantity);
-    }
-  }, [onQuantityChange, product, quantity]);
+    setInternalQuantity(Math.max(1, Math.trunc(quantity)));
+  }, [quantity]);
 
   useEffect(() => {
     if (!product) {
-      setQuantity(1);
+      setInternalQuantity(1);
     }
   }, [product]);
+
+  const totalPriceFormatted = useMemo(() => {
+    if (!product) {
+      return "Preis auf Anfrage";
+    }
+    const unitPrice = product.price?.value ?? null;
+    if (unitPrice == null || !Number.isFinite(unitPrice) || unitPrice <= 0) {
+      return product.price?.formatted ?? "Preis auf Anfrage";
+    }
+    const total = unitPrice * internalQuantity;
+    if (!Number.isFinite(total) || total <= 0) {
+      return product.price?.formatted ?? "Preis auf Anfrage";
+    }
+    return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(total);
+  }, [internalQuantity, product]);
 
   if (!product) {
     return null;
   }
+
+  const handleQuantityChange = (value: number) => {
+    const next = Math.max(1, value);
+    setInternalQuantity(next);
+    if (product) {
+      onQuantityChange?.(next);
+    }
+  };
 
   return (
     <article className="relative flex items-start gap-4 rounded-2xl bg-base-100 p-4 shadow-sm">
@@ -42,6 +65,7 @@ export function CartItemProduct({ product, onQuantityChange }: CartItemProductPr
         type="button"
         aria-label="Entfernen"
         className="btn btn-ghost btn-circle btn-xs absolute right-3 top-3"
+        onClick={onRemove}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -83,11 +107,11 @@ export function CartItemProduct({ product, onQuantityChange }: CartItemProductPr
         </p>
         <footer className="flex items-center justify-start">
           <div className="flex items-center gap-3">
-            <QuantitySelector value={quantity} onChange={setQuantity} />
+            <QuantitySelector value={internalQuantity} onChange={handleQuantityChange} />
           </div>
         </footer>
         <p className="absolute bottom-4 right-4 text-base font-semibold">
-          {product.price?.formatted ?? "Preis auf Anfrage"}
+          {totalPriceFormatted}
         </p>
       </div>
     </article>
