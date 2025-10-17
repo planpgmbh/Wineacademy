@@ -1,10 +1,11 @@
 "use client";
 
-import { CartItemGutschein } from "./CartItemGutschein";
-import { CartItemProduct } from "./CartItemProduct";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import { BOOKING_SELECTION_STORAGE_KEY } from "@/components/seminar/bookingUtils";
 import { CartItemSeminar } from "./CartItemSeminar";
 import { useCartData } from "./useCartData";
-import { useEffect, useMemo, useState } from "react";
 
 type CartDrawerProps = {
   id: string;
@@ -12,11 +13,44 @@ type CartDrawerProps = {
   onClose: () => void;
 };
 
+function updateStoredBookingSelection(
+  updater: (current: Record<string, unknown> | null) => Record<string, unknown> | null
+) {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  let current: Record<string, unknown> | null = null;
+  try {
+    const raw = window.localStorage.getItem(BOOKING_SELECTION_STORAGE_KEY);
+    current = raw ? JSON.parse(raw) : null;
+  } catch {
+    current = null;
+  }
+
+  const next = updater(current);
+
+  try {
+    if (next) {
+      window.localStorage.setItem(BOOKING_SELECTION_STORAGE_KEY, JSON.stringify(next));
+    } else {
+      window.localStorage.removeItem(BOOKING_SELECTION_STORAGE_KEY);
+    }
+  } catch (error) {
+    console.warn("[cart] Konnte Buchungsauswahl nicht speichern:", error);
+  }
+
+  if (typeof document !== "undefined") {
+    document.dispatchEvent(new CustomEvent("booking:pending", { detail: next ?? null }));
+  }
+
+  return next;
+}
+
 export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
   const { status, data } = useCartData();
   const [seminarQuantity, setSeminarQuantity] = useState(() => data.selection?.quantity ?? 1);
-  const [productQuantity, setProductQuantity] = useState(1);
-  const [voucherQuantity, setVoucherQuantity] = useState(1);
+  const router = useRouter();
 
   useEffect(() => {
     setSeminarQuantity(data.selection?.quantity ?? 1);
@@ -24,43 +58,85 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-    const count =
-      (data.seminar ? seminarQuantity : 0) +
-      (data.product ? productQuantity : 0) +
-      (data.voucher ? voucherQuantity : 0);
+    const count = data.seminar ? seminarQuantity : 0;
     document.dispatchEvent(new CustomEvent("cart:set", { detail: { count } }));
-  }, [data.product, data.seminar, data.voucher, productQuantity, seminarQuantity, voucherQuantity]);
+  }, [data.seminar, seminarQuantity]);
 
   const totalFormatted = useMemo(() => {
     const seminarTotal = (data.seminar?.price.value ?? 0) * seminarQuantity;
-    const productTotal = (data.product?.price.value ?? 0) * productQuantity;
-    const voucherValue = data.voucher?.value ?? 0;
-    const voucherTotal = voucherValue * voucherQuantity;
-    const sum = seminarTotal + productTotal + voucherTotal;
+    const sum = seminarTotal;
     if (!Number.isFinite(sum) || sum <= 0) {
       return "–";
     }
     return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(sum);
-  }, [data.product?.price.value, data.seminar?.price.value, data.voucher?.value, productQuantity, seminarQuantity, voucherQuantity]);
+  }, [data.seminar?.price.value, seminarQuantity]);
 
-  const handleSeminarQuantityChange = (quantity: number) => {
-    const nextQuantity = Math.max(1, quantity);
-    setSeminarQuantity(nextQuantity);
-    if (typeof window !== "undefined") {
-      try {
-        const raw = window.localStorage.getItem("booking:lastSelection");
-        const parsed = raw ? JSON.parse(raw) : {};
-        window.localStorage.setItem(
-          "booking:lastSelection",
-          JSON.stringify({ ...parsed, quantity: nextQuantity, slug: data.seminar?.slug ?? parsed.slug ?? null })
-        );
-      } catch {
-        // Ignoriert: Persistenz optional.
+  const handleSeminarQuantityChange = useCallback(
+    (quantity: number) => {
+      if (!data.seminar) {
+        setSeminarQuantity(1);
+        return;
       }
-    }
-  };
 
-  const isLoading = status === "loading" && !data.seminar && !data.product && !data.voucher;
+      const nextQuantity = Math.max(1, quantity);
+      setSeminarQuantity(nextQuantity);
+
+      updateStoredBookingSelection((current) => {
+        const base = (current && typeof current === "object") ? current : {};
+        const slug =
+          data.seminar?.slug ??
+          data.selection?.seminarSlug ??
+          (typeof (base as { slug?: unknown }).slug === "string" ? (base as { slug?: string }).slug : null);
+        const createdAt =
+          typeof (base as { createdAt?: unknown }).createdAt === "string"
+            ? (base as { createdAt?: string }).createdAt
+            : new Date().toISOString();
+        const dateId =
+          data.selection?.dateId ??
+          (typeof (base as { dateId?: unknown }).dateId === "string" ? (base as { dateId?: string }).dateId : null);
+
+        return {
+          ...base,
+          type: "seminar",
+          slug,
+          seminarSlug: slug,
+          title:
+            data.seminar?.title ??
+            data.selection?.seminarTitle ??
+            ((base as { title?: unknown }).title as string | null | undefined) ??
+            null,
+          quantity: nextQuantity,
+          dateId,
+          createdAt,
+          updatedAt: new Date().toISOString()
+        };
+      });
+    },
+    [data.seminar, data.selection?.dateId, data.selection?.seminarSlug, data.selection?.seminarTitle]
+  );
+
+  const handleSeminarRemove = useCallback(() => {
+    setSeminarQuantity(1);
+    updateStoredBookingSelection(() => null);
+  }, []);
+
+  const canCheckout = Boolean(data.seminar && seminarQuantity > 0);
+
+  const handleCheckoutClick = useCallback(() => {
+    if (!canCheckout) {
+      return;
+    }
+
+    if (typeof document !== "undefined") {
+      document.dispatchEvent(new CustomEvent("cart:close"));
+    }
+
+    onClose();
+    router.push("/checkout");
+  }, [canCheckout, onClose, router]);
+
+  const isLoading = status === "loading" && !data.seminar;
+  const hasError = status === "error";
 
   return (
     <div className="drawer drawer-end">
@@ -86,9 +162,19 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
               </div>
             ) : (
               <div className="flex flex-col gap-4">
-                <CartItemSeminar seminar={data.seminar} selection={data.selection} onQuantityChange={handleSeminarQuantityChange} />
-                <CartItemProduct product={data.product} onQuantityChange={setProductQuantity} />
-                <CartItemGutschein voucher={data.voucher} />
+                {hasError ? (
+                  <div className="rounded-2xl bg-error/10 p-6 text-sm text-error">
+                    Der Warenkorb konnte nicht geladen werden. Bitte Seite neu laden oder später erneut versuchen.
+                  </div>
+                ) : null}
+                {data.seminar ? (
+                  <CartItemSeminar
+                    seminar={data.seminar}
+                    selection={data.selection}
+                    onQuantityChange={handleSeminarQuantityChange}
+                    onRemove={handleSeminarRemove}
+                  />
+                ) : null}
               </div>
             )}
           </div>
@@ -97,7 +183,14 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
               <dt>Summe</dt>
               <dd className="text-base font-semibold">{totalFormatted}</dd>
             </dl>
-            <button type="button" className="btn btn-primary btn-lg">Weiter zur Kasse</button>
+            <button
+              type="button"
+              className="btn btn-primary btn-lg"
+              disabled={!canCheckout}
+              onClick={handleCheckoutClick}
+            >
+              Weiter zur Kasse
+            </button>
           </footer>
         </aside>
       </div>

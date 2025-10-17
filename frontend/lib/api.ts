@@ -14,8 +14,8 @@ function ensureLeadingSlash(path: string): string {
 }
 
 export function getApiBaseUrl(): string | null {
-  const base = process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL;
-  return base ? normaliseBase(base) : null;
+  const envBase = process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL;
+  return envBase ? normaliseBase(envBase) : null;
 }
 
 export function buildApiUrl(path: string): string {

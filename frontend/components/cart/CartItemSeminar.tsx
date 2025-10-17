@@ -27,23 +27,38 @@ function useQuantity(initial: number, onChange?: (quantity: number) => void) {
   return [quantity, setQuantity] as const;
 }
 
-export function CartItemSeminar({ seminar, selection, onQuantityChange }: CartItemSeminarProps) {
+const EURO_FORMATTER = new Intl.NumberFormat("de-DE", {
+  style: "currency",
+  currency: "EUR"
+});
+
+export function CartItemSeminar({ seminar, selection, onQuantityChange, onRemove }: CartItemSeminarProps) {
   const [quantity, setQuantity] = useQuantity(selection?.quantity ?? 1, onQuantityChange);
 
-  const dates = useMemo(() => {
-    if (!seminar) return [] as { id: string; label: string; selected: boolean }[];
-    return seminar.dates.map((date) => ({
-      ...date,
-      selected: selection?.dateId ? selection.dateId === date.id : false
-    }));
-  }, [selection?.dateId, seminar]);
+  const hasDates = Boolean(seminar?.dates?.length);
+  const selectedDateId = selection?.dateId ?? null;
+
+  const totalPriceFormatted = useMemo(() => {
+    if (!seminar) {
+      return "Preis auf Anfrage";
+    }
+    if (seminar.price.value == null) {
+      return seminar.price.formatted;
+    }
+    const total = seminar.price.value * quantity;
+    if (!Number.isFinite(total) || total <= 0) {
+      return seminar.price.formatted;
+    }
+    return EURO_FORMATTER.format(total);
+  }, [quantity, seminar]);
 
   return (
     <article className="relative flex items-start gap-4 rounded-2xl bg-base-100 p-4 shadow-sm">
       <button
         type="button"
-        aria-label="Entfernen"
+        aria-label="Seminar aus dem Warenkorb entfernen"
         className="btn btn-ghost btn-circle btn-xs absolute right-3 top-3"
+        onClick={onRemove}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -74,40 +89,36 @@ export function CartItemSeminar({ seminar, selection, onQuantityChange }: CartIt
           <div className="absolute inset-0 flex items-center justify-center text-sm font-medium text-primary">WA</div>
         )}
       </div>
-      <div className="flex flex-1 flex-col gap-3 pr-4">
-        <header className="flex items-start justify-between gap-2">
-          <div>
-            <h3 className="text-base font-medium leading-snug">
-              {seminar?.title ?? "Seminar"}
-            </h3>
-            {seminar?.description ? (
-              <p className="mt-1 text-sm text-base-content/70 line-clamp-2">
-                {seminar.description}
-              </p>
-            ) : null}
-            <p className="mt-3 text-xs font-semibold uppercase tracking-wide">Seminartage</p>
-            <ul className="mt-1 space-y-1 text-sm text-base-content/80">
-              {dates.length > 0
-                ? dates.map((day) => (
-                    <li
-                      key={day.id}
-                      className={day.selected ? "font-semibold text-base-content" : undefined}
-                    >
-                      {day.label}
-                    </li>
-                  ))
-                : [<li key="placeholder">Termine folgen in Kürze</li>]}
+      <div className="flex flex-1 flex-col gap-4 pr-4">
+        <header className="space-y-2">
+          <h3 className="text-base font-medium leading-snug">
+            {seminar?.title ?? "Seminar"}
+          </h3>
+        </header>
+
+        {hasDates ? (
+          <div className="space-y-1">
+            <span className="text-xs font-semibold uppercase tracking-wide text-base-content/70">Termine</span>
+            <ul className="space-y-1 text-sm text-base-content/80">
+              {seminar?.dates.map((option) => (
+                <li key={option.id} className={option.id === selectedDateId ? "font-semibold text-base-content" : ""}>
+                  {option.label}
+                </li>
+              ))}
             </ul>
           </div>
-        </header>
-        <footer className="flex items-center justify-start">
+        ) : (
+          <p className="text-xs text-base-content/60">Neue Termine werden in Kürze veröffentlicht.</p>
+        )}
+
+        <footer className="flex items-center justify-between pt-2">
           <div className="flex items-center gap-3">
             <QuantitySelector value={quantity} onChange={setQuantity} />
           </div>
+          <div className="text-right">
+            <span className="block text-base font-semibold">{totalPriceFormatted}</span>
+          </div>
         </footer>
-        <p className="absolute bottom-4 right-4 text-base font-semibold">
-          {seminar?.price.formatted ?? "Preis auf Anfrage"}
-        </p>
       </div>
     </article>
   );

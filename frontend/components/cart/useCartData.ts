@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { fetchJson, mediaUrl } from "@/lib/api";
+import { BOOKING_SELECTION_STORAGE_KEY } from "@/components/seminar/bookingUtils";
 
 type SeminarListItem = {
   id: number;
@@ -18,22 +19,7 @@ type SeminarListItem = {
 
 type SeminarDetailItem = SeminarListItem;
 
-type ProductListItem = {
-  id: number;
-  name: string;
-  slug: string;
-  kurzbeschreibung?: string | null;
-  preisBrutto?: string | number | null;
-  bild?: { url?: string | null; alternativeText?: string | null } | null;
-};
-
-type VoucherTemplate = {
-  name: string;
-  beschreibung?: string | null;
-  minBetrag?: number | null;
-  maxBetrag?: number | null;
-  bild?: { url?: string | null; alternativeText?: string | null } | null;
-};
+type SeminarTermin = NonNullable<SeminarListItem["termine"]>[number];
 
 export type SeminarCartItem = {
   id: number;
@@ -46,29 +32,11 @@ export type SeminarCartItem = {
   imageAlt: string | null;
 };
 
-export type ProductCartItem = {
-  id: number;
-  title: string;
-  slug: string;
-  description?: string | null;
-  price: { value: number | null; formatted: string };
-  imageUrl: string | null;
-  imageAlt: string | null;
-};
-
-export type VoucherCartItem = {
-  title: string;
-  description: string;
-  value: number | null;
-  formattedValue: string | null;
-  imageUrl: string | null;
-  imageAlt: string | null;
-};
-
 export type BookingSelection = {
   quantity: number;
   dateId?: string | null;
   seminarSlug?: string | null;
+  seminarTitle?: string | null;
 };
 
 const PRICE_FORMATTER = new Intl.NumberFormat("de-DE", {
@@ -89,7 +57,11 @@ function parseCurrency(value: string | number | null | undefined): { value: numb
   return { value: null, formatted: "Preis auf Anfrage" };
 }
 
-function formatSeminarDate(termin: SeminarListItem["termine"][number]): string | null {
+function ensureWeekdaySuffix(label: string): string {
+  return label.endsWith(".") ? label : `${label}.`;
+}
+
+function formatSeminarDate(termin: SeminarTermin): string | null {
   if (!termin?.starttag) {
     return null;
   }
@@ -99,16 +71,16 @@ function formatSeminarDate(termin: SeminarListItem["termine"][number]): string |
     return null;
   }
 
-  const dateLabel = new Intl.DateTimeFormat("de-DE", {
-    weekday: "short",
-    day: "numeric",
-    month: "long"
+  const weekday = ensureWeekdaySuffix(
+    new Intl.DateTimeFormat("de-DE", { weekday: "short" }).format(date)
+  );
+  const datePart = new Intl.DateTimeFormat("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
   }).format(date);
 
-  const locationRaw = termin.standort?.stadt ?? termin.standort?.name ?? "";
-  const location = locationRaw.trim();
-
-  return location.length > 0 ? `${dateLabel} · ${location}` : dateLabel;
+  return `${weekday} ${datePart}`;
 }
 
 function readBookingSelection(): BookingSelection | null {
@@ -116,7 +88,7 @@ function readBookingSelection(): BookingSelection | null {
     return null;
   }
   try {
-    const raw = window.localStorage.getItem("booking:lastSelection");
+    const raw = window.localStorage.getItem(BOOKING_SELECTION_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object") {
@@ -127,7 +99,18 @@ function readBookingSelection(): BookingSelection | null {
       typeof parsed.dateId === "string" && parsed.dateId.length > 0 ? parsed.dateId : undefined;
     const seminarSlug =
       typeof parsed.slug === "string" && parsed.slug.length > 0 ? parsed.slug : undefined;
-    return { quantity, dateId, seminarSlug: seminarSlug ?? parsed.seminarSlug ?? null };
+    const seminarTitle =
+      typeof parsed.title === "string" && parsed.title.length > 0
+        ? parsed.title
+        : typeof parsed.seminarTitle === "string" && parsed.seminarTitle.length > 0
+          ? parsed.seminarTitle
+          : null;
+    return {
+      quantity,
+      dateId,
+      seminarSlug: seminarSlug ?? parsed.seminarSlug ?? null,
+      seminarTitle
+    };
   } catch {
     return null;
   }
@@ -138,7 +121,7 @@ function mapSeminar(item: SeminarListItem | SeminarDetailItem | undefined): Semi
     return null;
   }
   const price = parseCurrency(item.preis ?? null);
-  const datesRaw = Array.isArray(item.termine) ? item.termine : [];
+  const datesRaw: SeminarTermin[] = Array.isArray(item.termine) ? item.termine : [];
   const dates = datesRaw
     .map((termin) => {
       const label = formatSeminarDate(termin);
@@ -160,42 +143,8 @@ function mapSeminar(item: SeminarListItem | SeminarDetailItem | undefined): Semi
   };
 }
 
-function mapProductItem(item: ProductListItem | undefined): ProductCartItem | null {
-  if (!item) {
-    return null;
-  }
-  const price = parseCurrency(item.preisBrutto ?? null);
-  return {
-    id: item.id,
-    title: item.name,
-    slug: item.slug,
-    description: item.kurzbeschreibung ?? null,
-    price,
-    imageUrl: mediaUrl(item.bild?.url),
-    imageAlt: item.bild?.alternativeText ?? null
-  };
-}
-
-function mapVoucherTemplate(template: VoucherTemplate | null | undefined): VoucherCartItem | null {
-  if (!template) {
-    return null;
-  }
-  const value = template.minBetrag ?? null;
-  const formattedValue = value != null ? PRICE_FORMATTER.format(value) : null;
-  return {
-    title: "Gutschein",
-    description: "Dein Geschenkgutschein zum Verschenken",
-    value,
-    formattedValue,
-    imageUrl: mediaUrl(template.bild?.url),
-    imageAlt: template.bild?.alternativeText ?? null
-  };
-}
-
 type CartData = {
   seminar: SeminarCartItem | null;
-  product: ProductCartItem | null;
-  voucher: VoucherCartItem | null;
   selection: BookingSelection | null;
 };
 
@@ -204,42 +153,7 @@ type CartState =
   | { status: "ready"; data: CartData }
   | { status: "error"; data: CartData; error: unknown };
 
-const EMPTY_DATA: CartData = { seminar: null, product: null, voucher: null, selection: null };
-
-const FALLBACK_CART_DATA: Omit<CartData, "selection"> = {
-  seminar: {
-    id: 0,
-    title: "Assistant Sommelier (inkl. WSET® Level 2 Weine)",
-    slug: "assistant-sommelier",
-    description:
-      "Ob Gastronomie, Weinhandel, Tourismus oder Weinliebhaber:innen – der Lehrgang zum Assistant Sommelier inkl. WSET® Level 2 bietet die perfekte Weiterbildung.",
-    price: { value: 249, formatted: PRICE_FORMATTER.format(249) },
-    dates: [
-      { id: "date-1", label: "Fr, 15. November · Hamburg" },
-      { id: "date-2", label: "Sa, 23. November · Hamburg" },
-      { id: "date-3", label: "Fr, 6. Dezember · Berlin" }
-    ],
-    imageUrl: null,
-    imageAlt: null
-  },
-  product: {
-    id: 0,
-    title: "Wine Academy Merch-Set",
-    slug: "wine-academy-merch-set",
-    description: "Handverlesene Accessoires für perfekte Tastings.",
-    price: { value: 98.9, formatted: PRICE_FORMATTER.format(98.9) },
-    imageUrl: null,
-    imageAlt: null
-  },
-  voucher: {
-    title: "Gutschein",
-    description: "Dein Geschenkgutschein zum Verschenken",
-    value: 50,
-    formattedValue: PRICE_FORMATTER.format(50),
-    imageUrl: null,
-    imageAlt: null
-  }
-};
+const EMPTY_DATA: CartData = { seminar: null, selection: null };
 
 export function useCartData(): CartState {
   const [selection, setSelection] = useState<BookingSelection | null>(() => readBookingSelection());
@@ -254,7 +168,7 @@ export function useCartData(): CartState {
     };
 
     const handleStorage = (event: StorageEvent) => {
-      if (event.key === "booking:lastSelection") {
+      if (event.key === BOOKING_SELECTION_STORAGE_KEY) {
         setSelection(readBookingSelection());
       }
     };
@@ -280,25 +194,9 @@ export function useCartData(): CartState {
             })
               .then((detail) => mapSeminar(detail))
               .catch(() => null)
-          : fetchJson<SeminarListItem[]>("/public/seminare", { next: { revalidate: 60 }, cache: "force-cache" })
-              .then((list) => mapSeminar(list?.[0]))
-              .catch(() => null);
+          : Promise.resolve(null);
 
-        const productPromise = fetchJson<ProductListItem[]>("/public/produkte", {
-          next: { revalidate: 60 },
-          cache: "force-cache"
-        })
-          .then((list) => mapProductItem(list?.[0]))
-          .catch(() => null);
-
-        const voucherPromise = fetchJson<VoucherTemplate>("/public/gutscheine/template", {
-          next: { revalidate: 300 },
-          cache: "force-cache"
-        })
-          .then((template) => mapVoucherTemplate(template))
-          .catch(() => mapVoucherTemplate(null));
-
-        const [seminar, product, voucher] = await Promise.all([seminarPromise, productPromise, voucherPromise]);
+        const [seminar] = await Promise.all([seminarPromise]);
 
         if (!active) return;
 
@@ -306,8 +204,6 @@ export function useCartData(): CartState {
           status: "ready",
           data: {
             seminar,
-            product,
-            voucher,
             selection: currentSelection
           }
         });
@@ -317,7 +213,7 @@ export function useCartData(): CartState {
         setState({
           status: "error",
           data: {
-            ...FALLBACK_CART_DATA,
+            ...EMPTY_DATA,
             selection: currentSelection
           },
           error

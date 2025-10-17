@@ -1,3 +1,5 @@
+export const BOOKING_SELECTION_STORAGE_KEY = "booking:lastSelection";
+
 export type BookingSelection = {
   quantity: number;
   dateId?: string;
@@ -6,18 +8,22 @@ export type BookingSelection = {
 };
 
 export function triggerBookingFlow(selection: BookingSelection) {
+  const normalizedQuantity = Math.max(1, Math.trunc(selection.quantity));
+  const slug = selection.seminarSlug ?? null;
   const payload = {
     type: "seminar" as const,
-    slug: selection.seminarSlug ?? null,
+    slug,
+    seminarSlug: slug,
     title: selection.seminarTitle ?? null,
-    quantity: selection.quantity,
+    quantity: normalizedQuantity,
     dateId: selection.dateId ?? null,
     createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
 
   try {
     if (typeof window !== "undefined") {
-      window.localStorage.setItem("booking:lastSelection", JSON.stringify(payload));
+      window.localStorage.setItem(BOOKING_SELECTION_STORAGE_KEY, JSON.stringify(payload));
     }
   } catch {
     // Persistenz optional; Fehler bewusst ignoriert.
@@ -26,7 +32,7 @@ export function triggerBookingFlow(selection: BookingSelection) {
   if (typeof document !== "undefined") {
     document.dispatchEvent(new CustomEvent("booking:pending", { detail: payload }));
     document.dispatchEvent(
-      new CustomEvent("cart:add", { detail: { amount: Math.max(1, selection.quantity), item: payload } })
+      new CustomEvent("cart:add", { detail: { amount: normalizedQuantity, item: payload } })
     );
     document.dispatchEvent(new CustomEvent("cart:toggle"));
   }

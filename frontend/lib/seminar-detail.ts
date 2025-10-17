@@ -140,6 +140,21 @@ function ensureHtmlContent(text: string | null | undefined): string {
   return paragraphs.map((paragraph) => `<p>${paragraph}</p>`).join("");
 }
 
+function extractParagraphsFromRichText(text: string | null | undefined): string[] {
+  const html = ensureHtmlContent(text);
+  if (html.length === 0) {
+    return [];
+  }
+
+  return html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n")
+    .replace(/<[^>]*>/g, " ")
+    .split(/\n+/)
+    .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
+    .filter((paragraph) => paragraph.length > 0);
+}
+
 function toContentTabs(
   rawTabs: StrapiTab[] | null | undefined,
   fallback: { id: string; title: string; html: string }[]
@@ -210,6 +225,11 @@ function mapDateOptions(termine: StrapiSeminarDetail["termine"]): SeminarDateOpt
 }
 
 function extractHeroParagraphs(seminar: StrapiSeminarDetail, fallbackTabs: SeminarContentTab[]): string[] {
+  const fromDescription = extractParagraphsFromRichText(seminar.beschreibung);
+  if (fromDescription.length > 0) {
+    return fromDescription;
+  }
+
   const fromShortDescription = splitParagraphs(seminar.kurzbeschreibung);
   if (fromShortDescription.length > 0) {
     return fromShortDescription;

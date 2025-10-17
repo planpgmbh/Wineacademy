@@ -71,12 +71,6 @@ export function CartDrawerProvider() {
       broadcastCount(countRef.current + amount);
     };
 
-    const handleRemove = (event: Event) => {
-      const amount =
-        event instanceof CustomEvent && typeof event.detail?.amount === "number" ? event.detail.amount : 1;
-      broadcastCount(countRef.current - amount);
-    };
-
     const handleSet = (event: Event) => {
       const value =
         event instanceof CustomEvent && typeof event.detail?.count === "number" ? event.detail.count : countRef.current;
@@ -91,13 +85,11 @@ export function CartDrawerProvider() {
     };
 
     document.addEventListener("cart:add", handleAdd as EventListener);
-    document.addEventListener("cart:remove", handleRemove as EventListener);
     document.addEventListener("cart:set", handleSet as EventListener);
     window.addEventListener("storage", handleStorage);
 
     return () => {
       document.removeEventListener("cart:add", handleAdd as EventListener);
-      document.removeEventListener("cart:remove", handleRemove as EventListener);
       document.removeEventListener("cart:set", handleSet as EventListener);
       window.removeEventListener("storage", handleStorage);
     };

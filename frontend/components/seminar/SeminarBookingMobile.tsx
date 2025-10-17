@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from "react";
 
 import { QuantitySelector } from "@/components/shared/QuantitySelector";
-import { triggerBookingFlow } from "./bookingUtils";
+import { BOOKING_SELECTION_STORAGE_KEY, triggerBookingFlow } from "./bookingUtils";
 
 type SeminarBookingMobileProps = {
   highlightLabel?: string;
@@ -30,9 +30,11 @@ export function SeminarBookingMobile({
   const [showCTA, setShowCTA] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [selectedDate, setSelectedDate] = useState<string | undefined>(undefined);
+  const [dateError, setDateError] = useState<string | null>(null);
 
   const hasDates = dates.length > 0;
   const placeholderValue = "";
+  const datesKey = useMemo(() => dates.map((date) => date.id).join("|"), [dates]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -44,11 +46,61 @@ export function SeminarBookingMobile({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined" || !seminarSlug) {
+      return;
+    }
+
+    try {
+      const raw = window.localStorage.getItem(BOOKING_SELECTION_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return;
+
+      const storedSlug =
+        typeof parsed.slug === "string"
+          ? parsed.slug
+          : typeof parsed.seminarSlug === "string"
+            ? parsed.seminarSlug
+            : null;
+
+      if (!storedSlug || storedSlug !== seminarSlug) return;
+
+      if (typeof parsed.quantity === "number" && Number.isFinite(parsed.quantity)) {
+        setQuantity(Math.max(1, Math.trunc(parsed.quantity)));
+      }
+
+      const storedDate = typeof parsed.dateId === "string" ? parsed.dateId : null;
+      if (storedDate && dates.some((date) => date.id === storedDate)) {
+        setSelectedDate(storedDate);
+      } else {
+        setSelectedDate(undefined);
+      }
+      setDateError(null);
+    } catch {
+      // Ignoriert – Vorbelegung optional.
+    }
+  }, [datesKey, dates, seminarSlug]);
+
   const safeAreaBottom = "env(safe-area-inset-bottom, 0)";
+
+  const handleDateChange = useCallback(
+    (event: ChangeEvent<HTMLSelectElement>) => {
+      const value = event.target.value === placeholderValue ? undefined : event.target.value;
+      setSelectedDate(value);
+      setDateError(null);
+    },
+    [placeholderValue]
+  );
 
   const handleButtonClick = () => {
     if (!isOpen) {
       setIsOpen(true);
+      return;
+    }
+
+    if (hasDates && !selectedDate) {
+      setDateError("Bitte wähle einen Termin aus.");
       return;
     }
 
@@ -63,6 +115,8 @@ export function SeminarBookingMobile({
       seminarSlug,
       seminarTitle: title,
     });
+
+    setIsOpen(false);
   };
 
   const shouldShowSheet = isOpen || showCTA;
@@ -120,9 +174,8 @@ export function SeminarBookingMobile({
                         className="select select-bordered w-full"
                         value={selectedDate ?? placeholderValue}
                         disabled={!hasDates}
-                        onChange={(event) =>
-                          setSelectedDate(event.target.value === placeholderValue ? undefined : event.target.value)
-                        }
+                        aria-invalid={Boolean(dateError)}
+                        onChange={handleDateChange}
                       >
                         <option value={placeholderValue} disabled={hasDates}>
                           {hasDates ? "Termin auswählen" : "Termine folgen in Kürze"}
@@ -133,6 +186,7 @@ export function SeminarBookingMobile({
                           </option>
                         ))}
                       </select>
+                      {dateError ? <span className="label-text-alt mt-1 text-xs text-error">{dateError}</span> : null}
                     </label>
                   </div>
                 </div>

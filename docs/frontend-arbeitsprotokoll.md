@@ -1,5 +1,19 @@
 # Frontend-Arbeitsprotokoll
 
+- 2025-10-17 – Anzeige der Seminartermine im Warenkorb vereinfacht (Wochentag + Datum, Label „Termine“); `npm run lint` im Frontend erfolgreich ausgeführt. – Commit: n/a
+- 2025-10-17 – Fallback-Warenkorbinhalte entfernt; Drawer zeigt nur noch echte Seminar-/Produkt-/Gutscheindaten und meldet Fehlerzustände. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-17 – API-Helper ergänzt Same-Origin-Fallback (`window.location.origin/api`), falls ENV beim Build fehlt; Warenkorb lädt nun auch nach Staging-Builds ohne INLINE-ENV. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-17 – Warenkorb zeigt initial keine Dummy-Produkte/Gutscheine mehr; Drawer rendert nur echte Seminarbuchungen ohne Hinweis-Placeholder. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-17 – `CartItemSeminar` zurück auf reines Seminar-Layout ohne Termin-Dropdown/Beschreibung; zeigt wieder Seminartage-Liste und nur Gesamtpreis. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-17 – Unbenötigte Warenkorb-Komponenten (Produkt/Gutschein) und Event-Listener entfernt; CartDrawer-Provider verschlankt. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-17 – `CartItemProduct` und `CartItemGutschein` als eigenständige Komponenten wiederhergestellt (für spätere Nutzung). `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-17 – Warenkorb-Badge in der Navbar per Translate-Klassen um 3 px nach links und 5 px nach oben verschoben; `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-17 – Checkout-Routing angebunden: Warenkorb-CTA führt zur neuen `/checkout`-Seite inkl. Zusammenfassung der Auswahl und vorbereiteten Checkout-Bereichen. `npm run lint` ausgeführt. – Commit: n/a
+
+- 2025-10-17 – Seminarbuchungen werden jetzt vollständig in den Warenkorb übernommen (Terminpflicht bei Buchung, Drawer aktualisiert Menge/Termin, Entfernen leert Auswahl und Cart-Badge synchronisiert sich erneut). `npm run lint` ausgeführt. – Commit: n/a
+
+- 2025-10-17 – Warenkorb-Badge in der Navbar kreisrund gestaltet, Position um ca. 10 px nach unten verschoben und `npm run lint` erfolgreich ausgeführt. – Commit: n/a
+- 2025-10-17 – Seminar-Detail-Hero zieht jetzt die Strapi-Beschreibung für den Einleitungstext heran, Breadcrumb ergänzt die Seminar-Kategorie als zweiten Eintrag; `npm run lint` erfolgreich. – Commit: n/a
 - 2025-10-17 – Warenkorb-Drawer per zusätzlichen z-Index-Klassen auf höchste Ebene gehoben (Overlay/Panel stehen nun über Sticky-Header & Booking-Sheet); `npm run lint` erfolgreich. – Commit: n/a
 - 2025-10-17 – Warenkorb-Slideout nutzt nun Strapi-Daten (Seminare, Produkte, Gutschein-Template) inkl. Booking-Auswahl & Fallback; CTA triggert `booking:pending`/`cart:add`, State liegt in LocalStorage und synchronisiert Cart-Anzeige inkl. Summe. – Commit: n/a
 - 2025-10-17 – Seminar-Fallback entfernt; `.env.local` mit API-Basis hinterlegt und README ergänzt. – Commit: n/a

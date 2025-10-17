@@ -4,10 +4,16 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import { QuantitySelector } from "../shared/QuantitySelector";
-import type { ProductCartItem } from "./useCartData";
 
 type CartItemProductProps = {
-  product: ProductCartItem | null;
+  product: {
+    id: number;
+    title: string;
+    description?: string | null;
+    price?: { value: number | null; formatted: string | null } | null;
+    imageUrl: string | null;
+    imageAlt: string | null;
+  } | null;
   onQuantityChange?: (quantity: number) => void;
 };
 
@@ -15,8 +21,20 @@ export function CartItemProduct({ product, onQuantityChange }: CartItemProductPr
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
-    onQuantityChange?.(quantity);
-  }, [onQuantityChange, quantity]);
+    if (product) {
+      onQuantityChange?.(quantity);
+    }
+  }, [onQuantityChange, product, quantity]);
+
+  useEffect(() => {
+    if (!product) {
+      setQuantity(1);
+    }
+  }, [product]);
+
+  if (!product) {
+    return null;
+  }
 
   return (
     <article className="relative flex items-start gap-4 rounded-2xl bg-base-100 p-4 shadow-sm">
@@ -41,7 +59,7 @@ export function CartItemProduct({ product, onQuantityChange }: CartItemProductPr
         </svg>
       </button>
       <div className="relative size-20 flex-shrink-0 overflow-hidden rounded-2xl bg-primary/10">
-        {product?.imageUrl ? (
+        {product.imageUrl ? (
           <Image
             src={product.imageUrl}
             alt={product.imageAlt ?? product.title}
@@ -57,11 +75,11 @@ export function CartItemProduct({ product, onQuantityChange }: CartItemProductPr
       <div className="flex flex-1 flex-col gap-3 pr-4">
         <header className="flex items-start justify-between gap-2">
           <h3 className="text-base font-medium leading-snug">
-            {product?.title ?? "Produkt"}
+            {product.title}
           </h3>
         </header>
         <p className="text-sm text-base-content/80">
-          {product?.description ?? "Aktuell keine Beschreibung verfügbar."}
+          {product.description ?? "Aktuell keine Beschreibung verfügbar."}
         </p>
         <footer className="flex items-center justify-start">
           <div className="flex items-center gap-3">
@@ -69,7 +87,7 @@ export function CartItemProduct({ product, onQuantityChange }: CartItemProductPr
           </div>
         </footer>
         <p className="absolute bottom-4 right-4 text-base font-semibold">
-          {product?.price.formatted ?? "Preis auf Anfrage"}
+          {product.price?.formatted ?? "Preis auf Anfrage"}
         </p>
       </div>
     </article>

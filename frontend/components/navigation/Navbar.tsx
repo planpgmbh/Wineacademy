@@ -276,7 +276,12 @@ export function Navbar({ items }: NavbarProps) {
             onClick={handleCartClick}
           >
             {cartCount > 0 ? (
-              <span className="badge badge-primary badge-xs absolute -right-1 -top-1">{cartCount}</span>
+              <span
+                className="absolute -right-1 top-[10px] -translate-x-[3px] -translate-y-[5px] flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-semibold leading-none text-primary-content shadow-sm"
+                aria-live="polite"
+              >
+                {cartCount}
+              </span>
             ) : null}
             <CartIcon className="size-5" />
           </button>

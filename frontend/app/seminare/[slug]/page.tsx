@@ -6,13 +6,13 @@ import { ProductDetailHero } from "@/components/product/ProductDetailHero";
 import { getSeminarDetail } from "@/lib/seminar-detail";
 
 type SeminarDetailPageProps = {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 };
 
 export default async function SeminarDetailPage({ params }: SeminarDetailPageProps) {
-  const { slug } = params;
+  const { slug } = await params;
   const seminar = await getSeminarDetail(slug);
 
   if (!seminar) {
@@ -61,17 +61,6 @@ export default async function SeminarDetailPage({ params }: SeminarDetailPagePro
         <div className="mx-auto max-w-6xl px-6 md:px-8">
           <div className="mt-12 space-y-10 md:mt-16 md:pr-[420px]">
             <SeminarContentTabs tabs={seminar.tabs} />
-
-            <p className="text-base-content/60">
-              Hinweis: Du siehst aktuell <span className="font-semibold">{seminar.title}</span>
-              {slug ? (
-                <>
-                  {" "}
-                  (Slug: <span className="font-semibold">{slug}</span>)
-                </>
-              ) : null}
-              .
-            </p>
           </div>
         </div>
       </div>
