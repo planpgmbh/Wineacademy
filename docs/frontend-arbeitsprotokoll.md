@@ -1,5 +1,7 @@
-# Frontend-Arbeitsprotokoll
-
+-# Frontend-Arbeitsprotokoll
+- 2025-10-18 – Checkout-Button „Weiter zur Zahlung“ blockiert bis AGB und Datenschutzhinweise bestätigt sind; Validierung greift vor Wechsel in den Zahlungsschritt. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-18 – Puppeteer-Checkout-Test um PayPal-Sandbox-Login, Button-Handling und Bestätigungslogik erweitert; mehrfacher Testlauf gegen Staging scheiterte an PayPal-Sicherheitsprüfungen (2FA/Invisible reCAPTCHA), daher keine vollständige Zahlungsbestätigung möglich. Relevante Logs in `artifacts/checkout-debug.log`. – Commit: n/a
+- 2025-10-18 – Checkout in einen vollständigen Multi-Step-Flow überführt (Teilnehmerverwaltung, Rechnungsadresse, Bestellübersicht mit Gutscheinvalidierung, Zahlungsarten inkl. PayPal-SDK sowie persistente Bestätigungsansicht über Query-Parameter); Warenkorb-Übergabe greift nun direkt auf `useCartData`, sodass beim Übergang von Slideout → Checkout keine Leer-Ansicht mehr entsteht. PayPal, Lastschrift und Kreditkarte laufen jeweils über eigene PayPal-Buttons (PayPal-Infrastruktur, unterschiedliche Beschriftung/Erklärung). `npm run lint` erfolgreich, `docker compose -f docker-compose-staging.yml up -d --build` ausgeführt. – Commit: n/a
 - 2025-10-17 – README ergänzt: Auf Staging nach jeder Frontend-/Backend-Änderung `docker compose -f docker-compose-staging.yml up -d --build` ausführen, damit Änderungen sofort greifen. Keine Tests erforderlich. – Commit: n/a
 - 2025-10-17 – Checkout verarbeitet Produktauswahlen (`cart:productSelection`); neue Checkout-Seite inkl. Formular, Teilnehmerverwaltung und Order-Submit. Warenkorb leert nach Erfolg beide Selektionen. `npm run lint` erfolgreich. – Commit: n/a
 - 2025-10-17 – Gutscheindetailseite inkl. Hero, Dynamik für Tabs sowie Gutschein-Booking-Card mit Betragsfeld umgesetzt; Warenkorb und Checkout unterstützen nun Gutscheinbeträge (CartItemGutschein). `npm run lint` erfolgreich. – Commit: n/a

@@ -325,6 +325,36 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
           titel,
           steuerSatz,
         });
+      } else if (typ === 'gutschein' && !Number.isFinite(Number(raw.produktId))) {
+        let adjustment;
+        try {
+          adjustment = await gutscheinHelper.applyAdjustments(raw, null);
+        } catch (voucherError: any) {
+          return ctx.badRequest(voucherError?.message ?? 'Gutschein ungültig');
+        }
+        if (!adjustment || !Number.isFinite(adjustment.brutto) || adjustment.brutto <= 0) {
+          return ctx.badRequest('Gutscheinbetrag ungültig');
+        }
+        const titel = raw.titel?.trim() || 'Geschenkgutschein';
+        const beschreibung = raw.beschreibung ? String(raw.beschreibung) : undefined;
+        const einzelpreisBrutto = round2(adjustment.brutto);
+        const einzelpreisNetto = round2(adjustment.netto);
+        const summeBrutto = round2(einzelpreisBrutto * menge);
+        const summeNetto = round2(einzelpreisNetto * menge);
+        const summeSteuer = round2(summeBrutto - summeNetto);
+
+        positionen.push({
+          typ: 'gutschein',
+          titel,
+          beschreibung,
+          menge,
+          steuerSatz: adjustment.steuerSatz,
+          einzelpreisBrutto,
+          einzelpreisNetto,
+          summeBrutto,
+          summeNetto,
+          summeSteuer,
+        });
       } else {
         const produktId = Number(raw.produktId);
         if (!Number.isFinite(produktId)) return ctx.badRequest('Produkt-ID fehlt');

@@ -76,6 +76,8 @@ services:
       args:
         NEXT_PUBLIC_API_URL: https://wineacademy.plan-p.de/api
         API_INTERNAL_URL: http://service_wineacadamy_staging:1337/api
+        NEXT_PUBLIC_PAYPAL_CLIENT_ID: ${NEXT_PUBLIC_PAYPAL_CLIENT_ID}
+        NEXT_PUBLIC_PAYPAL_CURRENCY: ${NEXT_PUBLIC_PAYPAL_CURRENCY:-EUR}
     container_name: web_wineacadamy_staging
     env_file:
       - .env.staging

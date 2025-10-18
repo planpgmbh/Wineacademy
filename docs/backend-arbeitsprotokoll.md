@@ -1,5 +1,6 @@
 # Backend-Arbeitsprotokoll
 
+- 2025-10-18 – Public-Checkout akzeptiert Gutscheinpositionen ohne Produkt-ID; Summenberechnung & curl-Tests für Rechnung/PayPal erfolgreich, Strapi-Service neu gebaut. – Commit: n/a
 - 2025-10-17 – Gutschein-Content-Type um Hintergrundbild, Bookingbox-Felder und Gutschein-Tabs erweitert; Component `gutschein.tab` angelegt und Typdefinitionen angepasst. – Commit: n/a
 - 2025-10-17 – Public-Produktliste liefert Hintergründe/Bookingbox-Daten mit; neuer Detail-Endpoint `/api/public/produkte/:slug`; Gutschein-Template-Endpoint liefert neue Felder/Tabs. – Commit: n/a
 - 2025-10-17 – Produkt-Content-Type um Hintergrundbild, Bookingbox-Felder und Produkt-Tabs ergänzt; Component `produkt.tab` hinzugefügt und Typdefinitionen aktualisiert. – Commit: n/a

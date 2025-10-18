@@ -14,6 +14,7 @@ type PublicSeminarDetail = {
   name: string;
   slug: string;
   preis?: string | number | null;
+  mwst?: boolean | null;
   termine?: SeminarTermin[];
 };
 
@@ -31,6 +32,7 @@ export type SeminarCheckoutData = {
   seminarId: number;
   seminarTitle: string;
   preisBrutto: number | null;
+  steuerSatz: number | null;
   termine: {
     id: number;
     label: string;
@@ -51,6 +53,8 @@ const PRICE_FORMATTER = new Intl.NumberFormat("de-DE", {
   style: "currency",
   currency: "EUR"
 });
+
+const DEFAULT_VAT_RATE = 19;
 
 const WEEKDAY_FORMATTER = new Intl.DateTimeFormat("de-DE", { weekday: "short" });
 const DATE_FORMATTER = new Intl.DateTimeFormat("de-DE", {
@@ -112,11 +116,13 @@ export async function fetchSeminarCheckoutData(slug: string): Promise<SeminarChe
 
   const preisBrutto = parsePrice(payload.preis ?? null);
   const termine = Array.isArray(payload.termine) ? payload.termine : [];
+  const steuerSatz = payload.mwst === false ? 0 : DEFAULT_VAT_RATE;
 
   return {
     seminarId: payload.id,
     seminarTitle: payload.name,
     preisBrutto,
+    steuerSatz,
     termine: termine.map((entry) => ({
       id: entry.id,
       label: formatTerminLabel(entry) ?? `Termin #${entry.id}`,
@@ -163,6 +169,9 @@ export type OrderParticipantInput = {
   nachname: string;
   email?: string;
   terminId: number;
+  wsetCandidateNumber?: string;
+  besondereBeduerfnisse?: string;
+  anmerkungen?: string;
 };
 
 export type OrderPayload = {
@@ -175,8 +184,20 @@ export type OrderPayload = {
   newsletterOptIn?: boolean;
   positionen: OrderPositionInput[];
   buchungen: OrderParticipantInput[];
-  zahlungsmethode?: "rechnung" | "paypal";
+  zahlungsmethode?: "rechnung" | "paypal" | "karte" | "ueberweisung" | "sonstiges";
   notizen?: string;
+  firmenname?: string;
+  ustId?: string;
+  rechnungsEmail?: string;
+  strasse: string;
+  plz: string;
+  stadt: string;
+  land: string;
+  telefon?: string;
+  gutscheinBetrag?: number;
+  gutscheinCode?: string;
+  paypalOrderId?: string;
+  paypalCaptureId?: string;
 };
 
 export type OrderResponse = {
@@ -196,6 +217,81 @@ export async function submitOrder(payload: OrderPayload): Promise<OrderResponse>
   return postJson<OrderResponse>("/public/bestellungen", payload, {
     cache: "no-store"
   });
+}
+
+export type OrderStatusResponse = {
+  id: number;
+  bestellnummer?: string | null;
+  status?: string;
+  zahlungsmethode?: string;
+  totals?: {
+    brutto?: number;
+    netto?: number;
+    steuer?: number;
+    gutschein?: number;
+  };
+  gutscheine?: { code: string; betrag: number }[];
+};
+
+export async function fetchOrderById(id: number): Promise<OrderStatusResponse> {
+  return fetchJson<OrderStatusResponse>(`/public/bestellungen/${id}`, {
+    cache: "no-store"
+  });
+}
+
+type VoucherApiEntry = {
+  id: number;
+  attributes?: {
+    code?: string | null;
+    betrag?: string | number | null;
+    aktiv?: boolean | null;
+    eingeloest?: boolean | null;
+    beschreibung?: string | null;
+  };
+};
+
+type VoucherApiResponse = {
+  data?: VoucherApiEntry[];
+};
+
+export type VoucherCodeLookup = {
+  code: string;
+  amount: number;
+  description?: string | null;
+  active: boolean;
+  redeemed: boolean;
+};
+
+export async function fetchVoucherByCode(code: string): Promise<VoucherCodeLookup | null> {
+  const trimmed = code.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  try {
+    const query = `/gutscheine?filters[code][$eq]=${encodeURIComponent(
+      trimmed
+    )}&filters[istTemplate][$eq]=false&pagination[limit]=1`;
+    const response = await fetchJson<VoucherApiResponse>(query, {
+      cache: "no-store"
+    });
+    const entry = response?.data && response.data.length > 0 ? response.data[0] : null;
+    if (!entry || !entry.attributes) {
+      return null;
+    }
+    const attributes = entry.attributes;
+    const amount = parsePrice(attributes.betrag ?? null) ?? 0;
+    return {
+      code: attributes.code?.trim() || trimmed,
+      amount,
+      description: attributes.beschreibung ?? null,
+      active: attributes.aktiv !== false,
+      redeemed: attributes.eingeloest === true
+    };
+  } catch (error) {
+    console.warn("[checkout] Gutschein konnte nicht geladen werden:", error);
+    return null;
+  }
 }
 
 export function formatCurrency(value: number | null | undefined): string {
