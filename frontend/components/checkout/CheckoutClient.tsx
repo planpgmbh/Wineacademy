@@ -81,6 +81,8 @@ type BillingFormValue = {
   phone: string;
 };
 
+type BillingFieldName = keyof BillingFormValue;
+
 type ParticipantErrorState = {
   firstName: boolean;
   lastName: boolean;
@@ -1472,17 +1474,28 @@ export function CheckoutClient() {
                         </label>
                       </div>
                       <div className="mt-4">
-                        <label className="form-control">
-                          <span className="label-text text-sm font-medium">Besondere Bedürfnisse</span>
-                          <textarea
-                            className="textarea textarea-bordered min-h-[96px]"
-                            value={participant.specialNeeds}
-                            onChange={(event) =>
-                              handleParticipantChange(group.selectionId, index, "specialNeeds", event.target.value)
-                            }
-                            placeholder="Allergien, Barrierefreiheit oder andere Hinweise für unser Team"
-                          />
-                        </label>
+                        {(() => {
+                          const specialNeedsInputId = `${group.selectionId}-participant-${index}-special-needs`;
+                          return (
+                            <>
+                              <label
+                                htmlFor={specialNeedsInputId}
+                                className="block text-sm font-medium text-base-content"
+                              >
+                                Besondere Bedürfnisse
+                              </label>
+                              <textarea
+                                id={specialNeedsInputId}
+                                className="textarea textarea-bordered mt-2 w-full min-h-[120px]"
+                                value={participant.specialNeeds}
+                                onChange={(event) =>
+                                  handleParticipantChange(group.selectionId, index, "specialNeeds", event.target.value)
+                                }
+                                placeholder="Allergien, Barrierefreiheit oder andere Hinweise für unser Team"
+                              />
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
                   );
@@ -1495,243 +1508,173 @@ export function CheckoutClient() {
     </section>
   );
 
-  const renderBillingStep = () => (
-    <section className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-base-content">Rechnungsadresse</h2>
-        <p className="mt-2 text-sm text-base-content/70">
-          Wähle, ob die Rechnung auf eine Privatperson oder ein Unternehmen ausgestellt werden soll.
-        </p>
-      </div>
-      <div className="join">
-        <button
-          type="button"
-          className={`btn join-item ${billing.type === "privat" ? "btn-primary" : "btn-ghost"}`}
-          onClick={() => handleBillingTypeChange("privat")}
-        >
-          Privat
-        </button>
-        <button
-          type="button"
-          className={`btn join-item ${billing.type === "firma" ? "btn-primary" : "btn-ghost"}`}
-          onClick={() => handleBillingTypeChange("firma")}
-        >
-          Firma
-        </button>
-      </div>
+  const renderBillingStep = () => {
+    const isCompany = billing.type === "firma";
 
-      {billing.type === "firma" ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="form-control md:col-span-2">
-            <span
-              className={`label-text text-sm font-medium ${
-                billingErrors.companyName ? "text-error" : ""
-              }`}
-            >
-              Firmenname *
-            </span>
-            <input
-              type="text"
-              className={`input input-bordered ${
-                billingErrors.companyName ? "input-error" : ""
-              }`}
-              value={billing.companyName}
-              onChange={(event) => handleBillingChange("companyName", event.target.value)}
-              required
-            />
-            {billingErrors.companyName ? (
-              <span className="mt-1 text-xs text-error">{billingErrors.companyName}</span>
-            ) : null}
+    const renderTextField = (
+      name: Exclude<BillingFieldName, "type">,
+      {
+        label,
+        type = "text",
+        required = false,
+        placeholder,
+        span = 1,
+        error,
+        autoComplete
+      }: {
+        label: string;
+        type?: string;
+        required?: boolean;
+        placeholder?: string;
+        span?: 1 | 2;
+        error?: string | null;
+        autoComplete?: string;
+      }
+    ) => {
+      const inputId = `billing-${name}`;
+      const labelClass = `block text-sm font-medium ${error ? "text-error" : "text-base-content"}`;
+      const inputClass = `input input-bordered mt-2 w-full ${error ? "input-error" : ""}`;
+
+      return (
+        <div className={span === 2 ? "md:col-span-2" : ""}>
+          <label htmlFor={inputId} className={labelClass}>
+            {label}
+            {required ? " *" : ""}
           </label>
-          <label className="form-control">
-            <span className="label-text text-sm font-medium">Umsatzsteuer-ID</span>
-            <input
-              type="text"
-              className="input input-bordered"
-              value={billing.vatId}
-              onChange={(event) => handleBillingChange("vatId", event.target.value)}
-              placeholder="Optional"
-            />
-          </label>
-          <label className="form-control">
-            <span
-              className={`label-text text-sm font-medium ${
-                billingErrors.invoiceEmail ? "text-error" : ""
-              }`}
-            >
-              Rechnungs-E-Mail *
-            </span>
-            <input
-              type="email"
-              className={`input input-bordered ${
-                billingErrors.invoiceEmail ? "input-error" : ""
-              }`}
-              value={billing.invoiceEmail}
-              onChange={(event) => handleBillingChange("invoiceEmail", event.target.value)}
-              required
-            />
-            {billingErrors.invoiceEmail ? (
-              <span className="mt-1 text-xs text-error">{billingErrors.invoiceEmail}</span>
-            ) : null}
-          </label>
+          <input
+            id={inputId}
+            type={type}
+            className={inputClass}
+            value={billing[name] as string}
+            onChange={(event) => handleBillingChange(name, event.target.value)}
+            required={required}
+            placeholder={placeholder}
+            autoComplete={autoComplete}
+          />
+          {error ? <p className="mt-1 text-xs text-error">{error}</p> : null}
         </div>
-      ) : null}
+      );
+    };
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <label className="form-control md:col-span-2">
-          <span
-            className={`label-text text-sm font-medium ${
-              billingErrors.street ? "text-error" : ""
-            }`}
-          >
-            Straße und Hausnummer *
-          </span>
-          <input
-            type="text"
-            className={`input input-bordered ${billingErrors.street ? "input-error" : ""}`}
-            value={billing.street}
-            onChange={(event) => handleBillingChange("street", event.target.value)}
-            required
-          />
-          {billingErrors.street ? (
-            <span className="mt-1 text-xs text-error">{billingErrors.street}</span>
-          ) : null}
-        </label>
-        <label className="form-control">
-          <span
-            className={`label-text text-sm font-medium ${billingErrors.zip ? "text-error" : ""}`}
-          >
-            Postleitzahl *
-          </span>
-          <input
-            type="text"
-            className={`input input-bordered ${billingErrors.zip ? "input-error" : ""}`}
-            value={billing.zip}
-            onChange={(event) => handleBillingChange("zip", event.target.value)}
-            required
-          />
-          {billingErrors.zip ? (
-            <span className="mt-1 text-xs text-error">{billingErrors.zip}</span>
-          ) : null}
-        </label>
-        <label className="form-control">
-          <span
-            className={`label-text text-sm font-medium ${billingErrors.city ? "text-error" : ""}`}
-          >
-            Stadt *
-          </span>
-          <input
-            type="text"
-            className={`input input-bordered ${billingErrors.city ? "input-error" : ""}`}
-            value={billing.city}
-            onChange={(event) => handleBillingChange("city", event.target.value)}
-            required
-          />
-          {billingErrors.city ? (
-            <span className="mt-1 text-xs text-error">{billingErrors.city}</span>
-          ) : null}
-        </label>
-        <label className="form-control md:col-span-2">
-          <span
-            className={`label-text text-sm font-medium ${
-              billingErrors.country ? "text-error" : ""
-            }`}
-          >
-            Land *
-          </span>
-          <input
-            type="text"
-            className={`input input-bordered ${billingErrors.country ? "input-error" : ""}`}
-            value={billing.country}
-            onChange={(event) => handleBillingChange("country", event.target.value)}
-            required
-          />
-          {billingErrors.country ? (
-            <span className="mt-1 text-xs text-error">{billingErrors.country}</span>
-          ) : null}
-        </label>
-      </div>
+    return (
+      <section className="space-y-6">
+        <div>
+          <h2 className="text-xl font-semibold text-base-content">Rechnungsadresse</h2>
+          <p className="mt-2 text-sm text-base-content/70">
+            Wähle, ob die Rechnung auf eine Privatperson oder ein Unternehmen ausgestellt werden soll.
+          </p>
+        </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <label className="form-control">
-          <span
-            className={`label-text text-sm font-medium ${
-              billingErrors.contactFirstName ? "text-error" : ""
-            }`}
+        <div role="tablist" aria-label="Rechnungstyp" className="tabs tabs-boxed w-fit">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={!isCompany}
+            className={`tab ${!isCompany ? "tab-active" : ""}`}
+            onClick={() => handleBillingTypeChange("privat")}
           >
-            {billing.type === "firma" ? "Ansprechpartner Vorname *" : "Vorname *"}
-          </span>
-          <input
-            type="text"
-            className={`input input-bordered ${billingErrors.contactFirstName ? "input-error" : ""}`}
-            value={billing.contactFirstName}
-            onChange={(event) => handleBillingChange("contactFirstName", event.target.value)}
-            required
-          />
-          {billingErrors.contactFirstName ? (
-            <span className="mt-1 text-xs text-error">{billingErrors.contactFirstName}</span>
-          ) : null}
-        </label>
-        <label className="form-control">
-          <span
-            className={`label-text text-sm font-medium ${
-              billingErrors.contactLastName ? "text-error" : ""
-            }`}
+            Privat
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={isCompany}
+            className={`tab ${isCompany ? "tab-active" : ""}`}
+            onClick={() => handleBillingTypeChange("firma")}
           >
-            {billing.type === "firma" ? "Ansprechpartner Nachname *" : "Nachname *"}
-          </span>
-          <input
-            type="text"
-            className={`input input-bordered ${billingErrors.contactLastName ? "input-error" : ""}`}
-            value={billing.contactLastName}
-            onChange={(event) => handleBillingChange("contactLastName", event.target.value)}
-            required
-          />
-          {billingErrors.contactLastName ? (
-            <span className="mt-1 text-xs text-error">{billingErrors.contactLastName}</span>
-          ) : null}
-        </label>
-        <label className="form-control">
-          <span
-            className={`label-text text-sm font-medium ${
-              billingErrors.contactEmail ? "text-error" : ""
-            }`}
-          >
-            E-Mail *
-          </span>
-          <input
-            type="email"
-            className={`input input-bordered ${billingErrors.contactEmail ? "input-error" : ""}`}
-            value={billing.contactEmail}
-            onChange={(event) => handleBillingChange("contactEmail", event.target.value)}
-            required
-          />
-          {billingErrors.contactEmail ? (
-            <span className="mt-1 text-xs text-error">{billingErrors.contactEmail}</span>
-          ) : null}
-        </label>
-        <label className="form-control">
-          <span
-            className={`label-text text-sm font-medium ${billingErrors.phone ? "text-error" : ""}`}
-          >
-            Telefon *
-          </span>
-          <input
-            type="tel"
-            className={`input input-bordered ${billingErrors.phone ? "input-error" : ""}`}
-            value={billing.phone}
-            onChange={(event) => handleBillingChange("phone", event.target.value)}
-            required
-          />
-          {billingErrors.phone ? (
-            <span className="mt-1 text-xs text-error">{billingErrors.phone}</span>
-          ) : null}
-        </label>
-      </div>
-    </section>
-  );
+            Firma
+          </button>
+        </div>
 
-  const renderOverviewStep = () => (
+        <div className="grid gap-4 md:grid-cols-2">
+          {renderTextField("contactFirstName", {
+            label: isCompany ? "Ansprechpartner Vorname" : "Vorname",
+            required: true,
+            error: billingErrors.contactFirstName
+          })}
+          {renderTextField("contactLastName", {
+            label: isCompany ? "Ansprechpartner Nachname" : "Nachname",
+            required: true,
+            error: billingErrors.contactLastName
+          })}
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          {renderTextField("contactEmail", {
+            label: "E-Mail",
+            type: "email",
+            required: true,
+            error: billingErrors.contactEmail,
+            autoComplete: "email"
+          })}
+          {renderTextField("phone", {
+            label: "Telefon",
+            type: "tel",
+            required: true,
+            error: billingErrors.phone,
+            autoComplete: "tel"
+          })}
+        </div>
+
+        {isCompany ? (
+          <div className="grid gap-4 md:grid-cols-2">
+            {renderTextField("companyName", {
+              label: "Firmenname",
+              required: true,
+              error: billingErrors.companyName,
+              span: 2
+            })}
+            {renderTextField("invoiceEmail", {
+              label: "Rechnungs-E-Mail",
+              type: "email",
+              required: true,
+              error: billingErrors.invoiceEmail,
+              autoComplete: "email"
+            })}
+            {renderTextField("vatId", {
+              label: "Umsatzsteuer-ID",
+              placeholder: "Optional"
+            })}
+          </div>
+        ) : null}
+
+        <div className="grid gap-4 md:grid-cols-2">
+          {renderTextField("street", {
+            label: "Straße und Hausnummer",
+            required: true,
+            error: billingErrors.street,
+            span: 2,
+            autoComplete: "street-address"
+          })}
+          {renderTextField("zip", {
+            label: "Postleitzahl",
+            required: true,
+            error: billingErrors.zip,
+            autoComplete: "postal-code"
+          })}
+          {renderTextField("city", {
+            label: "Stadt",
+            required: true,
+            error: billingErrors.city,
+            autoComplete: "address-level2"
+          })}
+          {renderTextField("country", {
+            label: "Land",
+            required: true,
+            error: billingErrors.country,
+            span: 2,
+            autoComplete: "country-name"
+          })}
+        </div>
+      </section>
+    );
+  };
+
+  
+const renderOverviewStep = () => {
+  const agreementsBoxHasError = agbError || privacyError;
+
+  return (
     <section className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold text-base-content">Bestellübersicht</h2>
@@ -1740,34 +1683,7 @@ export function CheckoutClient() {
         </p>
       </div>
 
-      <div className="space-y-4">
-        <div className="rounded-2xl border border-base-200 bg-base-100 p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-4">
-            <h3 className="text-lg font-semibold text-base-content">Warenkorb / Artikel</h3>
-            <span className="text-sm font-medium text-base-content/70">
-              Gesamtsumme: {formatCurrency(totals.total)}
-            </span>
-          </div>
-          <div className="mt-4 space-y-4">
-            {summaryItems.map((item) => (
-              <div key={item.id} className="rounded-xl border border-base-200 p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-base font-semibold text-base-content">{item.title}</p>
-                    <p className="mt-1 text-sm text-base-content/70">Menge: {item.quantity}</p>
-                    {item.description ? (
-                      <p className="mt-2 text-sm text-base-content/60">{item.description}</p>
-                    ) : null}
-                  </div>
-                  <p className="text-base font-semibold text-base-content">
-                    {formatCurrency(item.subtotal ?? null)}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
+        <div className="space-y-4">
         {hasSeminarSelection ? (
           <div className="rounded-2xl border border-base-200 bg-base-100 p-5 shadow-sm">
             <div className="flex items-center justify-between gap-4">
@@ -1776,32 +1692,41 @@ export function CheckoutClient() {
                 Bearbeiten
               </button>
             </div>
-            <div className="mt-4 space-y-4 text-sm text-base-content/80">
-              {participantGroupsWithMeta.map(({ seminar, group }) => (
-                <div key={group.selectionId} className="rounded-xl border border-base-200 p-4">
-                  <p className="text-sm font-semibold text-base-content">
-                    {seminar.seminarTitle} · {seminar.terminLabel}
-                  </p>
-                  <div className="mt-3 space-y-3">
-                    {group.participants.map((participant, index) => (
-                      <div key={`${group.selectionId}-${index}`} className="rounded-lg border border-base-200/80 p-3">
-                        <p className="font-semibold">
-                          Teilnehmer {index + 1}: {participant.firstName || "—"} {participant.lastName || "—"}
-                        </p>
-                        {participant.email ? <p className="mt-1 text-base-content/70">{participant.email}</p> : null}
-                        {participant.wsetNumber ? (
-                          <p className="mt-1 text-base-content/70">WSET Candidate Number: {participant.wsetNumber}</p>
-                        ) : null}
-                        {participant.specialNeeds ? (
-                          <p className="mt-1 text-base-content/70">
-                            Besondere Bedürfnisse: {participant.specialNeeds}
+            <div className="mt-4 text-sm text-base-content/80">
+              <div className="divide-y divide-base-200">
+                {participantGroupsWithMeta.map(({ seminar, group }, seminarIndex) => (
+                  <div key={group.selectionId} className={`py-4 ${seminarIndex === 0 ? "pt-0" : ""}`}>
+                    <p className="font-semibold text-base-content">
+                      {seminar.seminarTitle} · {seminar.terminLabel}
+                    </p>
+                    <div className="mt-3 divide-y divide-base-200/80">
+                      {group.participants.map((participant, index) => (
+                        <div
+                          key={`${group.selectionId}-${index}`}
+                          className={`py-3 ${index === 0 ? "pt-0" : ""}`}
+                        >
+                          <p className="font-semibold">
+                            Teilnehmer {index + 1}: {participant.firstName || "—"} {participant.lastName || "—"}
                           </p>
-                        ) : null}
-                      </div>
-                    ))}
+                          {participant.email ? (
+                            <p className="mt-1 text-base-content/70">{participant.email}</p>
+                          ) : null}
+                          {participant.wsetNumber ? (
+                            <p className="mt-1 text-base-content/70">
+                              WSET Candidate Number: {participant.wsetNumber}
+                            </p>
+                          ) : null}
+                          {participant.specialNeeds ? (
+                            <p className="mt-1 text-base-content/70">
+                              Besondere Bedürfnisse: {participant.specialNeeds}
+                            </p>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         ) : null}
@@ -1900,68 +1825,88 @@ export function CheckoutClient() {
           ) : null}
         </div>
 
-        <div className="space-y-3">
-          <label className="label cursor-pointer gap-3">
-            <input
-              type="checkbox"
-              className={`checkbox ${agbError ? "border-error outline outline-1 outline-error" : ""}`}
-              checked={agbAccepted}
-              onChange={(event) => {
-                const checked = event.target.checked;
-                setAgbAccepted(checked);
-                if (checked) {
-                  setAgbError(false);
-                  if (privacyAccepted) {
-                    setStepError(null);
-                  }
-                }
-              }}
-            />
-            <span className={`label-text text-sm ${agbError ? "text-error" : ""}`}>
-              Ich akzeptiere die Allgemeinen Geschäftsbedingungen der Wine Academy Hamburg. *
-            </span>
-          </label>
-          {agbError ? (
-            <p className="pl-7 text-xs text-error">Bitte bestätige die Allgemeinen Geschäftsbedingungen.</p>
-          ) : null}
-          <label className="label cursor-pointer gap-3">
-            <input
-              type="checkbox"
-              className={`checkbox ${privacyError ? "border-error outline outline-1 outline-error" : ""}`}
-              checked={privacyAccepted}
-              onChange={(event) => {
-                const checked = event.target.checked;
-                setPrivacyAccepted(checked);
-                if (checked) {
-                  setPrivacyError(false);
-                  if (agbAccepted) {
-                    setStepError(null);
-                  }
-                }
-              }}
-            />
-            <span className={`label-text text-sm ${privacyError ? "text-error" : ""}`}>
-              Ich bestätige, die Datenschutzhinweise gelesen zu haben und stimme der Verarbeitung meiner Daten zu. *
-            </span>
-          </label>
-          {privacyError ? (
-            <p className="pl-7 text-xs text-error">Bitte bestätige den Datenschutzhinweis.</p>
-          ) : null}
-          <label className="label cursor-pointer gap-3">
-            <input
-              type="checkbox"
-              className="checkbox"
-              checked={newsletter}
-              onChange={(event) => setNewsletter(event.target.checked)}
-            />
-            <span className="label-text text-sm">
-              Ich möchte Neuigkeiten der Wine Academy per E-Mail erhalten (optional, jederzeit abbestellbar).
-            </span>
-          </label>
+        <div
+          className={`rounded-2xl border ${agreementsBoxHasError ? "border-error" : "border-base-200"} bg-base-100 p-5 shadow-sm`}
+        >
+          <h3 className="text-lg font-semibold text-base-content">Rechtliche Hinweise</h3>
+          <div className="mt-3 space-y-4">
+              <div>
+                <label className="label cursor-pointer items-start gap-3">
+                  <input
+                    type="checkbox"
+                    className={`checkbox ${agbError ? "border-error outline outline-1 outline-error" : ""}`}
+                    checked={agbAccepted}
+                    onChange={(event) => {
+                    const checked = event.target.checked;
+                    setAgbAccepted(checked);
+                    if (checked) {
+                      setAgbError(false);
+                      if (privacyAccepted) {
+                        setStepError(null);
+                      }
+                      }
+                    }}
+                  />
+                  <span
+                    className={`label-text flex-1 text-sm leading-relaxed break-words ${
+                      agbError ? "text-error" : "text-base-content"
+                    }`}
+                  >
+                    Ich akzeptiere die Allgemeinen Geschäftsbedingungen der Wine Academy Hamburg. *
+                  </span>
+                </label>
+                {agbError ? (
+                  <p className="pl-9 text-xs text-error">Bitte bestätige die Allgemeinen Geschäftsbedingungen.</p>
+                ) : null}
+              </div>
+              <div>
+                <label className="label cursor-pointer items-start gap-3">
+                  <input
+                    type="checkbox"
+                    className={`checkbox ${privacyError ? "border-error outline outline-1 outline-error" : ""}`}
+                    checked={privacyAccepted}
+                    onChange={(event) => {
+                    const checked = event.target.checked;
+                    setPrivacyAccepted(checked);
+                    if (checked) {
+                      setPrivacyError(false);
+                      if (agbAccepted) {
+                        setStepError(null);
+                      }
+                      }
+                    }}
+                  />
+                  <span
+                    className={`label-text flex-1 text-sm leading-relaxed break-words ${
+                      privacyError ? "text-error" : "text-base-content"
+                    }`}
+                  >
+                    Ich bestätige, die Datenschutzhinweise gelesen zu haben und stimme der Verarbeitung meiner Daten zu. *
+                  </span>
+                </label>
+                {privacyError ? (
+                  <p className="pl-9 text-xs text-error">Bitte bestätige den Datenschutzhinweis.</p>
+                ) : null}
+              </div>
+              <div>
+                <label className="label cursor-pointer items-start gap-3">
+                  <input
+                    type="checkbox"
+                    className="checkbox"
+                    checked={newsletter}
+                    onChange={(event) => setNewsletter(event.target.checked)}
+                  />
+                  <span className="label-text flex-1 text-sm leading-relaxed break-words text-base-content">
+                    Ich möchte Neuigkeiten der Wine Academy per E-Mail erhalten (optional, jederzeit abbestellbar).
+                  </span>
+                </label>
+              </div>
+          </div>
         </div>
       </div>
     </section>
   );
+};
 
   const renderPaymentStep = () => {
     const currentPayPalOption =
@@ -2080,84 +2025,73 @@ export function CheckoutClient() {
       : null;
 
     return (
-      <div className="mx-auto max-w-3xl rounded-2xl border border-success/30 bg-success/10 p-10 text-center shadow-sm">
-        <h2 className="text-3xl font-semibold text-success">Vielen Dank für deine Bestellung!</h2>
-        <p className="mt-4 text-base text-base-content/80">
-          {orderInformation?.bestellnummer
-            ? `Deine Bestellnummer lautet ${orderInformation.bestellnummer}.`
-            : "Du erhältst in Kürze eine Bestätigung per E-Mail."}
-        </p>
-        {confirmationMessage ? (
-          <p className="mt-2 text-sm text-base-content/70">{confirmationMessage}</p>
-        ) : null}
-        <p className="mt-2 text-sm text-base-content/60">
-          Die Bestätigung bleibt auch bei einem erneuten Aufruf dieser Seite verfügbar.
-        </p>
-        {invoiceLink ? (
-          <div className="mt-6 flex justify-center">
-            <a
-              href={invoiceLink}
-              className="btn btn-outline btn-success"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Rechnung herunterladen
-            </a>
-          </div>
-        ) : (
-          <div className="mt-6 flex flex-col items-center gap-3">
-            <button
-              type="button"
-              className="btn btn-outline btn-disabled flex items-center gap-2"
-              disabled
-            >
-              {invoicePolling ? (
-                <>
-                  <span className="loading loading-spinner loading-sm" aria-hidden="true" />
-                  Rechnung wird vorbereitet …
-                </>
-              ) : (
-                "Rechnung wird vorbereitet …"
-              )}
-            </button>
-            <p className="text-xs text-base-content/60 text-center">{invoiceStatusMessage}</p>
-          </div>
-        )}
-        {confirmationTotals ? (
-          <dl className="mt-8 space-y-2 text-sm text-base-content/80">
-            {confirmationSubtotal != null && confirmationSubtotal > 0 ? (
+      <div className="flex min-h-[calc(100vh-6rem)] items-center justify-center px-6 py-12 md:px-8">
+        <div className="max-w-3xl rounded-2xl border border-base-200 bg-base-100 p-10 text-center shadow-sm">
+          <h2 className="text-3xl font-semibold text-base-content">Vielen Dank für deine Bestellung!</h2>
+          <p className="mt-4 text-base text-base-content/80">
+            {orderInformation?.bestellnummer
+              ? `Deine Bestellnummer lautet ${orderInformation.bestellnummer}.`
+              : "Du erhältst in Kürze eine Bestätigung per E-Mail."}
+          </p>
+          {confirmationMessage ? (
+            <p className="mt-2 text-sm text-base-content/70">{confirmationMessage}</p>
+          ) : null}
+          <p className="mt-2 text-sm text-base-content/60">
+            Die Bestätigung bleibt auch bei einem erneuten Aufruf dieser Seite verfügbar.
+          </p>
+          {invoiceLink ? (
+            <div className="mt-6 flex justify-center">
+              <a href={invoiceLink} className="btn btn-primary" target="_blank" rel="noreferrer">
+                Rechnung herunterladen
+              </a>
+            </div>
+          ) : (
+            <div className="mt-6 flex flex-col items-center gap-3">
+              <button type="button" className="btn btn-outline btn-disabled flex items-center gap-2" disabled>
+                {invoicePolling ? (
+                  <>
+                    <span className="loading loading-spinner loading-sm" aria-hidden="true" />
+                    Rechnung wird vorbereitet …
+                  </>
+                ) : (
+                  "Rechnung wird vorbereitet …"
+                )}
+              </button>
+              <p className="text-xs text-base-content/60 text-center">{invoiceStatusMessage}</p>
+            </div>
+          )}
+          {confirmationTotals ? (
+            <dl className="mt-8 space-y-2 text-sm text-base-content/80">
+              {confirmationSubtotal != null && confirmationSubtotal > 0 ? (
+                <div className="flex items-center justify-center gap-3">
+                  <dt className="font-medium">Zwischensumme</dt>
+                  <dd>{formatCurrency(confirmationSubtotal)}</dd>
+                </div>
+              ) : null}
+              {confirmationTotals.gutschein ? (
+                <div className="flex items-center justify-center gap-3 text-error">
+                  <dt className="font-medium">Gutschein</dt>
+                  <dd>-{formatCurrency(confirmationTotals.gutschein)}</dd>
+                </div>
+              ) : null}
               <div className="flex items-center justify-center gap-3">
-                <dt className="font-medium">Zwischensumme</dt>
-                <dd>{formatCurrency(confirmationSubtotal)}</dd>
+                <dt className="font-medium">Steuern</dt>
+                <dd>{formatCurrency(confirmationTotals.steuer ?? 0)}</dd>
               </div>
-            ) : null}
-            {confirmationTotals.gutschein ? (
-              <div className="flex items-center justify-center gap-3 text-error">
-                <dt className="font-medium">Gutschein</dt>
-                <dd>-{formatCurrency(confirmationTotals.gutschein)}</dd>
+              <div className="flex items-center justify-center gap-3 text-base font-semibold">
+                <dt>Gesamtsumme</dt>
+                <dd>{formatCurrency(confirmationTotals.brutto ?? 0)}</dd>
               </div>
-            ) : null}
-            <div className="flex items-center justify-center gap-3">
-              <dt className="font-medium">Steuern</dt>
-              <dd>{formatCurrency(confirmationTotals.steuer ?? 0)}</dd>
-            </div>
-            <div className="flex items-center justify-center gap-3 text-base font-semibold">
-              <dt>Gesamtsumme</dt>
-              <dd>{formatCurrency(confirmationTotals.brutto ?? 0)}</dd>
-            </div>
-          </dl>
-        ) : null}
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <button type="button" className="btn btn-primary" onClick={() => router.push("/")}>
-            Zurück zur Startseite
-          </button>
-          <button
-            type="button"
-            className="btn btn-outline"
-            onClick={() => router.push("/konto/bestellungen")}
-          >
-            Meine Bestellungen ansehen
-          </button>
+            </dl>
+          ) : null}
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <button type="button" className="btn btn-primary" onClick={() => router.push("/")}>
+              Zurück zur Startseite
+            </button>
+            <button type="button" className="btn btn-outline" onClick={() => router.push("/konto/bestellungen")}>
+              Meine Bestellungen ansehen
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -2180,25 +2114,33 @@ export function CheckoutClient() {
     <aside className="space-y-6 rounded-2xl border border-base-200 bg-base-100 p-6 shadow-sm">
       <div>
         <h2 className="text-lg font-semibold text-base-content">Deine Bestellung</h2>
-        <div className="mt-4 space-y-4">
-          {summaryItems.map((item) => (
-            <div key={item.id} className="rounded-xl border border-base-200 p-4">
-              <p className="text-base font-semibold text-base-content">{item.title}</p>
-              <p className="mt-1 text-sm text-base-content/70">Menge: {item.quantity}</p>
-              {item.description ? (
-                <p className="mt-1 text-sm text-base-content/60">{item.description}</p>
-              ) : null}
-              <p className="mt-2 text-base font-semibold text-base-content">
-                {formatCurrency(item.subtotal ?? null)}
-              </p>
-            </div>
-          ))}
-          {summaryItems.length === 0 ? (
-            <p className="text-sm text-base-content/60">
-              Keine Artikel ausgewählt. Bitte füge ein Seminar, Produkt oder einen Gutschein hinzu.
-            </p>
-          ) : null}
-        </div>
+        {summaryItems.length > 0 ? (
+          <div className="mt-4 divide-y divide-base-200">
+            {summaryItems.map((item, index) => (
+              <div
+                key={item.id}
+                className={`flex flex-col gap-3 py-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4 ${
+                  index === 0 ? "pt-0" : ""
+                }`}
+              >
+                <div>
+                  <p className="text-base font-semibold text-base-content">{item.title}</p>
+                  <p className="mt-1 text-sm text-base-content/70">Menge: {item.quantity}</p>
+                  {item.description ? (
+                    <p className="mt-2 text-sm text-base-content/60">{item.description}</p>
+                  ) : null}
+                </div>
+                <p className="text-base font-semibold text-base-content sm:text-right">
+                  {formatCurrency(item.subtotal ?? null)}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-base-content/60">
+            Keine Artikel ausgewählt. Bitte füge ein Seminar, Produkt oder einen Gutschein hinzu.
+          </p>
+        )}
       </div>
       <dl className="space-y-2 text-sm text-base-content">
         <div className="flex items-center justify-between">
@@ -2294,7 +2236,11 @@ export function CheckoutClient() {
 
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             {activeStepIndex > 0 ? (
-              <button type="button" className="btn btn-ghost md:w-auto" onClick={handleBack}>
+              <button
+                type="button"
+                className="btn md:w-auto border-base-300 bg-base-200 text-base-content hover:bg-base-300"
+                onClick={handleBack}
+              >
                 Zurück
               </button>
             ) : (

@@ -6,6 +6,18 @@ Diese Regeln gelten sowohl auf dem Server (Staging/Live) als auch lokal. Zu Begi
 - **Bereichsspezifische Readmes:** Bei Backend-Arbeiten vor dem Plan `backend/README.md`, bei Frontend-Arbeiten `frontend/README.md` querlesen und relevante Hinweise einplanen.
 - **Sprache:** Antworte immer auf Deutsch.
 - **Planung vor Umsetzung:** Vor jeder größeren Änderung einen kurzen Plan (2–5 Schritte) formulieren und Freigabe abwarten.
+- **Telegram-Benachrichtigungen:** Immer wenn du einen Arbeitsschritt abgeschlossen hast oder meine Rückmeldung benötigst, schicke mir sofort eine kurze Telegram-Nachricht:
+source /opt/docker/projects/telegrambot/.env  # lädt CHATBOT_API_TOKEN
+
+curl -X POST https://chatbot.plan-p.de/notify \
+  -H "Content-Type: application/json" \
+  -H "X-Notify-Token: ${CHATBOT_API_TOKEN}" \
+  -d '{
+        "message": "Hier steht die Nachricht."
+      }'
+
+  Den Nachrichtentext jeweils passend zum erledigten Schritt anpassen.
+
 - **Teste:** Nach Implementierungen die relevanten Tests/Linting ausführen und Ergebnisse nennen.
 - **Arbeitsprotokolle:** Fortschritt, geplante Arbeiten und Commit-IDs im passenden Bereichslog (`docs/backend-arbeitsprotokoll.md` bzw. `docs/frontend-arbeitsprotokoll.md`) dokumentieren und den Entwicklungsplan aktuell halten.
 - **Commits:** Nur auf ausdrückliche Anweisung committen/pushen (z. B. Befehl „commit“). Danach `git push origin staging` und Commit-ID im jeweiligen Arbeitsprotokoll vermerken.
