@@ -31,6 +31,8 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
     productSlug: product.slug,
     productTitle: product.title,
     priceValue: product.priceValue,
+    priceNetto: product.priceNetto,
+    steuerSatz: product.steuerSatz,
     priceFormatted: product.price,
     isVoucher: product.isVoucher
   } as const;

@@ -1,5 +1,8 @@
 # Backend-Arbeitsprotokoll
 
+- 2025-10-18 – Public-Bestell-Endpoint liefert nun Bestellnummer sowie Download-Links (Rechnung/Storno) zurück; Checkout-Frontend nutzt die Felder und zeigt nach Reload wieder die Bestellnummer an. `npm run lint` (Frontend) erfolgreich. – Commit: n/a
+- 2025-10-18 – Staging-Datenbank zurückgesetzt (Schema neu erstellt) und Seeds via `SEED_ON_BOOT=true` neu eingespielt; anschließend Flag wieder deaktiviert und Backend neu gestartet. – Commit: n/a
+- 2025-10-18 – SevDesk-Client sendet den API-Token nun gemäß Doku im Authorization-Header (ohne Präfix) inkl. dediziertem User-Agent; Test-Call `curl -H "Authorization: $SEVDESK_API_TOKEN"` liefert 200 OK. Backend neu gebaut. – Commit: n/a
 - 2025-10-18 – Gutscheinlogik überarbeitet: Content-Type `gutschein` um Typ-/Wert-/Limit-Felder ergänzt, Seed-Kodes normalisiert, neuer Endpoint `POST /api/public/gutscheine/validate` und Bestell-Controller validieren & verbuchen Einlösungen (Restwert, Nutzungszähler). Tests: `npm run lint` (Frontend) grün; `npm run lint` (Backend) nicht verfügbar (kein Script).
 - 2025-10-18 – Public-Checkout akzeptiert Gutscheinpositionen ohne Produkt-ID; Summenberechnung & curl-Tests für Rechnung/PayPal erfolgreich, Strapi-Service neu gebaut. – Commit: n/a
 - 2025-10-17 – Gutschein-Content-Type um Hintergrundbild, Bookingbox-Felder und Gutschein-Tabs erweitert; Component `gutschein.tab` angelegt und Typdefinitionen angepasst. – Commit: n/a

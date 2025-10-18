@@ -23,13 +23,18 @@ import {
   OrderPositionInput,
   submitOrder
 } from "@/lib/checkout";
+import type { OrderResponse } from "@/lib/checkout";
 import { PayPalButtons } from "@/components/payments/PayPalButtons";
 
+const INVOICE_POLL_INTERVAL_MS = 5000;
+const MAX_INVOICE_POLL_ATTEMPTS = 12;
+
 type SeminarSelectionState = {
+  selectionId: string;
   selection: BookingSelection;
-  seminarId: number;
+  seminarId: number | null;
   seminarTitle: string;
-  terminId: number;
+  terminId: number | null;
   terminLabel: string;
   terminDescription: string | null;
   preisBrutto: number | null;
@@ -79,6 +84,12 @@ type BillingFormValue = {
 type ParticipantErrorState = {
   firstName: boolean;
   lastName: boolean;
+};
+
+type ParticipantGroupState = {
+  selectionId: string;
+  participants: ParticipantFormValue[];
+  errors: ParticipantErrorState[];
 };
 
 type BillingErrorState = {
@@ -233,8 +244,11 @@ function computeNetAmount(gross: number | null, taxRate: number | null): number 
   if (gross == null || !Number.isFinite(gross)) {
     return null;
   }
-  const rate = taxRate ?? DEFAULT_VAT_RATE;
-  if (!Number.isFinite(rate) || rate <= 0) {
+  if (taxRate == null || !Number.isFinite(taxRate)) {
+    return null;
+  }
+  const rate = taxRate;
+  if (rate <= 0) {
     return Math.round((gross + Number.EPSILON) * 100) / 100;
   }
   const net = gross / (1 + rate / 100);
@@ -242,13 +256,13 @@ function computeNetAmount(gross: number | null, taxRate: number | null): number 
 }
 
 function computeSummaryItems(
-  seminarState: SeminarSelectionState | null,
+  seminarStates: SeminarSelectionState[],
   productState: ProductSelectionState | null,
   voucherState: VoucherSelectionState | null
 ): SummaryItem[] {
   const items: SummaryItem[] = [];
 
-  if (seminarState) {
+  seminarStates.forEach((seminarState) => {
     const quantity = Math.max(1, seminarState.selection.quantity);
     const subtotal =
       seminarState.preisBrutto != null && Number.isFinite(seminarState.preisBrutto)
@@ -258,7 +272,7 @@ function computeSummaryItems(
     const netto = subtotal != null ? computeNetAmount(subtotal, steuerSatz) : null;
 
     items.push({
-      id: `seminar-${seminarState.terminId}`,
+      id: `seminar-${seminarState.selectionId}`,
       title: seminarState.seminarTitle,
       quantity,
       description: [seminarState.terminLabel, seminarState.terminDescription].filter(Boolean).join(" · "),
@@ -267,7 +281,7 @@ function computeSummaryItems(
       steuerSatz,
       type: "seminar"
     });
-  }
+  });
 
   if (productState) {
     const quantity = Math.max(1, productState.selection.quantity);
@@ -349,38 +363,47 @@ export function CheckoutClient() {
         : "Die ausgewählten Artikel konnten nicht geladen werden."
       : null;
 
-  const seminarState = useMemo<SeminarSelectionState | null>(() => {
-    if (!cartData.seminar || !cartData.seminarSelection) {
-      return null;
+  const seminarStates = useMemo<SeminarSelectionState[]>(() => {
+    if (!Array.isArray(cartData.seminars) || cartData.seminars.length === 0) {
+      return [];
     }
-    const selection = cartData.seminarSelection;
-    if (!selection.seminarSlug || !selection.dateId) {
-      return null;
-    }
-    const terminId = Number(selection.dateId);
-    if (!Number.isFinite(terminId)) {
-      return null;
-    }
-    const quantity = Math.max(1, Math.trunc(selection.quantity ?? 1));
-    const normalizedSelection: BookingSelection = {
-      quantity,
-      dateId: selection.dateId,
-      seminarSlug: selection.seminarSlug,
-      seminarTitle: selection.seminarTitle ?? cartData.seminar.title
-    };
-    const terminLabel = cartData.seminar.dates?.find((date) => date.id === selection.dateId)?.label;
+    return cartData.seminars
+      .map((entry) => {
+        const selection = entry.selection;
+        const seminar = entry.seminar;
+        const quantity = Math.max(1, Math.trunc(selection.quantity ?? 1));
+        const normalizedSelection: BookingSelection = {
+          ...selection,
+          quantity,
+          seminarTitle: selection.seminarTitle ?? seminar?.title ?? null
+        };
+        const terminIdValue = selection.dateId != null ? Number(selection.dateId) : NaN;
+        const terminId = Number.isFinite(terminIdValue) ? terminIdValue : null;
+        const terminLabel =
+          seminar?.dates?.find((date) => date.id === selection.dateId)?.label ??
+          (selection.dateId ? `Termin #${selection.dateId}` : "Termin wird abgestimmt");
+        const einzelpreisBrutto = seminar?.price?.value ?? null;
+        const steuerSatz =
+          seminar?.steuerSatz != null
+            ? seminar.steuerSatz
+            : einzelpreisBrutto != null
+              ? DEFAULT_VAT_RATE
+              : null;
 
-    return {
-      selection: normalizedSelection,
-      seminarId: cartData.seminar.id,
-      seminarTitle: cartData.seminar.title,
-      terminId,
-      terminLabel: terminLabel ?? `Termin #${selection.dateId}`,
-      terminDescription: cartData.seminar.description ?? null,
-      preisBrutto: cartData.seminar.price?.value ?? null,
-      steuerSatz: cartData.seminar.price?.value != null ? DEFAULT_VAT_RATE : null
-    };
-  }, [cartData.seminar, cartData.seminarSelection]);
+        return {
+          selectionId: selection.id,
+          selection: normalizedSelection,
+          seminarId: seminar?.id ?? null,
+          seminarTitle: seminar?.title ?? normalizedSelection.seminarTitle ?? "Seminar",
+          terminId,
+          terminLabel,
+          terminDescription: seminar?.description ?? null,
+          preisBrutto: einzelpreisBrutto,
+          steuerSatz
+        };
+      })
+      .filter((entry) => entry.selection.quantity > 0);
+  }, [cartData.seminars]);
 
   const productState = useMemo<ProductSelectionState | null>(() => {
     if (!cartData.product || !cartData.productSelection?.productSlug) {
@@ -388,24 +411,50 @@ export function CheckoutClient() {
     }
     const selection = cartData.productSelection;
     const quantity = Math.max(1, Math.trunc(selection.quantity ?? 1));
+    const fallbackGross = cartData.product.price.value ?? null;
+    const fallbackNetto = cartData.product.priceNetto ?? null;
+    const fallbackSteuer =
+      cartData.product.steuerSatz != null
+        ? cartData.product.steuerSatz
+        : cartData.product.isVoucher
+          ? 0
+          : fallbackGross != null && fallbackNetto != null && fallbackNetto > 0
+            ? Math.max(
+                0,
+                Math.round(((fallbackGross / fallbackNetto - 1) * 100 + Number.EPSILON) * 100) / 100
+              )
+            : null;
     const normalizedSelection: ProductSelection = {
       quantity,
       productSlug: selection.productSlug,
       productTitle: selection.productTitle ?? cartData.product.title,
       priceValue:
-        selection.priceValue ?? cartData.product.price.value ?? null,
+        selection.priceValue ?? fallbackGross,
+      priceNetto:
+        selection.priceNetto ?? fallbackNetto,
       priceFormatted:
         selection.priceFormatted ?? cartData.product.price.formatted ?? null,
-      isVoucher: selection.isVoucher ?? cartData.product.isVoucher
+      isVoucher: selection.isVoucher ?? cartData.product.isVoucher,
+      steuerSatz: selection.steuerSatz ?? fallbackSteuer
     };
+    const preisBrutto = normalizedSelection.priceValue ?? fallbackGross;
+    const preisNetto = normalizedSelection.priceNetto ?? fallbackNetto;
+    let steuerSatz = normalizedSelection.steuerSatz ?? fallbackSteuer;
+    if (steuerSatz == null && preisBrutto != null && preisNetto != null && preisNetto > 0) {
+      const ratio = preisBrutto / preisNetto;
+      steuerSatz = Math.max(0, Math.round(((ratio - 1) * 100 + Number.EPSILON) * 100) / 100);
+    }
+    if (steuerSatz == null && (normalizedSelection.isVoucher || cartData.product.isVoucher)) {
+      steuerSatz = 0;
+    }
 
     return {
       selection: normalizedSelection,
       productId: cartData.product.id,
       productTitle: cartData.product.title,
-      preisBrutto: normalizedSelection.priceValue ?? cartData.product.price.value ?? null,
-      preisNetto: null,
-      steuerSatz: null,
+      preisBrutto,
+      preisNetto,
+      steuerSatz,
       isVoucher: cartData.product.isVoucher
     };
   }, [cartData.product, cartData.productSelection]);
@@ -423,7 +472,7 @@ export function CheckoutClient() {
     };
   }, [cartData.voucherSelection]);
 
-  const [participants, setParticipants] = useState<ParticipantFormValue[]>([]);
+  const [participantGroups, setParticipantGroups] = useState<ParticipantGroupState[]>([]);
   const [billing, setBilling] = useState<BillingFormValue>({
     type: "privat",
     companyName: "",
@@ -438,7 +487,6 @@ export function CheckoutClient() {
     contactEmail: "",
     phone: ""
   });
-  const [participantErrors, setParticipantErrors] = useState<ParticipantErrorState[]>([]);
   const [billingErrors, setBillingErrors] = useState<BillingErrorState>(initialBillingErrors);
   const [newsletter, setNewsletter] = useState(false);
   const [agbAccepted, setAgbAccepted] = useState(false);
@@ -458,7 +506,14 @@ export function CheckoutClient() {
     id: number;
     bestellnummer?: string | null;
     zahlungsmethode?: string | null;
+    downloads?: {
+      rechnung?: string | null;
+      storno?: string | null;
+    };
+    totals?: OrderResponse["totals"] | null;
   } | null>(null);
+  const [invoicePollingStarted, setInvoicePollingStarted] = useState(false);
+  const [invoicePolling, setInvoicePolling] = useState(false);
 
   const [paypalError, setPaypalError] = useState<string | null>(null);
   const [queriedOrderId, setQueriedOrderId] = useState<number | null>(null);
@@ -468,7 +523,7 @@ export function CheckoutClient() {
   const [activeStepId, setActiveStepId] = useState<StepId>("billing");
   const [furthestStepIndex, setFurthestStepIndex] = useState(0);
 
-  const hasSeminarSelection = Boolean(seminarState);
+  const hasSeminarSelection = seminarStates.length > 0;
   const steps = useMemo(() => buildSteps(hasSeminarSelection), [hasSeminarSelection]);
   const isPayPalSelected = isPayPalConfigured && paymentMethod !== "rechnung";
   const activeStepIndex = useMemo(
@@ -477,8 +532,8 @@ export function CheckoutClient() {
   );
 
   const summaryItems = useMemo(
-    () => computeSummaryItems(seminarState, productState, voucherState),
-    [productState, seminarState, voucherState]
+    () => computeSummaryItems(seminarStates, productState, voucherState),
+    [productState, seminarStates, voucherState]
   );
   const totals = useMemo(() => computeTotals(summaryItems, appliedVoucher), [summaryItems, appliedVoucher]);
 
@@ -496,57 +551,80 @@ export function CheckoutClient() {
   }, [steps, activeStepId]);
 
   useEffect(() => {
-    if (seminarState && activeStepId === "billing" && furthestStepIndex === 0) {
+    if (hasSeminarSelection && activeStepId === "billing" && furthestStepIndex === 0) {
       setActiveStepId("participants");
     }
-    if (!seminarState && activeStepId === "participants") {
+    if (!hasSeminarSelection && activeStepId === "participants") {
       setActiveStepId("billing");
     }
-  }, [seminarState, activeStepId, furthestStepIndex]);
+  }, [hasSeminarSelection, activeStepId, furthestStepIndex]);
 
   useEffect(() => {
-    const seatCount = seminarState?.selection.quantity ?? 0;
-    if (!seminarState || seatCount <= 0) {
-      setParticipants([]);
+    if (seminarStates.length === 0) {
+      setParticipantGroups([]);
       return;
     }
-    setParticipants((prev) => {
-      const next = [...prev];
-      if (next.length < seatCount) {
-        for (let i = next.length; i < seatCount; i += 1) {
-          next.push({
-            firstName: "",
-            lastName: "",
-            email: "",
-            wsetNumber: "",
-            specialNeeds: ""
-          });
+    setParticipantGroups((prevGroups) => {
+      const nextGroups: ParticipantGroupState[] = [];
+      seminarStates.forEach((seminar) => {
+        const requiredSeats = Math.max(1, Math.trunc(seminar.selection.quantity ?? 1));
+        const existing = prevGroups.find((group) => group.selectionId === seminar.selectionId);
+        const participants = existing ? [...existing.participants] : [];
+        if (participants.length < requiredSeats) {
+          for (let i = participants.length; i < requiredSeats; i += 1) {
+            participants.push({
+              firstName: "",
+              lastName: "",
+              email: "",
+              wsetNumber: "",
+              specialNeeds: ""
+            });
+          }
+        } else if (participants.length > requiredSeats) {
+          participants.splice(requiredSeats);
         }
-      } else if (next.length > seatCount) {
-        next.splice(seatCount);
-      }
-      return next;
+        const errors = existing ? [...existing.errors] : [];
+        if (errors.length < participants.length) {
+          for (let i = errors.length; i < participants.length; i += 1) {
+            errors.push(createParticipantErrorState());
+          }
+        } else if (errors.length > participants.length) {
+          errors.splice(participants.length);
+        }
+        nextGroups.push({ selectionId: seminar.selectionId, participants, errors });
+      });
+      return nextGroups;
     });
-  }, [seminarState?.selection.quantity, seminarState]);
+  }, [seminarStates]);
+
+  const participantGroupsWithMeta = useMemo(() => {
+    if (seminarStates.length === 0) {
+      return [];
+    }
+    return seminarStates.map((seminar) => {
+      const group =
+        participantGroups.find((entry) => entry.selectionId === seminar.selectionId) ??
+        ({
+          selectionId: seminar.selectionId,
+          participants: [],
+          errors: []
+        } satisfies ParticipantGroupState);
+      return { seminar, group };
+    });
+  }, [participantGroups, seminarStates]);
+
+  const primaryParticipant = useMemo(() => {
+    return participantGroupsWithMeta[0]?.group.participants[0] ?? null;
+  }, [participantGroupsWithMeta]);
 
   useEffect(() => {
-    setParticipantErrors((prev) =>
-      participants.map((_, index) => {
-        const existing = prev[index];
-        return existing ? { ...existing } : createParticipantErrorState();
-      })
-    );
-  }, [participants]);
-
-  useEffect(() => {
-    if (participants.length === 0) {
+    if (!primaryParticipant) {
       return;
     }
     setBilling((prev) => {
       if (prev.contactFirstName || prev.contactLastName || prev.contactEmail) {
         return prev;
       }
-      const primaryParticipant = participants[0];
       return {
         ...prev,
         contactFirstName: primaryParticipant.firstName,
@@ -554,7 +632,7 @@ export function CheckoutClient() {
         contactEmail: primaryParticipant.email
       };
     });
-  }, [participants]);
+  }, [primaryParticipant]);
 
   useEffect(() => {
     if (!isPayPalSelected && paypalError) {
@@ -572,7 +650,7 @@ export function CheckoutClient() {
     }
   }, [isPayPalConfigured, paymentMethod]);
 
-  const hasSelections = Boolean(seminarState || productState || voucherState);
+  const hasSelections = Boolean(seminarStates.length > 0 || productState || voucherState);
 
   const moveToStep = useCallback(
     (nextIndex: number) => {
@@ -606,27 +684,29 @@ export function CheckoutClient() {
   }, [activeStepIndex, moveToStep]);
 
   const handleParticipantChange = useCallback(
-    (index: number, field: keyof ParticipantFormValue, value: string) => {
-      setParticipants((prev) => {
-        const next = [...prev];
-        if (!next[index]) {
-          return prev;
-        }
-        next[index] = { ...next[index], [field]: value };
-        return next;
-      });
-      if (field === "firstName" || field === "lastName") {
-        setParticipantErrors((prev) => {
-          const next = [...prev];
-          if (next[index]) {
-            next[index] = {
-              ...next[index],
-              [field === "firstName" ? "firstName" : "lastName"]: false
-            };
+    (selectionId: string, index: number, field: keyof ParticipantFormValue, value: string) => {
+      setParticipantGroups((prevGroups) =>
+        prevGroups.map((group) => {
+          if (group.selectionId !== selectionId) {
+            return group;
           }
-          return next;
-        });
-      }
+          const participants = [...group.participants];
+          if (!participants[index]) {
+            return group;
+          }
+          participants[index] = { ...participants[index], [field]: value };
+          const errors = [...group.errors];
+          if (field === "firstName" || field === "lastName") {
+            if (errors[index]) {
+              errors[index] = {
+                ...errors[index],
+                [field === "firstName" ? "firstName" : "lastName"]: false
+              };
+            }
+          }
+          return { ...group, participants, errors };
+        })
+      );
     },
     []
   );
@@ -669,24 +749,33 @@ export function CheckoutClient() {
   }, []);
 
   const validateParticipants = useCallback(() => {
-    if (!seminarState) {
-      setParticipantErrors([]);
+    if (seminarStates.length === 0) {
+      setParticipantGroups([]);
       setStepError(null);
       return true;
     }
-    if (participants.length === 0) {
-      setParticipantErrors([]);
+    if (participantGroups.length === 0) {
       setStepError("Bitte gib mindestens einen Teilnehmer ein.");
       return false;
     }
 
-    const errors = participants.map((participant) => ({
-      firstName: !participant.firstName.trim(),
-      lastName: !participant.lastName.trim()
-    }));
-    setParticipantErrors(errors);
+    let hasErrors = false;
+    setParticipantGroups((prevGroups) =>
+      prevGroups.map((group) => {
+        const errors = group.participants.map((participant) => {
+          const error = {
+            firstName: !participant.firstName.trim(),
+            lastName: !participant.lastName.trim()
+          };
+          if (error.firstName || error.lastName) {
+            hasErrors = true;
+          }
+          return error;
+        });
+        return { ...group, errors };
+      })
+    );
 
-    const hasErrors = errors.some((entry) => entry.firstName || entry.lastName);
     if (hasErrors) {
       setStepError("Bitte fülle alle Pflichtfelder bei den Teilnehmerdaten aus.");
       return false;
@@ -694,7 +783,7 @@ export function CheckoutClient() {
 
     setStepError(null);
     return true;
-  }, [participants, seminarState]);
+  }, [participantGroups, seminarStates]);
 
   const validateBilling = useCallback(() => {
     const errors: BillingErrorState = { ...initialBillingErrors };
@@ -836,13 +925,15 @@ export function CheckoutClient() {
         setOrderInformation({
           id: detail.id,
           bestellnummer: detail.bestellnummer ?? null,
-          zahlungsmethode: detail.zahlungsmethode ?? null
+          zahlungsmethode: detail.zahlungsmethode ?? null,
+          downloads: detail.downloads,
+          totals: detail.totals ?? null
         });
         setSubmissionState("success");
         setActiveStepId("confirmation");
         setFurthestStepIndex(buildSteps(false).length - 1);
         setQueriedOrderId(id);
-        setParticipants([]);
+        setParticipantGroups([]);
         setAppliedVoucher(null);
         setVoucherInput("");
         setVoucherMessage(null);
@@ -859,6 +950,89 @@ export function CheckoutClient() {
       isActive = false;
     };
   }, [submissionState, orderInformation?.id, queriedOrderId, clearSelections]);
+
+  useEffect(() => {
+    if (submissionState !== "success" || !orderInformation?.id) {
+      if (invoicePolling || invoicePollingStarted) {
+        setInvoicePolling(false);
+        setInvoicePollingStarted(false);
+      }
+      return;
+    }
+
+    if (orderInformation.downloads?.rechnung) {
+      if (invoicePolling || invoicePollingStarted) {
+        setInvoicePolling(false);
+        setInvoicePollingStarted(false);
+      }
+      return;
+    }
+
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let attempts = 0;
+
+    if (!invoicePollingStarted) {
+      setInvoicePollingStarted(true);
+    }
+    if (!invoicePolling) {
+      setInvoicePolling(true);
+    }
+
+    const poll = async () => {
+      if (cancelled) {
+        return;
+      }
+      attempts += 1;
+
+      try {
+        const detail = await fetchOrderById(orderInformation.id);
+        if (!cancelled && detail?.downloads?.rechnung) {
+          setOrderInformation((prev) => {
+            if (!prev || prev.id !== detail.id) {
+              return prev;
+            }
+            return {
+              ...prev,
+              bestellnummer: detail.bestellnummer ?? prev.bestellnummer,
+              zahlungsmethode: detail.zahlungsmethode ?? prev.zahlungsmethode,
+              downloads: detail.downloads
+            };
+          });
+          setInvoicePolling(false);
+          setInvoicePollingStarted(false);
+          return;
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.warn("[checkout] Rechnungspolling fehlgeschlagen:", error);
+        }
+      }
+
+      if (!cancelled) {
+        if (attempts < MAX_INVOICE_POLL_ATTEMPTS) {
+          timeoutId = setTimeout(poll, INVOICE_POLL_INTERVAL_MS);
+        } else {
+          setInvoicePolling(false);
+        }
+      }
+    };
+
+    timeoutId = setTimeout(poll, INVOICE_POLL_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [
+    submissionState,
+    orderInformation?.id,
+    orderInformation?.downloads?.rechnung,
+    invoicePolling,
+    invoicePollingStarted
+  ]);
 
   const handleRemoveVoucher = useCallback(() => {
     setAppliedVoucher(null);
@@ -888,40 +1062,53 @@ export function CheckoutClient() {
       const positionen: OrderPositionInput[] = [];
       const buchungen: OrderParticipantInput[] = [];
 
-      if (seminarState) {
-        if (seminarState.preisBrutto == null) {
-          throw new Error("Für die Seminarbuchung liegt kein Preis vor.");
-        }
-        const seatCount = Math.max(1, seminarState.selection.quantity);
-        const steuerSatz = seminarState.steuerSatz ?? DEFAULT_VAT_RATE;
-        const einzelpreisBrutto = seminarState.preisBrutto;
-        const einzelpreisNetto = computeNetAmount(einzelpreisBrutto, steuerSatz) ?? undefined;
+      if (seminarStates.length > 0) {
+        seminarStates.forEach((seminarStateEntry) => {
+          if (seminarStateEntry.preisBrutto == null) {
+            throw new Error("Für die Seminarbuchung liegt kein Preis vor.");
+          }
+          if (seminarStateEntry.terminId == null) {
+            throw new Error("Für die Seminarbuchung liegt kein Termin vor.");
+          }
+          const seatCount = Math.max(1, seminarStateEntry.selection.quantity);
+          const steuerSatz = seminarStateEntry.steuerSatz ?? DEFAULT_VAT_RATE;
+          const einzelpreisBrutto = seminarStateEntry.preisBrutto;
+          const einzelpreisNetto = computeNetAmount(einzelpreisBrutto, steuerSatz) ?? undefined;
 
-        positionen.push({
-          typ: "seminar",
-          titel: `${seminarState.seminarTitle} · ${seminarState.terminLabel}`,
-          beschreibung: seminarState.terminDescription ?? undefined,
-          terminId: seminarState.terminId,
-          menge: seatCount,
-          einzelpreisBrutto,
-          einzelpreisNetto,
-          steuerSatz
-        });
+          positionen.push({
+            typ: "seminar",
+            titel: `${seminarStateEntry.seminarTitle} · ${seminarStateEntry.terminLabel}`,
+            beschreibung: seminarStateEntry.terminDescription ?? undefined,
+            terminId: seminarStateEntry.terminId,
+            menge: seatCount,
+            einzelpreisBrutto,
+            einzelpreisNetto,
+            steuerSatz
+          });
 
-        for (let index = 0; index < seatCount; index += 1) {
-          const participant = participants[index] ?? participants[0];
-          if (!participant) {
+          const group = participantGroupsWithMeta.find(
+            ({ seminar }) => seminar.selectionId === seminarStateEntry.selectionId
+          )?.group;
+          const participantsForSeminar = group?.participants ?? [];
+          if (participantsForSeminar.length === 0) {
             throw new Error("Teilnehmerdaten fehlen.");
           }
-          buchungen.push({
-            vorname: participant.firstName.trim() || billing.contactFirstName.trim(),
-            nachname: participant.lastName.trim() || billing.contactLastName.trim(),
-            email: participant.email.trim() || billing.contactEmail.trim(),
-            terminId: seminarState.terminId,
-            wsetCandidateNumber: participant.wsetNumber.trim() || undefined,
-            besondereBeduerfnisse: participant.specialNeeds.trim() || undefined
-          });
-        }
+
+          for (let index = 0; index < seatCount; index += 1) {
+            const participant = participantsForSeminar[index] ?? participantsForSeminar[0];
+            if (!participant) {
+              throw new Error("Teilnehmerdaten fehlen.");
+            }
+            buchungen.push({
+              vorname: participant.firstName.trim() || billing.contactFirstName.trim(),
+              nachname: participant.lastName.trim() || billing.contactLastName.trim(),
+              email: participant.email.trim() || billing.contactEmail.trim(),
+              terminId: seminarStateEntry.terminId,
+              wsetCandidateNumber: participant.wsetNumber.trim() || undefined,
+              besondereBeduerfnisse: participant.specialNeeds.trim() || undefined
+            });
+          }
+        });
       }
 
       if (productState) {
@@ -997,12 +1184,14 @@ export function CheckoutClient() {
       setOrderInformation({
         id: response.id,
         bestellnummer: response.bestellnummer,
-        zahlungsmethode: response.zahlungsmethode
+        zahlungsmethode: response.zahlungsmethode,
+        downloads: response.downloads,
+        totals: response.totals ?? null
       });
       setQueriedOrderId(response.id);
       setSubmissionState("success");
       setSubmittedPaymentMethod(isPayPalFlow ? paymentMethod : null);
-      setParticipants([]);
+      setParticipantGroups([]);
       setAppliedVoucher(null);
       setVoucherInput("");
       setVoucherMessage(null);
@@ -1021,19 +1210,19 @@ export function CheckoutClient() {
     }
   }, [
     hasSelections,
-    seminarState,
+    seminarStates,
     productState,
     voucherState,
-    participants,
+    participantGroupsWithMeta,
     billing,
     agbAccepted,
     privacyAccepted,
     newsletter,
     paymentMethod,
-      appliedVoucher,
-      isPayPalConfigured,
-      clearSelections,
-      steps.length,
+    appliedVoucher,
+    isPayPalConfigured,
+    clearSelections,
+    steps.length,
     router
   ]);
 
@@ -1187,91 +1376,121 @@ export function CheckoutClient() {
           anpassen.
         </p>
       </div>
-      <div className="space-y-6">
-        {participants.map((participant, index) => (
-          <div key={index} className="rounded-2xl border border-base-200 bg-base-100 p-5 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold text-base-content/80">Teilnehmer {index + 1}</p>
-            </div>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <label className="form-control">
-                <span
-                  className={`label-text text-sm font-medium ${
-                    participantErrors[index]?.firstName ? "text-error" : ""
-                  }`}
-                >
-                  Vorname *
-                </span>
-                <input
-                  type="text"
-                  className={`input input-bordered ${
-                    participantErrors[index]?.firstName ? "input-error" : ""
-                  }`}
-                  value={participant.firstName}
-                  onChange={(event) => handleParticipantChange(index, "firstName", event.target.value)}
-                  required
-                />
-                {participantErrors[index]?.firstName ? (
-                  <span className="mt-1 text-xs text-error">Vorname ist erforderlich.</span>
-                ) : null}
-              </label>
-              <label className="form-control">
-                <span
-                  className={`label-text text-sm font-medium ${
-                    participantErrors[index]?.lastName ? "text-error" : ""
-                  }`}
-                >
-                  Nachname *
-                </span>
-                <input
-                  type="text"
-                  className={`input input-bordered ${
-                    participantErrors[index]?.lastName ? "input-error" : ""
-                  }`}
-                  value={participant.lastName}
-                  onChange={(event) => handleParticipantChange(index, "lastName", event.target.value)}
-                  required
-                />
-                {participantErrors[index]?.lastName ? (
-                  <span className="mt-1 text-xs text-error">Nachname ist erforderlich.</span>
-                ) : null}
-              </label>
-            </div>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <label className="form-control">
-                <span className="label-text text-sm font-medium">E-Mail</span>
-                <input
-                  type="email"
-                  className="input input-bordered"
-                  value={participant.email}
-                  onChange={(event) => handleParticipantChange(index, "email", event.target.value)}
-                  placeholder="name@example.com"
-                />
-              </label>
-              <label className="form-control">
-                <span className="label-text text-sm font-medium">WSET Candidate Number</span>
-                <input
-                  type="text"
-                  className="input input-bordered"
-                  value={participant.wsetNumber}
-                  onChange={(event) => handleParticipantChange(index, "wsetNumber", event.target.value)}
-                  placeholder="Optional"
-                />
-              </label>
-            </div>
-            <div className="mt-4">
-              <label className="form-control">
-                <span className="label-text text-sm font-medium">Besondere Bedürfnisse</span>
-                <textarea
-                  className="textarea textarea-bordered min-h-[96px]"
-                  value={participant.specialNeeds}
-                  onChange={(event) => handleParticipantChange(index, "specialNeeds", event.target.value)}
-                  placeholder="Allergien, Barrierefreiheit oder andere Hinweise für unser Team"
-                />
-              </label>
-            </div>
+      <div className="space-y-8">
+        {participantGroupsWithMeta.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-base-300 bg-base-100 p-5 text-sm text-base-content/70">
+            Es sind aktuell keine Seminare im Warenkorb.
           </div>
-        ))}
+        ) : (
+          participantGroupsWithMeta.map(({ seminar, group }) => (
+            <div key={group.selectionId} className="space-y-4">
+              <header className="space-y-1">
+                <h3 className="text-lg font-semibold text-base-content">{seminar.seminarTitle}</h3>
+                <p className="text-sm text-base-content/70">
+                  {seminar.terminLabel}
+                  {seminar.terminDescription ? ` · ${seminar.terminDescription}` : ""}
+                </p>
+              </header>
+              <div className="space-y-6">
+                {group.participants.map((participant, index) => {
+                  const errorState = group.errors[index] ?? createParticipantErrorState();
+                  return (
+                    <div key={`${group.selectionId}-${index}`} className="rounded-2xl border border-base-200 bg-base-100 p-5 shadow-sm">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-semibold text-base-content/80">
+                          Teilnehmer {index + 1} von {group.participants.length}
+                        </p>
+                      </div>
+                      <div className="mt-4 grid gap-4 md:grid-cols-2">
+                        <label className="form-control">
+                          <span
+                            className={`label-text text-sm font-medium ${
+                              errorState.firstName ? "text-error" : ""
+                            }`}
+                          >
+                            Vorname *
+                          </span>
+                          <input
+                            type="text"
+                            className={`input input-bordered ${errorState.firstName ? "input-error" : ""}`}
+                            value={participant.firstName}
+                            onChange={(event) =>
+                              handleParticipantChange(group.selectionId, index, "firstName", event.target.value)
+                            }
+                            required
+                          />
+                          {errorState.firstName ? (
+                            <span className="mt-1 text-xs text-error">Vorname ist erforderlich.</span>
+                          ) : null}
+                        </label>
+                        <label className="form-control">
+                          <span
+                            className={`label-text text-sm font-medium ${
+                              errorState.lastName ? "text-error" : ""
+                            }`}
+                          >
+                            Nachname *
+                          </span>
+                          <input
+                            type="text"
+                            className={`input input-bordered ${errorState.lastName ? "input-error" : ""}`}
+                            value={participant.lastName}
+                            onChange={(event) =>
+                              handleParticipantChange(group.selectionId, index, "lastName", event.target.value)
+                            }
+                            required
+                          />
+                          {errorState.lastName ? (
+                            <span className="mt-1 text-xs text-error">Nachname ist erforderlich.</span>
+                          ) : null}
+                        </label>
+                      </div>
+                      <div className="mt-4 grid gap-4 md:grid-cols-2">
+                        <label className="form-control">
+                          <span className="label-text text-sm font-medium">E-Mail</span>
+                          <input
+                            type="email"
+                            className="input input-bordered"
+                            value={participant.email}
+                            onChange={(event) =>
+                              handleParticipantChange(group.selectionId, index, "email", event.target.value)
+                            }
+                            placeholder="name@example.com"
+                          />
+                        </label>
+                        <label className="form-control">
+                          <span className="label-text text-sm font-medium">WSET Candidate Number</span>
+                          <input
+                            type="text"
+                            className="input input-bordered"
+                            value={participant.wsetNumber}
+                            onChange={(event) =>
+                              handleParticipantChange(group.selectionId, index, "wsetNumber", event.target.value)
+                            }
+                            placeholder="Optional"
+                          />
+                        </label>
+                      </div>
+                      <div className="mt-4">
+                        <label className="form-control">
+                          <span className="label-text text-sm font-medium">Besondere Bedürfnisse</span>
+                          <textarea
+                            className="textarea textarea-bordered min-h-[96px]"
+                            value={participant.specialNeeds}
+                            onChange={(event) =>
+                              handleParticipantChange(group.selectionId, index, "specialNeeds", event.target.value)
+                            }
+                            placeholder="Allergien, Barrierefreiheit oder andere Hinweise für unser Team"
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </section>
   );
@@ -1549,7 +1768,7 @@ export function CheckoutClient() {
           </div>
         </div>
 
-        {seminarState ? (
+        {hasSeminarSelection ? (
           <div className="rounded-2xl border border-base-200 bg-base-100 p-5 shadow-sm">
             <div className="flex items-center justify-between gap-4">
               <h3 className="text-lg font-semibold text-base-content">Teilnehmerdaten</h3>
@@ -1557,21 +1776,30 @@ export function CheckoutClient() {
                 Bearbeiten
               </button>
             </div>
-            <div className="mt-4 space-y-3 text-sm text-base-content/80">
-              {participants.map((participant, index) => (
-                <div key={index} className="rounded-xl border border-base-200 p-4">
-                  <p className="font-semibold">
-                    Teilnehmer {index + 1}: {participant.firstName || "—"} {participant.lastName || "—"}
+            <div className="mt-4 space-y-4 text-sm text-base-content/80">
+              {participantGroupsWithMeta.map(({ seminar, group }) => (
+                <div key={group.selectionId} className="rounded-xl border border-base-200 p-4">
+                  <p className="text-sm font-semibold text-base-content">
+                    {seminar.seminarTitle} · {seminar.terminLabel}
                   </p>
-                  {participant.email ? <p className="mt-1 text-base-content/70">{participant.email}</p> : null}
-                  {participant.wsetNumber ? (
-                    <p className="mt-1 text-base-content/70">WSET Candidate Number: {participant.wsetNumber}</p>
-                  ) : null}
-                  {participant.specialNeeds ? (
-                    <p className="mt-1 text-base-content/70">
-                      Besondere Bedürfnisse: {participant.specialNeeds}
-                    </p>
-                  ) : null}
+                  <div className="mt-3 space-y-3">
+                    {group.participants.map((participant, index) => (
+                      <div key={`${group.selectionId}-${index}`} className="rounded-lg border border-base-200/80 p-3">
+                        <p className="font-semibold">
+                          Teilnehmer {index + 1}: {participant.firstName || "—"} {participant.lastName || "—"}
+                        </p>
+                        {participant.email ? <p className="mt-1 text-base-content/70">{participant.email}</p> : null}
+                        {participant.wsetNumber ? (
+                          <p className="mt-1 text-base-content/70">WSET Candidate Number: {participant.wsetNumber}</p>
+                        ) : null}
+                        {participant.specialNeeds ? (
+                          <p className="mt-1 text-base-content/70">
+                            Besondere Bedürfnisse: {participant.specialNeeds}
+                          </p>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
@@ -1840,6 +2068,16 @@ export function CheckoutClient() {
         : orderInformation?.zahlungsmethode === "rechnung"
           ? "Du erhältst deine Rechnung inklusive Zahlungsinformationen per E-Mail."
           : null;
+    const invoiceLink = orderInformation?.downloads?.rechnung ?? null;
+    const invoiceStatusMessage = invoicePolling
+      ? "Wir synchronisieren deine Rechnung. Das kann bis zu einer Minute dauern."
+      : invoicePollingStarted
+        ? "Die Rechnung ist noch nicht verfügbar. Bitte lade diese Seite in Kürze erneut oder prüfe deine Bestellübersicht."
+        : "Die Rechnung wird gleich bereitgestellt.";
+    const confirmationTotals = orderInformation?.totals ?? null;
+    const confirmationSubtotal = confirmationTotals
+      ? (confirmationTotals.brutto ?? 0) + (confirmationTotals.gutschein ?? 0)
+      : null;
 
     return (
       <div className="mx-auto max-w-3xl rounded-2xl border border-success/30 bg-success/10 p-10 text-center shadow-sm">
@@ -1855,6 +2093,60 @@ export function CheckoutClient() {
         <p className="mt-2 text-sm text-base-content/60">
           Die Bestätigung bleibt auch bei einem erneuten Aufruf dieser Seite verfügbar.
         </p>
+        {invoiceLink ? (
+          <div className="mt-6 flex justify-center">
+            <a
+              href={invoiceLink}
+              className="btn btn-outline btn-success"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Rechnung herunterladen
+            </a>
+          </div>
+        ) : (
+          <div className="mt-6 flex flex-col items-center gap-3">
+            <button
+              type="button"
+              className="btn btn-outline btn-disabled flex items-center gap-2"
+              disabled
+            >
+              {invoicePolling ? (
+                <>
+                  <span className="loading loading-spinner loading-sm" aria-hidden="true" />
+                  Rechnung wird vorbereitet …
+                </>
+              ) : (
+                "Rechnung wird vorbereitet …"
+              )}
+            </button>
+            <p className="text-xs text-base-content/60 text-center">{invoiceStatusMessage}</p>
+          </div>
+        )}
+        {confirmationTotals ? (
+          <dl className="mt-8 space-y-2 text-sm text-base-content/80">
+            {confirmationSubtotal != null && confirmationSubtotal > 0 ? (
+              <div className="flex items-center justify-center gap-3">
+                <dt className="font-medium">Zwischensumme</dt>
+                <dd>{formatCurrency(confirmationSubtotal)}</dd>
+              </div>
+            ) : null}
+            {confirmationTotals.gutschein ? (
+              <div className="flex items-center justify-center gap-3 text-error">
+                <dt className="font-medium">Gutschein</dt>
+                <dd>-{formatCurrency(confirmationTotals.gutschein)}</dd>
+              </div>
+            ) : null}
+            <div className="flex items-center justify-center gap-3">
+              <dt className="font-medium">Steuern</dt>
+              <dd>{formatCurrency(confirmationTotals.steuer ?? 0)}</dd>
+            </div>
+            <div className="flex items-center justify-center gap-3 text-base font-semibold">
+              <dt>Gesamtsumme</dt>
+              <dd>{formatCurrency(confirmationTotals.brutto ?? 0)}</dd>
+            </div>
+          </dl>
+        ) : null}
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <button type="button" className="btn btn-primary" onClick={() => router.push("/")}>
             Zurück zur Startseite
@@ -1870,6 +2162,19 @@ export function CheckoutClient() {
       </div>
     );
   };
+
+  const backendTotals = submissionState === "success" && orderInformation?.totals ? orderInformation.totals : null;
+  const derivedSubtotal = backendTotals
+    ? (backendTotals.brutto ?? 0) + (backendTotals.gutschein ?? 0)
+    : totals.subtotal;
+  const derivedDiscount = backendTotals ? backendTotals.gutschein ?? 0 : appliedVoucher?.amount ?? 0;
+  const derivedTax = backendTotals ? backendTotals.steuer ?? 0 : totals.tax;
+  const derivedTotal = backendTotals ? backendTotals.brutto ?? 0 : totals.total;
+  const discountLabel = appliedVoucher
+    ? `Rabatt (${appliedVoucher.code.toUpperCase()})`
+    : backendTotals && derivedDiscount > 0
+      ? "Gutschein"
+      : "Rabatt";
 
   const renderSummaryAside = () => (
     <aside className="space-y-6 rounded-2xl border border-base-200 bg-base-100 p-6 shadow-sm">
@@ -1898,21 +2203,21 @@ export function CheckoutClient() {
       <dl className="space-y-2 text-sm text-base-content">
         <div className="flex items-center justify-between">
           <dt>Zwischensumme</dt>
-          <dd>{formatCurrency(totals.subtotal)}</dd>
+          <dd>{formatCurrency(derivedSubtotal)}</dd>
         </div>
-        {appliedVoucher ? (
+        {derivedDiscount > 0 ? (
           <div className="flex items-center justify-between text-error">
-            <dt>Rabatt ({appliedVoucher.code.toUpperCase()})</dt>
-            <dd>-{formatCurrency(appliedVoucher.amount)}</dd>
+            <dt>{discountLabel}</dt>
+            <dd>-{formatCurrency(derivedDiscount)}</dd>
           </div>
         ) : null}
         <div className="flex items-center justify-between">
           <dt>Steuern</dt>
-          <dd>{formatCurrency(totals.tax)}</dd>
+          <dd>{formatCurrency(derivedTax)}</dd>
         </div>
         <div className="flex items-center justify-between text-base font-semibold">
           <dt>Gesamtsumme</dt>
-          <dd>{formatCurrency(totals.total)}</dd>
+          <dd>{formatCurrency(derivedTotal)}</dd>
         </div>
       </dl>
     </aside>

@@ -56,6 +56,8 @@ export type ProductDetail = {
   title: string;
   price: string;
   priceValue: number | null;
+  priceNetto: number | null;
+  steuerSatz: number | null;
   hero: ProductHero;
   mainImage: { url: string; alt: string | null } | null;
   bookingBox: ProductBookingBox;
@@ -67,6 +69,8 @@ const PRICE_FORMATTER = new Intl.NumberFormat("de-DE", {
   style: "currency",
   currency: "EUR"
 });
+
+const DEFAULT_VAT_RATE = 19;
 
 function parsePrice(value: string | number | null | undefined): number | null {
   if (typeof value === "number") {
@@ -182,6 +186,8 @@ function createFallbackProduct(slug: string): ProductDetail {
     title,
     price: "Preis auf Anfrage",
     priceValue: null,
+    priceNetto: null,
+    steuerSatz: null,
     hero: {
       title,
       paragraphs,
@@ -210,6 +216,15 @@ function createFallbackProduct(slug: string): ProductDetail {
 
 function normaliseProductPayload(payload: StrapiProductDetail): ProductDetail {
   const price = formatPrice(payload.preisBrutto ?? payload.preisNetto ?? null);
+  const priceNetto = parsePrice(payload.preisNetto ?? null);
+  const rawSteuer = parsePrice(payload.steuerSatz ?? null);
+  const steuerSatz = payload.gutschein || payload.mwst === false
+    ? 0
+    : rawSteuer != null
+      ? rawSteuer
+      : price.numeric != null && priceNetto != null && priceNetto > 0
+        ? Math.max(0, Math.round(((price.numeric / priceNetto - 1) * 100 + Number.EPSILON) * 100) / 100)
+        : DEFAULT_VAT_RATE;
 
   const descriptionParagraphs = richTextToParagraphs(payload.beschreibung ?? null);
   const heroFallbackParagraphs = splitParagraphs(payload.kurzbeschreibung ?? null);
@@ -242,6 +257,8 @@ function normaliseProductPayload(payload: StrapiProductDetail): ProductDetail {
     title: payload.name,
     price: price.formatted,
     priceValue: price.numeric,
+    priceNetto,
+    steuerSatz,
     hero: {
       title: payload.name,
       paragraphs: heroParagraphs,

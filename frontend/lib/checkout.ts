@@ -25,6 +25,7 @@ type PublicProductDetail = {
   preisBrutto?: string | number | null;
   preisNetto?: string | number | null;
   steuerSatz?: string | number | null;
+  mwst?: boolean | null;
   gutschein?: boolean | null;
 };
 
@@ -139,7 +140,15 @@ export async function fetchProductCheckoutData(slug: string): Promise<ProductChe
 
   const preisBrutto = parsePrice(payload.preisBrutto ?? payload.preisNetto ?? null);
   const preisNetto = parsePrice(payload.preisNetto ?? null);
-  const steuerSatz = parsePrice(payload.steuerSatz ?? null);
+  const rawSteuer = parsePrice(payload.steuerSatz ?? null);
+  const steuerSatz =
+    payload.gutschein || payload.mwst === false
+      ? 0
+      : rawSteuer != null
+        ? rawSteuer
+        : preisBrutto != null && preisNetto != null && preisNetto > 0
+          ? Math.max(0, Math.round(((preisBrutto / preisNetto - 1) * 100 + Number.EPSILON) * 100) / 100)
+          : DEFAULT_VAT_RATE;
 
   return {
     productId: payload.id,
@@ -211,6 +220,10 @@ export type OrderResponse = {
     steuer?: number;
     gutschein?: number;
   };
+  downloads?: {
+    rechnung?: string | null;
+    storno?: string | null;
+  };
 };
 
 export async function submitOrder(payload: OrderPayload): Promise<OrderResponse> {
@@ -231,6 +244,10 @@ export type OrderStatusResponse = {
     gutschein?: number;
   };
   gutscheine?: { code: string; betrag: number }[];
+  downloads?: {
+    rechnung?: string | null;
+    storno?: string | null;
+  };
 };
 
 export async function fetchOrderById(id: number): Promise<OrderStatusResponse> {

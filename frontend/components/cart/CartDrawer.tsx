@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { BOOKING_SELECTION_STORAGE_KEY } from "@/components/seminar/bookingUtils";
+import { removeBookingSelection, setBookingSelectionQuantity } from "@/components/seminar/bookingUtils";
 import { CartItemSeminar } from "./CartItemSeminar";
 import { CartItemProduct } from "./CartItemProduct";
 import { CartItemGutschein } from "./CartItemGutschein";
@@ -17,40 +17,6 @@ type CartDrawerProps = {
 
 const PRODUCT_SELECTION_STORAGE_KEY = "cart:productSelection";
 const VOUCHER_SELECTION_STORAGE_KEY = "voucher:lastSelection";
-
-function updateStoredBookingSelection(
-  updater: (current: Record<string, unknown> | null) => Record<string, unknown> | null
-) {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  let current: Record<string, unknown> | null = null;
-  try {
-    const raw = window.localStorage.getItem(BOOKING_SELECTION_STORAGE_KEY);
-    current = raw ? JSON.parse(raw) : null;
-  } catch {
-    current = null;
-  }
-
-  const next = updater(current);
-
-  try {
-    if (next) {
-      window.localStorage.setItem(BOOKING_SELECTION_STORAGE_KEY, JSON.stringify(next));
-    } else {
-      window.localStorage.removeItem(BOOKING_SELECTION_STORAGE_KEY);
-    }
-  } catch (error) {
-    console.warn("[cart] Konnte Buchungsauswahl nicht speichern:", error);
-  }
-
-  if (typeof document !== "undefined") {
-    document.dispatchEvent(new CustomEvent("booking:pending", { detail: next ?? null }));
-  }
-
-  return next;
-}
 
 function updateStoredProductSelection(
   updater: (current: Record<string, unknown> | null) => Record<string, unknown> | null
@@ -103,13 +69,9 @@ function clearStoredVoucherSelection() {
 
 export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
   const { status, data } = useCartData();
-  const [seminarQuantity, setSeminarQuantity] = useState(() => data.seminarSelection?.quantity ?? 1);
   const [productQuantity, setProductQuantity] = useState(() => data.productSelection?.quantity ?? 1);
   const router = useRouter();
-
-  useEffect(() => {
-    setSeminarQuantity(data.seminarSelection?.quantity ?? 1);
-  }, [data.seminarSelection?.quantity]);
+  const seminarEntries = data.seminars;
 
   useEffect(() => {
     setProductQuantity(data.productSelection?.quantity ?? 1);
@@ -118,12 +80,17 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
   useEffect(() => {
     if (typeof document === "undefined") return;
     const voucherCount = data.voucher ? 1 : 0;
-    const count = (data.seminar ? seminarQuantity : 0) + (data.product ? productQuantity : 0) + voucherCount;
+    const seminarCount = seminarEntries.reduce((sum, entry) => sum + Math.max(0, entry.selection.quantity ?? 0), 0);
+    const count = seminarCount + (data.product ? productQuantity : 0) + voucherCount;
     document.dispatchEvent(new CustomEvent("cart:set", { detail: { count } }));
-  }, [data.seminar, data.product, data.voucher, productQuantity, seminarQuantity]);
+  }, [seminarEntries, data.product, data.voucher, productQuantity]);
 
   const totalFormatted = useMemo(() => {
-    const seminarTotal = (data.seminar?.price.value ?? 0) * seminarQuantity;
+    const seminarTotal = seminarEntries.reduce((sum, entry) => {
+      const price = entry.seminar?.price.value ?? 0;
+      const quantity = Math.max(0, entry.selection.quantity ?? 0);
+      return sum + price * quantity;
+    }, 0);
     const productTotal = (data.product?.price.value ?? 0) * productQuantity;
     const voucherTotal = data.voucher?.amount ?? 0;
     const sum = seminarTotal + productTotal + voucherTotal;
@@ -131,55 +98,14 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
       return "–";
     }
     return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(sum);
-  }, [data.product?.price.value, data.seminar?.price.value, data.voucher?.amount, productQuantity, seminarQuantity]);
+  }, [data.product?.price.value, seminarEntries, data.voucher?.amount, productQuantity]);
 
-  const handleSeminarQuantityChange = useCallback(
-    (quantity: number) => {
-      if (!data.seminar) {
-        setSeminarQuantity(1);
-        return;
-      }
+  const handleSeminarQuantityChange = useCallback((selectionId: string, quantity: number) => {
+    setBookingSelectionQuantity(selectionId, quantity);
+  }, []);
 
-      const nextQuantity = Math.max(1, quantity);
-      setSeminarQuantity(nextQuantity);
-
-      updateStoredBookingSelection((current) => {
-        const base = (current && typeof current === "object") ? current : {};
-        const slug =
-          data.seminar?.slug ??
-          data.seminarSelection?.seminarSlug ??
-          (typeof (base as { slug?: unknown }).slug === "string" ? (base as { slug?: string }).slug : null);
-        const createdAt =
-          typeof (base as { createdAt?: unknown }).createdAt === "string"
-            ? (base as { createdAt?: string }).createdAt
-            : new Date().toISOString();
-        const dateId =
-          data.seminarSelection?.dateId ??
-          (typeof (base as { dateId?: unknown }).dateId === "string" ? (base as { dateId?: string }).dateId : null);
-
-        return {
-          ...base,
-          type: "seminar",
-          slug,
-          seminarSlug: slug,
-          title:
-          data.seminar?.title ??
-            data.seminarSelection?.seminarTitle ??
-            ((base as { title?: unknown }).title as string | null | undefined) ??
-            null,
-          quantity: nextQuantity,
-          dateId,
-          createdAt,
-          updatedAt: new Date().toISOString()
-        };
-      });
-    },
-    [data.seminar, data.seminarSelection?.dateId, data.seminarSelection?.seminarSlug, data.seminarSelection?.seminarTitle]
-  );
-
-  const handleSeminarRemove = useCallback(() => {
-    setSeminarQuantity(1);
-    updateStoredBookingSelection(() => null);
+  const handleSeminarRemove = useCallback((selectionId: string) => {
+    removeBookingSelection(selectionId);
   }, []);
 
   const handleProductQuantityChange = useCallback(
@@ -208,11 +134,23 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
           (typeof (base as { priceValue?: unknown }).priceValue === "number"
             ? (base as { priceValue?: number }).priceValue
             : null);
+        const priceNetto =
+          data.product?.priceNetto ??
+          data.productSelection?.priceNetto ??
+          (typeof (base as { priceNetto?: unknown }).priceNetto === "number"
+            ? (base as { priceNetto?: number }).priceNetto
+            : null);
         const priceFormatted =
           data.product?.price.formatted ??
           data.productSelection?.priceFormatted ??
           (typeof (base as { priceFormatted?: unknown }).priceFormatted === "string"
             ? (base as { priceFormatted?: string }).priceFormatted
+            : null);
+        const steuerSatz =
+          data.product?.steuerSatz ??
+          data.productSelection?.steuerSatz ??
+          (typeof (base as { steuerSatz?: unknown }).steuerSatz === "number"
+            ? (base as { steuerSatz?: number }).steuerSatz
             : null);
 
         return {
@@ -227,7 +165,9 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
             null,
           quantity: nextQuantity,
           priceValue,
+          priceNetto,
           priceFormatted,
+          steuerSatz,
           isVoucher:
             data.product?.isVoucher ??
             data.productSelection?.isVoucher ??
@@ -237,7 +177,16 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
         };
       });
     },
-    [data.product, data.productSelection?.isVoucher, data.productSelection?.priceFormatted, data.productSelection?.priceValue, data.productSelection?.productSlug, data.productSelection?.productTitle]
+    [
+      data.product,
+      data.productSelection?.isVoucher,
+      data.productSelection?.priceFormatted,
+      data.productSelection?.priceNetto,
+      data.productSelection?.priceValue,
+      data.productSelection?.productSlug,
+      data.productSelection?.productTitle,
+      data.productSelection?.steuerSatz
+    ]
   );
 
   const handleProductRemove = useCallback(() => {
@@ -249,10 +198,9 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
     clearStoredVoucherSelection();
   }, []);
 
+  const hasSeminarSelections = seminarEntries.some((entry) => (entry.selection.quantity ?? 0) > 0);
   const canCheckout = Boolean(
-    (data.seminar && seminarQuantity > 0) ||
-      (data.product && productQuantity > 0) ||
-      data.voucher
+    hasSeminarSelections || (data.product && productQuantity > 0) || data.voucher
   );
 
   const handleCheckoutClick = useCallback(() => {
@@ -268,7 +216,7 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
     router.push("/checkout");
   }, [canCheckout, onClose, router]);
 
-  const isLoading = status === "loading" && !data.seminar && !data.product;
+  const isLoading = status === "loading" && seminarEntries.length === 0 && !data.product && !data.voucher;
   const hasError = status === "error";
 
   return (
@@ -300,14 +248,17 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
                     Der Warenkorb konnte nicht geladen werden. Bitte Seite neu laden oder später erneut versuchen.
                   </div>
                 ) : null}
-                {data.seminar ? (
-                  <CartItemSeminar
-                    seminar={data.seminar}
-                    selection={data.seminarSelection}
-                    onQuantityChange={handleSeminarQuantityChange}
-                    onRemove={handleSeminarRemove}
-                  />
-                ) : null}
+                {seminarEntries.length > 0
+                  ? seminarEntries.map((entry) => (
+                      <CartItemSeminar
+                        key={entry.selection.id}
+                        seminar={entry.seminar}
+                        selection={entry.selection}
+                        onQuantityChange={(nextQuantity) => handleSeminarQuantityChange(entry.selection.id, nextQuantity)}
+                        onRemove={() => handleSeminarRemove(entry.selection.id)}
+                      />
+                    ))
+                  : null}
                 {data.product ? (
                   <CartItemProduct
                     product={{

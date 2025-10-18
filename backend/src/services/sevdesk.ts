@@ -101,10 +101,12 @@ function buildUrl(baseUrl: string, path: string, query?: RequestOptions['query']
 }
 
 function createHeaders(
+  token: string,
   userAgent?: string,
   extra?: Record<string, string>
 ): Record<string, string> {
   const headers: Record<string, string> = {
+    Authorization: token,
     Accept: 'application/json',
   };
   if (userAgent) {
@@ -160,7 +162,11 @@ async function sevDeskRequest<T>(
   while (attempt < MAX_RETRIES) {
     attempt += 1;
     try {
-      const headers = createHeaders(clientOptions?.userAgent, options.headers);
+      const headers = createHeaders(
+        token,
+        clientOptions?.userAgent || 'WineAcademy/Strapi-SevDesk',
+        options.headers
+      );
       let body: any;
 
       if (options.body !== undefined && options.body !== null) {

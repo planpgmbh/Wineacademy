@@ -1,26 +1,31 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { QuantitySelector } from "../shared/QuantitySelector";
 import type { BookingSelection, SeminarCartItem } from "./useCartData";
 
 type CartItemSeminarProps = {
   seminar: SeminarCartItem | null;
-  selection: BookingSelection | null;
+  selection: BookingSelection;
   onQuantityChange?: (quantity: number) => void;
   onRemove?: () => void;
 };
 
 function useQuantity(initial: number, onChange?: (quantity: number) => void) {
   const [quantity, setQuantity] = useState(() => Math.max(1, Math.trunc(initial)));
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
     setQuantity(Math.max(1, Math.trunc(initial)));
   }, [initial]);
 
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     onChange?.(quantity);
   }, [onChange, quantity]);
 
@@ -33,10 +38,11 @@ const EURO_FORMATTER = new Intl.NumberFormat("de-DE", {
 });
 
 export function CartItemSeminar({ seminar, selection, onQuantityChange, onRemove }: CartItemSeminarProps) {
-  const [quantity, setQuantity] = useQuantity(selection?.quantity ?? 1, onQuantityChange);
+  const [quantity, setQuantity] = useQuantity(selection.quantity ?? 1, onQuantityChange);
 
   const hasDates = Boolean(seminar?.dates?.length);
-  const selectedDateId = selection?.dateId ?? null;
+  const selectedDateId = selection.dateId ?? null;
+  const title = seminar?.title ?? selection.seminarTitle ?? "Seminar";
 
   const totalPriceFormatted = useMemo(() => {
     if (!seminar) {
@@ -79,7 +85,7 @@ export function CartItemSeminar({ seminar, selection, onQuantityChange, onRemove
         {seminar?.imageUrl ? (
           <Image
             src={seminar.imageUrl}
-            alt={seminar.imageAlt ?? seminar.title}
+            alt={seminar.imageAlt ?? title}
             fill
             sizes="80px"
             className="object-cover"
@@ -92,7 +98,7 @@ export function CartItemSeminar({ seminar, selection, onQuantityChange, onRemove
       <div className="flex flex-1 flex-col gap-4 pr-4">
         <header className="space-y-2">
           <h3 className="text-base font-medium leading-snug">
-            {seminar?.title ?? "Seminar"}
+            {title}
           </h3>
         </header>
 
@@ -108,7 +114,11 @@ export function CartItemSeminar({ seminar, selection, onQuantityChange, onRemove
             </ul>
           </div>
         ) : (
-          <p className="text-xs text-base-content/60">Neue Termine werden in Kürze veröffentlicht.</p>
+          <p className="text-xs text-base-content/60">
+            {selectedDateId
+              ? "Termin wird im Checkout bestätigt."
+              : "Neue Termine werden in Kürze veröffentlicht."}
+          </p>
         )}
 
         <footer className="flex items-center justify-between pt-2">

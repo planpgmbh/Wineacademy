@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
 
 import { fetchJson, mediaUrl } from "@/lib/api";
-import { BOOKING_SELECTION_STORAGE_KEY } from "@/components/seminar/bookingUtils";
+import {
+  BOOKING_SELECTION_STORAGE_KEY,
+  readBookingSelections,
+  type BookingSelection
+} from "@/components/seminar/bookingUtils";
 import {
   readVoucherSelection,
   VOUCHER_SELECTION_STORAGE_KEY,
   type VoucherSelection
 } from "@/components/voucher/voucherBookingUtils";
+export type { BookingSelection } from "@/components/seminar/bookingUtils";
 
 type SeminarListItem = {
   id: number;
@@ -14,6 +19,7 @@ type SeminarListItem = {
   slug: string;
   kurzbeschreibung?: string | null;
   preis?: string | number | null;
+  mwst?: boolean | null;
   bild?: { url?: string | null; alternativeText?: string | null } | null;
   termine?: {
     id: number;
@@ -32,16 +38,10 @@ export type SeminarCartItem = {
   slug: string;
   description?: string | null;
   price: { value: number | null; formatted: string };
+  steuerSatz: number | null;
   dates: { id: string; label: string }[];
   imageUrl: string | null;
   imageAlt: string | null;
-};
-
-export type BookingSelection = {
-  quantity: number;
-  dateId?: string | null;
-  seminarSlug?: string | null;
-  seminarTitle?: string | null;
 };
 
 const PRODUCT_SELECTION_STORAGE_KEY = "cart:productSelection";
@@ -53,6 +53,8 @@ type ProductDetailItem = {
   kurzbeschreibung?: string | null;
   preisBrutto?: string | number | null;
   preisNetto?: string | number | null;
+  steuerSatz?: string | number | null;
+  mwst?: boolean | null;
   gutschein?: boolean | null;
   bild?: { url?: string | null; alternativeText?: string | null } | null;
 };
@@ -63,6 +65,8 @@ export type ProductCartItem = {
   slug: string;
   description?: string | null;
   price: { value: number | null; formatted: string };
+  priceNetto: number | null;
+  steuerSatz: number | null;
   imageUrl: string | null;
   imageAlt: string | null;
   isVoucher: boolean;
@@ -73,8 +77,10 @@ export type ProductSelection = {
   productSlug?: string | null;
   productTitle?: string | null;
   priceValue?: number | null;
+  priceNetto?: number | null;
   priceFormatted?: string | null;
   isVoucher?: boolean;
+  steuerSatz?: number | null;
 };
 
 export type VoucherCartItem = {
@@ -90,6 +96,8 @@ const PRICE_FORMATTER = new Intl.NumberFormat("de-DE", {
   style: "currency",
   currency: "EUR"
 });
+
+const DEFAULT_VAT_RATE = 19;
 
 function parseCurrency(value: string | number | null | undefined): { value: number | null; formatted: string } {
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -130,39 +138,6 @@ function formatSeminarDate(termin: SeminarTermin): string | null {
   return `${weekday} ${datePart}`;
 }
 
-export function readBookingSelection(): BookingSelection | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-  try {
-    const raw = window.localStorage.getItem(BOOKING_SELECTION_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") {
-      return null;
-    }
-    const quantity = typeof parsed.quantity === "number" ? Math.max(1, Math.trunc(parsed.quantity)) : 1;
-    const dateId =
-      typeof parsed.dateId === "string" && parsed.dateId.length > 0 ? parsed.dateId : undefined;
-    const seminarSlug =
-      typeof parsed.slug === "string" && parsed.slug.length > 0 ? parsed.slug : undefined;
-    const seminarTitle =
-      typeof parsed.title === "string" && parsed.title.length > 0
-        ? parsed.title
-        : typeof parsed.seminarTitle === "string" && parsed.seminarTitle.length > 0
-          ? parsed.seminarTitle
-          : null;
-    return {
-      quantity,
-      dateId,
-      seminarSlug: seminarSlug ?? parsed.seminarSlug ?? null,
-      seminarTitle
-    };
-  } catch {
-    return null;
-  }
-}
-
 export function readProductSelection(): ProductSelection | null {
   if (typeof window === "undefined") {
     return null;
@@ -190,6 +165,10 @@ export function readProductSelection(): ProductSelection | null {
           : null;
     const priceValue =
       typeof parsed.priceValue === "number" && Number.isFinite(parsed.priceValue) ? parsed.priceValue : null;
+    const priceNetto =
+      typeof parsed.priceNetto === "number" && Number.isFinite(parsed.priceNetto) ? parsed.priceNetto : null;
+    const steuerSatz =
+      typeof parsed.steuerSatz === "number" && Number.isFinite(parsed.steuerSatz) ? parsed.steuerSatz : null;
     const priceFormatted =
       typeof parsed.priceFormatted === "string" && parsed.priceFormatted.length > 0 ? parsed.priceFormatted : null;
     const isVoucher = Boolean(parsed.isVoucher);
@@ -199,8 +178,10 @@ export function readProductSelection(): ProductSelection | null {
       productSlug: productSlug ?? null,
       productTitle,
       priceValue,
+      priceNetto,
       priceFormatted,
-      isVoucher
+      isVoucher,
+      steuerSatz
     };
   } catch {
     return null;
@@ -212,6 +193,8 @@ function mapSeminar(item: SeminarListItem | SeminarDetailItem | undefined): Semi
     return null;
   }
   const price = parseCurrency(item.preis ?? null);
+  const hasBrutto = price.value != null;
+  const steuerSatz = item.mwst === false ? 0 : hasBrutto ? DEFAULT_VAT_RATE : null;
   const datesRaw: SeminarTermin[] = Array.isArray(item.termine) ? item.termine : [];
   const dates = datesRaw
     .map((termin) => {
@@ -228,6 +211,7 @@ function mapSeminar(item: SeminarListItem | SeminarDetailItem | undefined): Semi
     slug: item.slug,
     description: item.kurzbeschreibung ?? null,
     price,
+    steuerSatz,
     dates,
     imageUrl: mediaUrl(item.bild?.url),
     imageAlt: item.bild?.alternativeText ?? null
@@ -241,6 +225,20 @@ function mapProduct(item: ProductDetailItem | null | undefined): ProductCartItem
 
   const priceSource = item.preisBrutto ?? item.preisNetto ?? null;
   const price = parseCurrency(priceSource);
+  const priceNetto = parseCurrency(item.preisNetto ?? null).value;
+  const steuerRaw =
+    typeof item.steuerSatz === "number"
+      ? item.steuerSatz
+      : typeof item.steuerSatz === "string"
+        ? Number.parseFloat(item.steuerSatz.replace(",", "."))
+        : null;
+  const fallbackTax = item.mwst === false ? 0 : DEFAULT_VAT_RATE;
+  const steuerSatz =
+    item.gutschein
+      ? 0
+      : Number.isFinite(steuerRaw)
+        ? Number(steuerRaw)
+        : fallbackTax;
 
   return {
     id: item.id,
@@ -248,6 +246,8 @@ function mapProduct(item: ProductDetailItem | null | undefined): ProductCartItem
     slug: item.slug,
     description: item.kurzbeschreibung ?? null,
     price,
+    priceNetto,
+    steuerSatz,
     imageUrl: mediaUrl(item.bild?.url),
     imageAlt: item.bild?.alternativeText ?? null,
     isVoucher: Boolean(item.gutschein)
@@ -268,9 +268,13 @@ function mapVoucher(selection: VoucherSelection | null): VoucherCartItem | null 
   };
 }
 
-type CartData = {
+export type SeminarCartEntry = {
+  selection: BookingSelection;
   seminar: SeminarCartItem | null;
-  seminarSelection: BookingSelection | null;
+};
+
+type CartData = {
+  seminars: SeminarCartEntry[];
   product: ProductCartItem | null;
   productSelection: ProductSelection | null;
   voucher: VoucherCartItem | null;
@@ -282,9 +286,8 @@ type CartState =
   | { status: "ready"; data: CartData }
   | { status: "error"; data: CartData; error: unknown };
 
-const EXTENDED_EMPTY_DATA: CartData = {
-  seminar: null,
-  seminarSelection: null,
+const EMPTY_DATA: CartData = {
+  seminars: [],
   product: null,
   productSelection: null,
   voucher: null,
@@ -292,14 +295,14 @@ const EXTENDED_EMPTY_DATA: CartData = {
 };
 
 export function useCartData(): CartState {
-  const [seminarSelection, setSeminarSelection] = useState<BookingSelection | null>(() => readBookingSelection());
+  const [seminarSelections, setSeminarSelections] = useState<BookingSelection[]>(() => readBookingSelections());
   const [productSelection, setProductSelection] = useState<ProductSelection | null>(() => readProductSelection());
   const [voucherSelection, setVoucherSelection] = useState<VoucherSelection | null>(() => readVoucherSelection());
   const [state, setState] = useState<CartState>({
     status: "loading",
     data: {
-      ...EXTENDED_EMPTY_DATA,
-      seminarSelection,
+      ...EMPTY_DATA,
+      seminars: seminarSelections.map((selection) => ({ selection, seminar: null })),
       productSelection,
       voucherSelection,
       voucher: mapVoucher(voucherSelection)
@@ -308,7 +311,7 @@ export function useCartData(): CartState {
 
   useEffect(() => {
     const handleBookingPending = () => {
-      setSeminarSelection(readBookingSelection());
+      setSeminarSelections(readBookingSelections());
     };
 
     const handleProductPending = () => {
@@ -321,7 +324,7 @@ export function useCartData(): CartState {
 
     const handleStorage = (event: StorageEvent) => {
       if (event.key === BOOKING_SELECTION_STORAGE_KEY) {
-        setSeminarSelection(readBookingSelection());
+        setSeminarSelections(readBookingSelections());
       }
       if (event.key === PRODUCT_SELECTION_STORAGE_KEY) {
         setProductSelection(readProductSelection());
@@ -348,27 +351,36 @@ export function useCartData(): CartState {
     let active = true;
 
     async function load(
-      currentSeminarSelection: BookingSelection | null,
+      currentSeminarSelections: BookingSelection[],
       currentProductSelection: ProductSelection | null,
       currentVoucherSelection: VoucherSelection | null
     ) {
       try {
-        const seminarPromise = currentSeminarSelection?.seminarSlug
-          ? fetchJson<SeminarDetailItem>(
-              `/public/seminare/${encodeURIComponent(currentSeminarSelection.seminarSlug)}`,
+        const seminarPromises = currentSeminarSelections.map(async (selection) => {
+          if (!selection.seminarSlug) {
+            return { selection, seminar: null as SeminarCartItem | null };
+          }
+          try {
+            const detail = await fetchJson<SeminarDetailItem>(
+              `/public/seminare/${encodeURIComponent(selection.seminarSlug)}`,
               {
                 next: { revalidate: 30 },
                 cache: "force-cache"
               }
-            )
-              .then((detail) => mapSeminar(detail))
-              .catch((error) => {
-                if (error && typeof error === "object" && "status" in error && (error as { status?: number }).status === 404) {
-                  return null;
-                }
-                throw error;
-              })
-          : Promise.resolve(null);
+            );
+            return { selection, seminar: mapSeminar(detail) };
+          } catch (error) {
+            if (
+              error &&
+              typeof error === "object" &&
+              "status" in error &&
+              (error as { status?: number }).status === 404
+            ) {
+              return { selection, seminar: null as SeminarCartItem | null };
+            }
+            throw error;
+          }
+        });
 
         const productPromise = currentProductSelection?.productSlug
           ? fetchJson<ProductDetailItem>(
@@ -387,7 +399,10 @@ export function useCartData(): CartState {
               })
           : Promise.resolve(null);
 
-        const [seminar, product] = await Promise.all([seminarPromise, productPromise]);
+        const [seminars, product] = await Promise.all([
+          Promise.all(seminarPromises),
+          productPromise
+        ]);
         const voucher = mapVoucher(currentVoucherSelection);
 
         if (!active) return;
@@ -395,8 +410,7 @@ export function useCartData(): CartState {
         setState({
           status: "ready",
           data: {
-            seminar,
-            seminarSelection: currentSeminarSelection,
+            seminars,
             product,
             productSelection: currentProductSelection,
             voucher,
@@ -409,8 +423,8 @@ export function useCartData(): CartState {
         setState({
           status: "error",
           data: {
-            ...EXTENDED_EMPTY_DATA,
-            seminarSelection: currentSeminarSelection,
+            ...EMPTY_DATA,
+            seminars: currentSeminarSelections.map((selection) => ({ selection, seminar: null })),
             productSelection: currentProductSelection,
             voucherSelection: currentVoucherSelection,
             voucher: mapVoucher(currentVoucherSelection)
@@ -420,12 +434,12 @@ export function useCartData(): CartState {
       }
     }
 
-    load(seminarSelection, productSelection, voucherSelection);
+    load(seminarSelections, productSelection, voucherSelection);
 
     return () => {
       active = false;
     };
-  }, [seminarSelection, productSelection, voucherSelection]);
+  }, [seminarSelections, productSelection, voucherSelection]);
 
   return state;
 }

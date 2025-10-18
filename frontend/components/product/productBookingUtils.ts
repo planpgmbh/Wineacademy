@@ -7,6 +7,8 @@ export type ProductBookingSelection = {
   productSlug?: string | null;
   productTitle?: string | null;
   priceValue?: number | null;
+  priceNetto?: number | null;
+  steuerSatz?: number | null;
   priceFormatted?: string | null;
   isVoucher?: boolean;
 };
@@ -21,6 +23,8 @@ export function triggerProductBooking(selection: ProductBookingSelection) {
     title: selection.productTitle ?? null,
     quantity,
     priceValue: typeof selection.priceValue === "number" ? selection.priceValue : null,
+    priceNetto: typeof selection.priceNetto === "number" ? selection.priceNetto : null,
+    steuerSatz: typeof selection.steuerSatz === "number" ? selection.steuerSatz : null,
     priceFormatted: selection.priceFormatted ?? null,
     isVoucher: Boolean(selection.isVoucher),
     createdAt: new Date().toISOString(),

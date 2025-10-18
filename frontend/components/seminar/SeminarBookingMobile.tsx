@@ -3,7 +3,12 @@
 import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from "react";
 
 import { QuantitySelector } from "@/components/shared/QuantitySelector";
-import { BOOKING_SELECTION_STORAGE_KEY, triggerBookingFlow } from "./bookingUtils";
+import {
+  BOOKING_SELECTION_STORAGE_KEY,
+  readBookingSelections,
+  triggerBookingFlow,
+  type BookingSelection
+} from "./bookingUtils";
 
 type SeminarBookingMobileProps = {
   highlightLabel?: string;
@@ -46,41 +51,74 @@ export function SeminarBookingMobile({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const syncSelection = useCallback(
+    (preferredDate?: string) => {
+      if (typeof window === "undefined" || !seminarSlug) {
+        return;
+      }
+
+      const selections = readBookingSelections().filter((entry) => entry.seminarSlug === seminarSlug);
+      if (selections.length === 0) {
+        return;
+      }
+
+      const desiredDate = preferredDate ?? selectedDate ?? null;
+      const matchByDate = desiredDate ? selections.find((entry) => entry.dateId === desiredDate) ?? null : null;
+
+      if (preferredDate && !matchByDate) {
+        setQuantity(1);
+        return;
+      }
+
+      const latestFallback = selections.reduce<BookingSelection | null>((latest, entry) => {
+        if (!latest) {
+          return entry;
+        }
+        if (!entry.updatedAt) {
+          return latest;
+        }
+        if (!latest.updatedAt || entry.updatedAt > latest.updatedAt) {
+          return entry;
+        }
+        return latest;
+      }, null);
+
+      const candidate = matchByDate ?? latestFallback;
+      if (!candidate) {
+        return;
+      }
+
+      setQuantity(Math.max(1, Math.trunc(candidate.quantity ?? 1)));
+      if (!selectedDate && candidate.dateId && dates.some((date) => date.id === candidate.dateId)) {
+        setSelectedDate(candidate.dateId);
+      }
+      setDateError(null);
+    },
+    [dates, selectedDate, seminarSlug]
+  );
+
   useEffect(() => {
     if (typeof window === "undefined" || !seminarSlug) {
       return;
     }
 
-    try {
-      const raw = window.localStorage.getItem(BOOKING_SELECTION_STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      if (!parsed || typeof parsed !== "object") return;
-
-      const storedSlug =
-        typeof parsed.slug === "string"
-          ? parsed.slug
-          : typeof parsed.seminarSlug === "string"
-            ? parsed.seminarSlug
-            : null;
-
-      if (!storedSlug || storedSlug !== seminarSlug) return;
-
-      if (typeof parsed.quantity === "number" && Number.isFinite(parsed.quantity)) {
-        setQuantity(Math.max(1, Math.trunc(parsed.quantity)));
+    const handleSync = () => syncSelection();
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === BOOKING_SELECTION_STORAGE_KEY) {
+        syncSelection();
       }
+    };
 
-      const storedDate = typeof parsed.dateId === "string" ? parsed.dateId : null;
-      if (storedDate && dates.some((date) => date.id === storedDate)) {
-        setSelectedDate(storedDate);
-      } else {
-        setSelectedDate(undefined);
-      }
-      setDateError(null);
-    } catch {
-      // Ignoriert – Vorbelegung optional.
-    }
-  }, [datesKey, dates, seminarSlug]);
+    syncSelection();
+
+    document.addEventListener("booking:pending", handleSync);
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      document.removeEventListener("booking:pending", handleSync);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, [datesKey, syncSelection, seminarSlug]);
 
   const safeAreaBottom = "env(safe-area-inset-bottom, 0)";
 
@@ -89,8 +127,11 @@ export function SeminarBookingMobile({
       const value = event.target.value === placeholderValue ? undefined : event.target.value;
       setSelectedDate(value);
       setDateError(null);
+      if (value) {
+        syncSelection(value);
+      }
     },
-    [placeholderValue]
+    [placeholderValue, syncSelection]
   );
 
   const handleButtonClick = () => {

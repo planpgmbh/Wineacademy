@@ -17,6 +17,8 @@ type ProductBookingMobileProps = {
   productSlug?: string;
   productTitle?: string;
   priceValue?: number | null;
+  priceNetto?: number | null;
+  steuerSatz?: number | null;
   priceFormatted?: string | null;
   isVoucher?: boolean;
   onSubmit?: (payload: { quantity: number }) => void;
@@ -31,6 +33,8 @@ export function ProductBookingMobile({
   productSlug,
   productTitle,
   priceValue,
+  priceNetto,
+  steuerSatz,
   priceFormatted,
   isVoucher,
   onSubmit
@@ -96,6 +100,8 @@ export function ProductBookingMobile({
       productSlug,
       productTitle: productTitle ?? title,
       priceValue,
+      priceNetto,
+      steuerSatz,
       priceFormatted: priceFormatted ?? price,
       isVoucher
     });

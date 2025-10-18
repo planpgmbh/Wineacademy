@@ -183,23 +183,15 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
     try {
       const bestellung = await strapi.entityService.findOne('api::bestellung.bestellung', id, {
         populate: { gutscheine: { filters: { istTemplate: false }, fields: ['code', 'betrag', 'eingeloest'] } },
-        fields: [
-          'id',
-          'bestellstatus',
-          'zahlungsmethode',
-          'zuZahlenBrutto',
-          'zuZahlenNetto',
-          'zuZahlenSteuer',
-          'summePositionenBrutto',
-          'summePositionenNetto',
-          'summeSteuer',
-          'gutscheinBetrag',
-        ],
       });
       if (!bestellung) return ctx.notFound('Nicht gefunden');
       const vouchers = Array.isArray((bestellung as any)?.gutscheine) ? (bestellung as any).gutscheine : [];
+      const invoiceDownload = resolveInvoiceDownloadUrl(bestellung, 'invoice');
+      const stornoDownload = resolveInvoiceDownloadUrl(bestellung, 'storno');
+
       ctx.body = {
         id: bestellung.id,
+        bestellnummer: bestellung.bestellnummer ?? null,
         status: bestellung.bestellstatus,
         zahlungsmethode: bestellung.zahlungsmethode,
         totals: {
@@ -213,6 +205,10 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
           betrag: g.betrag,
           eingelöst: g.eingeloest,
         })),
+        downloads: {
+          rechnung: invoiceDownload,
+          storno: stornoDownload,
+        },
       };
     } catch (e) {
       strapi.log.error('[publicGet Bestellung] Fehler', e);
@@ -288,13 +284,11 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         const steuerSatz = mwstAktiv ? defaultVat : 0;
 
         const seminarPreis = Number(seminar?.preis);
-        const fallbackPreis = Number(raw.einzelpreisBrutto);
-        const basisPreis = Number.isFinite(seminarPreis) ? seminarPreis : fallbackPreis;
-        if (!Number.isFinite(basisPreis)) {
-          strapi.log.error(`[publicCreate Bestellung] Kein Preis für Termin ${terminId} (raw=${JSON.stringify({ terminId, rawPreis: raw.einzelpreisBrutto, seminarPreis: seminar?.preis })})`);
+        if (!Number.isFinite(seminarPreis)) {
+          strapi.log.error(`[publicCreate Bestellung] Kein Preis für Termin ${terminId} (seminarPreis=${seminar?.preis})`);
           return ctx.badRequest('Preis für Termin nicht verfügbar');
         }
-        const brutto = round2(basisPreis);
+        const brutto = round2(seminarPreis);
         const netto = mwstAktiv ? round2(brutto / (1 + steuerSatz / 100)) : brutto;
 
         const titel = raw.titel?.trim() || `${seminar?.name || 'Seminar'} · Termin #${termin.id}`;
