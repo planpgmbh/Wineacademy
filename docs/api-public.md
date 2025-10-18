@@ -10,6 +10,7 @@ Die Frontend- und Partner-Integrationen greifen ausschließlich auf `/api/public
 | `GET` | `/api/public/produkte` | Aktive Produkte (inkl. `gutschein`-Flag) |
 | `GET` | `/api/public/gutscheine/template` | Gutschein-Template (Min/Max-Beträge, Beschreibung, Bild) |
 | `POST` | `/api/public/gutscheine/pricing` | Validiert Wunschbetrag, gibt gerundete Werte zurück |
+| `POST` | `/api/public/gutscheine/validate` | Prüft Rabatt-/Gutschein-Codes und liefert anwendbaren Betrag |
 | `POST` | `/api/public/bestellungen` | Erstellt eine Bestellung (Rechnung oder PayPal-Capture) |
 | `GET` | `/api/public/bestellungen/:id` | Gibt Status & Gutscheincodes einer Bestellung aus |
 | `POST` | `/api/public/paypal/webhook` | Verarbeitung von PayPal-Webhooks (Signaturprüfung, Status-Update) |
@@ -100,5 +101,30 @@ Die Frontend- und Partner-Integrationen greifen ausschließlich auf `/api/public
 - **Payload:** `{ "betrag": 87 }`
 - **Antwort:** `{ "betrag": 90, "steuerSatz": 19, "summeNetto": 75.63, "summeSteuer": 14.37 }`
 - Nutzt interne Rundungslogik gemäß Strapi-Einstellungen.
+
+### POST `/api/public/gutscheine/validate`
+- **Payload:**
+```json
+{
+  "code": "WELCOME10",
+  "totals": {
+    "brutto": 249.0,
+    "netto": 209.24,
+    "steuer": 39.76
+  }
+}
+```
+- **Antwort:**
+```json
+{
+  "code": "WELCOME10",
+  "typ": "prozent",
+  "amount": 24.9,
+  "remaining": 0,
+  "name": "WELCOME10",
+  "description": "10% Willkommensrabatt"
+}
+```
+- Validiert Aktivität, Limits (Mindestbestellwert, Ablauf, Nutzungsanzahl) sowie Restguthaben und liefert den anwendbaren Rabattbetrag.
 
 Weitere Details zu Feldern und Business-Logik findest Du im Strapi-Code (`src/api/*`) bzw. den entsprechenden Services.

@@ -52,8 +52,25 @@
       "type": "string",
       "unique": true
     },
+    "typ": {
+      "type": "enumeration",
+      "enum": [
+        "betrag",
+        "prozent"
+      ],
+      "default": "betrag"
+    },
+    "wert": {
+      "type": "decimal",
+      "default": 0
+    },
     "betrag": {
-      "type": "decimal"
+      "type": "decimal",
+      "default": 0
+    },
+    "restwert": {
+      "type": "decimal",
+      "default": 0
     },
     "minBetrag": {
       "type": "decimal"
@@ -71,6 +88,24 @@
     },
     "eingeloestAm": {
       "type": "datetime"
+    },
+    "eingeloestAnzahl": {
+      "type": "integer",
+      "default": 0
+    },
+    "maxEinloesungen": {
+      "type": "integer",
+      "default": 0
+    },
+    "mindesteinkauf": {
+      "type": "decimal",
+      "default": 0
+    },
+    "maxRabatt": {
+      "type": "decimal"
+    },
+    "gueltigBis": {
+      "type": "date"
     },
     "bestellung": {
       "type": "relation",

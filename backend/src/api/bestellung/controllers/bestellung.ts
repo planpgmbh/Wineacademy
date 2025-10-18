@@ -1,6 +1,6 @@
 import { factories } from '@strapi/strapi';
 import { SevDeskError, downloadDocument } from '../../../services/sevdesk';
-import { GutscheinHelper, calculateGutscheinTotals } from '../utils/gutschein';
+import { GutscheinHelper, calculateGutscheinTotals, GutscheinValidationResult } from '../utils/gutschein';
 import { verifyPayPalCapture } from '../utils/paypal';
 import { syncSevDeskOrder, SevDeskSyncInput } from '../services/sevdesk-order';
 import { resolveInvoiceDownloadUrl, buildDocumentFilename, resolveOrderIdentifier } from '../utils/order-links';
@@ -245,9 +245,6 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
 
     const teilnehmerInput: TeilnehmerInput[] = Array.isArray(body.buchungen) ? body.buchungen : [];
 
-    const discountRaw = Number(body.gutscheinBetrag ?? 0);
-    const gutscheinBetrag = Number.isFinite(discountRaw) && discountRaw > 0 ? round2(discountRaw) : 0;
-
     const seminarSeats = new Map<number, { menge: number; brutto: number; netto: number; titel: string; steuerSatz: number }>();
     const positionen: any[] = [];
     const loadProdukt = async (id: number) => {
@@ -456,7 +453,27 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
     const summePositionenBrutto = round2(normalisedPositions.reduce((acc, p) => acc + (p.summeBrutto ?? 0), 0));
     const summeSteuer = round2(normalisedPositions.reduce((acc, p) => acc + (p.summeSteuer ?? 0), 0));
 
-        const gutscheinTotals = calculateGutscheinTotals(
+    const voucherCodeRaw = typeof body.gutscheinCode === 'string' ? body.gutscheinCode : '';
+    let appliedVoucher: GutscheinValidationResult | null = null;
+    let gutscheinBetrag = 0;
+
+    if (voucherCodeRaw) {
+      try {
+        appliedVoucher = await gutscheinHelper.validateVoucher(voucherCodeRaw, {
+          brutto: summePositionenBrutto,
+          netto: summePositionenNetto,
+          steuer: summeSteuer,
+        });
+        gutscheinBetrag = appliedVoucher.betrag;
+      } catch (voucherError: any) {
+        return ctx.badRequest(voucherError?.message ?? 'Gutschein ungültig');
+      }
+    } else if (Number.isFinite(Number(body.gutscheinBetrag)) && Number(body.gutscheinBetrag) > 0) {
+      // Legacy-Fallback: erlaubt bestehende Integrationen ohne Gutschein-Code.
+      gutscheinBetrag = round2(Number(body.gutscheinBetrag));
+    }
+
+    const gutscheinTotals = calculateGutscheinTotals(
       summePositionenBrutto,
       summePositionenNetto,
       summeSteuer,
@@ -476,6 +493,11 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
 
       const { summeGutschein, dueBrutto, dueNetto, dueSteuer } = gutscheinTotals;
       const newsletterOptIn = !!body.newsletterOptIn;
+      const normalisedVoucherCode = appliedVoucher?.code
+        ? appliedVoucher.code
+        : voucherCodeRaw
+          ? gutscheinHelper.normaliseCode(voucherCodeRaw)
+          : undefined;
 
             const bestellungData: any = {
         rechnungstyp,
@@ -495,7 +517,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         summePositionenBrutto,
         summeSteuer,
         gutscheinBetrag: summeGutschein,
-        gutscheinCode: body.gutscheinCode,
+        gutscheinCode: normalisedVoucherCode,
         zuZahlenBrutto: dueBrutto,
         zuZahlenNetto: dueNetto,
         zuZahlenSteuer: dueSteuer,
@@ -520,6 +542,22 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
               ...teilnehmer,
               bestellung: bestellungId,
             },
+          });
+        }
+      }
+
+      if (appliedVoucher) {
+        try {
+          await gutscheinHelper.registerVoucherRedemption(
+            appliedVoucher.voucher,
+            appliedVoucher.betrag,
+            appliedVoucher.restbetrag
+          );
+        } catch (voucherUpdateErr: any) {
+          strapi.log.error('[publicCreate Bestellung] Gutscheincode konnte nicht aktualisiert werden.', {
+            bestellungId,
+            gutscheinId: appliedVoucher.gutscheinId,
+            error: voucherUpdateErr?.message ?? voucherUpdateErr,
           });
         }
       }

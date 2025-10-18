@@ -273,7 +273,14 @@ async function upsertGutschein(
     name: string;
     code: string;
     beschreibung?: string;
+    typ?: 'betrag' | 'prozent';
+    wert?: number;
     betrag?: number;
+    restwert?: number;
+    maxRabatt?: number;
+    mindesteinkauf?: number;
+    maxEinloesungen?: number;
+    gueltigBis?: string | Date;
     aktiv?: boolean;
     hintergrundbild?: unknown;
     bookingbox_topline?: string;
@@ -282,16 +289,40 @@ async function upsertGutschein(
     gutscheininhalte?: Array<Record<string, unknown>>;
   }
 ) {
-  const existing = await strapi.db.query('api::gutschein.gutschein').findOne({ where: { code: values.code }, select: ['id'] });
+  const canonicalCode = values.code.replace(/\s+/g, '').toUpperCase();
+  const existing = await strapi.db.query('api::gutschein.gutschein').findOne({ where: { code: canonicalCode }, select: ['id'] });
   const data: any = {
     name: values.name,
     beschreibung: values.beschreibung ?? undefined,
-    code: values.code,
+    code: canonicalCode,
     istTemplate: false,
     aktiv: values.aktiv ?? true,
   };
+  if (values.typ) {
+    data.typ = values.typ;
+  }
+  if (typeof values.wert === 'number') {
+    data.wert = values.wert;
+  }
   if (typeof values.betrag === 'number') {
     data.betrag = values.betrag;
+  }
+  if (typeof values.restwert === 'number') {
+    data.restwert = values.restwert;
+  } else if (typeof values.betrag === 'number' && values.typ !== 'prozent') {
+    data.restwert = values.betrag;
+  }
+  if (typeof values.maxRabatt === 'number') {
+    data.maxRabatt = values.maxRabatt;
+  }
+  if (typeof values.mindesteinkauf === 'number') {
+    data.mindesteinkauf = values.mindesteinkauf;
+  }
+  if (typeof values.maxEinloesungen === 'number') {
+    data.maxEinloesungen = values.maxEinloesungen;
+  }
+  if (values.gueltigBis) {
+    data.gueltigBis = values.gueltigBis instanceof Date ? values.gueltigBis.toISOString().slice(0, 10) : values.gueltigBis;
   }
   if ('hintergrundbild' in values) {
     data.hintergrundbild = values.hintergrundbild ?? undefined;
@@ -944,18 +975,29 @@ const seminarSeeds: SeminarSeed[] = [
       name: 'WELCOME10',
       code: 'WELCOME10',
       beschreibung: '10% Willkommensrabatt',
+      typ: 'prozent' as const,
+      wert: 10,
+      mindesteinkauf: 100,
+      maxRabatt: 100,
+      maxEinloesungen: 500,
     },
     {
       name: 'TEST-25',
       code: 'TEST-25',
       beschreibung: '25 EUR Testgutschein',
       betrag: 25,
+      typ: 'betrag' as const,
+      wert: 25,
+      maxEinloesungen: 1,
     },
     {
       name: 'WSET50',
       code: 'WSET50',
       beschreibung: '50 EUR auf WSET Seminare',
       betrag: 50,
+      typ: 'betrag' as const,
+      wert: 50,
+      maxEinloesungen: 1,
     },
   ];
 

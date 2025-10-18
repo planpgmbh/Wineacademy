@@ -12,5 +12,11 @@ export default {
       handler: 'gutschein.pricing',
       config: { auth: false },
     },
+    {
+      method: 'POST',
+      path: '/public/gutscheine/validate',
+      handler: 'gutschein.validate',
+      config: { auth: false },
+    },
   ],
 };

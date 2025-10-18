@@ -638,7 +638,8 @@ export interface ApiGutscheinGutschein extends Struct.CollectionTypeSchema {
       'manyToOne',
       'api::bestellung.bestellung'
     >;
-    betrag: Schema.Attribute.Decimal;
+    betrag: Schema.Attribute.Decimal &
+      Schema.Attribute.DefaultTo<0>;
     bild: Schema.Attribute.Media<'images'>;
     bookingboxBody: Schema.Attribute.Text;
     bookingboxHeadline: Schema.Attribute.String;
@@ -649,6 +650,9 @@ export interface ApiGutscheinGutschein extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     eingeloest: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     eingeloestAm: Schema.Attribute.DateTime;
+    eingeloestAnzahl: Schema.Attribute.Integer &
+      Schema.Attribute.DefaultTo<0>;
+    gueltigBis: Schema.Attribute.Date;
     gutscheininhalte: Schema.Attribute.Component<'gutschein.tab', true>;
     hintergrundbild: Schema.Attribute.Media<'images'>;
     istTemplate: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
@@ -658,13 +662,24 @@ export interface ApiGutscheinGutschein extends Struct.CollectionTypeSchema {
       'api::gutschein.gutschein'
     > &
       Schema.Attribute.Private;
+    maxEinloesungen: Schema.Attribute.Integer &
+      Schema.Attribute.DefaultTo<0>;
     maxBetrag: Schema.Attribute.Decimal;
+    maxRabatt: Schema.Attribute.Decimal;
     minBetrag: Schema.Attribute.Decimal;
+    mindesteinkauf: Schema.Attribute.Decimal &
+      Schema.Attribute.DefaultTo<0>;
     publishedAt: Schema.Attribute.DateTime;
     name: Schema.Attribute.String & Schema.Attribute.Required;
+    restwert: Schema.Attribute.Decimal &
+      Schema.Attribute.DefaultTo<0>;
+    typ: Schema.Attribute.Enumeration<['betrag', 'prozent']> &
+      Schema.Attribute.DefaultTo<'betrag'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    wert: Schema.Attribute.Decimal &
+      Schema.Attribute.DefaultTo<0>;
   };
 }
 

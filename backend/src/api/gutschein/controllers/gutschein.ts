@@ -1,4 +1,5 @@
 import { factories } from '@strapi/strapi';
+import { GutscheinHelper } from '../../bestellung/utils/gutschein';
 
 const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
@@ -59,5 +60,61 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
       minBetrag: min,
       maxBetrag: max,
     };
+  },
+
+  async validate(ctx) {
+    const body = ctx.request.body as any;
+    const codeInput = typeof body?.code === 'string' ? body.code : typeof body?.gutscheinCode === 'string' ? body.gutscheinCode : null;
+    if (!codeInput) {
+      return ctx.badRequest('Gutscheincode erforderlich');
+    }
+
+    const extractNumber = (...values: unknown[]): number | null => {
+      for (const value of values) {
+        if (value == null) continue;
+        const num = Number(value);
+        if (Number.isFinite(num)) {
+          return num;
+        }
+      }
+      return null;
+    };
+
+    const totalsSource = body?.totals ?? body?.warenkorb ?? body?.cart ?? {};
+    const bruttoCandidate = extractNumber(
+      body?.brutto,
+      body?.total,
+      body?.subtotal,
+      body?.cartTotal,
+      totalsSource?.brutto,
+      totalsSource?.total,
+      totalsSource?.subtotal
+    );
+    const brutto = bruttoCandidate != null ? Number(bruttoCandidate) : 0;
+    if (!Number.isFinite(brutto) || brutto <= 0) {
+      return ctx.badRequest('Warenkorb-Betrag erforderlich.');
+    }
+
+    const nettoCandidate = extractNumber(body?.netto, totalsSource?.netto);
+    const steuerCandidate = extractNumber(body?.steuer, totalsSource?.steuer);
+
+    const helper = new GutscheinHelper(strapi);
+    try {
+      const result = await helper.validateVoucher(codeInput, {
+        brutto,
+        netto: nettoCandidate != null ? Number(nettoCandidate) : undefined,
+        steuer: steuerCandidate != null ? Number(steuerCandidate) : undefined,
+      });
+      ctx.body = {
+        code: result.code,
+        typ: result.typ,
+        amount: result.betrag,
+        remaining: result.restbetrag,
+        name: result.name ?? null,
+        description: result.beschreibung ?? null,
+      };
+    } catch (error: any) {
+      ctx.badRequest(error?.message ?? 'Gutscheincode ungültig.');
+    }
   },
 }));

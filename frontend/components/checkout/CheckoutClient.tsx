@@ -76,6 +76,24 @@ type BillingFormValue = {
   phone: string;
 };
 
+type ParticipantErrorState = {
+  firstName: boolean;
+  lastName: boolean;
+};
+
+type BillingErrorState = {
+  companyName: string | null;
+  invoiceEmail: string | null;
+  street: string | null;
+  zip: string | null;
+  city: string | null;
+  country: string | null;
+  contactFirstName: string | null;
+  contactLastName: string | null;
+  contactEmail: string | null;
+  phone: string | null;
+};
+
 type StepId = "participants" | "billing" | "overview" | "payment" | "confirmation";
 
 type StepDefinition = {
@@ -96,6 +114,24 @@ type PayPalOptionConfig = {
   helper: string;
   buttonLabel: "pay" | "checkout" | "buynow" | "paylater";
   fundingSource?: "paypal" | "card";
+};
+
+const createParticipantErrorState = (): ParticipantErrorState => ({
+  firstName: false,
+  lastName: false
+});
+
+const initialBillingErrors: BillingErrorState = {
+  companyName: null,
+  invoiceEmail: null,
+  street: null,
+  zip: null,
+  city: null,
+  country: null,
+  contactFirstName: null,
+  contactLastName: null,
+  contactEmail: null,
+  phone: null
 };
 
 type SummaryItem = {
@@ -136,13 +172,13 @@ const PAYMENT_OPTIONS: PaymentOption[] = [
   },
   {
     value: "lastschrift",
-    label: "Lastschrift (via PayPal)",
-    description: "Der Betrag wird durch PayPal per SEPA-Lastschrift eingezogen."
+    label: "Lastschrift",
+    description: "Der Betrag wird per SEPA-Lastschrift eingezogen."
   },
   {
     value: "kreditkarte",
-    label: "Kreditkarte (via PayPal)",
-    description: "Zahlung per Visa, Mastercard oder American Express über PayPal."
+    label: "Kreditkarte",
+    description: "Zahlung per Visa, Mastercard oder American Express."
   }
 ];
 
@@ -402,9 +438,13 @@ export function CheckoutClient() {
     contactEmail: "",
     phone: ""
   });
+  const [participantErrors, setParticipantErrors] = useState<ParticipantErrorState[]>([]);
+  const [billingErrors, setBillingErrors] = useState<BillingErrorState>(initialBillingErrors);
   const [newsletter, setNewsletter] = useState(false);
   const [agbAccepted, setAgbAccepted] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [agbError, setAgbError] = useState(false);
+  const [privacyError, setPrivacyError] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("rechnung");
 
   const [voucherInput, setVoucherInput] = useState("");
@@ -490,6 +530,15 @@ export function CheckoutClient() {
   }, [seminarState?.selection.quantity, seminarState]);
 
   useEffect(() => {
+    setParticipantErrors((prev) =>
+      participants.map((_, index) => {
+        const existing = prev[index];
+        return existing ? { ...existing } : createParticipantErrorState();
+      })
+    );
+  }, [participants]);
+
+  useEffect(() => {
     if (participants.length === 0) {
       return;
     }
@@ -556,19 +605,50 @@ export function CheckoutClient() {
     moveToStep(activeStepIndex - 1);
   }, [activeStepIndex, moveToStep]);
 
-  const handleParticipantChange = useCallback((index: number, field: keyof ParticipantFormValue, value: string) => {
-    setParticipants((prev) => {
-      const next = [...prev];
-      if (!next[index]) {
-        return prev;
+  const handleParticipantChange = useCallback(
+    (index: number, field: keyof ParticipantFormValue, value: string) => {
+      setParticipants((prev) => {
+        const next = [...prev];
+        if (!next[index]) {
+          return prev;
+        }
+        next[index] = { ...next[index], [field]: value };
+        return next;
+      });
+      if (field === "firstName" || field === "lastName") {
+        setParticipantErrors((prev) => {
+          const next = [...prev];
+          if (next[index]) {
+            next[index] = {
+              ...next[index],
+              [field === "firstName" ? "firstName" : "lastName"]: false
+            };
+          }
+          return next;
+        });
       }
-      next[index] = { ...next[index], [field]: value };
-      return next;
-    });
-  }, []);
+    },
+    []
+  );
 
   const handleBillingChange = useCallback(<K extends keyof BillingFormValue>(key: K, value: BillingFormValue[K]) => {
     setBilling((prev) => ({ ...prev, [key]: value }));
+    switch (key) {
+      case "companyName":
+      case "invoiceEmail":
+      case "street":
+      case "zip":
+      case "city":
+      case "country":
+      case "contactFirstName":
+      case "contactLastName":
+      case "contactEmail":
+      case "phone":
+        setBillingErrors((prev) => ({ ...prev, [key]: null }));
+        break;
+      default:
+        break;
+    }
   }, []);
 
   const handleBillingTypeChange = useCallback((type: "privat" | "firma") => {
@@ -579,60 +659,100 @@ export function CheckoutClient() {
       vatId: type === "firma" ? prev.vatId : "",
       invoiceEmail: type === "firma" ? prev.invoiceEmail : ""
     }));
+    if (type === "privat") {
+      setBillingErrors((prev) => ({
+        ...prev,
+        companyName: null,
+        invoiceEmail: null
+      }));
+    }
   }, []);
 
   const validateParticipants = useCallback(() => {
     if (!seminarState) {
+      setParticipantErrors([]);
+      setStepError(null);
       return true;
     }
     if (participants.length === 0) {
+      setParticipantErrors([]);
       setStepError("Bitte gib mindestens einen Teilnehmer ein.");
       return false;
     }
-    for (let index = 0; index < participants.length; index += 1) {
-      const participant = participants[index];
-      if (!participant.firstName.trim() || !participant.lastName.trim()) {
-        setStepError(`Bitte gib Vor- und Nachname für Teilnehmer ${index + 1} ein.`);
-        return false;
-      }
+
+    const errors = participants.map((participant) => ({
+      firstName: !participant.firstName.trim(),
+      lastName: !participant.lastName.trim()
+    }));
+    setParticipantErrors(errors);
+
+    const hasErrors = errors.some((entry) => entry.firstName || entry.lastName);
+    if (hasErrors) {
+      setStepError("Bitte fülle alle Pflichtfelder bei den Teilnehmerdaten aus.");
+      return false;
     }
+
     setStepError(null);
     return true;
   }, [participants, seminarState]);
 
   const validateBilling = useCallback(() => {
-    const requiredFields = [
-      { value: billing.street, message: "Bitte trage die Straße für die Rechnungsadresse ein." },
-      { value: billing.zip, message: "Bitte trage die Postleitzahl ein." },
-      { value: billing.city, message: "Bitte trage die Stadt ein." },
-      { value: billing.country, message: "Bitte trage das Land ein." },
-      { value: billing.contactFirstName, message: "Bitte trage den Vornamen der Kontaktperson ein." },
-      { value: billing.contactLastName, message: "Bitte trage den Nachnamen der Kontaktperson ein." },
-      { value: billing.contactEmail, message: "Bitte trage die E-Mail-Adresse der Kontaktperson ein." },
-      { value: billing.phone, message: "Bitte ergänze eine Telefonnummer für Rückfragen." }
-    ];
+    const errors: BillingErrorState = { ...initialBillingErrors };
+    let firstError: string | null = null;
 
-    if (billing.type === "firma") {
-      requiredFields.push(
-        { value: billing.companyName, message: "Bitte trage den Firmennamen ein." },
-        { value: billing.invoiceEmail, message: "Bitte gib die Rechnungs-E-Mail an." }
-      );
+    const registerError = (key: keyof BillingErrorState, message: string) => {
+      errors[key] = message;
+      if (!firstError) {
+        firstError = message;
+      }
+    };
+
+    if (!billing.street.trim()) {
+      registerError("street", "Bitte trage die Straße für die Rechnungsadresse ein.");
+    }
+    if (!billing.zip.trim()) {
+      registerError("zip", "Bitte trage die Postleitzahl ein.");
+    }
+    if (!billing.city.trim()) {
+      registerError("city", "Bitte trage die Stadt ein.");
+    }
+    if (!billing.country.trim()) {
+      registerError("country", "Bitte trage das Land ein.");
+    }
+    if (!billing.contactFirstName.trim()) {
+      registerError("contactFirstName", "Bitte trage den Vornamen der Kontaktperson ein.");
+    }
+    if (!billing.contactLastName.trim()) {
+      registerError("contactLastName", "Bitte trage den Nachnamen der Kontaktperson ein.");
+    }
+    if (!billing.contactEmail.trim()) {
+      registerError("contactEmail", "Bitte trage die E-Mail-Adresse der Kontaktperson ein.");
+    }
+    if (!billing.phone.trim()) {
+      registerError("phone", "Bitte ergänze eine Telefonnummer für Rückfragen.");
     }
 
-    for (const field of requiredFields) {
-      if (!String(field.value ?? "").trim()) {
-        setStepError(field.message);
-        return false;
+    if (billing.type === "firma") {
+      if (!billing.companyName.trim()) {
+        registerError("companyName", "Bitte trage den Firmennamen ein.");
+      }
+      if (!billing.invoiceEmail.trim()) {
+        registerError("invoiceEmail", "Bitte gib die Rechnungs-E-Mail an.");
       }
     }
 
     const emailPattern = /\S+@\S+\.\S+/;
-    if (!emailPattern.test(billing.contactEmail.trim())) {
-      setStepError("Die E-Mail-Adresse der Kontaktperson ist ungültig.");
-      return false;
+    if (billing.contactEmail.trim() && !emailPattern.test(billing.contactEmail.trim())) {
+      registerError("contactEmail", "Die E-Mail-Adresse der Kontaktperson ist ungültig.");
     }
-    if (billing.type === "firma" && billing.invoiceEmail && !emailPattern.test(billing.invoiceEmail.trim())) {
-      setStepError("Die Rechnungs-E-Mail ist ungültig.");
+    if (billing.type === "firma" && billing.invoiceEmail.trim() && !emailPattern.test(billing.invoiceEmail.trim())) {
+      registerError("invoiceEmail", "Die Rechnungs-E-Mail ist ungültig.");
+    }
+
+    setBillingErrors(errors);
+
+    if (firstError) {
+      setStepError(firstError);
       return false;
     }
 
@@ -641,18 +761,33 @@ export function CheckoutClient() {
   }, [billing]);
 
   const validatePayment = useCallback(() => {
+    let errorMessage: string | null = null;
+
     if (!agbAccepted) {
-      setStepError("Bitte bestätige die Allgemeinen Geschäftsbedingungen.");
-      return false;
+      setAgbError(true);
+      errorMessage = "Bitte bestätige die Allgemeinen Geschäftsbedingungen.";
+    } else {
+      setAgbError(false);
     }
+
     if (!privacyAccepted) {
-      setStepError("Bitte bestätige den Datenschutzhinweis.");
+      setPrivacyError(true);
+      if (!errorMessage) {
+        errorMessage = "Bitte bestätige den Datenschutzhinweis.";
+      }
+    } else {
+      setPrivacyError(false);
+    }
+
+    if (!paymentMethod && !errorMessage) {
+      errorMessage = "Bitte wähle eine Zahlungsmethode aus.";
+    }
+
+    if (errorMessage) {
+      setStepError(errorMessage);
       return false;
     }
-    if (!paymentMethod) {
-      setStepError("Bitte wähle eine Zahlungsmethode aus.");
-      return false;
-    }
+
     setStepError(null);
     return true;
   }, [agbAccepted, paymentMethod, privacyAccepted]);
@@ -924,8 +1059,24 @@ export function CheckoutClient() {
       }
 
       if (activeStepId === "overview") {
-        if (!agbAccepted || !privacyAccepted) {
-          setStepError("Bitte bestätige AGB und Datenschutzhinweise, bevor du zur Zahlung weitergehst.");
+        let hasError = false;
+        if (!agbAccepted) {
+          setAgbError(true);
+          setStepError("Bitte bestätige die Allgemeinen Geschäftsbedingungen.");
+          hasError = true;
+        } else {
+          setAgbError(false);
+        }
+        if (!privacyAccepted) {
+          setPrivacyError(true);
+          if (!hasError) {
+            setStepError("Bitte bestätige den Datenschutzhinweis.");
+          }
+          hasError = true;
+        } else {
+          setPrivacyError(false);
+        }
+        if (hasError) {
           return;
         }
         moveToStep(activeStepIndex + 1);
@@ -968,27 +1119,22 @@ export function CheckoutClient() {
       return;
     }
 
+    const subtotal = summaryItems.reduce((acc, item) => acc + (item.subtotal ?? 0), 0);
+    if (subtotal <= 0) {
+      setVoucherMessage("Der Warenkorb enthält keine kostenpflichtigen Positionen.");
+      return;
+    }
+
+    const netto = summaryItems.reduce((acc, item) => acc + (item.netto ?? item.subtotal ?? 0), 0);
+    const steuer = Math.max(0, subtotal - netto);
+
     setVoucherChecking(true);
     setVoucherMessage(null);
-    const lookup = await fetchVoucherByCode(code);
+    const lookup = await fetchVoucherByCode(code, { brutto: subtotal, netto, steuer });
     setVoucherChecking(false);
 
     if (!lookup) {
       setVoucherMessage("Der eingegebene Code ist ungültig oder wurde nicht gefunden.");
-      return;
-    }
-    if (!lookup.active) {
-      setVoucherMessage("Dieser Gutscheincode ist derzeit nicht aktiv.");
-      return;
-    }
-    if (lookup.redeemed && (!lookup.amount || lookup.amount <= 0)) {
-      setVoucherMessage("Dieser Gutscheincode wurde bereits vollständig eingelöst.");
-      return;
-    }
-
-    const subtotal = summaryItems.reduce((acc, item) => acc + (item.subtotal ?? 0), 0);
-    if (subtotal <= 0) {
-      setVoucherMessage("Der Warenkorb enthält keine kostenpflichtigen Positionen.");
       return;
     }
 
@@ -997,19 +1143,21 @@ export function CheckoutClient() {
       setVoucherMessage("Der Gutschein enthält aktuell kein verfügbares Guthaben.");
       return;
     }
-    const remaining = Math.max(0, lookup.amount - usableAmount);
+    const remaining = Math.max(0, lookup.remaining ?? 0);
 
     setAppliedVoucher({
       code: lookup.code,
       amount: usableAmount,
       remaining,
-      description: lookup.description ?? null
+      description: lookup.description ?? lookup.name ?? null
     });
     setVoucherInput(lookup.code.toUpperCase());
     setVoucherMessage(
       remaining > 0
         ? `Gutschein angewendet. Verbleibendes Guthaben: ${formatCurrency(remaining)}.`
-        : "Gutschein vollständig angewendet."
+        : lookup.typ === "prozent"
+          ? "Rabattcode angewendet."
+          : "Gutschein vollständig angewendet."
     );
   }, [appliedVoucher, summaryItems, voucherInput]);
 
@@ -1022,14 +1170,13 @@ export function CheckoutClient() {
       case "overview":
         return "Weiter zur Zahlung";
       case "payment":
-        return submissionState === "submitting" ? "Bestellung wird übermittelt..." : "Jetzt kostenpflichtig bestellen";
+        return submissionState === "submitting" ? "Bitte warten ..." : "Jetzt kostenpflichtig bestellen";
       default:
         return "Weiter";
     }
   }, [activeStepId, submissionState]);
 
   const showPrimaryButton = !(activeStepId === "payment" && isPayPalSelected);
-  const isOverviewBlocked = activeStepId === "overview" && (!agbAccepted || !privacyAccepted);
 
   const renderParticipantsStep = () => (
     <section className="space-y-6">
@@ -1048,24 +1195,46 @@ export function CheckoutClient() {
             </div>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <label className="form-control">
-                <span className="label-text text-sm font-medium">Vorname *</span>
+                <span
+                  className={`label-text text-sm font-medium ${
+                    participantErrors[index]?.firstName ? "text-error" : ""
+                  }`}
+                >
+                  Vorname *
+                </span>
                 <input
                   type="text"
-                  className="input input-bordered"
+                  className={`input input-bordered ${
+                    participantErrors[index]?.firstName ? "input-error" : ""
+                  }`}
                   value={participant.firstName}
                   onChange={(event) => handleParticipantChange(index, "firstName", event.target.value)}
                   required
                 />
+                {participantErrors[index]?.firstName ? (
+                  <span className="mt-1 text-xs text-error">Vorname ist erforderlich.</span>
+                ) : null}
               </label>
               <label className="form-control">
-                <span className="label-text text-sm font-medium">Nachname *</span>
+                <span
+                  className={`label-text text-sm font-medium ${
+                    participantErrors[index]?.lastName ? "text-error" : ""
+                  }`}
+                >
+                  Nachname *
+                </span>
                 <input
                   type="text"
-                  className="input input-bordered"
+                  className={`input input-bordered ${
+                    participantErrors[index]?.lastName ? "input-error" : ""
+                  }`}
                   value={participant.lastName}
                   onChange={(event) => handleParticipantChange(index, "lastName", event.target.value)}
                   required
                 />
+                {participantErrors[index]?.lastName ? (
+                  <span className="mt-1 text-xs text-error">Nachname ist erforderlich.</span>
+                ) : null}
               </label>
             </div>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -1135,14 +1304,25 @@ export function CheckoutClient() {
       {billing.type === "firma" ? (
         <div className="grid gap-4 md:grid-cols-2">
           <label className="form-control md:col-span-2">
-            <span className="label-text text-sm font-medium">Firmenname *</span>
+            <span
+              className={`label-text text-sm font-medium ${
+                billingErrors.companyName ? "text-error" : ""
+              }`}
+            >
+              Firmenname *
+            </span>
             <input
               type="text"
-              className="input input-bordered"
+              className={`input input-bordered ${
+                billingErrors.companyName ? "input-error" : ""
+              }`}
               value={billing.companyName}
               onChange={(event) => handleBillingChange("companyName", event.target.value)}
               required
             />
+            {billingErrors.companyName ? (
+              <span className="mt-1 text-xs text-error">{billingErrors.companyName}</span>
+            ) : null}
           </label>
           <label className="form-control">
             <span className="label-text text-sm font-medium">Umsatzsteuer-ID</span>
@@ -1155,105 +1335,178 @@ export function CheckoutClient() {
             />
           </label>
           <label className="form-control">
-            <span className="label-text text-sm font-medium">Rechnungs-E-Mail *</span>
+            <span
+              className={`label-text text-sm font-medium ${
+                billingErrors.invoiceEmail ? "text-error" : ""
+              }`}
+            >
+              Rechnungs-E-Mail *
+            </span>
             <input
               type="email"
-              className="input input-bordered"
+              className={`input input-bordered ${
+                billingErrors.invoiceEmail ? "input-error" : ""
+              }`}
               value={billing.invoiceEmail}
               onChange={(event) => handleBillingChange("invoiceEmail", event.target.value)}
               required
             />
+            {billingErrors.invoiceEmail ? (
+              <span className="mt-1 text-xs text-error">{billingErrors.invoiceEmail}</span>
+            ) : null}
           </label>
         </div>
       ) : null}
 
       <div className="grid gap-4 md:grid-cols-2">
         <label className="form-control md:col-span-2">
-          <span className="label-text text-sm font-medium">Straße und Hausnummer *</span>
+          <span
+            className={`label-text text-sm font-medium ${
+              billingErrors.street ? "text-error" : ""
+            }`}
+          >
+            Straße und Hausnummer *
+          </span>
           <input
             type="text"
-            className="input input-bordered"
+            className={`input input-bordered ${billingErrors.street ? "input-error" : ""}`}
             value={billing.street}
             onChange={(event) => handleBillingChange("street", event.target.value)}
             required
           />
+          {billingErrors.street ? (
+            <span className="mt-1 text-xs text-error">{billingErrors.street}</span>
+          ) : null}
         </label>
         <label className="form-control">
-          <span className="label-text text-sm font-medium">Postleitzahl *</span>
+          <span
+            className={`label-text text-sm font-medium ${billingErrors.zip ? "text-error" : ""}`}
+          >
+            Postleitzahl *
+          </span>
           <input
             type="text"
-            className="input input-bordered"
+            className={`input input-bordered ${billingErrors.zip ? "input-error" : ""}`}
             value={billing.zip}
             onChange={(event) => handleBillingChange("zip", event.target.value)}
             required
           />
+          {billingErrors.zip ? (
+            <span className="mt-1 text-xs text-error">{billingErrors.zip}</span>
+          ) : null}
         </label>
         <label className="form-control">
-          <span className="label-text text-sm font-medium">Stadt *</span>
+          <span
+            className={`label-text text-sm font-medium ${billingErrors.city ? "text-error" : ""}`}
+          >
+            Stadt *
+          </span>
           <input
             type="text"
-            className="input input-bordered"
+            className={`input input-bordered ${billingErrors.city ? "input-error" : ""}`}
             value={billing.city}
             onChange={(event) => handleBillingChange("city", event.target.value)}
             required
           />
+          {billingErrors.city ? (
+            <span className="mt-1 text-xs text-error">{billingErrors.city}</span>
+          ) : null}
         </label>
         <label className="form-control md:col-span-2">
-          <span className="label-text text-sm font-medium">Land *</span>
+          <span
+            className={`label-text text-sm font-medium ${
+              billingErrors.country ? "text-error" : ""
+            }`}
+          >
+            Land *
+          </span>
           <input
             type="text"
-            className="input input-bordered"
+            className={`input input-bordered ${billingErrors.country ? "input-error" : ""}`}
             value={billing.country}
             onChange={(event) => handleBillingChange("country", event.target.value)}
             required
           />
+          {billingErrors.country ? (
+            <span className="mt-1 text-xs text-error">{billingErrors.country}</span>
+          ) : null}
         </label>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <label className="form-control">
-          <span className="label-text text-sm font-medium">
+          <span
+            className={`label-text text-sm font-medium ${
+              billingErrors.contactFirstName ? "text-error" : ""
+            }`}
+          >
             {billing.type === "firma" ? "Ansprechpartner Vorname *" : "Vorname *"}
           </span>
           <input
             type="text"
-            className="input input-bordered"
+            className={`input input-bordered ${billingErrors.contactFirstName ? "input-error" : ""}`}
             value={billing.contactFirstName}
             onChange={(event) => handleBillingChange("contactFirstName", event.target.value)}
             required
           />
+          {billingErrors.contactFirstName ? (
+            <span className="mt-1 text-xs text-error">{billingErrors.contactFirstName}</span>
+          ) : null}
         </label>
         <label className="form-control">
-          <span className="label-text text-sm font-medium">
+          <span
+            className={`label-text text-sm font-medium ${
+              billingErrors.contactLastName ? "text-error" : ""
+            }`}
+          >
             {billing.type === "firma" ? "Ansprechpartner Nachname *" : "Nachname *"}
           </span>
           <input
             type="text"
-            className="input input-bordered"
+            className={`input input-bordered ${billingErrors.contactLastName ? "input-error" : ""}`}
             value={billing.contactLastName}
             onChange={(event) => handleBillingChange("contactLastName", event.target.value)}
             required
           />
+          {billingErrors.contactLastName ? (
+            <span className="mt-1 text-xs text-error">{billingErrors.contactLastName}</span>
+          ) : null}
         </label>
         <label className="form-control">
-          <span className="label-text text-sm font-medium">E-Mail *</span>
+          <span
+            className={`label-text text-sm font-medium ${
+              billingErrors.contactEmail ? "text-error" : ""
+            }`}
+          >
+            E-Mail *
+          </span>
           <input
             type="email"
-            className="input input-bordered"
+            className={`input input-bordered ${billingErrors.contactEmail ? "input-error" : ""}`}
             value={billing.contactEmail}
             onChange={(event) => handleBillingChange("contactEmail", event.target.value)}
             required
           />
+          {billingErrors.contactEmail ? (
+            <span className="mt-1 text-xs text-error">{billingErrors.contactEmail}</span>
+          ) : null}
         </label>
         <label className="form-control">
-          <span className="label-text text-sm font-medium">Telefon *</span>
+          <span
+            className={`label-text text-sm font-medium ${billingErrors.phone ? "text-error" : ""}`}
+          >
+            Telefon *
+          </span>
           <input
             type="tel"
-            className="input input-bordered"
+            className={`input input-bordered ${billingErrors.phone ? "input-error" : ""}`}
             value={billing.phone}
             onChange={(event) => handleBillingChange("phone", event.target.value)}
             required
           />
+          {billingErrors.phone ? (
+            <span className="mt-1 text-xs text-error">{billingErrors.phone}</span>
+          ) : null}
         </label>
       </div>
     </section>
@@ -1293,19 +1546,6 @@ export function CheckoutClient() {
                 </div>
               </div>
             ))}
-            {appliedVoucher ? (
-              <div className="rounded-xl border border-primary bg-primary/5 p-4 text-sm">
-                <p className="font-semibold text-base-content">
-                  Rabattcode angewendet: {appliedVoucher.code.toUpperCase()}
-                </p>
-                <p className="mt-1 text-base-content/70">
-                  Abzug: {formatCurrency(appliedVoucher.amount)}
-                  {appliedVoucher.remaining != null
-                    ? ` · Restguthaben: ${formatCurrency(appliedVoucher.remaining)}`
-                    : null}
-                </p>
-              </div>
-            ) : null}
           </div>
         </div>
 
@@ -1381,23 +1621,54 @@ export function CheckoutClient() {
               onChange={(event) => setVoucherInput(event.target.value)}
             />
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className={`btn btn-outline ${voucherChecking ? "loading" : ""}`}
-                onClick={handleVoucherCheck}
-                disabled={voucherChecking}
-              >
-                Code prüfen
-              </button>
               {appliedVoucher ? (
-                <button type="button" className="btn btn-ghost" onClick={handleRemoveVoucher}>
-                  Entfernen
+                <button
+                  type="button"
+                  className="btn btn-outline btn-error gap-2"
+                  onClick={handleRemoveVoucher}
+                  aria-label="Gutscheincode entfernen"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="h-4 w-4"
+                    aria-hidden="true"
+                  >
+                    <path d="M9 3a1 1 0 0 0-.894.553L7.382 5H5a1 1 0 1 0 0 2h.154l.73 11.675A2 2 0 0 0 7.878 20H16.12a2 2 0 0 0 1.994-1.325L18.846 7H19a1 1 0 1 0 0-2h-2.382l-.724-1.447A1 1 0 0 0 15 3H9Zm.118 4-.667 11h7.098l-.667-11H9.118ZM11 9a1 1 0 1 1 2 0v7a1 1 0 1 1-2 0V9Z" />
+                  </svg>
+                  Code entfernen
                 </button>
-              ) : null}
+              ) : (
+                <button
+                  type="button"
+                  className={`btn btn-outline ${voucherChecking ? "loading" : ""}`}
+                  onClick={handleVoucherCheck}
+                  disabled={voucherChecking}
+                >
+                  Code prüfen
+                </button>
+              )}
             </div>
           </div>
           {voucherMessage ? (
             <p className="mt-3 text-sm text-base-content/70">{voucherMessage}</p>
+          ) : null}
+          {appliedVoucher ? (
+            <div className="mt-4 rounded-xl border border-primary bg-primary/5 p-4 text-sm">
+              <p className="font-semibold text-base-content">
+                Rabattcode angewendet: {appliedVoucher.code.toUpperCase()}
+              </p>
+              <p className="mt-1 text-base-content/70">
+                Abzug: {formatCurrency(appliedVoucher.amount)}
+                {appliedVoucher.remaining != null
+                  ? ` · Restguthaben: ${formatCurrency(appliedVoucher.remaining)}`
+                  : null}
+              </p>
+              {appliedVoucher.description ? (
+                <p className="mt-1 text-base-content/60">{appliedVoucher.description}</p>
+              ) : null}
+            </div>
           ) : null}
         </div>
 
@@ -1405,25 +1676,49 @@ export function CheckoutClient() {
           <label className="label cursor-pointer gap-3">
             <input
               type="checkbox"
-              className="checkbox"
+              className={`checkbox ${agbError ? "border-error outline outline-1 outline-error" : ""}`}
               checked={agbAccepted}
-              onChange={(event) => setAgbAccepted(event.target.checked)}
+              onChange={(event) => {
+                const checked = event.target.checked;
+                setAgbAccepted(checked);
+                if (checked) {
+                  setAgbError(false);
+                  if (privacyAccepted) {
+                    setStepError(null);
+                  }
+                }
+              }}
             />
-            <span className="label-text text-sm">
+            <span className={`label-text text-sm ${agbError ? "text-error" : ""}`}>
               Ich akzeptiere die Allgemeinen Geschäftsbedingungen der Wine Academy Hamburg. *
             </span>
           </label>
+          {agbError ? (
+            <p className="pl-7 text-xs text-error">Bitte bestätige die Allgemeinen Geschäftsbedingungen.</p>
+          ) : null}
           <label className="label cursor-pointer gap-3">
             <input
               type="checkbox"
-              className="checkbox"
+              className={`checkbox ${privacyError ? "border-error outline outline-1 outline-error" : ""}`}
               checked={privacyAccepted}
-              onChange={(event) => setPrivacyAccepted(event.target.checked)}
+              onChange={(event) => {
+                const checked = event.target.checked;
+                setPrivacyAccepted(checked);
+                if (checked) {
+                  setPrivacyError(false);
+                  if (agbAccepted) {
+                    setStepError(null);
+                  }
+                }
+              }}
             />
-            <span className="label-text text-sm">
+            <span className={`label-text text-sm ${privacyError ? "text-error" : ""}`}>
               Ich bestätige, die Datenschutzhinweise gelesen zu haben und stimme der Verarbeitung meiner Daten zu. *
             </span>
           </label>
+          {privacyError ? (
+            <p className="pl-7 text-xs text-error">Bitte bestätige den Datenschutzhinweis.</p>
+          ) : null}
           <label className="label cursor-pointer gap-3">
             <input
               type="checkbox"
@@ -1703,11 +1998,9 @@ export function CheckoutClient() {
             {showPrimaryButton ? (
               <button
                 type="submit"
-                className={`btn btn-primary md:w-auto ${
-                  submissionState === "submitting" ? "loading" : ""
-                } ${isOverviewBlocked ? "btn-disabled pointer-events-none opacity-60" : ""}`}
-                disabled={submissionState === "submitting" || isOverviewBlocked}
-                aria-disabled={submissionState === "submitting" || isOverviewBlocked}
+                className="btn btn-primary md:w-auto"
+                disabled={submissionState === "submitting"}
+                aria-disabled={submissionState === "submitting"}
               >
                 {primaryActionLabel}
               </button>

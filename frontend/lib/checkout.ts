@@ -239,54 +239,63 @@ export async function fetchOrderById(id: number): Promise<OrderStatusResponse> {
   });
 }
 
-type VoucherApiEntry = {
-  id: number;
-  attributes?: {
-    code?: string | null;
-    betrag?: string | number | null;
-    aktiv?: boolean | null;
-    eingeloest?: boolean | null;
-    beschreibung?: string | null;
-  };
-};
-
-type VoucherApiResponse = {
-  data?: VoucherApiEntry[];
-};
-
 export type VoucherCodeLookup = {
   code: string;
   amount: number;
+  remaining: number;
+  typ: "betrag" | "prozent";
+  name?: string | null;
   description?: string | null;
-  active: boolean;
-  redeemed: boolean;
 };
 
-export async function fetchVoucherByCode(code: string): Promise<VoucherCodeLookup | null> {
+type VoucherValidateResponse = {
+  code: string;
+  typ: "betrag" | "prozent";
+  amount: number;
+  remaining: number;
+  name?: string | null;
+  description?: string | null;
+};
+
+type VoucherTotalsInput = {
+  brutto: number;
+  netto?: number;
+  steuer?: number;
+};
+
+export async function fetchVoucherByCode(
+  code: string,
+  totals: VoucherTotalsInput
+): Promise<VoucherCodeLookup | null> {
   const trimmed = code.trim();
   if (!trimmed) {
     return null;
   }
 
   try {
-    const query = `/gutscheine?filters[code][$eq]=${encodeURIComponent(
-      trimmed
-    )}&filters[istTemplate][$eq]=false&pagination[limit]=1`;
-    const response = await fetchJson<VoucherApiResponse>(query, {
+    const payload = {
+      code: trimmed,
+      totals: {
+        brutto: totals.brutto,
+        netto: totals.netto,
+        steuer: totals.steuer
+      }
+    };
+    const response = await postJson<VoucherValidateResponse>("/public/gutscheine/validate", payload, {
       cache: "no-store"
     });
-    const entry = response?.data && response.data.length > 0 ? response.data[0] : null;
-    if (!entry || !entry.attributes) {
+    if (!response) {
       return null;
     }
-    const attributes = entry.attributes;
-    const amount = parsePrice(attributes.betrag ?? null) ?? 0;
+    const amount = Number.isFinite(response.amount) ? response.amount : 0;
+    const remaining = Number.isFinite(response.remaining) ? response.remaining : 0;
     return {
-      code: attributes.code?.trim() || trimmed,
+      code: response.code?.trim() || trimmed.toUpperCase(),
       amount,
-      description: attributes.beschreibung ?? null,
-      active: attributes.aktiv !== false,
-      redeemed: attributes.eingeloest === true
+      remaining,
+      typ: response.typ === "prozent" ? "prozent" : "betrag",
+      name: response.name ?? null,
+      description: response.description ?? null
     };
   } catch (error) {
     console.warn("[checkout] Gutschein konnte nicht geladen werden:", error);
