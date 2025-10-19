@@ -6,7 +6,7 @@ Diese Regeln gelten sowohl auf dem Server (Staging/Live) als auch lokal. Zu Begi
 - **Bereichsspezifische Readmes:** Bei Backend-Arbeiten vor dem Plan `backend/README.md`, bei Frontend-Arbeiten `frontend/README.md` querlesen und relevante Hinweise einplanen.
 - **Sprache:** Antworte immer auf Deutsch.
 - **Planung vor Umsetzung:** Vor jeder größeren Änderung einen kurzen Plan (2–5 Schritte) formulieren und Freigabe abwarten.
-- **Telegram-Benachrichtigungen:** Immer wenn du einen Arbeitsschritt abgeschlossen hast oder meine Rückmeldung benötigst, schicke mir sofort eine kurze Telegram-Nachricht:
+- **Telegram-Benachrichtigungen:** Immer wenn du etwas abgeschlossen hast, oder meine Rückmeldung benötigst damit du weitermachen kannst, schicke mir sofort eine kurze Telegram-Nachricht über:
 source /opt/docker/projects/telegrambot/.env  # lädt CHATBOT_API_TOKEN
 
 curl -X POST https://chatbot.plan-p.de/notify \
