@@ -1,7 +1,5 @@
 "use client";
 
-import Image from "next/image";
-
 type CartItemGutscheinProps = {
   voucher: {
     title: string;
@@ -19,7 +17,7 @@ export function CartItemGutschein({ voucher, onRemove }: CartItemGutscheinProps)
   }
 
   return (
-    <article className="relative flex items-start gap-4 rounded-2xl bg-base-100 p-4 shadow-sm">
+    <article className="relative flex flex-col gap-3 rounded-2xl bg-base-100 p-4 shadow-sm">
       <button
         type="button"
         aria-label="Entfernen"
@@ -41,29 +39,17 @@ export function CartItemGutschein({ voucher, onRemove }: CartItemGutscheinProps)
           />
         </svg>
       </button>
-      <div className="relative size-20 flex-shrink-0 overflow-hidden rounded-2xl bg-primary/10">
-        {voucher.imageUrl ? (
-          <Image
-            src={voucher.imageUrl}
-            alt={voucher.imageAlt ?? voucher.title}
-            fill
-            sizes="80px"
-            className="object-cover"
-            unoptimized
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-sm font-medium text-primary">WA</div>
-        )}
-      </div>
-      <div className="flex flex-1 flex-col gap-2 pr-4">
+      <header className="flex flex-col gap-2 pr-8">
         <h3 className="text-base font-medium leading-snug">{voucher.title}</h3>
-        <p className="text-sm text-base-content/80 pr-12">
+        <p className="text-sm text-base-content/80">
           {voucher.description ?? "Dein Gutschein zum Verschenken"}
         </p>
-        <p className="absolute bottom-4 right-4 text-base font-semibold">
+      </header>
+      <footer className="flex justify-end">
+        <span className="text-base font-semibold">
           {voucher.formattedValue ?? "Wert frei wählbar"}
-        </p>
-      </div>
+        </span>
+      </footer>
     </article>
   );
 }

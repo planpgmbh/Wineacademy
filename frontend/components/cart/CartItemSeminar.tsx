@@ -1,6 +1,4 @@
 "use client";
-
-import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { QuantitySelector } from "../shared/QuantitySelector";
@@ -59,7 +57,7 @@ export function CartItemSeminar({ seminar, selection, onQuantityChange, onRemove
   }, [quantity, seminar]);
 
   return (
-    <article className="relative flex items-start gap-4 rounded-2xl bg-base-100 p-4 shadow-sm">
+    <article className="relative flex flex-col gap-4 rounded-2xl bg-base-100 p-4 shadow-sm">
       <button
         type="button"
         aria-label="Seminar aus dem Warenkorb entfernen"
@@ -81,22 +79,8 @@ export function CartItemSeminar({ seminar, selection, onQuantityChange, onRemove
           />
         </svg>
       </button>
-      <div className="relative size-20 flex-shrink-0 overflow-hidden rounded-2xl bg-primary/10">
-        {seminar?.imageUrl ? (
-          <Image
-            src={seminar.imageUrl}
-            alt={seminar.imageAlt ?? title}
-            fill
-            sizes="80px"
-            className="object-cover"
-            unoptimized
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-sm font-medium text-primary">WA</div>
-        )}
-      </div>
-      <div className="flex flex-1 flex-col gap-4 pr-4">
-        <header className="space-y-2">
+      <div className="flex flex-1 flex-col gap-4">
+        <header className="space-y-2 pr-8">
           <h3 className="text-base font-medium leading-snug">
             {title}
           </h3>

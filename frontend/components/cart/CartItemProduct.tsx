@@ -1,6 +1,4 @@
 "use client";
-
-import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
 import { QuantitySelector } from "../shared/QuantitySelector";
@@ -60,7 +58,7 @@ export function CartItemProduct({ product, quantity = 1, onQuantityChange, onRem
   };
 
   return (
-    <article className="relative flex items-start gap-4 rounded-2xl bg-base-100 p-4 shadow-sm">
+    <article className="relative flex flex-col gap-3 rounded-2xl bg-base-100 p-4 shadow-sm">
       <button
         type="button"
         aria-label="Entfernen"
@@ -82,38 +80,22 @@ export function CartItemProduct({ product, quantity = 1, onQuantityChange, onRem
           />
         </svg>
       </button>
-      <div className="relative size-20 flex-shrink-0 overflow-hidden rounded-2xl bg-primary/10">
-        {product.imageUrl ? (
-          <Image
-            src={product.imageUrl}
-            alt={product.imageAlt ?? product.title}
-            fill
-            sizes="80px"
-            className="object-cover"
-            unoptimized
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-sm font-medium text-primary">WA</div>
-        )}
-      </div>
-      <div className="flex flex-1 flex-col gap-3 pr-4">
-        <header className="flex items-start justify-between gap-2">
-          <h3 className="text-base font-medium leading-snug">
-            {product.title}
-          </h3>
-        </header>
+      <header className="flex flex-col gap-2 pr-8">
+        <h3 className="text-base font-medium leading-snug">
+          {product.title}
+        </h3>
         <p className="text-sm text-base-content/80">
           {product.description ?? "Aktuell keine Beschreibung verfügbar."}
         </p>
-        <footer className="flex items-center justify-start">
-          <div className="flex items-center gap-3">
-            <QuantitySelector value={internalQuantity} onChange={handleQuantityChange} />
-          </div>
-        </footer>
-        <p className="absolute bottom-4 right-4 text-base font-semibold">
+      </header>
+      <footer className="flex items-center justify-between pt-1">
+        <div className="flex items-center gap-3">
+          <QuantitySelector value={internalQuantity} onChange={handleQuantityChange} />
+        </div>
+        <span className="text-base font-semibold">
           {totalPriceFormatted}
-        </p>
-      </div>
+        </span>
+      </footer>
     </article>
   );
 }

@@ -1,4 +1,6 @@
 -# Frontend-Arbeitsprotokoll
+- 2025-10-20 – Checkout-Schritte auf eine einheitliche Step-Karte mit Divider-Linien umgestellt (Teilnehmer, Rechnungsadresse, Übersicht, Zahlung) und `CheckoutStepCard`-Hilfskomponente ergänzt; PayPal-Optionen ohne Einzelboxen neu gestaltet. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-20 – Warenkorb-Items ohne Vorschaubilder neu ausgerichtet (`CartItemSeminar`/`CartItemProduct`/`CartItemGutschein`), Layout auf reine Text-/Button-Spalten angepasst. `npm run lint` erfolgreich. – Commit: n/a
 - 2025-10-18 – Puppeteer-Checkout-Skript um vier Rechnungs-Szenarien (Seminar + Produkt + Gutscheinbetrag, Produkt + Rabattcode, Seminar Firmenrechnung, Seminare gemischte MwSt + Rabattcode inkl. MwSt-Abgleich Frontend/SevDesk) erweitert und erfolgreich gegen Staging ausgeführt; Bestellungen WA-20251046–WA-20251049 verifiziert. – Commit: n/a
 - 2025-10-18 – Warenkorb & Checkout unterstützen mehrere Seminarpositionen gleichzeitig (LocalStorage-Format auf Liste umgestellt, CartDrawer/Checkout/Booking-Formulare angepasst). `npm run lint` (Frontend) erfolgreich. – Commit: n/a
 - 2025-10-18 – Checkout-Bestätigung zeigt während der SevDesk-Synchronisation einen Hinweisbutton („Rechnung wird vorbereitet …“) und pollt `/api/public/bestellungen/:id` bis der Downloadlink zur Rechnung verfügbar ist. `npm run lint` erfolgreich. – Commit: n/a
