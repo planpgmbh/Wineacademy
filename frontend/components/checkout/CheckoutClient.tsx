@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { JSX } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -25,6 +26,7 @@ import {
 } from "@/lib/checkout";
 import type { OrderResponse } from "@/lib/checkout";
 import { PayPalButtons } from "@/components/payments/PayPalButtons";
+import { CheckoutStepCard } from "@/components/checkout/CheckoutStepCard";
 
 const INVOICE_POLL_INTERVAL_MS = 5000;
 const MAX_INVOICE_POLL_ATTEMPTS = 12;
@@ -34,9 +36,11 @@ type SeminarSelectionState = {
   selection: BookingSelection;
   seminarId: number | null;
   seminarTitle: string;
+  seminarDescription: string | null;
   terminId: number | null;
   terminLabel: string;
   terminDescription: string | null;
+  terminSlots: string[];
   preisBrutto: number | null;
   steuerSatz: number | null;
 };
@@ -228,6 +232,106 @@ const PAYPAL_CONFIRMATION_MESSAGE: Record<Exclude<PaymentMethod, "rechnung">, st
   kreditkarte: "Die Kreditkartenzahlung wurde über PayPal verarbeitet."
 };
 
+const STEP_DESCRIPTIONS: Partial<Record<StepId, string>> = {
+  participants:
+    "Bitte gib die Teilnehmerdaten für alle gebuchten Plätze ein. Die Angaben lassen sich vor Abschluss jederzeit anpassen.",
+  billing: "Wähle, ob die Rechnung auf eine Privatperson oder ein Unternehmen ausgestellt werden soll.",
+  overview: "Prüfe alle Angaben vor dem Zahlungsschritt. Du kannst einzelne Bereiche jederzeit bearbeiten.",
+  payment: "Wähle deine bevorzugte Zahlungsart und bestätige die rechtlichen Hinweise."
+};
+
+type CheckoutProgressProps = {
+  steps: StepDefinition[];
+  activeStepId: StepId;
+  activeStepIndex: number;
+  furthestStepIndex: number;
+  onStepClick: (stepId: StepId) => void;
+};
+
+function CheckoutProgress({
+  steps,
+  activeStepId,
+  activeStepIndex,
+  furthestStepIndex,
+  onStepClick
+}: CheckoutProgressProps) {
+  const progressIndex = Math.max(furthestStepIndex, activeStepIndex);
+  const columnTemplateSegments: string[] = [];
+
+  steps.forEach((_, index) => {
+    columnTemplateSegments.push("minmax(0,min-content)");
+    if (index < steps.length - 1) {
+      columnTemplateSegments.push("1fr");
+    }
+  });
+
+  const columnTemplate =
+    columnTemplateSegments.length > 0 ? columnTemplateSegments.join(" ") : "minmax(0,1fr)";
+  const combinedNodes: JSX.Element[] = [];
+
+  steps.forEach((step, index) => {
+    const isCompleted = index < progressIndex;
+    const isActive = index === activeStepIndex;
+    const canNavigate = index <= furthestStepIndex;
+
+    const circleClasses = [
+      "flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 bg-base-content/5 text-[12px] font-medium transition-colors duration-200",
+      "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+    ];
+
+    if (isActive) {
+      circleClasses.push("border-primary bg-primary/10 text-primary", "font-semibold");
+    } else if (isCompleted) {
+      circleClasses.push("border-primary bg-primary/10 text-primary", "font-bold");
+    } else {
+      circleClasses.push("border-base-content/20 text-base-content/50");
+    }
+
+    if (canNavigate) {
+      circleClasses.push("cursor-pointer hover:border-primary hover:text-primary");
+    } else {
+      circleClasses.push("cursor-default");
+    }
+
+    combinedNodes.push(
+      <div key={`step-${step.id}`} className="flex justify-center">
+        <button
+          type="button"
+          className={circleClasses.join(" ")}
+          onClick={() => (canNavigate ? onStepClick(step.id) : undefined)}
+          aria-current={isActive ? "step" : undefined}
+          disabled={!canNavigate}
+          aria-label={`Schritt ${index + 1}: ${step.label}`}
+        >
+          {index + 1}
+          <span className="sr-only">{step.label}</span>
+        </button>
+      </div>
+    );
+
+    if (index < steps.length - 1) {
+      combinedNodes.push(
+        <div key={`connector-${step.id}`} className="flex items-center self-center">
+          <div
+            className={`h-px w-full rounded-full transition-colors duration-200 ${
+              index < progressIndex ? "bg-primary" : "bg-base-content/20"
+            }`}
+            aria-hidden="true"
+          />
+        </div>
+      );
+    }
+  });
+
+  return (
+    <nav aria-label="Checkout-Fortschritt" className="mt-8">
+      <div className="grid items-center gap-4" style={{ gridTemplateColumns: columnTemplate }}>
+        {combinedNodes}
+      </div>
+    </nav>
+  );
+}
+
 function buildSteps(hasSeminar: boolean): StepDefinition[] {
   const steps: StepDefinition[] = [];
   if (hasSeminar) {
@@ -381,9 +485,12 @@ export function CheckoutClient() {
         };
         const terminIdValue = selection.dateId != null ? Number(selection.dateId) : NaN;
         const terminId = Number.isFinite(terminIdValue) ? terminIdValue : null;
+        const matchingDate = seminar?.dates?.find((date) => {
+          const dateId = typeof date.id === "number" ? String(date.id) : String(date.id ?? "");
+          return selection.dateId != null && dateId === String(selection.dateId);
+        });
         const terminLabel =
-          seminar?.dates?.find((date) => date.id === selection.dateId)?.label ??
-          (selection.dateId ? `Termin #${selection.dateId}` : "Termin wird abgestimmt");
+          matchingDate?.label ?? (selection.dateId ? `Termin #${selection.dateId}` : "Termin wird abgestimmt");
         const einzelpreisBrutto = seminar?.price?.value ?? null;
         const steuerSatz =
           seminar?.steuerSatz != null
@@ -397,9 +504,11 @@ export function CheckoutClient() {
           selection: normalizedSelection,
           seminarId: seminar?.id ?? null,
           seminarTitle: seminar?.title ?? normalizedSelection.seminarTitle ?? "Seminar",
+          seminarDescription: seminar?.description ?? null,
           terminId,
           terminLabel,
-          terminDescription: seminar?.description ?? null,
+          terminDescription: matchingDate?.description ?? seminar?.description ?? null,
+          terminSlots: Array.isArray(matchingDate?.slots) ? matchingDate.slots : [],
           preisBrutto: einzelpreisBrutto,
           steuerSatz
         };
@@ -1369,144 +1478,114 @@ export function CheckoutClient() {
 
   const showPrimaryButton = !(activeStepId === "payment" && isPayPalSelected);
 
-  const renderParticipantsStep = () => (
-    <section className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-base-content">Teilnehmer</h2>
-        <p className="mt-2 text-sm text-base-content/70">
-          Bitte gib die Teilnehmerdaten für alle gebuchten Plätze ein. Die Angaben lassen sich vor Abschluss jederzeit
-          anpassen.
-        </p>
-      </div>
-      <div className="space-y-8">
-        {participantGroupsWithMeta.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-base-300 bg-base-100 p-5 text-sm text-base-content/70">
+  const renderParticipantsStep = () => {
+    if (participantGroupsWithMeta.length === 0) {
+      return (
+        <CheckoutStepCard>
+          <div className="py-6 text-sm text-base-content/70">
             Es sind aktuell keine Seminare im Warenkorb.
           </div>
-        ) : (
-          participantGroupsWithMeta.map(({ seminar, group }) => (
-            <div key={group.selectionId} className="space-y-4">
-              <header className="space-y-1">
-                <h3 className="text-lg font-semibold text-base-content">{seminar.seminarTitle}</h3>
-                <p className="text-sm text-base-content/70">
-                  {seminar.terminLabel}
-                  {seminar.terminDescription ? ` · ${seminar.terminDescription}` : ""}
-                </p>
-              </header>
-              <div className="space-y-6">
-                {group.participants.map((participant, index) => {
-                  const errorState = group.errors[index] ?? createParticipantErrorState();
-                  return (
-                    <div key={`${group.selectionId}-${index}`} className="rounded-2xl border border-base-200 bg-base-100 p-5 shadow-sm">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-semibold text-base-content/80">
-                          Teilnehmer {index + 1} von {group.participants.length}
-                        </p>
-                      </div>
-                      <div className="mt-4 grid gap-4 md:grid-cols-2">
-                        <label className="form-control">
-                          <span
-                            className={`label-text text-sm font-medium ${
-                              errorState.firstName ? "text-error" : ""
-                            }`}
-                          >
-                            Vorname *
-                          </span>
-                          <input
-                            type="text"
-                            className={`input input-bordered ${errorState.firstName ? "input-error" : ""}`}
-                            value={participant.firstName}
-                            onChange={(event) =>
-                              handleParticipantChange(group.selectionId, index, "firstName", event.target.value)
-                            }
-                            required
-                          />
-                          {errorState.firstName ? (
-                            <span className="mt-1 text-xs text-error">Vorname ist erforderlich.</span>
-                          ) : null}
-                        </label>
-                        <label className="form-control">
-                          <span
-                            className={`label-text text-sm font-medium ${
-                              errorState.lastName ? "text-error" : ""
-                            }`}
-                          >
-                            Nachname *
-                          </span>
-                          <input
-                            type="text"
-                            className={`input input-bordered ${errorState.lastName ? "input-error" : ""}`}
-                            value={participant.lastName}
-                            onChange={(event) =>
-                              handleParticipantChange(group.selectionId, index, "lastName", event.target.value)
-                            }
-                            required
-                          />
-                          {errorState.lastName ? (
-                            <span className="mt-1 text-xs text-error">Nachname ist erforderlich.</span>
-                          ) : null}
-                        </label>
-                      </div>
-                      <div className="mt-4 grid gap-4 md:grid-cols-2">
-                        <label className="form-control">
-                          <span className="label-text text-sm font-medium">E-Mail</span>
-                          <input
-                            type="email"
-                            className="input input-bordered"
-                            value={participant.email}
-                            onChange={(event) =>
-                              handleParticipantChange(group.selectionId, index, "email", event.target.value)
-                            }
-                            placeholder="name@example.com"
-                          />
-                        </label>
-                        <label className="form-control">
-                          <span className="label-text text-sm font-medium">WSET Candidate Number</span>
-                          <input
-                            type="text"
-                            className="input input-bordered"
-                            value={participant.wsetNumber}
-                            onChange={(event) =>
-                              handleParticipantChange(group.selectionId, index, "wsetNumber", event.target.value)
-                            }
-                            placeholder="Optional"
-                          />
-                        </label>
-                      </div>
-                      <div className="mt-4">
-                        {(() => {
-                          const specialNeedsInputId = `${group.selectionId}-participant-${index}-special-needs`;
-                          return (
-                            <>
-                              <label
-                                htmlFor={specialNeedsInputId}
-                                className="block text-sm font-medium text-base-content"
-                              >
-                                Besondere Bedürfnisse
-                              </label>
-                              <textarea
-                                id={specialNeedsInputId}
-                                className="textarea textarea-bordered mt-2 w-full min-h-[120px]"
-                                value={participant.specialNeeds}
-                                onChange={(event) =>
-                                  handleParticipantChange(group.selectionId, index, "specialNeeds", event.target.value)
-                                }
-                                placeholder="Allergien, Barrierefreiheit oder andere Hinweise für unser Team"
-                              />
-                            </>
-                          );
-                        })()}
-                      </div>
+        </CheckoutStepCard>
+      );
+    }
+
+    return (
+      <CheckoutStepCard withDividers contentClassName="space-y-0">
+        {participantGroupsWithMeta.map(({ seminar, group }) => (
+          <div key={group.selectionId} className="py-6 first:pt-0 last:pb-0">
+            <h3 className="text-lg font-semibold text-base-content">{seminar.seminarTitle}</h3>
+            <div className="mt-6 space-y-6">
+              {group.participants.map((participant, index) => {
+                const errorState = group.errors[index] ?? createParticipantErrorState();
+                const specialNeedsInputId = `${group.selectionId}-participant-${index}-special-needs`;
+                return (
+                  <div key={`${group.selectionId}-${index}`} className="rounded-2xl border ui-border bg-base-100 p-5">
+                    <p className="text-sm font-semibold text-base-content">Teilnehmer {index + 1}</p>
+                    <div className="mt-4 grid gap-4 md:grid-cols-2">
+                      <label className="form-control">
+                        <span className={`label-text text-sm font-medium ${errorState.firstName ? "text-error" : ""}`}>
+                          Vorname *
+                        </span>
+                        <input
+                          type="text"
+                          className={`input input-bordered ${errorState.firstName ? "input-error" : ""}`}
+                          value={participant.firstName}
+                          onChange={(event) =>
+                            handleParticipantChange(group.selectionId, index, "firstName", event.target.value)
+                          }
+                          required
+                        />
+                        {errorState.firstName ? (
+                          <span className="mt-1 text-xs text-error">Vorname ist erforderlich.</span>
+                        ) : null}
+                      </label>
+                      <label className="form-control">
+                        <span className={`label-text text-sm font-medium ${errorState.lastName ? "text-error" : ""}`}>
+                          Nachname *
+                        </span>
+                        <input
+                          type="text"
+                          className={`input input-bordered ${errorState.lastName ? "input-error" : ""}`}
+                          value={participant.lastName}
+                          onChange={(event) =>
+                            handleParticipantChange(group.selectionId, index, "lastName", event.target.value)
+                          }
+                          required
+                        />
+                        {errorState.lastName ? (
+                          <span className="mt-1 text-xs text-error">Nachname ist erforderlich.</span>
+                        ) : null}
+                      </label>
                     </div>
-                  );
-                })}
-              </div>
+                    <div className="mt-4 grid gap-4 md:grid-cols-2">
+                      <label className="form-control">
+                        <span className="label-text text-sm font-medium">E-Mail</span>
+                        <input
+                          type="email"
+                          className="input input-bordered"
+                          value={participant.email}
+                          onChange={(event) =>
+                            handleParticipantChange(group.selectionId, index, "email", event.target.value)
+                          }
+                          placeholder="name@example.com"
+                        />
+                      </label>
+                      <label className="form-control">
+                        <span className="label-text text-sm font-medium">WSET Candidate Number</span>
+                        <input
+                          type="text"
+                          className="input input-bordered"
+                          value={participant.wsetNumber}
+                          onChange={(event) =>
+                            handleParticipantChange(group.selectionId, index, "wsetNumber", event.target.value)
+                          }
+                          placeholder="Optional"
+                        />
+                      </label>
+                    </div>
+                    <div className="mt-4">
+                      <label htmlFor={specialNeedsInputId} className="block text-sm font-medium text-base-content">
+                        Besondere Bedürfnisse
+                      </label>
+                      <textarea
+                        id={specialNeedsInputId}
+                        className="textarea textarea-bordered mt-2 w-full min-h-[120px]"
+                        value={participant.specialNeeds}
+                        onChange={(event) =>
+                          handleParticipantChange(group.selectionId, index, "specialNeeds", event.target.value)
+                        }
+                        placeholder="Allergien, Barrierefreiheit oder andere Hinweise für unser Team"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ))
-        )}
-      </div>
-    </section>
-  );
+          </div>
+        ))}
+      </CheckoutStepCard>
+    );
+  };
 
   const renderBillingStep = () => {
     const isCompany = billing.type === "firma";
@@ -1557,213 +1636,227 @@ export function CheckoutClient() {
     };
 
     return (
-      <section className="space-y-6">
+      <CheckoutStepCard contentClassName="space-y-6">
         <div>
-          <h2 className="text-xl font-semibold text-base-content">Rechnungsadresse</h2>
-          <p className="mt-2 text-sm text-base-content/70">
-            Wähle, ob die Rechnung auf eine Privatperson oder ein Unternehmen ausgestellt werden soll.
-          </p>
-        </div>
-
-        <div role="tablist" aria-label="Rechnungstyp" className="tabs tabs-boxed w-fit">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={!isCompany}
-            className={`tab ${!isCompany ? "tab-active" : ""}`}
-            onClick={() => handleBillingTypeChange("privat")}
-          >
-            Privat
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={isCompany}
-            className={`tab ${isCompany ? "tab-active" : ""}`}
-            onClick={() => handleBillingTypeChange("firma")}
-          >
-            Firma
-          </button>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          {renderTextField("contactFirstName", {
-            label: isCompany ? "Ansprechpartner Vorname" : "Vorname",
-            required: true,
-            error: billingErrors.contactFirstName
-          })}
-          {renderTextField("contactLastName", {
-            label: isCompany ? "Ansprechpartner Nachname" : "Nachname",
-            required: true,
-            error: billingErrors.contactLastName
-          })}
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          {renderTextField("contactEmail", {
-            label: "E-Mail",
-            type: "email",
-            required: true,
-            error: billingErrors.contactEmail,
-            autoComplete: "email"
-          })}
-          {renderTextField("phone", {
-            label: "Telefon",
-            type: "tel",
-            required: true,
-            error: billingErrors.phone,
-            autoComplete: "tel"
-          })}
+          <div role="tablist" aria-label="Rechnungstyp" className="flex gap-6 ui-border-bottom">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={!isCompany}
+              className={`relative pb-3 text-sm font-semibold ${
+                !isCompany ? "text-primary" : "text-base-content/70"
+              }`}
+              onClick={() => handleBillingTypeChange("privat")}
+            >
+              Privat
+              <span
+                aria-hidden="true"
+                className={`absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary transition-opacity ${
+                  !isCompany ? "opacity-100" : "opacity-0"
+                }`}
+              />
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={isCompany}
+              className={`relative pb-3 text-sm font-semibold ${
+                isCompany ? "text-primary" : "text-base-content/70"
+              }`}
+              onClick={() => handleBillingTypeChange("firma")}
+            >
+              Geschäftlich
+              <span
+                aria-hidden="true"
+                className={`absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary transition-opacity ${
+                  isCompany ? "opacity-100" : "opacity-0"
+                }`}
+              />
+            </button>
+          </div>
         </div>
 
         {isCompany ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            {renderTextField("companyName", {
-              label: "Firmenname",
-              required: true,
-              error: billingErrors.companyName,
-              span: 2
-            })}
-            {renderTextField("invoiceEmail", {
-              label: "Rechnungs-E-Mail",
-              type: "email",
-              required: true,
-              error: billingErrors.invoiceEmail,
-              autoComplete: "email"
-            })}
-            {renderTextField("vatId", {
-              label: "Umsatzsteuer-ID",
-              placeholder: "Optional"
-            })}
+          <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              {renderTextField("companyName", {
+                label: "Firmenname",
+                required: true,
+                error: billingErrors.companyName,
+                span: 2
+              })}
+              {renderTextField("invoiceEmail", {
+                label: "Rechnungs-E-Mail",
+                type: "email",
+                required: true,
+                error: billingErrors.invoiceEmail,
+                autoComplete: "email"
+              })}
+              {renderTextField("vatId", {
+                label: "Umsatzsteuer-ID",
+                placeholder: "Optional"
+              })}
+            </div>
           </div>
         ) : null}
 
-        <div className="grid gap-4 md:grid-cols-2">
-          {renderTextField("street", {
-            label: "Straße und Hausnummer",
-            required: true,
-            error: billingErrors.street,
-            span: 2,
-            autoComplete: "street-address"
-          })}
-          {renderTextField("zip", {
-            label: "Postleitzahl",
-            required: true,
-            error: billingErrors.zip,
-            autoComplete: "postal-code"
-          })}
-          {renderTextField("city", {
-            label: "Stadt",
-            required: true,
-            error: billingErrors.city,
-            autoComplete: "address-level2"
-          })}
-          {renderTextField("country", {
-            label: "Land",
-            required: true,
-            error: billingErrors.country,
-            span: 2,
-            autoComplete: "country-name"
-          })}
+        <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            {renderTextField("contactFirstName", {
+              label: isCompany ? "Ansprechpartner Vorname" : "Vorname",
+              required: true,
+              error: billingErrors.contactFirstName
+            })}
+            {renderTextField("contactLastName", {
+              label: isCompany ? "Ansprechpartner Nachname" : "Nachname",
+              required: true,
+              error: billingErrors.contactLastName
+            })}
+            {renderTextField("contactEmail", {
+              label: "E-Mail",
+              type: "email",
+              required: true,
+              error: billingErrors.contactEmail,
+              autoComplete: "email"
+            })}
+            {renderTextField("phone", {
+              label: "Telefon",
+              type: "tel",
+              required: true,
+              error: billingErrors.phone,
+              autoComplete: "tel"
+            })}
+          </div>
         </div>
-      </section>
+
+        <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            {renderTextField("street", {
+              label: "Straße und Hausnummer",
+              required: true,
+              error: billingErrors.street,
+              span: 2,
+              autoComplete: "street-address"
+            })}
+            {renderTextField("zip", {
+              label: "Postleitzahl",
+              required: true,
+              error: billingErrors.zip,
+              autoComplete: "postal-code"
+            })}
+            {renderTextField("city", {
+              label: "Stadt",
+              required: true,
+              error: billingErrors.city,
+              autoComplete: "address-level2"
+            })}
+            {renderTextField("country", {
+              label: "Land",
+              required: true,
+              error: billingErrors.country,
+              span: 2,
+              autoComplete: "country-name"
+            })}
+          </div>
+        </div>
+      </CheckoutStepCard>
     );
   };
 
-  
 const renderOverviewStep = () => {
   const agreementsBoxHasError = agbError || privacyError;
+  const agreementBorderClass = agreementsBoxHasError ? "border-error" : "ui-border";
 
   return (
-    <section className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-base-content">Bestellübersicht</h2>
-        <p className="mt-2 text-sm text-base-content/70">
-          Prüfe alle Angaben vor dem Zahlungsschritt. Du kannst einzelne Bereiche jederzeit bearbeiten.
-        </p>
-      </div>
-
-        <div className="space-y-4">
-        {hasSeminarSelection ? (
-          <div className="rounded-2xl border border-base-200 bg-base-100 p-5 shadow-sm">
-            <div className="flex items-center justify-between gap-4">
+    <CheckoutStepCard withDividers contentClassName="space-y-0">
+      {hasSeminarSelection ? (
+        <div className="py-6 first:pt-0 last:pb-0">
+          <div className="rounded-2xl border ui-border bg-base-100 p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <h3 className="text-lg font-semibold text-base-content">Teilnehmerdaten</h3>
               <button type="button" className="btn btn-link btn-sm px-0" onClick={() => goToStep("participants")}>
                 Bearbeiten
               </button>
             </div>
-            <div className="mt-4 text-sm text-base-content/80">
-              <div className="divide-y divide-base-200">
-                {participantGroupsWithMeta.map(({ seminar, group }, seminarIndex) => (
-                  <div key={group.selectionId} className={`py-4 ${seminarIndex === 0 ? "pt-0" : ""}`}>
-                    <p className="font-semibold text-base-content">
-                      {seminar.seminarTitle} · {seminar.terminLabel}
-                    </p>
-                    <div className="mt-3 divide-y divide-base-200/80">
+            <div className="mt-4 space-y-6 text-sm text-base-content/80">
+              {participantGroupsWithMeta.map(({ seminar, group }, seminarIndex) => (
+                <div key={group.selectionId} className={seminarIndex === 0 ? "" : "ui-border-top pt-4"}>
+                  <p className="text-base font-semibold text-base-content">{seminar.seminarTitle}</p>
+                  {seminar.seminarDescription ? (
+                    <p className="mt-1 text-sm text-base-content/70">{seminar.seminarDescription}</p>
+                  ) : null}
+                  <div className="mt-2 space-y-2">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-base-content/60">Termine</span>
+                    {seminar.terminSlots.length > 0 ? (
+                      <ul className="space-y-1 text-sm text-base-content/70">
+                        {seminar.terminSlots.map((slot, slotIndex) => (
+                          <li key={`${group.selectionId}-termin-${slotIndex}`}>{slot}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-base-content/70">{seminar.terminLabel}</p>
+                    )}
+                  </div>
+                  <div className="mt-6 space-y-3">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-base-content/60">Teilnehmer</span>
+                    <div className="grid gap-3 sm:grid-cols-2">
                       {group.participants.map((participant, index) => (
                         <div
                           key={`${group.selectionId}-${index}`}
-                          className={`py-3 ${index === 0 ? "pt-0" : ""}`}
+                          className="rounded-xl border ui-border bg-base-100/80 p-4 space-y-2"
                         >
-                          <p className="font-semibold">
-                            Teilnehmer {index + 1}: {participant.firstName || "—"} {participant.lastName || "—"}
+                          <p className="text-sm font-semibold text-base-content">
+                            {participant.firstName || "—"} {participant.lastName || "—"}
                           </p>
                           {participant.email ? (
-                            <p className="mt-1 text-base-content/70">{participant.email}</p>
+                            <p className="text-sm text-base-content/70">{participant.email}</p>
                           ) : null}
                           {participant.wsetNumber ? (
-                            <p className="mt-1 text-base-content/70">
-                              WSET Candidate Number: {participant.wsetNumber}
-                            </p>
+                            <p className="text-sm text-base-content/70">WSET Candidate Number: {participant.wsetNumber}</p>
                           ) : null}
                           {participant.specialNeeds ? (
-                            <p className="mt-1 text-base-content/70">
-                              Besondere Bedürfnisse: {participant.specialNeeds}
-                            </p>
+                            <p className="text-sm text-base-content/70">Besondere Bedürfnisse: {participant.specialNeeds}</p>
                           ) : null}
                         </div>
                       ))}
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
-        ) : null}
+        </div>
+      ) : null}
 
-        <div className="rounded-2xl border border-base-200 bg-base-100 p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-4">
+      <div className="py-6 first:pt-0 last:pb-0">
+        <div className="rounded-2xl border ui-border bg-base-100 p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <h3 className="text-lg font-semibold text-base-content">Rechnungsadresse</h3>
             <button type="button" className="btn btn-link btn-sm px-0" onClick={() => goToStep("billing")}>
               Bearbeiten
             </button>
           </div>
-          <div className="mt-4 text-sm text-base-content/80">
-            {billing.type === "firma" && billing.companyName ? (
-              <p className="font-semibold">{billing.companyName}</p>
-            ) : null}
-            {billing.type === "firma" && billing.vatId ? (
-              <p className="text-base-content/70">USt-ID: {billing.vatId}</p>
-            ) : null}
-            <p>
-              {billing.contactFirstName} {billing.contactLastName}
-            </p>
-            <p className="text-base-content/70">{billing.street}</p>
-            <p className="text-base-content/70">
-              {billing.zip} {billing.city}
-            </p>
-            <p className="text-base-content/70">{billing.country}</p>
-            <div className="mt-2 space-y-1">
-              <p className="text-base-content/70">E-Mail: {billing.contactEmail}</p>
-              {billing.type === "firma" && billing.invoiceEmail ? (
-                <p className="text-base-content/70">Rechnungs-E-Mail: {billing.invoiceEmail}</p>
-              ) : null}
-              <p className="text-base-content/70">Telefon: {billing.phone}</p>
+          <div className="mt-4 space-y-4 text-sm text-base-content/80">
+            <div className="space-y-2">
+              <p className="text-base font-semibold text-base-content">{billing.companyName || billing.contactFirstName}</p>
+              <p>
+                {billing.street}
+                <br />
+                {billing.zip} {billing.city}
+              </p>
+              <p className="text-base-content/70">{billing.country}</p>
+              <div className="mt-2 space-y-1 text-base-content/70">
+                <p>E-Mail: {billing.contactEmail}</p>
+                {billing.type === "firma" && billing.invoiceEmail ? <p>Rechnungs-E-Mail: {billing.invoiceEmail}</p> : null}
+                <p>Telefon: {billing.phone}</p>
+              </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="rounded-2xl border border-base-200 bg-base-100 p-5 shadow-sm">
+      <div className="py-6 first:pt-0 last:pb-0">
+        <div className="rounded-2xl border ui-border bg-base-100 p-5">
           <h3 className="text-lg font-semibold text-base-content">Rabatt / Gutscheincode</h3>
           <div className="mt-4 flex flex-col gap-3 md:flex-row">
             <input
@@ -1777,7 +1870,7 @@ const renderOverviewStep = () => {
               {appliedVoucher ? (
                 <button
                   type="button"
-                  className="btn btn-outline btn-error gap-2"
+                  className="btn ui-border bg-base-200 text-base-content hover:bg-base-300 gap-2"
                   onClick={handleRemoveVoucher}
                   aria-label="Gutscheincode entfernen"
                 >
@@ -1795,7 +1888,7 @@ const renderOverviewStep = () => {
               ) : (
                 <button
                   type="button"
-                  className={`btn btn-outline ${voucherChecking ? "loading" : ""}`}
+                  className={`btn ui-border bg-base-200 text-base-content hover:bg-base-300 ${voucherChecking ? "loading" : ""}`}
                   onClick={handleVoucherCheck}
                   disabled={voucherChecking}
                 >
@@ -1804,19 +1897,13 @@ const renderOverviewStep = () => {
               )}
             </div>
           </div>
-          {voucherMessage ? (
-            <p className="mt-3 text-sm text-base-content/70">{voucherMessage}</p>
-          ) : null}
+          {voucherMessage ? <p className="mt-3 text-sm text-base-content/70">{voucherMessage}</p> : null}
           {appliedVoucher ? (
-            <div className="mt-4 rounded-xl border border-primary bg-primary/5 p-4 text-sm">
-              <p className="font-semibold text-base-content">
-                Rabattcode angewendet: {appliedVoucher.code.toUpperCase()}
-              </p>
+            <div className="mt-4 rounded-xl border border-primary bg-primary/5 p-4 text-sm text-base-content">
+              <p className="font-semibold">Rabattcode angewendet: {appliedVoucher.code.toUpperCase()}</p>
               <p className="mt-1 text-base-content/70">
                 Abzug: {formatCurrency(appliedVoucher.amount)}
-                {appliedVoucher.remaining != null
-                  ? ` · Restguthaben: ${formatCurrency(appliedVoucher.remaining)}`
-                  : null}
+                {appliedVoucher.remaining != null ? ` · Restguthaben: ${formatCurrency(appliedVoucher.remaining)}` : null}
               </p>
               {appliedVoucher.description ? (
                 <p className="mt-1 text-base-content/60">{appliedVoucher.description}</p>
@@ -1824,19 +1911,19 @@ const renderOverviewStep = () => {
             </div>
           ) : null}
         </div>
+      </div>
 
-        <div
-          className={`rounded-2xl border ${agreementsBoxHasError ? "border-error" : "border-base-200"} bg-base-100 p-5 shadow-sm`}
-        >
+      <div className="py-6 first:pt-0 last:pb-0">
+        <div className={`rounded-2xl border bg-base-100 p-5 ${agreementBorderClass}`}>
           <h3 className="text-lg font-semibold text-base-content">Rechtliche Hinweise</h3>
-          <div className="mt-3 space-y-4">
-              <div>
-                <label className="label cursor-pointer items-start gap-3">
-                  <input
-                    type="checkbox"
-                    className={`checkbox ${agbError ? "border-error outline outline-1 outline-error" : ""}`}
-                    checked={agbAccepted}
-                    onChange={(event) => {
+          <div className="mt-4 space-y-4">
+            <div>
+              <label className="label w-full cursor-pointer items-start gap-3 whitespace-normal">
+                <input
+                  type="checkbox"
+                  className={`checkbox ${agbError ? "border-error outline outline-1 outline-error" : ""}`}
+                  checked={agbAccepted}
+                  onChange={(event) => {
                     const checked = event.target.checked;
                     setAgbAccepted(checked);
                     if (checked) {
@@ -1844,28 +1931,26 @@ const renderOverviewStep = () => {
                       if (privacyAccepted) {
                         setStepError(null);
                       }
-                      }
-                    }}
-                  />
-                  <span
-                    className={`label-text flex-1 text-sm leading-relaxed break-words ${
-                      agbError ? "text-error" : "text-base-content"
-                    }`}
-                  >
-                    Ich akzeptiere die Allgemeinen Geschäftsbedingungen der Wine Academy Hamburg. *
-                  </span>
-                </label>
-                {agbError ? (
-                  <p className="pl-9 text-xs text-error">Bitte bestätige die Allgemeinen Geschäftsbedingungen.</p>
-                ) : null}
-              </div>
-              <div>
-                <label className="label cursor-pointer items-start gap-3">
-                  <input
-                    type="checkbox"
-                    className={`checkbox ${privacyError ? "border-error outline outline-1 outline-error" : ""}`}
-                    checked={privacyAccepted}
-                    onChange={(event) => {
+                    }
+                  }}
+                />
+                <span
+                  className={`label-text flex-1 min-w-0 break-words text-sm leading-relaxed ${
+                    agbError ? "text-error" : "text-base-content"
+                  }`}
+                >
+                  Ich akzeptiere die AGB.*
+                </span>
+              </label>
+              {agbError ? <p className="pl-9 text-xs text-error">Bitte bestätige die AGB.</p> : null}
+            </div>
+            <div>
+              <label className="label w-full cursor-pointer items-start gap-3 whitespace-normal">
+                <input
+                  type="checkbox"
+                  className={`checkbox ${privacyError ? "border-error outline outline-1 outline-error" : ""}`}
+                  checked={privacyAccepted}
+                  onChange={(event) => {
                     const checked = event.target.checked;
                     setPrivacyAccepted(checked);
                     if (checked) {
@@ -1873,132 +1958,125 @@ const renderOverviewStep = () => {
                       if (agbAccepted) {
                         setStepError(null);
                       }
-                      }
-                    }}
-                  />
-                  <span
-                    className={`label-text flex-1 text-sm leading-relaxed break-words ${
-                      privacyError ? "text-error" : "text-base-content"
-                    }`}
-                  >
-                    Ich bestätige, die Datenschutzhinweise gelesen zu haben und stimme der Verarbeitung meiner Daten zu. *
-                  </span>
-                </label>
-                {privacyError ? (
-                  <p className="pl-9 text-xs text-error">Bitte bestätige den Datenschutzhinweis.</p>
-                ) : null}
-              </div>
-              <div>
-                <label className="label cursor-pointer items-start gap-3">
-                  <input
-                    type="checkbox"
-                    className="checkbox"
-                    checked={newsletter}
-                    onChange={(event) => setNewsletter(event.target.checked)}
-                  />
-                  <span className="label-text flex-1 text-sm leading-relaxed break-words text-base-content">
-                    Ich möchte Neuigkeiten der Wine Academy per E-Mail erhalten (optional, jederzeit abbestellbar).
-                  </span>
-                </label>
-              </div>
+                    }
+                  }}
+                />
+                <span
+                  className={`label-text flex-1 min-w-0 break-words text-sm leading-relaxed ${
+                    privacyError ? "text-error" : "text-base-content"
+                  }`}
+                >
+                  Ich stimme dem Datenschutz zu.*
+                </span>
+              </label>
+              {privacyError ? <p className="pl-9 text-xs text-error">Bitte bestätige den Datenschutz.</p> : null}
+            </div>
+            <div>
+              <label className="label w-full cursor-pointer items-start gap-3 whitespace-normal">
+                <input
+                  type="checkbox"
+                  className="checkbox"
+                  checked={newsletter}
+                  onChange={(event) => setNewsletter(event.target.checked)}
+                />
+                <span className="label-text flex-1 min-w-0 break-words text-sm leading-relaxed text-base-content">
+                  Newsletter (optional).
+                </span>
+              </label>
+            </div>
           </div>
         </div>
       </div>
-    </section>
+    </CheckoutStepCard>
   );
 };
 
-  const renderPaymentStep = () => {
-    const currentPayPalOption =
-      isPayPalConfigured && paymentMethod !== "rechnung"
-        ? PAYPAL_OPTION_CONFIG[paymentMethod as Exclude<PaymentMethod, "rechnung">]
-        : null;
-    const paypalDisabled = totals.total <= 0 || submissionState === "submitting";
+const renderPaymentStep = () => {
+  const currentPayPalOption =
+    isPayPalConfigured && paymentMethod !== "rechnung"
+      ? PAYPAL_OPTION_CONFIG[paymentMethod as Exclude<PaymentMethod, "rechnung">]
+      : null;
+  const paypalDisabled = totals.total <= 0 || submissionState === "submitting";
 
-    return (
-      <section className="space-y-6">
-        <div>
-        <h2 className="text-xl font-semibold text-base-content">Zahlung</h2>
-        <p className="mt-2 text-sm text-base-content/70">
-          Wähle deine bevorzugte Zahlungsart und bestätige die rechtlichen Hinweise.
-        </p>
+  return (
+    <CheckoutStepCard withDividers contentClassName="space-y-0">
+      <div className="py-6 first:pt-0 last:pb-0">
+        <div className="divide-y divide-base-200">
+          {PAYMENT_OPTIONS.map((option) => {
+            const optionDisabled = option.value !== "rechnung" && !isPayPalConfigured;
+            const isChecked = paymentMethod === option.value;
+            return (
+              <label
+                key={option.value}
+                className={`flex items-start gap-4 py-4 first:pt-0 last:pb-0 ${optionDisabled ? "opacity-60" : ""}`}
+              >
+                <input
+                  type="radio"
+                  className="radio mt-1"
+                  name="paymentMethod"
+                  value={option.value}
+                  checked={isChecked}
+                  disabled={optionDisabled}
+                  onChange={() => {
+                    if (!optionDisabled) {
+                      setPaymentMethod(option.value);
+                    }
+                  }}
+                />
+                <div className="space-y-1">
+                  <p className={`font-semibold ${isChecked ? "text-primary" : "text-base-content"}`}>{option.label}</p>
+                  {option.description ? (
+                    <p className="text-sm text-base-content/70">{option.description}</p>
+                  ) : null}
+                  {optionDisabled ? (
+                    <p className="text-xs text-warning">
+                      PayPal ist noch nicht konfiguriert. Bitte hinterlege die Umgebungsvariable <code className="mx-1">NEXT_PUBLIC_PAYPAL_CLIENT_ID</code>.
+                    </p>
+                  ) : null}
+                </div>
+              </label>
+            );
+          })}
         </div>
-
-        <div className="space-y-3">
-        {PAYMENT_OPTIONS.map((option) => {
-          const optionDisabled = option.value !== "rechnung" && !isPayPalConfigured;
-          const isChecked = paymentMethod === option.value;
-          return (
-            <label
-              key={option.value}
-              className={`flex items-start gap-4 rounded-2xl border p-4 ${
-                isChecked ? "border-primary bg-primary/5" : "border-base-200 bg-base-100"
-              } ${optionDisabled ? "opacity-60" : ""}`}
-            >
-              <input
-                type="radio"
-                className="radio mt-1"
-                name="paymentMethod"
-                value={option.value}
-                checked={isChecked}
-                disabled={optionDisabled}
-                onChange={() => {
-                  if (!optionDisabled) {
-                    setPaymentMethod(option.value);
-                  }
-                }}
-              />
-              <div>
-                <p className="font-semibold text-base-content">{option.label}</p>
-                {option.description ? (
-                  <p className="mt-1 text-sm text-base-content/70">{option.description}</p>
-                ) : null}
-                {optionDisabled ? (
-                  <p className="mt-1 text-xs text-warning">
-                    PayPal ist noch nicht konfiguriert. Bitte hinterlege die Umgebungsvariable
-                    {" "}
-                    <code className="mx-1">NEXT_PUBLIC_PAYPAL_CLIENT_ID</code>.
-                  </p>
-                ) : null}
-              </div>
-            </label>
-          );
-        })}
       </div>
 
       {currentPayPalOption ? (
-        <div className="rounded-2xl border border-primary/50 bg-primary/5 p-5 shadow-sm">
-          <h3 className="text-base font-semibold text-base-content">{currentPayPalOption.title}</h3>
-          <p className="mt-1 text-sm text-base-content/70">{currentPayPalOption.helper}</p>
-          <div className="mt-4">
-            <PayPalButtons
-              amount={totals.total}
-              disabled={!agbAccepted || !privacyAccepted || paypalDisabled}
-              label={currentPayPalOption.buttonLabel}
-              fundingSource={currentPayPalOption.fundingSource}
-              onApprove={async ({ orderId, captureId }) => {
-                await handleSubmitOrder({ orderId, captureId });
-              }}
-              onError={(message) => {
-                setPaypalError(message);
-              }}
-            />
+        <div className="py-6 first:pt-0 last:pb-0">
+          <div className="rounded-2xl border border-primary/50 bg-primary/5 p-5">
+            <h3 className="text-base font-semibold text-base-content">{currentPayPalOption.title}</h3>
+            <p className="mt-1 text-sm text-base-content/70">{currentPayPalOption.helper}</p>
+            <div className="mt-4">
+              <PayPalButtons
+                amount={totals.total}
+                disabled={!agbAccepted || !privacyAccepted || paypalDisabled}
+                label={currentPayPalOption.buttonLabel}
+                fundingSource={currentPayPalOption.fundingSource}
+                onApprove={async ({ orderId, captureId }) => {
+                  await handleSubmitOrder({ orderId, captureId });
+                }}
+                onError={(message) => {
+                  setPaypalError(message);
+                }}
+              />
+            </div>
+            <p className="mt-3 text-xs text-base-content/60">
+              Die Zahlungsabwicklung erfolgt vollständig über PayPal. Nach dem Klick wirst du zum PayPal-Fenster weitergeleitet.
+            </p>
+            {paypalError ? <p className="mt-3 text-sm text-error">{paypalError}</p> : null}
           </div>
-          <p className="mt-3 text-xs text-base-content/60">
-            Die Zahlungsabwicklung erfolgt vollständig über PayPal. Nach dem Klick wirst du zum PayPal-Fenster weitergeleitet.
-          </p>
-          {paypalError ? <p className="mt-3 text-sm text-error">{paypalError}</p> : null}
         </div>
       ) : !isPayPalConfigured ? (
-        <div className="rounded-2xl border border-warning bg-warning/10 p-5 text-sm text-warning">
-          PayPal-Zahlungen stehen aktuell nicht zur Verfügung. Bitte ergänze die Umgebungsvariable
-          {" "}
-          <code className="mx-1">NEXT_PUBLIC_PAYPAL_CLIENT_ID</code>, um PayPal, Lastschrift oder Kreditkarte zu aktivieren.
+        <div className="py-6 first:pt-0 last:pb-0">
+          <div className="rounded-2xl border border-warning bg-warning/10 p-5 text-sm text-warning">
+            PayPal-Zahlungen stehen aktuell nicht zur Verfügung. Bitte ergänze die Umgebungsvariable <code className="mx-1">NEXT_PUBLIC_PAYPAL_CLIENT_ID</code>,
+            um PayPal, Lastschrift oder Kreditkarte zu aktivieren.
+          </div>
         </div>
       ) : null}
-      </section>
-    );
-  };
+    </CheckoutStepCard>
+  );
+};
+
 
   const renderConfirmationStep = () => {
     const derivedPayPalKey: Exclude<PaymentMethod, "rechnung"> | null =
@@ -2111,57 +2189,57 @@ const renderOverviewStep = () => {
       : "Rabatt";
 
   const renderSummaryAside = () => (
-    <aside className="space-y-6 rounded-2xl border border-base-200 bg-base-100 p-6 shadow-sm">
-      <div>
-        <h2 className="text-lg font-semibold text-base-content">Deine Bestellung</h2>
+    <aside className="overflow-hidden rounded-2xl bg-base-100 shadow-sm">
+      <div className="px-6 py-8 space-y-6">
+        <div>
+          <h2 className="text-lg font-semibold text-base-content">Deine Bestellung</h2>
+        </div>
+
+        <div className="ui-border-top" aria-hidden="true" />
+
         {summaryItems.length > 0 ? (
-          <div className="mt-4 divide-y divide-base-200">
+          <ul className="space-y-4">
             {summaryItems.map((item, index) => (
-              <div
+              <li
                 key={item.id}
-                className={`flex flex-col gap-3 py-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4 ${
-                  index === 0 ? "pt-0" : ""
-                }`}
+                className={`space-y-2 ${index === 0 ? "" : "pt-4 ui-border-top"}`}
               >
-                <div>
-                  <p className="text-base font-semibold text-base-content">{item.title}</p>
-                  <p className="mt-1 text-sm text-base-content/70">Menge: {item.quantity}</p>
-                  {item.description ? (
-                    <p className="mt-2 text-sm text-base-content/60">{item.description}</p>
-                  ) : null}
-                </div>
-                <p className="text-base font-semibold text-base-content sm:text-right">
+                <p className="text-base font-semibold text-base-content">{item.title}</p>
+                <p className="text-base font-semibold text-base-content text-right">
                   {formatCurrency(item.subtotal ?? null)}
                 </p>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         ) : (
-          <p className="mt-4 text-sm text-base-content/60">
+          <p className="text-sm text-base-content/60">
             Keine Artikel ausgewählt. Bitte füge ein Seminar, Produkt oder einen Gutschein hinzu.
           </p>
         )}
-      </div>
-      <dl className="space-y-2 text-sm text-base-content">
-        <div className="flex items-center justify-between">
-          <dt>Zwischensumme</dt>
-          <dd>{formatCurrency(derivedSubtotal)}</dd>
-        </div>
-        {derivedDiscount > 0 ? (
-          <div className="flex items-center justify-between text-error">
-            <dt>{discountLabel}</dt>
-            <dd>-{formatCurrency(derivedDiscount)}</dd>
+
+        <div className="ui-border-top" aria-hidden="true" />
+
+        <dl className="space-y-3 text-sm text-base-content">
+          <div className="flex items-center justify-between">
+            <dt>Zwischensumme</dt>
+            <dd>{formatCurrency(derivedSubtotal)}</dd>
           </div>
-        ) : null}
-        <div className="flex items-center justify-between">
-          <dt>Steuern</dt>
-          <dd>{formatCurrency(derivedTax)}</dd>
-        </div>
-        <div className="flex items-center justify-between text-base font-semibold">
-          <dt>Gesamtsumme</dt>
-          <dd>{formatCurrency(derivedTotal)}</dd>
-        </div>
-      </dl>
+          {derivedDiscount > 0 ? (
+            <div className="flex items-center justify-between text-error">
+              <dt>{discountLabel}</dt>
+              <dd>-{formatCurrency(derivedDiscount)}</dd>
+            </div>
+          ) : null}
+          <div className="flex items-center justify-between">
+            <dt>Steuern</dt>
+            <dd>{formatCurrency(derivedTax)}</dd>
+          </div>
+          <div className="flex items-center justify-between text-base font-semibold">
+            <dt>Gesamtsumme</dt>
+            <dd>{formatCurrency(derivedTotal)}</dd>
+          </div>
+        </dl>
+      </div>
     </aside>
   );
 
@@ -2192,33 +2270,27 @@ const renderOverviewStep = () => {
     return renderConfirmationStep();
   }
 
+  const currentStepLabel =
+    activeStepIndex >= 0 && activeStepIndex < steps.length ? steps[activeStepIndex].label : "Checkout";
+  const currentStepDescription = STEP_DESCRIPTIONS[activeStepId];
+
   return (
     <div className="mx-auto max-w-5xl px-6 py-12 md:px-8">
-      <h1 className="text-3xl font-semibold text-base-content">Checkout</h1>
+      <h1>{currentStepLabel}</h1>
+      {currentStepDescription ? (
+        <p className="mt-4 text-lg leading-relaxed text-base-content/90 md:max-w-3xl">{currentStepDescription}</p>
+      ) : null}
       {loadError ? (
         <div className="mt-6 rounded-2xl border border-error bg-error/10 p-4 text-error">{loadError}</div>
       ) : null}
 
-      <div className="mt-8 overflow-x-auto">
-        <ul className="steps steps-horizontal">
-          {steps.map((step, index) => {
-            const isCompleted = index < furthestStepIndex;
-            const isActive = step.id === activeStepId;
-            const className = `step ${isActive || isCompleted ? "step-primary" : ""}`;
-            const canNavigate = index <= furthestStepIndex;
-            return (
-              <li
-                key={step.id}
-                className={className}
-                onClick={() => (canNavigate ? goToStep(step.id) : undefined)}
-                aria-current={isActive ? "step" : undefined}
-              >
-                {step.label}
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+      <CheckoutProgress
+        steps={steps}
+        activeStepId={activeStepId}
+        activeStepIndex={activeStepIndex}
+        furthestStepIndex={furthestStepIndex}
+        onStepClick={goToStep}
+      />
 
       <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
         <form ref={formRef} className="space-y-8" onSubmit={handlePrimaryAction}>
@@ -2238,7 +2310,7 @@ const renderOverviewStep = () => {
             {activeStepIndex > 0 ? (
               <button
                 type="button"
-                className="btn md:w-auto border-base-300 bg-base-200 text-base-content hover:bg-base-300"
+                className="btn md:w-auto ui-border bg-base-200 text-base-content hover:bg-base-300"
                 onClick={handleBack}
               >
                 Zurück

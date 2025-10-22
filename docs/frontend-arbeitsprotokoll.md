@@ -1,4 +1,23 @@
--# Frontend-Arbeitsprotokoll
+# Frontend-Arbeitsprotokoll
+- 2025-10-22 – Detailseiten-Hero verallgemeinert (neue Shared-Komponente), Mindesthöhe auf äußere Sektion verschoben und Inhalte vertikal zentriert; Produkt-/Seminar-/Gutschein-Seiten aktualisiert. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-22 – Footer + API-Proxy für lokale Entwicklung ergänzt, Checkout-Übersicht (Stepper, Termin-Slots, Border-Utilities) aufgeräumt und Style-Guidelines (globals.css, Arbeitsanweisungen) vereinheitlicht. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-22 – Gutschein-Buchungskarte: Euro-Symbol innerhalb des Betragsfelds positioniert, dynamische Feldbreite (≥80px) umgesetzt und Button-Layout wiederhergestellt (Desktop & Mobile). `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-21 – Checkout-Bestellkarte: Border-Linien auf 1px festgesetzt. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-21 – Checkout-Bestellkarte: Header/Foot mit grauer Trennlinie (`var(--ui-border-line-color)`). `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-21 – Checkout-Bestellkarte: Positionsbereich wieder weiß, Footer auf hellgrau (`bg-base-200`). `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-21 – Checkout-Bestellliste auf sehr helles Blau (`bg-primary/5`) umgestellt. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-21 – Header-Hintergrund der Checkout-Bestellkarte kräftiger auf bg-primary/10 gesetzt. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-21 – Checkout-Bestellkarte mit hellem Blau im Header hinterlegt. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-20 – Checkout-Steps verfeinert (Teilnehmerkarten ohne Schatten, Rechnungsformular ohne Divider, Übersichtsteilnehmer neu strukturiert, Checkbox-Texte gekürzt). `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-20 – Checkout-Bestellkarte (Hintergrund weiß, Header/Footer ohne Border) überarbeitet. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-20 – UI-Border-Farbe wieder auf Grau zurückgestellt. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-20 – Seminar-Tabs & Mengenregler auf globalen Linienstil umgestellt. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-20 – Formularfelder an globalen UI-Border gebunden. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-20 – Formularfelder an globalen UI-Border gebunden. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-20 – Einheitlichen UI-Border-Style eingeführt (Variablenfarbe, Utilities, Formular- & Divider-Umstellung) und temporär auf Rot gesetzt. `npm run lint` erfolgreich. – Commit: n/a
+
+- 2025-10-20 – Checkout-Teilnehmeransicht bereinigt (Termin-Metadaten entfernt, Divider zwischen Teilnehmerformularen, Label-Text gekürzt) und Rechnungs-Tabs auf neue Reiteroptik umgestellt. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-20 – Tab „Firma“ in „Geschäftlich“ umbenannt, globale Linien-Utility (`ui-border-bottom`) eingeführt und Rechnungsadress-Layout ohne Divider zwischen Kontakt und Adresse gestaltet. `npm run lint` erfolgreich. – Commit: n/a
 - 2025-10-20 – Checkout-Schritte auf eine einheitliche Step-Karte mit Divider-Linien umgestellt (Teilnehmer, Rechnungsadresse, Übersicht, Zahlung) und `CheckoutStepCard`-Hilfskomponente ergänzt; PayPal-Optionen ohne Einzelboxen neu gestaltet. `npm run lint` erfolgreich. – Commit: n/a
 - 2025-10-20 – Warenkorb-Items ohne Vorschaubilder neu ausgerichtet (`CartItemSeminar`/`CartItemProduct`/`CartItemGutschein`), Layout auf reine Text-/Button-Spalten angepasst. `npm run lint` erfolgreich. – Commit: n/a
 - 2025-10-18 – Puppeteer-Checkout-Skript um vier Rechnungs-Szenarien (Seminar + Produkt + Gutscheinbetrag, Produkt + Rabattcode, Seminar Firmenrechnung, Seminare gemischte MwSt + Rabattcode inkl. MwSt-Abgleich Frontend/SevDesk) erweitert und erfolgreich gegen Staging ausgeführt; Bestellungen WA-20251046–WA-20251049 verifiziert. – Commit: n/a

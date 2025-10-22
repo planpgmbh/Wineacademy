@@ -8,6 +8,7 @@ Das Next.js-Frontend stellt die öffentliche Website der Wine Academy Hamburg be
 - **Relevante Variablen:**
   - `NEXT_PUBLIC_API_URL` – Öffentliche Basis inkl. `/api` (z. B. `https://wineacademy.plan-p.de/api`).
   - `API_INTERNAL_URL` – Interne Basis ohne Traefik (z. B. `http://backend:1337`).
+  - `API_PROXY_TARGET` – Optionales Proxy-Ziel für lokale Aufrufe über `/api/*` (z. B. `https://wineacademy.plan-p.de/api`). In der lokalen `.env` kann `NEXT_PUBLIC_API_URL=/api` gesetzt werden, damit der Next.js-Proxy (`app/api/[...path]`) die Requests weiterleitet.
   - `NEXT_PUBLIC_ASSETS_URL` / `ASSETS_INTERNAL_URL` – Medienbasis ohne `/api`.
   - `NEXT_PUBLIC_PAYPAL_CLIENT_ID`, optional `NEXT_PUBLIC_PAYPAL_CURRENCY`.
   - Entwicklungsdefaults in `.env.example`, Staging-Werte in `.env.staging.example`.

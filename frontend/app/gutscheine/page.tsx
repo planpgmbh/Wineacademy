@@ -1,4 +1,4 @@
-import { ProductDetailHero } from "@/components/product/ProductDetailHero";
+import { DetailPageHero } from "@/components/shared/DetailPageHero";
 import { VoucherBookingCard } from "@/components/voucher/VoucherBookingCard";
 import { VoucherBookingMobile } from "@/components/voucher/VoucherBookingMobile";
 import { ProductContentTabs } from "@/components/product/ProductContentTabs";
@@ -37,7 +37,7 @@ export default async function VoucherDetailPage() {
     <>
       {DesktopStickyCard}
 
-      <ProductDetailHero
+      <DetailPageHero
         title={voucher.hero.title}
         paragraphs={voucher.hero.paragraphs}
         breadcrumbs={breadcrumbs}

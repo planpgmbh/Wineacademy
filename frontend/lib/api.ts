@@ -38,10 +38,22 @@ function resolveRuntimeBase(): string | null {
 }
 
 export function getApiBaseUrl(): string | null {
-  const envBase = process.env.NEXT_PUBLIC_API_URL ?? process.env.API_INTERNAL_URL;
-  if (envBase) {
-    return normaliseBase(envBase);
+  const isServer = typeof window === "undefined";
+
+  if (isServer) {
+    const serverBase = process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL;
+    if (serverBase) {
+      return normaliseBase(serverBase);
+    }
+  } else if (process.env.NEXT_PUBLIC_API_URL) {
+    return normaliseBase(process.env.NEXT_PUBLIC_API_URL);
   }
+
+  const fallback = process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL;
+  if (fallback) {
+    return normaliseBase(fallback);
+  }
+
   return resolveRuntimeBase();
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 
 import { triggerVoucherFlow } from "./voucherBookingUtils";
 
@@ -10,6 +11,7 @@ const EURO_FORMATTER = new Intl.NumberFormat("de-DE", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2
 });
+const AMOUNT_PLACEHOLDER_LENGTH = 6;
 
 type VoucherBookingMobileProps = {
   highlightLabel?: string | null;
@@ -59,6 +61,10 @@ export function VoucherBookingMobile({
   const [inputValue, setInputValue] = useState(() => String(defaultAmount));
 
   const amount = useMemo(() => parseAmount(inputValue), [inputValue]);
+  const amountInputStyle = useMemo<CSSProperties>(() => {
+    const visibleLength = Math.max(inputValue.length, AMOUNT_PLACEHOLDER_LENGTH);
+    return { width: `max(80px, ${visibleLength + 1}ch)` };
+  }, [inputValue]);
 
   const validation = useMemo(() => {
     if (amount == null || amount <= 0) {
@@ -150,11 +156,12 @@ export function VoucherBookingMobile({
 
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-3">
-                    <div className="input-group min-w-[160px] flex-1">
+                    <div className="relative min-w-[80px] flex-shrink-0">
                       <input
                         type="text"
                         inputMode="decimal"
-                        className="input input-bordered min-w-[55px]"
+                        className="input input-bordered pl-8 pr-3"
+                        style={amountInputStyle}
                         value={inputValue}
                         onChange={(event) => setInputValue(sanitiseAmountInput(event.target.value))}
                         onBlur={() => {
@@ -165,7 +172,12 @@ export function VoucherBookingMobile({
                         aria-label="Gutscheinbetrag"
                         placeholder="Betrag"
                       />
-                      <span>€</span>
+                      <span
+                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base-content/60 z-10"
+                        aria-hidden="true"
+                      >
+                        €
+                      </span>
                     </div>
                   </div>
                   {validation ? <p className="text-xs text-error">{validation}</p> : null}

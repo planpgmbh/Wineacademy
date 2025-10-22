@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-const borderColorMix = "color-mix(in oklab, var(--color-base-content) 20%, transparent)";
-
 type SeminarContentTabsProps = {
   tabs: {
     id: string;
@@ -23,7 +21,7 @@ export function SeminarContentTabs({ tabs }: SeminarContentTabsProps) {
 
   return (
     <div className="w-full">
-      <div className="border-b" style={{ borderColor: borderColorMix }}>
+      <div className="ui-border-bottom">
         <div role="tablist" className="tabs -mb-[1px] gap-6">
           {tabs.map((tab) => (
             <button

@@ -92,7 +92,13 @@ export function CartItemSeminar({ seminar, selection, onQuantityChange, onRemove
             <ul className="space-y-1 text-sm text-base-content/80">
               {seminar?.dates.map((option) => (
                 <li key={option.id} className={option.id === selectedDateId ? "font-semibold text-base-content" : ""}>
-                  {option.label}
+                  {option.days.length > 0
+                    ? option.days.map((day, idx) => (
+                        <span key={`${option.id}-day-${idx}`} className="block">
+                          {day}
+                        </span>
+                      ))
+                    : option.label}
                 </li>
               ))}
             </ul>

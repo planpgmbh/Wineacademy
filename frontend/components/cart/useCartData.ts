@@ -25,6 +25,7 @@ type SeminarListItem = {
     id: number;
     starttag?: string | null;
     standort?: { name?: string | null; stadt?: string | null } | null;
+    tageMitUhrzeit?: { datum?: string | null; startzeit?: string | null; endzeit?: string | null }[];
   }[];
 };
 
@@ -39,7 +40,7 @@ export type SeminarCartItem = {
   description?: string | null;
   price: { value: number | null; formatted: string };
   steuerSatz: number | null;
-  dates: { id: string; label: string }[];
+  dates: { id: string; label: string; days: string[]; slots: string[] }[];
   imageUrl: string | null;
   imageAlt: string | null;
 };
@@ -116,16 +117,7 @@ function ensureWeekdaySuffix(label: string): string {
   return label.endsWith(".") ? label : `${label}.`;
 }
 
-function formatSeminarDate(termin: SeminarTermin): string | null {
-  if (!termin?.starttag) {
-    return null;
-  }
-
-  const date = new Date(termin.starttag);
-  if (Number.isNaN(date.valueOf())) {
-    return null;
-  }
-
+function formatDateLabel(date: Date): string {
   const weekday = ensureWeekdaySuffix(
     new Intl.DateTimeFormat("de-DE", { weekday: "short" }).format(date)
   );
@@ -136,6 +128,49 @@ function formatSeminarDate(termin: SeminarTermin): string | null {
   }).format(date);
 
   return `${weekday} ${datePart}`;
+}
+
+function parseIsoDateLabel(isoDate: string | null | undefined): string | null {
+  if (!isoDate) {
+    return null;
+  }
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.valueOf())) {
+    return null;
+  }
+  return formatDateLabel(date);
+}
+
+function formatSeminarDate(termin: SeminarTermin): string | null {
+  return parseIsoDateLabel(termin?.starttag);
+}
+
+function formatTimeComponent(value: string | null | undefined): string | null {
+  if (!value) {
+    return null;
+  }
+  const parts = value.trim().split(":");
+  if (parts.length >= 2) {
+    const [hour, minute] = parts;
+    return `${hour.padStart(2, "0")}:${minute.padStart(2, "0")}`;
+  }
+  return value.trim().length > 0 ? value.trim() : null;
+}
+
+function formatSeminarTimeSlot(slot: { datum?: string | null; startzeit?: string | null; endzeit?: string | null }): string | null {
+  const dayLabel = parseIsoDateLabel(slot?.datum);
+  if (!dayLabel) {
+    return null;
+  }
+  const start = formatTimeComponent(slot?.startzeit);
+  const end = formatTimeComponent(slot?.endzeit);
+  if (start && end) {
+    return `${dayLabel} ${start} – ${end}`;
+  }
+  if (start) {
+    return `${dayLabel} ${start}`;
+  }
+  return dayLabel;
 }
 
 export function readProductSelection(): ProductSelection | null {
@@ -200,9 +235,17 @@ function mapSeminar(item: SeminarListItem | SeminarDetailItem | undefined): Semi
     .map((termin) => {
       const label = formatSeminarDate(termin);
       if (!label) return null;
-      return { id: String(termin.id), label };
+      const slotsRaw = Array.isArray(termin.tageMitUhrzeit) ? termin.tageMitUhrzeit : [];
+      const slots = slotsRaw
+        .map((slot) => formatSeminarTimeSlot(slot))
+        .filter((entry): entry is string => Boolean(entry));
+      const days = slotsRaw
+        .map((slot) => parseIsoDateLabel(slot?.datum))
+        .filter((entry): entry is string => Boolean(entry));
+      const uniqueDays = Array.from(new Set<string>(days));
+      return { id: String(termin.id), label, days: uniqueDays.length > 0 ? uniqueDays : [label], slots };
     })
-    .filter((entry): entry is { id: string; label: string } => Boolean(entry))
+    .filter((entry): entry is { id: string; label: string; days: string[]; slots: string[] } => Boolean(entry))
     .slice(0, 5);
 
   return {

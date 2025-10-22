@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { SeminarBookingCard } from "@/components/seminar/SeminarBookingCard";
 import { SeminarBookingMobile } from "@/components/seminar/SeminarBookingMobile";
 import { SeminarContentTabs } from "@/components/seminar/SeminarContentTabs";
-import { ProductDetailHero } from "@/components/product/ProductDetailHero";
+import { DetailPageHero } from "@/components/shared/DetailPageHero";
 import { getSeminarDetail } from "@/lib/seminar-detail";
 
 type SeminarDetailPageProps = {
@@ -49,7 +49,7 @@ export default async function SeminarDetailPage({ params }: SeminarDetailPagePro
     <>
       {DesktopStickyBookingCard}
 
-      <ProductDetailHero
+      <DetailPageHero
         title={seminar.hero.title}
         paragraphs={seminar.hero.paragraphs}
         breadcrumbs={breadcrumbs}

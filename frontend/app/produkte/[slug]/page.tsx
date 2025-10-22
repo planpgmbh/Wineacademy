@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ProductBookingCard } from "@/components/product/ProductBookingCard";
 import { ProductBookingMobile } from "@/components/product/ProductBookingMobile";
 import { ProductContentTabs } from "@/components/product/ProductContentTabs";
-import { ProductDetailHero } from "@/components/product/ProductDetailHero";
+import { DetailPageHero } from "@/components/shared/DetailPageHero";
 import { getProductDetail } from "@/lib/product-detail";
 
 type ProductDetailPageProps = {
@@ -51,7 +51,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
     <>
       {DesktopStickyBookingCard}
 
-      <ProductDetailHero
+      <DetailPageHero
         title={product.hero.title}
         paragraphs={product.hero.paragraphs}
         breadcrumbs={breadcrumbs}

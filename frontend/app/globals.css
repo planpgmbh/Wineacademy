@@ -8,7 +8,13 @@
   color-scheme: "light";
   --color-base-100: oklch(100% 0 0);
   --color-base-200: oklch(98% 0 0);
-  --color-base-300: oklch(95% 0 0);
+  --color-base-300: oklch(96% 0 0);
+  --color-base-400: oklch(94% 0 0);
+  --color-base-500: oklch(92% 0 0);
+  --color-base-600: oklch(90% 0 0);
+  --color-base-700: oklch(88% 0 0);
+  --color-base-800: oklch(86% 0 0);
+  --color-base-900: oklch(84% 0 0);
   --color-base-content: oklch(21% 0.006 285.885);
   --color-primary: oklch(80% 0.105 251.813);
   --color-primary-content: oklch(39% 0.09 240.876);
@@ -31,20 +37,76 @@
   --radius-box: 0.5rem;
   --size-selector: 0.21875rem;
   --size-field: 0.25rem;
-  --border: 1px;
+  --border: var(--ui-border-line-width);
   --depth: 1;
   --noise: 1;
 }
 
 :root {
   color-scheme: light;
+  --ui-border-line-width: 1px;
+  --ui-border-line-color: var(--color-base-700);
 }
 
 body {
   @apply min-h-screen bg-base-200 text-base-content antialiased;
 }
 
+@layer base {
+  h1 {
+    font-family: var(--font-serifbabe), ui-serif, Georgia, serif;
+    @apply text-4xl font-light leading-tight text-base-content;
+  }
+
+  @screen md {
+    h1 {
+      @apply text-5xl;
+    }
+  }
+}
+
 @layer utilities {
+
+  .input,
+  .textarea,
+  .select,
+  .checkbox,
+  .radio,
+  .toggle,
+  .input:focus,
+  .textarea:focus,
+  .select:focus,
+  .checkbox:focus,
+  .radio:focus,
+  .toggle:focus {
+    border-color: var(--ui-border-line-color);
+  }
+
+  .ui-border-bottom {
+    border-bottom-width: var(--ui-border-line-width);
+    border-bottom-style: solid;
+    border-bottom-color: var(--ui-border-line-color);
+  }
+
+  .ui-border-top {
+    border-top-width: var(--ui-border-line-width);
+    border-top-style: solid;
+    border-top-color: var(--ui-border-line-color);
+  }
+
+  .ui-border {
+    border-width: var(--ui-border-line-width);
+    border-style: solid;
+    border-color: var(--ui-border-line-color);
+  }
+
+  .ui-divide > :not([hidden]) ~ :not([hidden]) {
+    border-top-width: var(--ui-border-line-width);
+    border-top-style: solid;
+    border-top-color: var(--ui-border-line-color);
+  }
+
+
   .select:focus,
   .select:focus-visible,
   .select:focus-within {

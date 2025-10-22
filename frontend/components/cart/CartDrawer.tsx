@@ -226,7 +226,7 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
       <div className="drawer-side z-[9999]">
         <label htmlFor={id} className="drawer-overlay z-[9998]" onClick={onClose} />
         <aside className="relative z-[9999] flex h-full w-96 max-w-full flex-col bg-base-100 shadow-xl">
-          <header className="relative z-10 flex items-center justify-between border-b border-base-300 bg-base-100 px-6 py-4 shadow-[0_10px_16px_-14px_rgba(15,23,42,0.5)]">
+          <header className="relative z-10 flex items-center justify-between ui-border-bottom bg-base-100 px-6 py-4 shadow-[0_10px_16px_-14px_rgba(15,23,42,0.5)]">
             <h2 className="text-lg font-semibold">Warenkorb</h2>
             <button type="button" aria-label="Schließen" className="btn btn-ghost btn-sm" onClick={onClose}>
               ✕
@@ -287,7 +287,7 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
               </div>
             )}
           </div>
-          <footer className="relative z-10 flex flex-col gap-4 border-t border-base-300 bg-base-100 px-6 py-6 shadow-[0_-10px_16px_-14px_rgba(15,23,42,0.5)]">
+          <footer className="relative z-10 flex flex-col gap-4 ui-border-top bg-base-100 px-6 py-6 shadow-[0_-10px_16px_-14px_rgba(15,23,42,0.5)]">
             <dl className="flex justify-between text-base font-semibold">
               <dt>Summe</dt>
               <dd className="text-base font-semibold">{totalFormatted}</dd>
