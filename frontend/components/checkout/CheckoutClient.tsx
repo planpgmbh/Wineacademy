@@ -507,7 +507,7 @@ export function CheckoutClient() {
           seminarDescription: seminar?.description ?? null,
           terminId,
           terminLabel,
-          terminDescription: matchingDate?.description ?? seminar?.description ?? null,
+          terminDescription: seminar?.description ?? null,
           terminSlots: Array.isArray(matchingDate?.slots) ? matchingDate.slots : [],
           preisBrutto: einzelpreisBrutto,
           steuerSatz

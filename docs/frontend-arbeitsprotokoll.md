@@ -1,5 +1,6 @@
 # Frontend-Arbeitsprotokoll
 - 2025-10-22 – Detailseiten-Hero verallgemeinert (neue Shared-Komponente), Mindesthöhe auf äußere Sektion verschoben und Inhalte vertikal zentriert; Produkt-/Seminar-/Gutschein-Seiten aktualisiert. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-22 – Checkout-Teilnehmermapping korrigiert (Terminbeschreibung entfernt), damit der Build auf Staging wieder fehlerfrei durchläuft. `npm run lint` erfolgreich. – Commit: n/a
 - 2025-10-22 – Footer + API-Proxy für lokale Entwicklung ergänzt, Checkout-Übersicht (Stepper, Termin-Slots, Border-Utilities) aufgeräumt und Style-Guidelines (globals.css, Arbeitsanweisungen) vereinheitlicht. `npm run lint` erfolgreich. – Commit: n/a
 - 2025-10-22 – Gutschein-Buchungskarte: Euro-Symbol innerhalb des Betragsfelds positioniert, dynamische Feldbreite (≥80px) umgesetzt und Button-Layout wiederhergestellt (Desktop & Mobile). `npm run lint` erfolgreich. – Commit: n/a
 - 2025-10-21 – Checkout-Bestellkarte: Border-Linien auf 1px festgesetzt. `npm run lint` erfolgreich. – Commit: n/a
