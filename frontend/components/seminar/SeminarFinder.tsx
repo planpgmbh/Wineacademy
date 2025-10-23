@@ -16,11 +16,16 @@ type SeminarFinderProps = {
   initialLocationId?: string | null;
 };
 
-const buttonBaseClasses = "btn btn-sm";
+const buttonBaseClasses =
+  "inline-flex h-[32px] items-center justify-center rounded-full px-3 text-xs shadow-none transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2";
+const buttonActiveClasses =
+  "border border-transparent bg-secondary text-secondary-content hover:bg-secondary/90 focus-visible:outline-secondary";
+const buttonInactiveClasses =
+  "ui-border bg-base-100 text-base-content hover:bg-base-200 hover:text-base-content/80 focus-visible:outline-base-content";
 
 export function SeminarFinder({
   id,
-  title = "Finde dein passendes Seminar",
+  title = "Finde deine passende Vortbildung",
   categories,
   locations,
   initialCategorySlug,
@@ -93,10 +98,7 @@ export function SeminarFinder({
     <section id={id ?? undefined} className="mx-auto max-w-6xl px-6 py-16 md:px-8">
       <div className="space-y-10">
         <div className="space-y-3">
-          <h2 className="text-3xl font-semibold text-base-content md:text-4xl">{title}</h2>
-          <p className="max-w-2xl text-base text-base-content/70">
-            Filtere nach Kategorien oder Standorten und entdecke die passenden Seminare für dich.
-          </p>
+          <h2 className="text-xl font-semibold text-base-content md:text-2xl">{title}</h2>
         </div>
 
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -104,7 +106,7 @@ export function SeminarFinder({
             <button
               type="button"
               className={`${buttonBaseClasses} ${
-                selectedCategory === ALL_CATEGORIES ? "btn-primary" : "btn-outline"
+                selectedCategory === ALL_CATEGORIES ? buttonActiveClasses : buttonInactiveClasses
               }`}
               onClick={() => setSelectedCategory(ALL_CATEGORIES)}
             >
@@ -116,9 +118,7 @@ export function SeminarFinder({
                 key={category.slug}
                 type="button"
                 className={`${buttonBaseClasses} ${
-                  selectedCategory === category.slug
-                    ? "btn-primary"
-                    : "btn-outline"
+                  selectedCategory === category.slug ? buttonActiveClasses : buttonInactiveClasses
                 }`}
                 onClick={() => setSelectedCategory(category.slug)}
               >
@@ -128,7 +128,7 @@ export function SeminarFinder({
           </div>
 
           <label className="flex items-center gap-3 text-base-content/80">
-            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-base-content/60">Standort</span>
+            <span className="text-sm font-semibold text-base-content/60">Standort</span>
             <select
               className="select select-bordered select-sm w-48 border-base-300 bg-base-100 text-base-content shadow-sm shadow-base-300/40"
               value={selectedLocation}
@@ -149,12 +149,12 @@ export function SeminarFinder({
             return (
               <div
                 key={category.slug}
-                className="rounded-[24px] bg-primary px-6 py-8 text-primary-content shadow-[0_18px_40px_-24px_rgba(34,55,99,0.55)] md:px-10 md:py-10"
+                className="rounded-[24px] bg-secondary px-6 py-8 text-secondary-content shadow-[0_18px_40px_-24px_rgba(34,55,99,0.55)] md:px-10 md:py-10"
               >
                 <div className="space-y-3">
                   <h3 className="text-xl font-semibold md:text-2xl">{category.name}</h3>
                   {category.shortDescription ? (
-                    <p className="max-w-3xl text-sm leading-relaxed text-primary-content/80 md:text-base">
+                    <p className="max-w-3xl text-sm leading-relaxed text-secondary-content/80 md:text-base">
                       {category.shortDescription}
                     </p>
                   ) : null}
@@ -165,7 +165,7 @@ export function SeminarFinder({
                     {seminars.map((seminar) => (
                       <article
                         key={seminar.id}
-                        className="rounded-2xl bg-base-100 p-5 shadow-[0_12px_32px_-24px_rgba(15,23,42,0.45)] md:flex md:items-center md:justify-between md:px-7 md:py-6"
+                        className="rounded-2xl bg-base-100 p-5 md:flex md:items-center md:justify-between md:px-7 md:py-6"
                       >
                         <div className="space-y-2 md:max-w-2xl">
                           <h4 className="text-base font-semibold text-base-content md:text-lg">{seminar.name}</h4>
@@ -191,8 +191,8 @@ export function SeminarFinder({
                     ))}
                   </div>
                 ) : (
-                  <div className="mt-8 rounded-2xl border border-primary/40 bg-primary-content/10 p-8 text-base-content">
-                    <p className="text-base font-medium text-primary-content">
+                  <div className="mt-8 rounded-2xl border border-secondary/40 bg-secondary-content/10 p-8 text-secondary-content">
+                    <p className="text-base font-medium text-secondary-content">
                       Aktuell gibt es keine Seminare, die zu diesem Standort-Filter passen. Ändere die Auswahl, um
                       weitere Seminare zu entdecken.
                     </p>

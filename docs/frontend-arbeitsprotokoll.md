@@ -1,4 +1,7 @@
 # Frontend-Arbeitsprotokoll
+- 2025-10-23 – Seminarfinder-Filterpillen in der Höhe auf 34 px begrenzt und Polsterung angepasst. `npm run lint` erfolgreich. – Commit: cfa7c83
+- 2025-10-23 – Seminarfinder-Filter auf Pillenlayout mit UI-Border umgestellt, Sekundärfarbe auf #506A7E gesetzt und Seminar-Kartenschatten entfernt. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-23 – Seminarfinder-Karte dunkler gestaltet (Weißtext, Label-Anpassung), Headline verkleinert und Hilfetext entfernt. `npm run lint` erfolgreich. – Commit: n/a
 - 2025-10-23 – Seminarfinder-Datenaufbereitung bereinigt (Fallbacks entfernt, Typen gestrafft) und Komponente entsprechend verfeinert. `npm run lint`, `docker compose -f docker-compose-staging.yml up -d --build` erfolgreich. – Commit: n/a
 - 2025-10-23 – Seminarfinder weiter verfeinert (Typografie verkleinert, Radien reduziert, Buttons auf Standard-Stil zurückgeführt, Preise ausgerichtet). `npm run lint`, `docker compose -f docker-compose-staging.yml up -d --build` erfolgreich. – Commit: n/a
 - 2025-10-23 – Seminarfinder-Layout an Referenz angepasst (Farben, Abstände, Typografie), Kategorie-Kurzbeschreibung ergänzt und Buttons/Filter verfeinert. `npm run lint`, `docker compose -f docker-compose-staging.yml up -d --build` erfolgreich. – Commit: n/a
