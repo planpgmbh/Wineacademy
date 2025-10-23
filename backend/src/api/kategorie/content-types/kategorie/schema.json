@@ -21,6 +21,9 @@
     "beschreibung": {
       "type": "text"
     },
+    "kurzbeschreibung": {
+      "type": "string"
+    },
     "hintergrundbild": {
       "type": "media",
       "allowedTypes": [

@@ -1,4 +1,8 @@
 # Frontend-Arbeitsprotokoll
+- 2025-10-23 – Seminarfinder-Datenaufbereitung bereinigt (Fallbacks entfernt, Typen gestrafft) und Komponente entsprechend verfeinert. `npm run lint`, `docker compose -f docker-compose-staging.yml up -d --build` erfolgreich. – Commit: n/a
+- 2025-10-23 – Seminarfinder weiter verfeinert (Typografie verkleinert, Radien reduziert, Buttons auf Standard-Stil zurückgeführt, Preise ausgerichtet). `npm run lint`, `docker compose -f docker-compose-staging.yml up -d --build` erfolgreich. – Commit: n/a
+- 2025-10-23 – Seminarfinder-Layout an Referenz angepasst (Farben, Abstände, Typografie), Kategorie-Kurzbeschreibung ergänzt und Buttons/Filter verfeinert. `npm run lint`, `docker compose -f docker-compose-staging.yml up -d --build` erfolgreich. – Commit: n/a
+- 2025-10-23 – Seminarfinder-Komponente mit dynamischem Kategorie-/Standortfilter erstellt, Backend-Liste um Kategorien/Standorte ergänzt und Kategorie-Seite an neue Komponente angebunden. `npm run lint`, `docker compose -f docker-compose-staging.yml up -d --build` erfolgreich. – Commit: n/a
 - 2025-10-23 – Kategorie-Hero & Seite: Public-Endpoint angebunden, CTA-Scroll eingerichtet und Platzhalter-Content vorbereitet. `npm run lint` erfolgreich. – Commit: n/a
 - 2025-10-23 – Kategorie-Seite an neues Strapi-Schema (Slug, Hintergrundbild, Dark Mode, SEO) angepasst; Hero-Komponente mit Kontrast-Overlay, limitierter Desktop-Breite und Dark-Mode-Farbanpassungen versehen. `npm run lint` erfolgreich. – Commit: n/a
 - 2025-10-22 – Detailseiten-Hero verallgemeinert (neue Shared-Komponente), Mindesthöhe auf äußere Sektion verschoben und Inhalte vertikal zentriert; Produkt-/Seminar-/Gutschein-Seiten aktualisiert. `npm run lint` erfolgreich. – Commit: n/a

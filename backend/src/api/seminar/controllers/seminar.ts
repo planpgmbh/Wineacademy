@@ -6,7 +6,10 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
     const seminars = await strapi.db.query('api::seminar.seminar').findMany({
       where: { aktiv: true, publishedAt: { $not: null } },
       select: ['id', 'name', 'slug', 'kurzbeschreibung', 'preis', 'mwst'],
-      populate: { bild: { select: ['url', 'alternativeText'] } },
+      populate: {
+        bild: { select: ['url', 'alternativeText'] },
+        kategorien: { select: ['id', 'name', 'slug', 'kurzbeschreibung'] },
+      },
       orderBy: { name: 'asc' },
     });
 
@@ -17,14 +20,55 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
         select: ['kapazitaet', 'planungsstatus', 'id', 'starttag'],
         populate: {
           tageMitUhrzeit: { select: ['datum', 'startzeit', 'endzeit'] },
-          standort: { select: ['name', 'typ', 'veranstaltungsort', 'stadt'] },
+          standort: { select: ['id', 'name', 'typ', 'veranstaltungsort', 'stadt'] },
         },
         orderBy: { id: 'asc' },
       });
-      const termine = termineRaw.map((t) => ({ ...t, preis: (s as any).preis }));
+      const termine = termineRaw.map((termin) => {
+        const standortRaw = (termin as any).standort ?? null;
+        const standort = standortRaw
+          ? {
+              id: standortRaw.id ?? null,
+              name: typeof standortRaw.name === 'string' ? standortRaw.name : null,
+              typ: typeof standortRaw.typ === 'string' ? standortRaw.typ : null,
+              veranstaltungsort:
+                typeof standortRaw.veranstaltungsort === 'string' ? standortRaw.veranstaltungsort : null,
+              stadt: typeof standortRaw.stadt === 'string' ? standortRaw.stadt : null,
+            }
+          : null;
+
+        return {
+          id: termin.id,
+          starttag: termin.starttag ?? null,
+          kapazitaet: termin.kapazitaet ?? null,
+          planungsstatus: termin.planungsstatus ?? null,
+          preis: (s as any).preis ?? null,
+          standort,
+          tageMitUhrzeit: Array.isArray((termin as any).tageMitUhrzeit) ? (termin as any).tageMitUhrzeit : [],
+        };
+      });
+
+      const kategorienRaw = Array.isArray((s as any).kategorien) ? (s as any).kategorien : [];
+      const kategorien = kategorienRaw
+        .filter((cat) => typeof cat?.name === 'string' && cat.name.trim().length > 0)
+        .map((cat) => {
+          const name = cat.name.trim();
+          const slug =
+            typeof cat?.slug === 'string' && cat.slug.trim().length > 0
+              ? cat.slug.trim()
+              : slugify(name);
+
+          return {
+            id: cat.id,
+            name,
+            slug,
+            kurzbeschreibung: typeof cat.kurzbeschreibung === 'string' ? cat.kurzbeschreibung : null,
+          };
+        });
+
       const fallbackBild = { url: '/favicon.png', alternativeText: 'Weinseminar – Testbild' } as any;
       const sWithBild = { ...(s as any), bild: (s as any).bild ?? fallbackBild };
-      result.push({ ...sWithBild, termine });
+      result.push({ ...sWithBild, kategorien, termine });
     }
 
     ctx.body = result;

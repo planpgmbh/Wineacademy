@@ -699,6 +699,7 @@ export interface ApiKategorieKategorie extends Struct.CollectionTypeSchema {
     slug: Schema.Attribute.UID<'api::kategorie.kategorie', 'name'> &
       Schema.Attribute.Required;
     beschreibung: Schema.Attribute.Text;
+    kurzbeschreibung: Schema.Attribute.String;
     hintergrundbild: Schema.Attribute.Media<'images'>;
     seoTitle: Schema.Attribute.String;
     seoDescription: Schema.Attribute.Text;

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { DetailPageHero } from "@/components/shared/DetailPageHero";
+import { SeminarFinder } from "@/components/seminar/SeminarFinder";
 import { getCategoryDetail } from "@/lib/category-detail";
+import { getSeminarFinderData } from "@/lib/seminar-finder";
 
 type CategoryPageProps = {
   params: Promise<{
@@ -34,6 +36,8 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     notFound();
   }
 
+  const seminarFinderData = await getSeminarFinderData();
+
   const breadcrumbs = ["Seminare", category.title];
 
   return (
@@ -49,14 +53,13 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         preferDarkMode={category.heroDarkMode}
       />
 
-      <section id="category-content" className="mx-auto max-w-6xl px-6 py-16 md:px-8">
-        <div className="space-y-4 text-base-content/80">
-          <h2 className="text-3xl font-semibold text-base-content">Seminare entdecken</h2>
-          <p>
-            Hier entsteht die Übersicht der Seminare dieser Kategorie. Scrolle später erneut vorbei, um alle Inhalte zu sehen.
-          </p>
-        </div>
-      </section>
+      <SeminarFinder
+        id="category-content"
+        title="Finde dein passendes Seminar"
+        categories={seminarFinderData.categories}
+        locations={seminarFinderData.locations}
+        initialCategorySlug={category.slug}
+      />
     </>
   );
 }

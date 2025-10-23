@@ -1,5 +1,6 @@
 # Backend-Arbeitsprotokoll
 
+- 2025-10-23 – Kategorie-Public-API (List/Detail) ergänzt, Kurzbeschreibung im Schema hinterlegt und bestehende Slugs via SQL (`ALTER TABLE ... ADD COLUMN kurzbeschreibung`, `UPDATE kategorien SET slug=...`) nachgezogen; Endpunkte liefern Hero/SEO-Daten inkl. Seminaren. Tests: `npm run build` (Backend) erfolgreich, `docker compose -f docker-compose-staging.yml up -d --build`. – Commit: n/a
 - 2025-10-23 – Kategorie-Content-Type um Felder `slug`, `seoTitle`, `seoDescription` ergänzt und Seeds/Controller angepasst, damit Kategorien saubere URLs und optionale Meta-Daten liefern. Tests: `npm run build` (Backend) erfolgreich. – Commit: 555d051
 - 2025-10-23 – Kategorie-Content-Type: Medienfeld in `hintergrundbild` umbenannt und Admin-Label ergänzt, damit die Benennung konsistent zu anderen Content-Types ist. Tests: `npm run build` (Backend) erfolgreich. – Commit: 555d051
 - 2025-10-23 – Kategorie-Content-Type um Boolean-Feld `heroDarkMode` (Admin-Label „Hero Dark Mode“) erweitert, damit das Hero-Element auf dunklen Hintergründen hellen Text erzwingen kann. Tests: `npm run build` (Backend) erfolgreich. – Commit: 555d051
