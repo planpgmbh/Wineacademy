@@ -1,13 +1,5 @@
 import { factories } from '@strapi/strapi';
-
-function slugify(input: string): string {
-  return input
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .replace(/[^a-zA-Z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .toLowerCase();
-}
+import { slugify } from '../../../utils/slugify';
 
 export default factories.createCoreController('api::seminar.seminar', ({ strapi }) => ({
   async publicList(ctx) {

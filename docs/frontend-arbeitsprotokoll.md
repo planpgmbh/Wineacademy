@@ -1,4 +1,6 @@
 # Frontend-Arbeitsprotokoll
+- 2025-10-23 – Kategorie-Hero & Seite: Public-Endpoint angebunden, CTA-Scroll eingerichtet und Platzhalter-Content vorbereitet. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-23 – Kategorie-Seite an neues Strapi-Schema (Slug, Hintergrundbild, Dark Mode, SEO) angepasst; Hero-Komponente mit Kontrast-Overlay, limitierter Desktop-Breite und Dark-Mode-Farbanpassungen versehen. `npm run lint` erfolgreich. – Commit: n/a
 - 2025-10-22 – Detailseiten-Hero verallgemeinert (neue Shared-Komponente), Mindesthöhe auf äußere Sektion verschoben und Inhalte vertikal zentriert; Produkt-/Seminar-/Gutschein-Seiten aktualisiert. `npm run lint` erfolgreich. – Commit: n/a
 - 2025-10-22 – Checkout-Teilnehmermapping korrigiert (Terminbeschreibung entfernt), damit der Build auf Staging wieder fehlerfrei durchläuft. `npm run lint` erfolgreich. – Commit: n/a
 - 2025-10-22 – Footer + API-Proxy für lokale Entwicklung ergänzt, Checkout-Übersicht (Stepper, Termin-Slots, Border-Utilities) aufgeräumt und Style-Guidelines (globals.css, Arbeitsanweisungen) vereinheitlicht. `npm run lint` erfolgreich. – Commit: n/a
