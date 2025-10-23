@@ -1,5 +1,8 @@
 # Backend-Arbeitsprotokoll
 
+- 2025-10-23 – Kategorie-Content-Type um Felder `slug`, `seoTitle`, `seoDescription` ergänzt und Seeds/Controller angepasst, damit Kategorien saubere URLs und optionale Meta-Daten liefern. Tests: `npm run build` (Backend) erfolgreich. – Commit: n/a
+- 2025-10-23 – Kategorie-Content-Type: Medienfeld in `hintergrundbild` umbenannt und Admin-Label ergänzt, damit die Benennung konsistent zu anderen Content-Types ist. Tests: `npm run build` (Backend) erfolgreich. – Commit: n/a
+- 2025-10-23 – Kategorie-Content-Type um Boolean-Feld `heroDarkMode` (Admin-Label „Hero Dark Mode“) erweitert, damit das Hero-Element auf dunklen Hintergründen hellen Text erzwingen kann. Tests: `npm run build` (Backend) erfolgreich. – Commit: n/a
 - 2025-10-18 – Public-Bestell-Endpoint liefert nun Bestellnummer sowie Download-Links (Rechnung/Storno) zurück; Checkout-Frontend nutzt die Felder und zeigt nach Reload wieder die Bestellnummer an. `npm run lint` (Frontend) erfolgreich. – Commit: n/a
 - 2025-10-18 – Staging-Datenbank zurückgesetzt (Schema neu erstellt) und Seeds via `SEED_ON_BOOT=true` neu eingespielt; anschließend Flag wieder deaktiviert und Backend neu gestartet. – Commit: n/a
 - 2025-10-18 – SevDesk-Client sendet den API-Token nun gemäß Doku im Authorization-Header (ohne Präfix) inkl. dediziertem User-Agent; Test-Call `curl -H "Authorization: $SEVDESK_API_TOKEN"` liefert 200 OK. Backend neu gebaut. – Commit: n/a

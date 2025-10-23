@@ -32,15 +32,30 @@ function slugify(input: string): string {
 }
 
 async function upsertCategory(strapi: any, name: string, beschreibung?: string) {
-  const existing = await strapi.db.query('api::kategorie.kategorie').findOne({ where: { name }, select: ['id'] });
+  const existing = await strapi.db
+    .query('api::kategorie.kategorie')
+    .findOne({ where: { name }, select: ['id', 'slug'] });
+  const defaultSlug = slugify(name);
   if (existing) {
+    const data: Record<string, unknown> = {
+      beschreibung: beschreibung ?? undefined,
+      publishedAt: nowIso(),
+    };
+    if (!existing.slug) {
+      data.slug = defaultSlug;
+    }
     await strapi.entityService.update('api::kategorie.kategorie', existing.id, {
-      data: { beschreibung: beschreibung ?? undefined, publishedAt: nowIso() },
+      data,
     });
     return existing.id as number;
   }
   const created = await strapi.entityService.create('api::kategorie.kategorie', {
-    data: { name, beschreibung: beschreibung ?? undefined, publishedAt: nowIso() },
+    data: {
+      name,
+      slug: defaultSlug,
+      beschreibung: beschreibung ?? undefined,
+      publishedAt: nowIso(),
+    },
   });
   return created.id as number;
 }

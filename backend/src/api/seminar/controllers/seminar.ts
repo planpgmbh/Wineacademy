@@ -59,7 +59,9 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
         bild: { select: ['url', 'alternativeText'] },
         hintergrundbild: { select: ['url', 'alternativeText'] },
         seminarinhalte: true,
-        kategorien: { select: ['id', 'name'] },
+        kategorien: {
+          select: ['id', 'name', 'slug'],
+        },
       },
       limit: 1,
     });
@@ -83,10 +85,14 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
       .filter((cat) => typeof cat?.name === 'string' && cat.name.trim().length > 0)
       .map((cat) => {
         const name = cat.name.trim();
+        const slug =
+          typeof cat?.slug === 'string' && cat.slug.trim().length > 0
+            ? cat.slug.trim()
+            : slugify(name);
         return {
           id: cat.id,
           name,
-          slug: slugify(name),
+          slug,
         };
       });
 

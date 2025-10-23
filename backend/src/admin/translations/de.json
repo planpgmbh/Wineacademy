@@ -1,6 +1,14 @@
 {
   "content-manager": {
     "attributes": {
+      "api::kategorie.kategorie": {
+        "name": "Name",
+        "slug": "Slug",
+        "seoTitle": "SEO-Titel",
+        "seoDescription": "SEO-Beschreibung",
+        "hintergrundbild": "Hintergrundbild",
+        "heroDarkMode": "Hero Dark Mode"
+      },
       "api::termin.termin": {
         "tageMitUhrzeit": "Tage mit Uhrzeit",
         "starttag": "Starttag",

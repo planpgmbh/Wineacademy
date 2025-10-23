@@ -695,8 +695,14 @@ export interface ApiKategorieKategorie extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    slug: Schema.Attribute.UID<'api::kategorie.kategorie', 'name'> &
+      Schema.Attribute.Required;
     beschreibung: Schema.Attribute.Text;
-    bild: Schema.Attribute.Media<'images'>;
+    hintergrundbild: Schema.Attribute.Media<'images'>;
+    seoTitle: Schema.Attribute.String;
+    seoDescription: Schema.Attribute.Text;
+    heroDarkMode: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -708,7 +714,6 @@ export interface ApiKategorieKategorie extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
     seminare: Schema.Attribute.Relation<'manyToMany', 'api::seminar.seminar'>;
-    name: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
