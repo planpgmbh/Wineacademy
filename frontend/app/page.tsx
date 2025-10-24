@@ -1,6 +1,7 @@
-import LandingPage, { generateMetadata as generateLandingMetadata, revalidate as landingRevalidate } from "./(landing)/[slug]/page";
+import LandingPage, { generateMetadata as generateLandingMetadata } from "./(landing)/[slug]/page";
 
-export const revalidate = landingRevalidate;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function generateMetadata() {
   return generateLandingMetadata({ params: Promise.resolve({ slug: "homepage" }) });
