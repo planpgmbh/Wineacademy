@@ -223,7 +223,7 @@ export function Navbar({ items }: NavbarProps) {
                   className="group relative flex items-center"
                 >
                   <NavigationAnchor item={item} className={desktopLinkClass} tabIndex={0} />
-                  <ul className="absolute left-0 top-full z-10 mt-3 hidden min-w-[14rem] flex-col gap-1 rounded-box bg-base-100 p-3 text-sm shadow-md group-hover:flex group-focus-within:flex">
+                  <ul className="absolute left-0 top-full z-10 hidden min-w-[14rem] flex-col gap-1 rounded-box bg-base-100 p-3 text-sm shadow-md group-hover:flex group-focus-within:flex">
                     {item.subItems.map((subItem, subIndex) => (
                       <li key={`desktop-${index}-${subIndex}`}>
                         <NavigationAnchor
