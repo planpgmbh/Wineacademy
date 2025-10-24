@@ -1,0 +1,39 @@
+{
+  "collectionName": "components_landing_seminar_listen",
+  "info": {
+    "displayName": "Seminarliste",
+    "description": "Liste der nächsten Seminare für eine ausgewählte Kategorie."
+  },
+  "attributes": {
+    "ueberschrift": {
+      "type": "string"
+    },
+    "einleitung": {
+      "type": "text"
+    },
+    "seminarkategorie": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::kategorie.kategorie",
+      "required": true
+    },
+    "limit": {
+      "type": "integer",
+      "default": 6,
+      "min": 1,
+      "max": 24
+    },
+    "ctaLabel": {
+      "type": "string",
+      "default": "Zum Seminar"
+    },
+    "mehrButtonLabel": {
+      "type": "string",
+      "default": "Mehr laden"
+    },
+    "mehrButtonAktiv": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}

@@ -8,7 +8,6 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - frontend/README.md – Next.js-Routen, Warenkorb-/Checkout-Logik, API-Verbrauch.
 - AGENTS.md – Arbeitsregeln und Pflichtlektüre für Agenten/KI.
 - docs/backend-arbeitsprotokoll.md – Laufende Backend-Arbeiten & Commit-Verweise.
-- docs/frontend-arbeitsprotokoll.md – Laufende Frontend-Arbeiten & Commit-Verweise.
 - docs/server-infrastructure.md – Traefik-Setup, Domains, Deploy-Abläufe.
 - docker-compose-staging.yml – Staging-Stack mit Strapi, Next.js und Postgres.
 - tests/checkout-puppeteer.js – Puppeteer-E2E für Rechnung/PayPal.
@@ -124,6 +123,4 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - Staging-/Produktiv-Stacks sind über Traefik erreichbar; Deploy-Anleitung und Fehlerbehandlung sind dokumentiert.
 
 ## Arbeitsprotokolle
-Die laufenden Arbeitsnotizen liegen jeweils in eigenen Protokollen:
-- Backend: `docs/backend-arbeitsprotokoll.md`
-- Frontend: `docs/frontend-arbeitsprotokoll.md`
+Die laufenden Arbeitsnotizen liegen im Backend-Protokoll `docs/backend-arbeitsprotokoll.md`.

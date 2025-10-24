@@ -33,7 +33,9 @@
         "landing.hero",
         "landing.card-grid",
         "landing.text-block",
-        "landing.icon-grid"
+        "landing.icon-grid",
+        "landing.hero-carousel",
+        "landing.seminar-liste"
       ]
     }
   }

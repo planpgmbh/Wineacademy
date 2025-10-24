@@ -7,7 +7,7 @@ Diese Regeln gelten sowohl auf dem Server (Staging/Live) als auch lokal. Zu Begi
 - **Sprache:** Antworte immer auf Deutsch.
 - **Planung vor Umsetzung:** Vor jeder größeren Änderung einen kurzen Plan (2–5 Schritte) formulieren und Freigabe abwarten.
 - **Teste:** Nach Implementierungen die relevanten Tests/Linting ausführen und Ergebnisse nennen.
-- **Arbeitsprotokolle:** Fortschritt, geplante Arbeiten und Commit-IDs im passenden Bereichslog (`docs/backend-arbeitsprotokoll.md` bzw. `docs/frontend-arbeitsprotokoll.md`) dokumentieren und den Entwicklungsplan aktuell halten.
+- **Arbeitsprotokolle:** Backend-Fortschritt im Bereichslog (`docs/backend-arbeitsprotokoll.md`) dokumentieren und den Entwicklungsplan aktuell halten; Frontend-Anpassungen bei Bedarf direkt in den betreffenden Docs festhalten.
 - **Commits:** Nur auf ausdrückliche Anweisung committen/pushen (z. B. Befehl „commit“). Danach `git push origin staging` und Commit-ID im jeweiligen Arbeitsprotokoll vermerken.
 - **Datenbank Reset:** Wenn „dbreset“ o. ä. gefordert wird, Datenbank löschen und Seeds neu einspielen.
 - **Commit-Nachricht:** Auf Deutsch, kurz und beschreibend.

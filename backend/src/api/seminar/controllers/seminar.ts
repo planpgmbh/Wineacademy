@@ -3,17 +3,58 @@ import { slugify } from '../../../utils/slugify';
 
 export default factories.createCoreController('api::seminar.seminar', ({ strapi }) => ({
   async publicList(ctx) {
+    const { category, limit, offset } = ctx.query ?? {};
+    const categorySlug =
+      typeof category === 'string' && category.trim().length > 0 ? category.trim() : null;
+
+    const parseInteger = (value: unknown): number | null => {
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        return Math.trunc(value);
+      }
+      if (typeof value === 'string' && value.trim().length > 0) {
+        const parsed = Number.parseInt(value.trim(), 10);
+        return Number.isFinite(parsed) ? parsed : null;
+      }
+      return null;
+    };
+
+    const parsedLimit = parseInteger(limit);
+    const parsedOffsetRaw = parseInteger(offset);
+    const parsedOffset = parsedOffsetRaw != null && parsedOffsetRaw > 0 ? parsedOffsetRaw : 0;
+
+    const where: any = { aktiv: true, publishedAt: { $not: null } };
+    if (categorySlug) {
+      where.kategorien = { slug: categorySlug };
+    }
+
     const seminars = await strapi.db.query('api::seminar.seminar').findMany({
-      where: { aktiv: true, publishedAt: { $not: null } },
+      where,
       select: ['id', 'name', 'slug', 'kurzbeschreibung', 'preis', 'mwst'],
       populate: {
         bild: { select: ['url', 'alternativeText'] },
         kategorien: { select: ['id', 'name', 'slug', 'kurzbeschreibung'] },
       },
-      orderBy: { name: 'asc' },
+      orderBy: categorySlug ? { id: 'asc' } : { name: 'asc' },
     });
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTime = today.getTime();
+
     const result = [] as any[];
+
+    const toDate = (value: unknown): Date | null => {
+      if (typeof value !== 'string' || value.trim().length === 0) {
+        return null;
+      }
+      const parsed = new Date(value);
+      if (Number.isNaN(parsed.getTime())) {
+        return null;
+      }
+      parsed.setHours(0, 0, 0, 0);
+      return parsed;
+    };
+
     for (const s of seminars) {
       const termineRaw = await strapi.db.query('api::termin.termin').findMany({
         where: { planungsstatus: 'geplant', publishedAt: { $not: null }, seminar: s.id },
@@ -22,8 +63,9 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
           tageMitUhrzeit: { select: ['datum', 'startzeit', 'endzeit'] },
           standort: { select: ['id', 'name', 'typ', 'veranstaltungsort', 'stadt'] },
         },
-        orderBy: { id: 'asc' },
+        orderBy: { starttag: 'asc' },
       });
+
       const termine = termineRaw.map((termin) => {
         const standortRaw = (termin as any).standort ?? null;
         const standort = standortRaw
@@ -68,10 +110,68 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
 
       const fallbackBild = { url: '/favicon.png', alternativeText: 'Weinseminar – Testbild' } as any;
       const sWithBild = { ...(s as any), bild: (s as any).bild ?? fallbackBild };
-      result.push({ ...sWithBild, kategorien, termine });
+
+      const termineMitDatum = termine.map((termin: any) => {
+        const parsedDate = toDate(termin.starttag ?? null);
+        return {
+          ...termin,
+          starttagParsed: parsedDate,
+        };
+      });
+
+      const kommendeTermine = termineMitDatum
+        .filter((termin) => termin.starttagParsed && termin.starttagParsed.getTime() >= todayTime)
+        .sort((a, b) => {
+          const aTime = a.starttagParsed?.getTime() ?? Number.POSITIVE_INFINITY;
+          const bTime = b.starttagParsed?.getTime() ?? Number.POSITIVE_INFINITY;
+          return aTime - bTime;
+        });
+
+      const alleTermineSortiert = termineMitDatum
+        .slice()
+        .sort((a, b) => {
+          const aTime = a.starttagParsed?.getTime() ?? Number.POSITIVE_INFINITY;
+          const bTime = b.starttagParsed?.getTime() ?? Number.POSITIVE_INFINITY;
+          return aTime - bTime;
+        });
+
+      const naechsterTermin = kommendeTermine[0] ?? alleTermineSortiert[0] ?? null;
+
+      result.push({
+        ...sWithBild,
+        kategorien,
+        termine: termineMitDatum.map((termin) => {
+          const { starttagParsed, ...rest } = termin;
+          return rest;
+        }),
+        naechsterTermin: naechsterTermin
+          ? {
+              id: naechsterTermin.id,
+              starttag: naechsterTermin.starttag,
+              timestamp: naechsterTermin.starttagParsed?.getTime() ?? null,
+              standort: naechsterTermin.standort ?? null,
+            }
+          : null,
+      });
     }
 
-    ctx.body = result;
+    let ordered = result;
+    if (categorySlug) {
+      ordered = result
+        .filter((seminar) => seminar.naechsterTermin?.timestamp != null)
+        .sort((a, b) => {
+          const aTime = a.naechsterTermin?.timestamp ?? Number.POSITIVE_INFINITY;
+          const bTime = b.naechsterTermin?.timestamp ?? Number.POSITIVE_INFINITY;
+          return aTime - bTime;
+        });
+    }
+
+    let paginated = ordered;
+    if (parsedLimit && parsedLimit > 0) {
+      paginated = ordered.slice(parsedOffset, parsedOffset + parsedLimit);
+    }
+
+    ctx.body = paginated;
   },
 
   async publicDetail(ctx) {

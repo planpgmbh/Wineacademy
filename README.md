@@ -9,17 +9,16 @@ Diese Codebasis liefert die Wine Academy Hamburg Website: ein Strapi-Backend fü
 - **Domänen:** Produktion `https://wineacademymain.plan-p.de`, Staging `https://wineacademy.plan-p.de`.
 
 ## Schnellstart für KI-Agenten
-1. **Pflichtlektüre:** `AGENTS.md`, `docs/entwicklungsplan.md` sowie die Readmes und Arbeitsprotokolle von Backend (`docs/backend-arbeitsprotokoll.md`) und Frontend (`docs/frontend-arbeitsprotokoll.md`) lesen.
+1. **Pflichtlektüre:** `AGENTS.md`, `docs/entwicklungsplan.md` sowie die Teilprojekt-Readmes lesen.
 2. **Plan erstellen:** Vor jeder Änderung einen 2–5 Schritte umfassenden Plan formulieren, geplante Kommandos/Tests notieren.
 3. **Staging nutzen:** Alle Container-Kommandos mit `docker compose -f docker-compose-staging.yml ...` ausführen.
    - **Nur bei `.environment = staging`:** Nach jeder Änderung am Frontend oder Backend sofort `docker compose -f docker-compose-staging.yml up -d --build` ausführen, damit die Staging-Container den aktuellen Stand ausliefern.
 4. **Tests ausführen:** Nach Änderungen eigenständig die relevanten Tests/Checks laufen lassen (z. B. Puppeteer, Linting) und Ergebnisse protokollieren.
-5. **Dokumente aktualisieren:** Bei Workflow-, Infrastruktur- oder Content-Modell-Änderungen den Entwicklungsplan und zugehörige Docs anpassen.
 
 ## Verzeichnisstruktur
 - `backend/` – Strapi-Projekt inklusive Content-Types, Controller für Public API und Seed-Logik (`backend/README.md`).
 - `frontend/` – Next.js-Frontend mit App Router, Warenkorb/Checkout-Komponenten und PayPal-Integration (`frontend/README.md`).
-- `docs/` – Infrastruktur- und Projektpläne (`entwicklungsplan.md`, `backend-arbeitsprotokoll.md`, `frontend-arbeitsprotokoll.md`, `server-infrastructure.md`).
+- `docs/` – Infrastruktur- und Projektpläne (`entwicklungsplan.md`, `backend-arbeitsprotokoll.md`, `server-infrastructure.md`).
 - `tests/` – Automatisierte End-to-End-Skripte (z. B. `checkout-puppeteer.js`).
 - `docker-compose*.yml` – Compose-Stacks für Produktion und Staging.
 - `.env.example`, `.env.staging.example` – Vorlagen für Umgebungsvariablen (Backend-, Frontend- und Infrastruktur-Settings).
@@ -42,7 +41,6 @@ node tests/checkout-puppeteer.js
 - `docs/server-infrastructure.md` – Traefik-Routing, Netzwerke, Deploy-Abläufe, Backup-Hinweise.
 - `docs/entwicklungsplan.md` – Roadmap, Entscheidungen, offene Arbeitspakete.
 - `docs/backend-arbeitsprotokoll.md` – Laufende Backend-Aufgaben, Schritte und Commit-IDs.
-- `docs/frontend-arbeitsprotokoll.md` – Laufende Frontend-Aufgaben, Schritte und Commit-IDs.
 - `AGENTS.md` – Arbeitsprinzipien, Kommunikation und Tooling-Konventionen.
 
 Für Details zum Datenmodell, API-Requests oder Frontend-Flows bitte die jeweiligen Teilprojekt-Readmes heranziehen, um Redundanzen zu vermeiden.
