@@ -1,5 +1,5 @@
 # Frontend-Arbeitsprotokoll
-- 2025-10-24 – Desktop-Navigation angepasst, Dropdown ohne Hover-Lücke damit Unterpunkte klickbar bleiben. `npm run lint` erfolgreich. – Commit: n/a
+- 2025-10-24 – Desktop-Navigation angepasst, Dropdown ohne Hover-Lücke damit Unterpunkte klickbar bleiben. `npm run lint` erfolgreich. – Commit: c57e0a1
 - 2025-10-24 – Events-Landingpage (Strapi-Hero-Karussell, Next.js-Routing) vorbereitet, neue Carousel-Komponente implementiert und Fallback bei fehlenden Inhalten ergänzt. `npm run lint`, `docker compose -f docker-compose-staging.yml up -d --build` erfolgreich. – Commit: n/a
 - 2025-10-23 – Seminarfinder-Filterpillen in der Höhe auf 34 px begrenzt und Polsterung angepasst. `npm run lint` erfolgreich. – Commit: cfa7c83
 - 2025-10-23 – Seminarfinder-Filter auf Pillenlayout mit UI-Border umgestellt, Sekundärfarbe auf #506A7E gesetzt und Seminar-Kartenschatten entfernt. `npm run lint` erfolgreich. – Commit: n/a
