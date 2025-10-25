@@ -287,7 +287,6 @@ async function upsertGutschein(
   values: {
     name: string;
     code: string;
-    beschreibung?: string;
     typ?: 'betrag' | 'prozent';
     wert?: number;
     betrag?: number;
@@ -297,20 +296,13 @@ async function upsertGutschein(
     maxEinloesungen?: number;
     gueltigBis?: string | Date;
     aktiv?: boolean;
-    hintergrundbild?: unknown;
-    bookingbox_topline?: string;
-    bookingbox_headline?: string;
-    bookingbox_body?: string;
-    gutscheininhalte?: Array<Record<string, unknown>>;
   }
 ) {
   const canonicalCode = values.code.replace(/\s+/g, '').toUpperCase();
   const existing = await strapi.db.query('api::gutschein.gutschein').findOne({ where: { code: canonicalCode }, select: ['id'] });
   const data: any = {
     name: values.name,
-    beschreibung: values.beschreibung ?? undefined,
     code: canonicalCode,
-    istTemplate: false,
     aktiv: values.aktiv ?? true,
   };
   if (values.typ) {
@@ -339,21 +331,6 @@ async function upsertGutschein(
   if (values.gueltigBis) {
     data.gueltigBis = values.gueltigBis instanceof Date ? values.gueltigBis.toISOString().slice(0, 10) : values.gueltigBis;
   }
-  if ('hintergrundbild' in values) {
-    data.hintergrundbild = values.hintergrundbild ?? undefined;
-  }
-  if ('bookingbox_topline' in values) {
-    data.bookingbox_topline = values.bookingbox_topline ?? undefined;
-  }
-  if ('bookingbox_headline' in values) {
-    data.bookingbox_headline = values.bookingbox_headline ?? undefined;
-  }
-  if ('bookingbox_body' in values) {
-    data.bookingbox_body = values.bookingbox_body ?? undefined;
-  }
-  if (Array.isArray(values.gutscheininhalte)) {
-    data.gutscheininhalte = values.gutscheininhalte;
-  }
   if (existing) {
     await strapi.entityService.update('api::gutschein.gutschein', existing.id, { data });
     return existing.id as number;
@@ -370,6 +347,8 @@ async function upsertGutscheinTemplate(
     minBetrag?: number;
     maxBetrag?: number;
     aktiv?: boolean;
+    heroDarkMode?: boolean;
+    bild?: unknown;
     hintergrundbild?: unknown;
     bookingbox_topline?: string;
     bookingbox_headline?: string;
@@ -377,33 +356,56 @@ async function upsertGutscheinTemplate(
     gutscheininhalte?: Array<Record<string, unknown>>;
   }
 ) {
-  const existing = await strapi.db.query('api::gutschein.gutschein').findOne({ where: { istTemplate: true }, select: ['id'] });
   const data: any = {
-    ...values,
-    istTemplate: true,
+    name: values.name,
+    beschreibung: values.beschreibung ?? undefined,
+    minBetrag: values.minBetrag ?? undefined,
+    maxBetrag: values.maxBetrag ?? undefined,
     aktiv: values.aktiv ?? true,
-    publishedAt: nowIso(),
+    heroDarkMode: values.heroDarkMode ?? false,
+    bookingbox_topline: values.bookingbox_topline ?? undefined,
+    bookingbox_headline: values.bookingbox_headline ?? undefined,
+    bookingbox_body: values.bookingbox_body ?? undefined,
   };
   if ('hintergrundbild' in values) {
     data.hintergrundbild = values.hintergrundbild ?? undefined;
   }
-  if ('bookingbox_topline' in values) {
-    data.bookingbox_topline = values.bookingbox_topline ?? undefined;
-  }
-  if ('bookingbox_headline' in values) {
-    data.bookingbox_headline = values.bookingbox_headline ?? undefined;
-  }
-  if ('bookingbox_body' in values) {
-    data.bookingbox_body = values.bookingbox_body ?? undefined;
+  if ('bild' in values) {
+    data.bild = values.bild ?? undefined;
   }
   if (Array.isArray(values.gutscheininhalte)) {
     data.gutscheininhalte = values.gutscheininhalte;
   }
-  if (existing) {
-    await strapi.entityService.update('api::gutschein.gutschein', existing.id, { data });
-    return existing.id as number;
+  const existingSettings = await strapi.entityService.findMany('api::gutscheineinstellung.gutscheineinstellung', {
+    fields: ['id'],
+    populate: { gutscheininhalte: true },
+    pagination: { limit: 1 },
+  });
+  const current = Array.isArray(existingSettings) ? existingSettings[0] : existingSettings;
+  const cleanupLegacyTemplates = async () => {
+    try {
+      const legacyTemplates = await strapi.db.query('api::gutschein.gutschein').findMany({
+        where: { code: null },
+        select: ['id'],
+      });
+      for (const legacy of legacyTemplates) {
+        if (legacy?.id) {
+          await strapi.entityService.delete('api::gutschein.gutschein', legacy.id);
+        }
+      }
+    } catch (legacyErr) {
+      strapi.log.warn('[seed] Konnte Legacy-Gutschein-Template nicht bereinigen.', {
+        error: legacyErr instanceof Error ? legacyErr.message : legacyErr,
+      });
+    }
+  };
+  if (current?.id) {
+    await strapi.entityService.update('api::gutscheineinstellung.gutscheineinstellung', current.id, { data });
+    await cleanupLegacyTemplates().catch(() => undefined);
+    return current.id as number;
   }
-  const created = await strapi.entityService.create('api::gutschein.gutschein', { data });
+  const created = await strapi.entityService.create('api::gutscheineinstellung.gutscheineinstellung', { data });
+  await cleanupLegacyTemplates().catch(() => undefined);
   return created.id as number;
 }
 
@@ -989,7 +991,6 @@ const seminarSeeds: SeminarSeed[] = [
     {
       name: 'WELCOME10',
       code: 'WELCOME10',
-      beschreibung: '10% Willkommensrabatt',
       typ: 'prozent' as const,
       wert: 10,
       mindesteinkauf: 100,
@@ -999,7 +1000,6 @@ const seminarSeeds: SeminarSeed[] = [
     {
       name: 'TEST-25',
       code: 'TEST-25',
-      beschreibung: '25 EUR Testgutschein',
       betrag: 25,
       typ: 'betrag' as const,
       wert: 25,
@@ -1008,7 +1008,6 @@ const seminarSeeds: SeminarSeed[] = [
     {
       name: 'WSET50',
       code: 'WSET50',
-      beschreibung: '50 EUR auf WSET Seminare',
       betrag: 50,
       typ: 'betrag' as const,
       wert: 50,

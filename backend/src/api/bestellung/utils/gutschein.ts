@@ -20,7 +20,6 @@ type GutscheinRecord = {
   maxRabatt?: number | null;
   gueltigBis?: string | Date | null;
   name?: string | null;
-  beschreibung?: string | null;
 };
 
 export type GutscheinCartTotals = {
@@ -51,7 +50,6 @@ export interface GutscheinValidationResult {
   betrag: number;
   restbetrag: number;
   name?: string;
-  beschreibung?: string;
   voucher: GutscheinRecord;
 }
 
@@ -75,10 +73,19 @@ export class GutscheinHelper {
     if (this.template !== undefined) {
       return this.template;
     }
-    this.template = await this.strapi.db.query('api::gutschein.gutschein').findOne({
-      where: { istTemplate: true },
-      select: ['minBetrag', 'maxBetrag'],
+    const settings = await this.strapi.entityService.findMany('api::gutscheineinstellung.gutscheineinstellung', {
+      fields: ['minBetrag', 'maxBetrag', 'aktiv'],
+      pagination: { limit: 1 },
     });
+    const template = Array.isArray(settings) ? settings[0] : settings;
+    if (!template || template.aktiv === false) {
+      this.template = null;
+      return null;
+    }
+    this.template = {
+      minBetrag: template.minBetrag ?? null,
+      maxBetrag: template.maxBetrag ?? null,
+    };
     return this.template as GutscheinTemplate | null;
   }
 
@@ -125,7 +132,7 @@ export class GutscheinHelper {
       return null;
     }
     const voucher = await this.strapi.db.query('api::gutschein.gutschein').findOne({
-      where: { code: normalised, istTemplate: false },
+      where: { code: normalised },
       select: [
         'id',
         'code',
@@ -141,7 +148,6 @@ export class GutscheinHelper {
         'maxRabatt',
         'gueltigBis',
         'name',
-        'beschreibung',
       ],
     });
     return voucher as GutscheinRecord | null;
@@ -241,7 +247,6 @@ export class GutscheinHelper {
       betrag: discount,
       restbetrag: remaining,
       name: voucher.name ?? undefined,
-      beschreibung: voucher.beschreibung ?? undefined,
       voucher,
     };
   }

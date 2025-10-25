@@ -45,6 +45,7 @@ export default async function VoucherDetailPage() {
         backgroundImageAlt={voucher.hero.backgroundImageAlt ?? undefined}
         mediaImageUrl={voucher.mainImage?.url ?? undefined}
         mediaImageAlt={voucher.mainImage?.alt ?? undefined}
+        preferDarkMode={voucher.hero.preferDarkMode}
       />
 
       {voucher.tabs.length > 0 ? (

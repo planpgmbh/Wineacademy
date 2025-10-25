@@ -22,6 +22,7 @@ type StrapiVoucherTemplate = {
   bild?: StrapiMedia | null;
   hintergrundbild?: StrapiMedia | null;
   gutscheininhalte?: StrapiTab[] | null;
+  heroDarkMode?: boolean | null;
 };
 
 export type VoucherContentTab = {
@@ -37,6 +38,7 @@ export type VoucherDetail = {
     paragraphs: string[];
     backgroundImageUrl: string | null;
     backgroundImageAlt: string | null;
+    preferDarkMode: boolean;
   };
   mainImage: { url: string; alt: string | null } | null;
   bookingBox: {
@@ -125,7 +127,8 @@ function createFallbackVoucherDetail(): VoucherDetail {
         "Verschenke die Wine Academy Hamburg als Erlebnis: Seminare, Produkte und Masterclasses können flexibel eingelöst werden."
       ],
       backgroundImageUrl: null,
-      backgroundImageAlt: null
+      backgroundImageAlt: null,
+      preferDarkMode: false
     },
     mainImage: null,
     bookingBox: {
@@ -174,7 +177,8 @@ export async function getVoucherDetail(): Promise<VoucherDetail> {
             ? heroParagraphs
             : ["Dieser Gutschein kann für alle Angebote der Wine Academy eingesetzt werden."],
         backgroundImageUrl: backgroundImageUrl ?? mainImageUrl,
-        backgroundImageAlt
+        backgroundImageAlt,
+        preferDarkMode: Boolean(payload.heroDarkMode)
       },
       mainImage: mainImageUrl ? { url: mainImageUrl, alt: mainImageAlt } : null,
       bookingBox: {

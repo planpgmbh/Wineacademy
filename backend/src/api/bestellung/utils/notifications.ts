@@ -311,7 +311,7 @@ async function sendStornoNotifications(strapi: any, context: OrderNotificationCo
 export const getOrderNotificationFetchOptions = (): Record<string, unknown> => ({
   populate: {
     positionen: true,
-    gutscheine: { filters: { istTemplate: false }, fields: ['code', 'betrag'] },
+    gutscheine: { fields: ['code', 'betrag'] },
   },
   fields: ['*'] as any,
 });

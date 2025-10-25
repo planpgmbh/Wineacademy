@@ -160,6 +160,19 @@ export async function fetchProductCheckoutData(slug: string): Promise<ProductChe
   };
 }
 
+export type OrderVoucherDetailsInput = {
+  versandArt: "digital" | "physisch";
+  empfaengerName: string;
+  empfaengerEmail?: string;
+  adresszusatz?: string;
+  strasse?: string;
+  plz?: string;
+  stadt?: string;
+  land?: string;
+  lieferDatum?: string;
+  persoenlicheNachricht?: string;
+};
+
 export type OrderPositionInput = {
   typ?: "seminar" | "produkt" | "gutschein";
   titel?: string;
@@ -171,6 +184,7 @@ export type OrderPositionInput = {
   einzelpreisNetto?: number;
   steuerSatz?: number;
   betrag?: number;
+  gutscheinDetails?: OrderVoucherDetailsInput;
 };
 
 export type OrderParticipantInput = {

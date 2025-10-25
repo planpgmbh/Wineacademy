@@ -24,6 +24,10 @@
     "steuerSatz": { "type": "decimal" },
     "summeNetto": { "type": "decimal" },
     "summeBrutto": { "type": "decimal" },
-    "summeSteuer": { "type": "decimal" }
+    "summeSteuer": { "type": "decimal" },
+    "gutscheinDetails": {
+      "type": "component",
+      "component": "bestellung.gutschein-details"
+    }
   }
 }

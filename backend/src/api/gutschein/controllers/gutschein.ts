@@ -5,30 +5,32 @@ const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
 export default factories.createCoreController('api::gutschein.gutschein', ({ strapi }) => ({
   async template(ctx) {
-    const template = await strapi.db.query('api::gutschein.gutschein').findOne({
-      where: { istTemplate: true },
-      select: [
+    const entityService: any = strapi.entityService;
+    const response = await entityService.findMany('api::gutscheineinstellung.gutscheineinstellung', {
+      fields: [
         'id',
         'name',
-        'beschreibung',
         'minBetrag',
         'maxBetrag',
         'bookingbox_topline',
         'bookingbox_headline',
         'bookingbox_body',
+        'aktiv',
+        'heroDarkMode',
       ],
       populate: {
-        bild: { select: ['url', 'alternativeText'] },
-        hintergrundbild: { select: ['url', 'alternativeText'] },
+        bild: { fields: ['url', 'alternativeText'] },
+        hintergrundbild: { fields: ['url', 'alternativeText'] },
         gutscheininhalte: true,
       },
+      pagination: { limit: 1 },
     });
-    if (!template) return ctx.notFound('Kein Gutschein-Template konfiguriert');
+    const template = (Array.isArray(response) ? response[0] : response) as any;
+    if (!template || template.aktiv === false) return ctx.notFound('Kein Gutschein-Template konfiguriert');
     const fallbackBild = { url: '/favicon.png', alternativeText: 'Gutscheinbild Platzhalter' } as any;
     const gutscheininhalte = Array.isArray((template as any).gutscheininhalte) ? (template as any).gutscheininhalte : [];
     ctx.body = {
       name: template.name,
-      beschreibung: template.beschreibung,
       minBetrag: template.minBetrag != null ? Number(template.minBetrag) : null,
       maxBetrag: template.maxBetrag != null ? Number(template.maxBetrag) : null,
       bild: template.bild ?? fallbackBild,
@@ -37,6 +39,7 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
       bookingbox_headline: template.bookingbox_headline ?? null,
       bookingbox_body: template.bookingbox_body ?? null,
       gutscheininhalte,
+      heroDarkMode: Boolean(template.heroDarkMode),
     };
   },
 
@@ -45,11 +48,13 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
     const betragRaw = body?.betrag;
     const betragNum = Number(betragRaw);
     if (!Number.isFinite(betragNum) || betragNum <= 0) return ctx.badRequest('Betrag ungültig');
-    const template = await strapi.db.query('api::gutschein.gutschein').findOne({
-      where: { istTemplate: true },
-      select: ['minBetrag', 'maxBetrag'],
+    const entityService: any = strapi.entityService;
+    const response = await entityService.findMany('api::gutscheineinstellung.gutscheineinstellung', {
+      fields: ['minBetrag', 'maxBetrag', 'aktiv', 'heroDarkMode'],
+      pagination: { limit: 1 },
     });
-    if (!template) return ctx.badRequest('Kein Gutschein-Template konfiguriert');
+    const template = (Array.isArray(response) ? response[0] : response) as any;
+    if (!template || template.aktiv === false) return ctx.badRequest('Kein Gutschein-Template konfiguriert');
     const min = template.minBetrag != null ? Number(template.minBetrag) : null;
     const max = template.maxBetrag != null ? Number(template.maxBetrag) : null;
     if (min != null && betragNum < min) return ctx.badRequest(`Betrag muss mindestens ${min} sein`);
@@ -111,7 +116,7 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
         amount: result.betrag,
         remaining: result.restbetrag,
         name: result.name ?? null,
-        description: result.beschreibung ?? null,
+        description: null,
       };
     } catch (error: any) {
       ctx.badRequest(error?.message ?? 'Gutscheincode ungültig.');

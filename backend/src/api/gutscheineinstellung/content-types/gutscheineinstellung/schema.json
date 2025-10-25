@@ -1,0 +1,63 @@
+{
+  "kind": "singleType",
+  "collectionName": "gutscheineinstellungen",
+  "info": {
+    "singularName": "gutscheineinstellung",
+    "pluralName": "gutscheineinstellungen",
+    "displayName": "Gutscheineinstellung"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "beschreibung": {
+      "type": "text"
+    },
+    "aktiv": {
+      "type": "boolean",
+      "default": true
+    },
+    "heroDarkMode": {
+      "type": "boolean",
+      "default": false
+    },
+    "minBetrag": {
+      "type": "decimal"
+    },
+    "maxBetrag": {
+      "type": "decimal"
+    },
+    "bookingbox_topline": {
+      "type": "string"
+    },
+    "bookingbox_headline": {
+      "type": "string"
+    },
+    "bookingbox_body": {
+      "type": "text"
+    },
+    "bild": {
+      "type": "media",
+      "allowedTypes": [
+        "images"
+      ],
+      "multiple": false
+    },
+    "hintergrundbild": {
+      "type": "media",
+      "allowedTypes": [
+        "images"
+      ],
+      "multiple": false
+    },
+    "gutscheininhalte": {
+      "type": "component",
+      "repeatable": true,
+      "component": "gutschein.tab"
+    }
+  }
+}

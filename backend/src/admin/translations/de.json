@@ -9,11 +9,35 @@
         "hintergrundbild": "Hintergrundbild",
         "heroDarkMode": "Hero Dark Mode"
       },
+      "api::gutscheineinstellung.gutscheineinstellung": {
+        "name": "Name",
+        "beschreibung": "Beschreibung",
+        "heroDarkMode": "Hero Dark Mode",
+        "minBetrag": "Mindestbetrag",
+        "maxBetrag": "Höchstbetrag",
+        "bookingbox_topline": "Bookingbox Topline",
+        "bookingbox_headline": "Bookingbox Headline",
+        "bookingbox_body": "Bookingbox Text"
+      },
       "api::termin.termin": {
         "tageMitUhrzeit": "Tage mit Uhrzeit",
         "starttag": "Starttag",
         "standort": "Standort"
       }
+    }
+  },
+  "components": {
+    "bestellung.gutschein-details": {
+      "versandArt": "Versandart",
+      "empfaengerName": "Name der beschenkten Person",
+      "empfaengerEmail": "E-Mail der beschenkten Person",
+      "adresszusatz": "Adresszusatz",
+      "strasse": "Straße",
+      "plz": "PLZ",
+      "stadt": "Stadt",
+      "land": "Land",
+      "lieferDatum": "Lieferdatum",
+      "persoenlicheNachricht": "Persönliche Nachricht"
     }
   }
 }

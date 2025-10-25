@@ -22,6 +22,18 @@ type PositionInput = {
   einzelpreisBrutto?: number;
   steuerSatz?: number;
   betrag?: number;
+  gutscheinDetails?: {
+    versandArt?: 'digital' | 'physisch';
+    empfaengerName?: string;
+    empfaengerEmail?: string;
+    adresszusatz?: string;
+    strasse?: string;
+    plz?: string;
+    stadt?: string;
+    land?: string;
+    lieferDatum?: string;
+    persoenlicheNachricht?: string;
+  } | null;
 };
 
 type TeilnehmerInput = {
@@ -182,7 +194,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
     if (!Number.isFinite(id)) return ctx.badRequest('Ungültige ID');
     try {
       const bestellung = await strapi.entityService.findOne('api::bestellung.bestellung', id, {
-        populate: { gutscheine: { filters: { istTemplate: false }, fields: ['code', 'betrag', 'eingeloest'] } },
+        populate: { gutscheine: { fields: ['code', 'betrag', 'eingeloest'] } },
       });
       if (!bestellung) return ctx.notFound('Nicht gefunden');
       const vouchers = Array.isArray((bestellung as any)?.gutscheine) ? (bestellung as any).gutscheine : [];
@@ -263,6 +275,71 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
     };
 
     const gutscheinHelper = new GutscheinHelper(strapi);
+    const ensureGutscheinDetails = (details: any) => {
+      if (!details || typeof details !== 'object') {
+        ctx.throw(400, 'Gutscheininformationen erforderlich.');
+      }
+      const normaliseString = (value: unknown): string => {
+        if (typeof value !== 'string') {
+          return '';
+        }
+        return value.trim();
+      };
+      const versandArtRaw = normaliseString(details.versandArt);
+      const versandArt = versandArtRaw === 'physisch' ? 'physisch' : 'digital';
+      const empfaengerName = normaliseString(details.empfaengerName);
+      if (!empfaengerName) {
+        ctx.throw(400, 'Name der beschenkten Person fehlt.');
+      }
+      let empfaengerEmail: string | undefined;
+      if (versandArt === 'digital') {
+        const emailCandidate = normaliseString(details.empfaengerEmail);
+        if (!emailCandidate || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailCandidate)) {
+          ctx.throw(400, 'E-Mail-Adresse für den digitalen Versand ist ungültig.');
+        }
+        empfaengerEmail = emailCandidate;
+      }
+      let strasse: string | undefined;
+      let plz: string | undefined;
+      let stadt: string | undefined;
+      let land: string | undefined;
+      const adresszusatz = normaliseString(details.adresszusatz) || undefined;
+      if (versandArt === 'physisch') {
+        strasse = normaliseString(details.strasse);
+        plz = normaliseString(details.plz);
+        stadt = normaliseString(details.stadt);
+        land = normaliseString(details.land) || 'Deutschland';
+        if (!strasse || !plz || !stadt || !land) {
+          ctx.throw(400, 'Vollständige Versandadresse für den physischen Versand erforderlich.');
+        }
+      }
+      let lieferDatum: string | undefined;
+      if (details.lieferDatum) {
+        const dateInput = typeof details.lieferDatum === 'string' ? details.lieferDatum : null;
+        const parsed = dateInput ? new Date(dateInput) : null;
+        if (!parsed || Number.isNaN(parsed.valueOf())) {
+          ctx.throw(400, 'Lieferdatum ist ungültig.');
+        }
+        lieferDatum = parsed.toISOString().slice(0, 10);
+      }
+      const nachrichtRaw = normaliseString(details.persoenlicheNachricht);
+      if (nachrichtRaw.length > 500) {
+        ctx.throw(400, 'Die persönliche Nachricht darf höchstens 500 Zeichen enthalten.');
+      }
+
+      return {
+        versandArt,
+        empfaengerName,
+        empfaengerEmail,
+        adresszusatz,
+        strasse,
+        plz,
+        stadt,
+        land,
+        lieferDatum,
+        persoenlicheNachricht: nachrichtRaw || undefined,
+      };
+    };
     for (const raw of positionsInput) {
       const menge = Math.max(1, Number(raw.menge ?? 1));
       const typ = raw.typ === 'seminar' || raw.typ === 'gutschein' || raw.typ === 'produkt'
@@ -333,6 +410,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         const summeBrutto = round2(einzelpreisBrutto * menge);
         const summeNetto = round2(einzelpreisNetto * menge);
         const summeSteuer = round2(summeBrutto - summeNetto);
+        const gutscheinDetails = ensureGutscheinDetails(raw.gutscheinDetails);
 
         positionen.push({
           typ: 'gutschein',
@@ -345,6 +423,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
           summeBrutto,
           summeNetto,
           summeSteuer,
+          gutscheinDetails,
         });
       } else {
         const produktId = Number(raw.produktId);
@@ -385,6 +464,8 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         const summeBrutto = round2((brutto as number) * menge);
         const summeNetto = round2((netto as number) * menge);
         const summeSteuer = round2(summeBrutto - summeNetto);
+        const gutscheinDetails =
+          istGutschein || typ === 'gutschein' ? ensureGutscheinDetails(raw.gutscheinDetails) : undefined;
         const position = {
           typ: istGutschein ? 'gutschein' : 'produkt',
           titel: raw.titel?.trim() || produkt.name,
@@ -397,6 +478,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
           summeBrutto,
           summeNetto,
           summeSteuer,
+          ...(istGutschein ? { gutscheinDetails } : {}),
         };
         positionen.push(position);
       }

@@ -41,6 +41,12 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const normaliseText = (input) => (input ?? "").replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
 const isClose = (actual, expected, tolerance = 0.01) =>
   Math.abs(Number(actual ?? 0) - Number(expected ?? 0)) <= tolerance;
+const formatDateISO = (date) => {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 const resolveSevDeskToken = () => {
   const direct = (process.env.SEVDESK_API_TOKEN || "").trim();
@@ -293,6 +299,15 @@ function buildScenarios(baseData) {
         contactEmail: "clara.rechnung+privat@example.com",
         phone: "+49 40 1234567",
         newsletterOptIn: true
+      },
+      voucherDetails: {
+        selection: {
+          versandArt: "digital",
+          empfaengerName: "Mara Beschenkt",
+          empfaengerEmail: "mara.beschenkt@example.com",
+          lieferDatum: formatDateISO(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)),
+          persoenlicheNachricht: "Alles Gute und viel Freude!"
+        }
       }
     },
     {
@@ -369,6 +384,19 @@ function buildScenarios(baseData) {
         contactEmail: "henriette.hanse@example.com",
         phone: "+49 89 123456",
         newsletterOptIn: true
+      },
+      voucherDetails: {
+        selection: {
+          versandArt: "physisch",
+          empfaengerName: "Max Mustermann",
+          adresszusatz: "c/o Empfang",
+          strasse: "Geschenkweg 12",
+          plz: "70173",
+          stadt: "Stuttgart",
+          land: "Deutschland",
+          lieferDatum: formatDateISO(new Date(Date.now() + 12 * 24 * 60 * 60 * 1000)),
+          persoenlicheNachricht: "Viele Grüße vom gesamten Team!"
+        }
       }
     },
     {
@@ -499,6 +527,27 @@ function buildVoucherSelectionPayload(selection) {
   };
 }
 
+function getScenarioVoucherItems(scenario) {
+  const items = [];
+  const product = scenario.cart?.product;
+  if (product && product.isVoucher) {
+    const quantity = Math.max(1, Math.trunc(product.quantity ?? 1));
+    items.push({
+      key: "product",
+      title: product.title || "Gutschein",
+      quantity
+    });
+  }
+  if (scenario.cart?.voucherSelection) {
+    items.push({
+      key: "selection",
+      title: scenario.cart.voucherSelection.title || "Geschenkgutschein",
+      quantity: 1
+    });
+  }
+  return items;
+}
+
 async function setCartState(page, scenario) {
   const payload = {
     seminars: [],
@@ -549,20 +598,27 @@ async function setCartState(page, scenario) {
 }
 
 async function getSectionHandle(page, headingText) {
-  const sectionIndex = await page.evaluate((targetHeading) => {
-    const sections = Array.from(document.querySelectorAll("section"));
-    return sections.findIndex((section) => {
-      const heading = section.querySelector("h2");
-      if (!heading || !heading.textContent) return false;
-      return heading.textContent.toLowerCase().includes(targetHeading.toLowerCase());
-    });
-  }, headingText);
-
-  if (sectionIndex === -1) {
+  await page.waitForFunction(() => Boolean(document.querySelector("form section")), {
+    timeout: DEFAULT_TIMEOUT
+  });
+  const section = await page.$("form section");
+  if (!section) {
     return null;
   }
-  const sections = await page.$$("section");
-  return sections[sectionIndex] ?? null;
+  if (headingText) {
+    const currentHeading = await page
+      .$eval("h1", (node) => node.textContent?.toLowerCase().trim() || "")
+      .catch(() => "");
+    if (DEBUG) {
+      console.log("[DEBUG] getSectionHandle", headingText, { currentHeading });
+    }
+    if (!currentHeading.includes(headingText.toLowerCase())) {
+      if (DEBUG) {
+        console.warn(`[DEBUG] Erwarteter Schritt "${headingText}", gefunden "${currentHeading || "unbekannt"}".`);
+      }
+    }
+  }
+  return section;
 }
 
 async function typeValue(inputHandle, value) {
@@ -585,6 +641,10 @@ async function fillParticipantsStep(page, scenario) {
       ? [scenario.cart.seminar]
       : [];
 
+  await page.waitForFunction(() => Boolean(document.querySelector("form section")), {
+    timeout: DEFAULT_TIMEOUT
+  });
+
   const section = await getSectionHandle(page, "Teilnehmer");
   if (!section) {
     if (seminarEntries.length === 0) {
@@ -595,7 +655,10 @@ async function fillParticipantsStep(page, scenario) {
 
   if (seminarEntries.length === 0) {
     await page.$eval("form", (form) => form.requestSubmit());
-    await page.waitForFunction(() => document.body.innerText.includes("Straße und Hausnummer"), { timeout: DEFAULT_TIMEOUT });
+    await page.waitForFunction(() => {
+      const heading = document.querySelector("h1")?.textContent || "";
+      return heading.includes("Gutscheine") || heading.includes("Rechnungsadresse");
+    }, { timeout: DEFAULT_TIMEOUT });
     return;
   }
 
@@ -630,14 +693,14 @@ async function fillParticipantsStep(page, scenario) {
 
   await page.evaluate(
     ({ groups, fallback }) => {
-      const section = Array.from(document.querySelectorAll("section")).find((sec) => {
-        const heading = sec.querySelector("h2");
-        return heading && heading.textContent && heading.textContent.toLowerCase().includes("teilnehmer");
-      });
+      const section = document.querySelector("form section");
       if (!section) {
         throw new Error("Teilnehmer-Abschnitt konnte clientseitig nicht gefunden werden.");
       }
-      const container = section.querySelector("div.space-y-8");
+      const container =
+        Array.from(section.querySelectorAll("div")).find((node) =>
+          node instanceof HTMLElement && node.querySelector("div.rounded-2xl")
+        ) || null;
       if (!container) {
         throw new Error("Teilnehmer-Gruppencontainer nicht gefunden.");
       }
@@ -676,7 +739,128 @@ async function fillParticipantsStep(page, scenario) {
   );
 
   await page.$eval("form", (form) => form.requestSubmit());
-  await page.waitForFunction(() => document.body.innerText.includes("Straße und Hausnummer"), { timeout: DEFAULT_TIMEOUT });
+  await page.waitForFunction(() => {
+    const heading = document.querySelector("h1")?.textContent || "";
+    return heading.includes("Gutscheine") || heading.includes("Rechnungsadresse");
+  }, { timeout: DEFAULT_TIMEOUT });
+}
+
+async function fillVoucherStep(page, scenario) {
+  const voucherItems = getScenarioVoucherItems(scenario);
+  const section = await getSectionHandle(page, "Gutscheine");
+
+  if (!section) {
+    if (voucherItems.length === 0) {
+      return;
+    }
+    throw new Error("Gutschein-Abschnitt wurde nicht gefunden.");
+  }
+
+  if (voucherItems.length === 0) {
+    await page.$eval("form", (form) => form.requestSubmit());
+    await page.waitForFunction(() => document.body.innerText.includes("Rechnungsadresse"), {
+      timeout: DEFAULT_TIMEOUT
+    });
+    return;
+  }
+
+  const containers = await section.$$("div.py-6");
+  assert(containers.length >= voucherItems.length, "Unerwartete Anzahl Gutschein-Karten.");
+
+  const detailMap = scenario.voucherDetails || {};
+  const defaultDetails = {
+    versandArt: "digital",
+    empfaengerName: "Gutschein Empfänger",
+    empfaengerEmail: "gutschein@example.com",
+    adresszusatz: "",
+    strasse: "Gutscheinweg 1",
+    plz: "20095",
+    stadt: "Hamburg",
+    land: "Deutschland",
+    lieferDatum: "",
+    persoenlicheNachricht: ""
+  };
+
+  for (let index = 0; index < voucherItems.length; index += 1) {
+    const item = voucherItems[index];
+    const container = containers[index];
+    const rawDetails = detailMap[item.key] || {};
+    const details = {
+      ...defaultDetails,
+      ...rawDetails,
+      versandArt: rawDetails.versandArt === "physisch" ? "physisch" : "digital"
+    };
+
+    const shippingButtons = await container.$$(`button[role="tab"]`);
+    if (details.versandArt === "physisch" && shippingButtons[1]) {
+      await shippingButtons[1].click();
+      await delay(150);
+    } else if (shippingButtons[0]) {
+      await shippingButtons[0].click();
+      await delay(150);
+    }
+
+    const fillField = async (selector, value) => {
+      if (value == null || value === "") {
+        return;
+      }
+      const handle = await container.$(selector);
+      if (!handle) {
+        return;
+      }
+      const inputType = await handle.evaluate((element) => {
+        if (element instanceof HTMLInputElement) {
+          return element.type || null;
+        }
+        return null;
+      });
+      if (inputType === "date") {
+        await handle.evaluate(
+          (element, nextValue) => {
+            if ("value" in element) {
+              element.value = nextValue;
+              element.dispatchEvent(new Event("input", { bubbles: true }));
+              element.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+          },
+          value
+        );
+      } else {
+        await typeValue(handle, value);
+      }
+      await handle.dispose();
+    };
+
+    await fillField(`#voucher-${item.key}-name`, details.empfaengerName || `Empfänger ${index + 1}`);
+
+    if (details.versandArt === "digital") {
+      await fillField(
+        `#voucher-${item.key}-email`,
+        details.empfaengerEmail || `gutschein-${index + 1}@example.com`
+      );
+    } else {
+      await fillField(`#voucher-${item.key}-strasse`, details.strasse || defaultDetails.strasse);
+      if (details.adresszusatz) {
+        await fillField(`#voucher-${item.key}-adresszusatz`, details.adresszusatz);
+      }
+      await fillField(`#voucher-${item.key}-plz`, details.plz || defaultDetails.plz);
+      await fillField(`#voucher-${item.key}-stadt`, details.stadt || defaultDetails.stadt);
+      await fillField(`#voucher-${item.key}-land`, details.land || defaultDetails.land);
+    }
+
+    if (details.lieferDatum) {
+      await fillField(`#voucher-${item.key}-lieferdatum`, details.lieferDatum);
+    }
+    if (details.persoenlicheNachricht) {
+      await fillField(`#voucher-${item.key}-nachricht`, details.persoenlicheNachricht);
+    }
+  }
+
+  await page.$eval("form", (form) => form.requestSubmit());
+  await page.waitForFunction(() => {
+    const heading = document.querySelector("h1")?.textContent || "";
+    return heading.includes("Rechnungsadresse");
+  }, { timeout: DEFAULT_TIMEOUT });
 }
 
 async function fillBillingStep(page, billing) {
@@ -685,45 +869,113 @@ async function fillBillingStep(page, billing) {
 
   if (billing.type === "firma") {
     const buttons = await section.$$("button");
-    const firmaButton = await Promise.all(
+    const buttonEntries = await Promise.all(
       buttons.map(async (button) => {
-        const text = (await button.evaluate((node) => node.textContent?.trim() || "")) || "";
-        return text.includes("Firma") ? button : null;
+        const text = ((await button.evaluate((node) => node.textContent?.trim() || "")) || "").toLowerCase();
+        return { button, text };
       })
-    ).then((results) => results.find(Boolean));
+    );
+    if (DEBUG) {
+      console.log("[DEBUG] Rechnungstyp Buttons:", buttonEntries.map((entry) => entry.text));
+    }
+    const firmaEntry =
+      buttonEntries.find((entry) => entry.text.includes("geschäft")) ||
+      buttonEntries.find((entry) => entry.text.includes("firma"));
+    const firmaButton = firmaEntry?.button ?? null;
     if (firmaButton) {
       await firmaButton.click();
       await delay(150);
     }
   }
 
-  const inputs = await section.$$("input");
-  const mappingPrivat = ["street", "zip", "city", "country", "contactFirstName", "contactLastName", "contactEmail", "phone"];
-  const mappingFirma = [
-    "companyName",
-    "vatId",
-    "invoiceEmail",
-    "street",
-    "zip",
-    "city",
-    "country",
-    "contactFirstName",
-    "contactLastName",
-    "contactEmail",
-    "phone"
-  ];
-  const mapping = billing.type === "firma" ? mappingFirma : mappingPrivat;
+  const fillByLabel = async (needle, value) => {
+    if (!value) {
+      return;
+    }
+    const targetId = await section.$$eval(
+      "label",
+      (nodes, search) => {
+        const target = search.toLowerCase();
+        for (const node of nodes) {
+          const text = (node.textContent || "").toLowerCase();
+          if (text.includes(target)) {
+            return node.getAttribute("for");
+          }
+        }
+        return null;
+      },
+      needle
+    );
+    assert(targetId, `Feld für "${needle}" nicht gefunden.`);
+    const selector = `#${targetId.replace(/([\\#:.\[\],=])/g, "\\$1")}`;
+    const inputHandle = await section.$(selector);
+    assert(inputHandle, `Eingabefeld für "${needle}" nicht gefunden.`);
+    if (DEBUG) {
+      const labelText = await section.$$eval(
+        "label",
+        (nodes, id) => {
+          const match = nodes.find((node) => node.getAttribute("for") === id);
+          return match ? match.textContent?.trim() || "" : "";
+        },
+        targetId
+      );
+      console.log(`[DEBUG] Label ${needle}:`, labelText);
+    }
+    await typeValue(inputHandle, value);
+    await inputHandle.dispose();
+  };
 
-  assert(inputs.length >= mapping.length, "Anzahl der Rechnungsfelder unerwartet.");
+  const fillById = async (id, value) => {
+    if (!value) {
+      return;
+    }
+    const selector = `#${id.replace(/([\\#:.\[\],=])/g, "\\$1")}`;
+    const inputHandle = await section.$(selector);
+    assert(inputHandle, `Eingabefeld für "${id}" nicht gefunden.`);
+    if (DEBUG) {
+      const labelText = await section.$$eval(
+        "label",
+        (nodes, inputId) => {
+          const match = nodes.find((node) => node.getAttribute("for") === inputId);
+          return match ? match.textContent?.trim() || "" : "";
+        },
+        id
+      );
+      console.log(`[DEBUG] Feld ${id}:`, labelText);
+    }
+    await typeValue(inputHandle, value);
+    await inputHandle.dispose();
+  };
 
-  for (let i = 0; i < mapping.length; i += 1) {
-    const key = mapping[i];
-    const value = billing[key] ?? "";
-    await typeValue(inputs[i], value);
+  await fillByLabel("vorname", billing.contactFirstName ?? "");
+  await fillByLabel("nachname", billing.contactLastName ?? "");
+  await fillById("billing-contactEmail", billing.contactEmail ?? "");
+  await fillByLabel("telefon", billing.phone ?? "");
+  await fillByLabel("straße", billing.street ?? "");
+  await fillByLabel("postleitzahl", billing.zip ?? "");
+  await fillByLabel("stadt", billing.city ?? "");
+  await fillByLabel("land", billing.country ?? "");
+
+  if (billing.type === "firma") {
+    await fillById("billing-companyName", billing.companyName ?? "");
+    await fillById("billing-invoiceEmail", billing.invoiceEmail ?? "");
+    if (billing.vatId) {
+      await fillById("billing-vatId", billing.vatId);
+    }
   }
 
   await page.$eval("form", (form) => form.requestSubmit());
-  await page.waitForFunction(() => document.body.innerText.includes("Bestellübersicht"), { timeout: DEFAULT_TIMEOUT });
+  try {
+    await page.waitForFunction(() => {
+      const heading = document.querySelector("h1")?.textContent || "";
+      return heading.includes("Bestellübersicht");
+    }, { timeout: DEFAULT_TIMEOUT });
+  } catch (error) {
+    const errorPreview = await page
+      .evaluate(() => document.body.innerText.slice(-800))
+      .catch(() => "n/a");
+    throw new Error(`Wechsel zur Bestellübersicht fehlgeschlagen: ${errorPreview}`);
+  }
 }
 
 async function applyVoucherCode(page, code) {
@@ -764,20 +1016,59 @@ async function handleOverviewStep(page, scenario) {
 
   await applyVoucherCode(page, scenario.voucherCode);
 
-  const checkboxLabels = await page.$$("label.label");
-  const labelTexts = await Promise.all(checkboxLabels.map((label) => label.evaluate((node) => node.innerText.trim())));
+  if (DEBUG) {
+    const checkboxDebug = await page.evaluate(() =>
+      Array.from(document.querySelectorAll("input[type='checkbox']")).map((input) => ({
+        id: input.id,
+        name: input.name,
+        label: input.closest("label")?.innerText?.trim() || "",
+        parentClass: input.parentElement?.className || ""
+      }))
+    );
+    console.log("[DEBUG] Checkbox-Übersicht:", checkboxDebug);
+  }
 
-  const agbIndex = labelTexts.findIndex((text) => text.includes("Allgemeinen Geschäftsbedingungen"));
-  const privacyIndex = labelTexts.findIndex((text) => text.includes("Datenschutzhinweise"));
-  const newsletterIndex = labelTexts.findIndex((text) => text.includes("Neuigkeiten") || text.includes("Newsletter"));
+  const checkboxHandles = await page.$$("input[type='checkbox']");
+  let agbCheckbox = null;
+  let privacyCheckbox = null;
+  let newsletterCheckbox = null;
 
-  assert(agbIndex !== -1, "AGB-Checkbox nicht gefunden.");
-  assert(privacyIndex !== -1, "Datenschutz-Checkbox nicht gefunden.");
+  for (const checkbox of checkboxHandles) {
+    const labelText = await checkbox.evaluate((node) => node.closest("label")?.innerText?.trim() || "");
+    if (!labelText) {
+      continue;
+    }
+    const lowerText = labelText.toLowerCase();
+    if (lowerText.includes("agb")) {
+      agbCheckbox = checkbox;
+    } else if (lowerText.includes("datenschutz")) {
+      privacyCheckbox = checkbox;
+    } else if (lowerText.includes("newsletter") || lowerText.includes("neuigkeiten")) {
+      newsletterCheckbox = checkbox;
+    } else {
+      await checkbox.dispose();
+    }
+  }
 
-  await checkboxLabels[agbIndex].click();
-  await checkboxLabels[privacyIndex].click();
-  if (scenario.billing.newsletterOptIn && newsletterIndex !== -1) {
-    await checkboxLabels[newsletterIndex].click();
+  assert(agbCheckbox, "AGB-Checkbox nicht gefunden.");
+  assert(privacyCheckbox, "Datenschutz-Checkbox nicht gefunden.");
+
+  await agbCheckbox.click();
+  await privacyCheckbox.click();
+  if (scenario.billing.newsletterOptIn && newsletterCheckbox) {
+    await newsletterCheckbox.click();
+  }
+
+  // Dispose remaining checkbox handles
+  for (const checkbox of checkboxHandles) {
+    if (checkbox !== agbCheckbox && checkbox !== privacyCheckbox && checkbox !== newsletterCheckbox) {
+      await checkbox.dispose();
+    }
+  }
+  await agbCheckbox.dispose();
+  await privacyCheckbox.dispose();
+  if (newsletterCheckbox) {
+    await newsletterCheckbox.dispose();
   }
 
   if (scenario.assertions?.overviewTotals?.length) {
@@ -841,6 +1132,7 @@ async function runScenario(browser, scenario) {
   page.setDefaultTimeout(DEFAULT_TIMEOUT);
   page.setDefaultNavigationTimeout(DEFAULT_TIMEOUT);
   let createdOrderResponse = null;
+  let lastOrderRequestPayload = null;
 
   const handleResponse = async (res) => {
     const url = res.url();
@@ -850,10 +1142,42 @@ async function runScenario(browser, scenario) {
       console.log(`[Browser-${scenario.name}] RESPONSE ${res.status()} ${url}`);
     }
     try {
-      const json = await res.clone().json();
-      createdOrderResponse = json;
+      const text = await res.text();
+      const status = res.status();
+      if (!text) {
+        createdOrderResponse = status >= 400 ? { status } : null;
+      } else {
+        try {
+          const parsed = JSON.parse(text);
+          createdOrderResponse = status >= 400 ? { status, error: parsed } : parsed;
+        } catch (parseError) {
+          createdOrderResponse = status >= 400 ? { status, error: text } : { raw: text };
+        }
+      }
+      if (status >= 400) {
+        const errorText =
+          typeof createdOrderResponse?.error === "string"
+            ? createdOrderResponse.error
+            : JSON.stringify(createdOrderResponse?.error);
+        console.error(
+          `[Browser-${scenario.name}] Bestellung fehlgeschlagen (${status}): ${errorText || "Unbekannter Fehler"}`
+        );
+        if (lastOrderRequestPayload && DEBUG) {
+          console.error(`[Browser-${scenario.name}] Request-Payload: ${lastOrderRequestPayload}`);
+        }
+      }
     } catch (error) {
       logDebug(`Antwort konnte nicht geparst werden: ${error.message}`);
+    }
+  };
+
+  const handleOrderRequest = (req) => {
+    if (req.url().includes("/api/public/bestellungen") && req.method() === "POST") {
+      try {
+        lastOrderRequestPayload = req.postData();
+      } catch {
+        lastOrderRequestPayload = null;
+      }
     }
   };
 
@@ -862,6 +1186,7 @@ async function runScenario(browser, scenario) {
     page.on("requestfailed", (req) => console.log(`[Browser-${scenario.name}] REQUEST FAILED:`, req.url(), req.failure()?.errorText));
   }
   page.on("response", handleResponse);
+  page.on("request", handleOrderRequest);
 
   try {
     await page.goto(BASE_URL, { waitUntil: "domcontentloaded", timeout: DEFAULT_TIMEOUT });
@@ -870,11 +1195,31 @@ async function runScenario(browser, scenario) {
     await page.waitForSelector("form", { timeout: DEFAULT_TIMEOUT });
 
     await fillParticipantsStep(page, scenario);
+    await fillVoucherStep(page, scenario);
     await fillBillingStep(page, scenario.billing);
     await handleOverviewStep(page, scenario);
     await handlePaymentStep(page);
 
-    const confirmation = await waitForConfirmation(page);
+    if (DEBUG) {
+      console.log("[DEBUG] Order response payload:", createdOrderResponse);
+    }
+    if (createdOrderResponse && (createdOrderResponse.error || createdOrderResponse.raw)) {
+      throw new Error(
+        `Bestellung fehlgeschlagen: ${
+          createdOrderResponse.error?.message || createdOrderResponse.raw || JSON.stringify(createdOrderResponse.error)
+        }`
+      );
+    }
+
+    let confirmation;
+    try {
+      confirmation = await waitForConfirmation(page);
+    } catch (error) {
+      const bodyPreview = await page
+        .evaluate(() => document.body.innerText.slice(-1000))
+        .catch(() => "n/a");
+      throw new Error(`Bestellbestätigung nicht erreicht: ${bodyPreview}`);
+    }
     let resolvedOrderId = confirmation.orderId || (createdOrderResponse?.id != null ? String(createdOrderResponse.id) : "");
     let missingOrderIdNote = null;
     if (!resolvedOrderId) {

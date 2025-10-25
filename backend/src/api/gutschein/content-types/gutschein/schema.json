@@ -13,40 +13,9 @@
       "type": "string",
       "required": true
     },
-    "istTemplate": {
-      "type": "boolean",
-      "default": false
-    },
-    "beschreibung": {
-      "type": "text"
-    },
-    "bild": {
-      "type": "media",
-      "allowedTypes": [
-        "images"
-      ],
-      "multiple": false
-    },
-    "hintergrundbild": {
-      "type": "media",
-      "allowedTypes": [
-        "images"
-      ],
-      "multiple": false
-    },
-    "bookingbox_topline": {
-      "type": "string"
-    },
-    "bookingbox_headline": {
-      "type": "string"
-    },
-    "bookingbox_body": {
-      "type": "text"
-    },
-    "gutscheininhalte": {
+    "versandDetails": {
       "type": "component",
-      "repeatable": true,
-      "component": "gutschein.tab"
+      "component": "bestellung.gutschein-details"
     },
     "code": {
       "type": "string",
@@ -71,12 +40,6 @@
     "restwert": {
       "type": "decimal",
       "default": 0
-    },
-    "minBetrag": {
-      "type": "decimal"
-    },
-    "maxBetrag": {
-      "type": "decimal"
     },
     "aktiv": {
       "type": "boolean",

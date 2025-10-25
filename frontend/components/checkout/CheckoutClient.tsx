@@ -22,6 +22,7 @@ import {
   OrderParticipantInput,
   OrderPayload,
   OrderPositionInput,
+  OrderVoucherDetailsInput,
   submitOrder
 } from "@/lib/checkout";
 import type { OrderResponse } from "@/lib/checkout";
@@ -111,7 +112,37 @@ type BillingErrorState = {
   phone: string | null;
 };
 
-type StepId = "participants" | "billing" | "overview" | "payment" | "confirmation";
+type VoucherFormValue = {
+  versandArt: "digital" | "physisch";
+  empfaengerName: string;
+  empfaengerEmail: string;
+  adresszusatz: string;
+  strasse: string;
+  plz: string;
+  stadt: string;
+  land: string;
+  lieferDatum: string;
+  persoenlicheNachricht: string;
+};
+
+type VoucherFormErrorState = {
+  empfaengerName?: string | null;
+  empfaengerEmail?: string | null;
+  strasse?: string | null;
+  plz?: string | null;
+  stadt?: string | null;
+  land?: string | null;
+  lieferDatum?: string | null;
+};
+
+type VoucherItem = {
+  key: "product" | "selection";
+  title: string;
+  subtitle?: string | null;
+  quantity: number;
+};
+
+type StepId = "participants" | "gutscheine" | "billing" | "overview" | "payment" | "confirmation";
 
 type StepDefinition = {
   id: StepId;
@@ -150,6 +181,19 @@ const initialBillingErrors: BillingErrorState = {
   contactEmail: null,
   phone: null
 };
+
+const createVoucherFormValue = (): VoucherFormValue => ({
+  versandArt: "digital",
+  empfaengerName: "",
+  empfaengerEmail: "",
+  adresszusatz: "",
+  strasse: "",
+  plz: "",
+  stadt: "",
+  land: DEFAULT_COUNTRY,
+  lieferDatum: "",
+  persoenlicheNachricht: ""
+});
 
 type SummaryItem = {
   id: string;
@@ -235,6 +279,8 @@ const PAYPAL_CONFIRMATION_MESSAGE: Record<Exclude<PaymentMethod, "rechnung">, st
 const STEP_DESCRIPTIONS: Partial<Record<StepId, string>> = {
   participants:
     "Bitte gib die Teilnehmerdaten für alle gebuchten Plätze ein. Die Angaben lassen sich vor Abschluss jederzeit anpassen.",
+  gutscheine:
+    "Trage die Versandart sowie die Empfängerdaten für deine Gutscheine ein. Wir nutzen diese Angaben für den Versand und die Zustellung.",
   billing: "Wähle, ob die Rechnung auf eine Privatperson oder ein Unternehmen ausgestellt werden soll.",
   overview: "Prüfe alle Angaben vor dem Zahlungsschritt. Du kannst einzelne Bereiche jederzeit bearbeiten.",
   payment: "Wähle deine bevorzugte Zahlungsart und bestätige die rechtlichen Hinweise."
@@ -332,10 +378,13 @@ function CheckoutProgress({
   );
 }
 
-function buildSteps(hasSeminar: boolean): StepDefinition[] {
+function buildSteps(hasSeminar: boolean, hasVoucher: boolean): StepDefinition[] {
   const steps: StepDefinition[] = [];
   if (hasSeminar) {
     steps.push({ id: "participants", label: "Teilnehmer" });
+  }
+  if (hasVoucher) {
+    steps.push({ id: "gutscheine", label: "Gutscheine" });
   }
   steps.push(
     { id: "billing", label: "Rechnungsadresse" },
@@ -635,7 +684,11 @@ export function CheckoutClient() {
   const [furthestStepIndex, setFurthestStepIndex] = useState(0);
 
   const hasSeminarSelection = seminarStates.length > 0;
-  const steps = useMemo(() => buildSteps(hasSeminarSelection), [hasSeminarSelection]);
+  const hasVoucherSelection = Boolean((productState && productState.isVoucher) || voucherState);
+  const steps = useMemo(
+    () => buildSteps(hasSeminarSelection, hasVoucherSelection),
+    [hasSeminarSelection, hasVoucherSelection]
+  );
   const isPayPalSelected = isPayPalConfigured && paymentMethod !== "rechnung";
   const activeStepIndex = useMemo(
     () => steps.findIndex((step) => step.id === activeStepId),
@@ -656,19 +709,18 @@ export function CheckoutClient() {
       const maxIndex = steps.length - 1;
       return current > maxIndex ? maxIndex : current;
     });
+    const firstStepId = steps[0]?.id;
+    if (!firstStepId) {
+      return;
+    }
     if (!steps.some((step) => step.id === activeStepId)) {
-      setActiveStepId(steps[steps.length - 1].id);
+      setActiveStepId(firstStepId);
+      return;
     }
-  }, [steps, activeStepId]);
-
-  useEffect(() => {
-    if (hasSeminarSelection && activeStepId === "billing" && furthestStepIndex === 0) {
-      setActiveStepId("participants");
+    if (furthestStepIndex === 0 && activeStepId !== firstStepId) {
+      setActiveStepId(firstStepId);
     }
-    if (!hasSeminarSelection && activeStepId === "participants") {
-      setActiveStepId("billing");
-    }
-  }, [hasSeminarSelection, activeStepId, furthestStepIndex]);
+  }, [steps, activeStepId, furthestStepIndex]);
 
   useEffect(() => {
     if (seminarStates.length === 0) {
@@ -763,6 +815,47 @@ export function CheckoutClient() {
 
   const hasSelections = Boolean(seminarStates.length > 0 || productState || voucherState);
 
+  const voucherItems = useMemo<VoucherItem[]>(() => {
+    const items: VoucherItem[] = [];
+    if (productState?.isVoucher) {
+      items.push({
+        key: "product",
+        title: productState.productTitle,
+        subtitle: productState.selection.productTitle ?? null,
+        quantity: Math.max(1, Math.trunc(productState.selection.quantity ?? 1))
+      });
+    }
+    if (voucherState) {
+      items.push({
+        key: "selection",
+        title: voucherState.title,
+        subtitle: voucherState.description ?? null,
+        quantity: 1
+      });
+    }
+    return items;
+  }, [productState, voucherState]);
+
+  const [voucherForms, setVoucherForms] = useState<Record<string, VoucherFormValue>>({});
+  const [voucherFormErrors, setVoucherFormErrors] = useState<Record<string, VoucherFormErrorState>>({});
+
+  useEffect(() => {
+    setVoucherForms((prev) => {
+      const next: Record<string, VoucherFormValue> = {};
+      voucherItems.forEach((item) => {
+        next[item.key] = prev[item.key] ?? createVoucherFormValue();
+      });
+      return next;
+    });
+    setVoucherFormErrors((prev) => {
+      const next: Record<string, VoucherFormErrorState> = {};
+      voucherItems.forEach((item) => {
+        next[item.key] = prev[item.key] ?? {};
+      });
+      return next;
+    });
+  }, [voucherItems]);
+
   const moveToStep = useCallback(
     (nextIndex: number) => {
       if (nextIndex < 0 || nextIndex >= steps.length) {
@@ -841,6 +934,71 @@ export function CheckoutClient() {
         break;
     }
   }, []);
+
+  const handleVoucherFieldChange = useCallback(
+    (key: VoucherItem["key"], field: keyof VoucherFormValue, value: string) => {
+      setVoucherForms((prev) => {
+        const current = prev[key] ?? createVoucherFormValue();
+        return {
+          ...prev,
+          [key]: {
+            ...current,
+            [field]: value
+          }
+        };
+      });
+      if (
+        field === "empfaengerName" ||
+        field === "empfaengerEmail" ||
+        field === "strasse" ||
+        field === "plz" ||
+        field === "stadt" ||
+        field === "land" ||
+        field === "lieferDatum"
+      ) {
+        setVoucherFormErrors((prev) => ({
+          ...prev,
+          [key]: {
+            ...(prev[key] ?? {}),
+            [field]: null
+          }
+        }));
+      }
+    },
+    []
+  );
+
+  const handleVoucherVersandArtChange = useCallback(
+    (key: VoucherItem["key"], versandArt: "digital" | "physisch") => {
+      setVoucherForms((prev) => {
+        const current = prev[key] ?? createVoucherFormValue();
+        return {
+          ...prev,
+          [key]: {
+            ...current,
+            versandArt
+          }
+        };
+      });
+      setVoucherFormErrors((prev) => {
+        const current = prev[key] ?? {};
+        const nextErrors: VoucherFormErrorState = { ...current };
+        if (versandArt === "digital") {
+          delete nextErrors.strasse;
+          delete nextErrors.plz;
+          delete nextErrors.stadt;
+          delete nextErrors.land;
+        } else {
+          delete nextErrors.empfaengerEmail;
+        }
+        return {
+          ...prev,
+          [key]: nextErrors
+        };
+      });
+    },
+    []
+  );
 
   const handleBillingTypeChange = useCallback((type: "privat" | "firma") => {
     setBilling((prev) => ({
@@ -960,6 +1118,71 @@ export function CheckoutClient() {
     return true;
   }, [billing]);
 
+  const validateVoucherDetails = useCallback(() => {
+    if (voucherItems.length === 0) {
+      setStepError(null);
+      return true;
+    }
+    const emailPattern = /\S+@\S+\.\S+/;
+    let firstError: string | null = null;
+    const nextErrors: Record<string, VoucherFormErrorState> = {};
+
+    voucherItems.forEach((item) => {
+      const form = voucherForms[item.key] ?? createVoucherFormValue();
+      const errors: VoucherFormErrorState = {};
+      const trimmedName = form.empfaengerName.trim();
+      if (!trimmedName) {
+        errors.empfaengerName = "Bitte gib den Namen der beschenkten Person ein.";
+      }
+      if (form.versandArt === "digital") {
+        const trimmedEmail = form.empfaengerEmail.trim();
+        if (!trimmedEmail) {
+          errors.empfaengerEmail = "Bitte gib die E-Mail-Adresse für den digitalen Versand an.";
+        } else if (!emailPattern.test(trimmedEmail)) {
+          errors.empfaengerEmail = "Die E-Mail-Adresse für den digitalen Versand ist ungültig.";
+        }
+      } else {
+        if (!form.strasse.trim()) {
+          errors.strasse = "Bitte ergänze die Straße für den postalischen Versand.";
+        }
+        if (!form.plz.trim()) {
+          errors.plz = "Bitte ergänze die Postleitzahl für den postalischen Versand.";
+        }
+        if (!form.stadt.trim()) {
+          errors.stadt = "Bitte ergänze die Stadt für den postalischen Versand.";
+        }
+        if (!form.land.trim()) {
+          errors.land = "Bitte ergänze das Land für den postalischen Versand.";
+        }
+      }
+      if (form.lieferDatum.trim()) {
+        const parsedDate = new Date(form.lieferDatum);
+        if (Number.isNaN(parsedDate.valueOf())) {
+          errors.lieferDatum = "Das gewünschte Lieferdatum ist ungültig.";
+        }
+      }
+
+      if (!firstError) {
+        const firstEntry = Object.values(errors).find((message) => message);
+        if (firstEntry) {
+          firstError = firstEntry;
+        }
+      }
+
+      nextErrors[item.key] = errors;
+    });
+
+    setVoucherFormErrors(nextErrors);
+
+    if (firstError) {
+      setStepError(firstError);
+      return false;
+    }
+
+    setStepError(null);
+    return true;
+  }, [voucherItems, voucherForms]);
+
   const validatePayment = useCallback(() => {
     let errorMessage: string | null = null;
 
@@ -1042,7 +1265,7 @@ export function CheckoutClient() {
         });
         setSubmissionState("success");
         setActiveStepId("confirmation");
-        setFurthestStepIndex(buildSteps(false).length - 1);
+        setFurthestStepIndex(buildSteps(false, false).length - 1);
         setQueriedOrderId(id);
         setParticipantGroups([]);
         setAppliedVoucher(null);
@@ -1150,6 +1373,60 @@ export function CheckoutClient() {
     setVoucherMessage("Der Gutscheincode wurde entfernt.");
   }, []);
 
+  const normaliseVoucherDetailsForSubmit = useCallback(
+    (form: VoucherFormValue | undefined): OrderVoucherDetailsInput | undefined => {
+      if (!form) {
+        return undefined;
+      }
+      const versandArt = form.versandArt === "physisch" ? "physisch" : "digital";
+      const trim = (value: string) => value.trim();
+      const empfaengerName = trim(form.empfaengerName);
+      if (!empfaengerName) {
+        return undefined;
+      }
+      const details: OrderVoucherDetailsInput = {
+        versandArt,
+        empfaengerName
+      };
+      const email = trim(form.empfaengerEmail);
+      if (email) {
+        details.empfaengerEmail = email;
+      }
+      const adresszusatz = trim(form.adresszusatz);
+      if (adresszusatz) {
+        details.adresszusatz = adresszusatz;
+      }
+      if (versandArt === "physisch") {
+        const strasse = trim(form.strasse);
+        const plz = trim(form.plz);
+        const stadt = trim(form.stadt);
+        const land = trim(form.land) || DEFAULT_COUNTRY;
+        if (strasse) {
+          details.strasse = strasse;
+        }
+        if (plz) {
+          details.plz = plz;
+        }
+        if (stadt) {
+          details.stadt = stadt;
+        }
+        if (land) {
+          details.land = land;
+        }
+      }
+      const lieferDatum = trim(form.lieferDatum);
+      if (lieferDatum) {
+        details.lieferDatum = lieferDatum;
+      }
+      const message = trim(form.persoenlicheNachricht);
+      if (message) {
+        details.persoenlicheNachricht = message;
+      }
+      return details;
+    },
+    []
+  );
+
   const handleSubmitOrder = useCallback(async (paypalDetails?: { orderId?: string; captureId?: string }) => {
     if (!hasSelections) {
       setSubmissionError("Der Warenkorb ist leer.");
@@ -1232,6 +1509,9 @@ export function CheckoutClient() {
           productState.preisNetto != null
             ? productState.preisNetto
             : computeNetAmount(productState.preisBrutto, productState.steuerSatz) ?? undefined;
+        const productVoucherDetails = productState.isVoucher
+          ? normaliseVoucherDetailsForSubmit(voucherForms["product"])
+          : undefined;
 
         positionen.push({
           typ: productState.isVoucher ? "gutschein" : "produkt",
@@ -1240,17 +1520,20 @@ export function CheckoutClient() {
           menge: quantity,
           einzelpreisBrutto,
           einzelpreisNetto,
-          steuerSatz: productState.steuerSatz ?? undefined
+          steuerSatz: productState.steuerSatz ?? undefined,
+          ...(productState.isVoucher && productVoucherDetails ? { gutscheinDetails: productVoucherDetails } : {})
         });
       }
 
       if (voucherState) {
+        const selectionVoucherDetails = normaliseVoucherDetailsForSubmit(voucherForms["selection"]);
         positionen.push({
           typ: "gutschein",
           titel: voucherState.title,
           beschreibung: voucherState.description ?? undefined,
           menge: 1,
-          betrag: voucherState.amount
+          betrag: voucherState.amount,
+          ...(selectionVoucherDetails ? { gutscheinDetails: selectionVoucherDetails } : {})
         });
       }
 
@@ -1332,6 +1615,8 @@ export function CheckoutClient() {
     paymentMethod,
     appliedVoucher,
     isPayPalConfigured,
+    voucherForms,
+    normaliseVoucherDetailsForSubmit,
     clearSelections,
     steps.length,
     router
@@ -1344,6 +1629,14 @@ export function CheckoutClient() {
 
       if (activeStepId === "participants") {
         if (!validateParticipants()) {
+          return;
+        }
+        moveToStep(activeStepIndex + 1);
+        return;
+      }
+
+      if (activeStepId === "gutscheine") {
+        if (!validateVoucherDetails()) {
           return;
         }
         moveToStep(activeStepIndex + 1);
@@ -1401,6 +1694,7 @@ export function CheckoutClient() {
       moveToStep,
       isPayPalSelected,
       validateBilling,
+      validateVoucherDetails,
       validateParticipants,
       agbAccepted,
       privacyAccepted,
@@ -1464,6 +1758,8 @@ export function CheckoutClient() {
   const primaryActionLabel = useMemo(() => {
     switch (activeStepId) {
       case "participants":
+        return hasVoucherSelection ? "Weiter zu Gutscheinen" : "Weiter zur Rechnungsadresse";
+      case "gutscheine":
         return "Weiter zur Rechnungsadresse";
       case "billing":
         return "Weiter zur Bestellübersicht";
@@ -1474,7 +1770,7 @@ export function CheckoutClient() {
       default:
         return "Weiter";
     }
-  }, [activeStepId, submissionState]);
+  }, [activeStepId, submissionState, hasVoucherSelection]);
 
   const showPrimaryButton = !(activeStepId === "payment" && isPayPalSelected);
 
@@ -1583,6 +1879,268 @@ export function CheckoutClient() {
             </div>
           </div>
         ))}
+      </CheckoutStepCard>
+    );
+  };
+
+  const renderVoucherStep = () => {
+    if (voucherItems.length === 0) {
+      return (
+        <CheckoutStepCard>
+          <div className="py-6 text-sm text-base-content/70">
+            Es sind aktuell keine Gutscheine im Warenkorb.
+          </div>
+        </CheckoutStepCard>
+      );
+    }
+
+    const renderLabelClass = (hasError: boolean) =>
+      `block text-sm font-medium ${hasError ? "text-error" : "text-base-content"}`;
+    const renderInputClass = (hasError: boolean) => `input input-bordered mt-2 w-full ${hasError ? "input-error" : ""}`;
+
+    return (
+      <CheckoutStepCard withDividers contentClassName="space-y-0">
+        {voucherItems.map((item) => {
+          const form = voucherForms[item.key] ?? createVoucherFormValue();
+          const errors = voucherFormErrors[item.key] ?? {};
+          const isPhysisch = form.versandArt === "physisch";
+
+          return (
+            <div key={item.key} className="py-6 first:pt-0 last:pb-0">
+              <h3 className="text-lg font-semibold text-base-content">
+                {item.title}
+                {item.quantity > 1 ? ` (x${item.quantity})` : ""}
+              </h3>
+              {item.subtitle ? (
+                <p className="mt-1 text-sm text-base-content/70">{item.subtitle}</p>
+              ) : null}
+
+              <div className="mt-6 space-y-6">
+                <div>
+                  <span className="text-sm font-medium text-base-content">Versandart *</span>
+                  <div role="tablist" aria-label="Versandart" className="mt-3 flex gap-6 ui-border-bottom">
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={form.versandArt === "digital"}
+                      className={`relative pb-3 text-sm font-semibold ${
+                        form.versandArt === "digital" ? "text-primary" : "text-base-content/70"
+                      }`}
+                      onClick={() => handleVoucherVersandArtChange(item.key, "digital")}
+                    >
+                      Digital
+                      <span
+                        aria-hidden="true"
+                        className={`absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary transition-opacity ${
+                          form.versandArt === "digital" ? "opacity-100" : "opacity-0"
+                        }`}
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={form.versandArt === "physisch"}
+                      className={`relative pb-3 text-sm font-semibold ${
+                        form.versandArt === "physisch" ? "text-primary" : "text-base-content/70"
+                      }`}
+                      onClick={() => handleVoucherVersandArtChange(item.key, "physisch")}
+                    >
+                      Post
+                      <span
+                        aria-hidden="true"
+                        className={`absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary transition-opacity ${
+                          form.versandArt === "physisch" ? "opacity-100" : "opacity-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={`voucher-${item.key}-name`}
+                    className={renderLabelClass(Boolean(errors.empfaengerName))}
+                  >
+                    Name der beschenkten Person *
+                  </label>
+                  <input
+                    id={`voucher-${item.key}-name`}
+                    type="text"
+                    className={renderInputClass(Boolean(errors.empfaengerName))}
+                    value={form.empfaengerName}
+                    onChange={(event) => handleVoucherFieldChange(item.key, "empfaengerName", event.target.value)}
+                    required
+                  />
+                  {errors.empfaengerName ? (
+                    <p className="mt-1 text-xs text-error">{errors.empfaengerName}</p>
+                  ) : null}
+                </div>
+
+                {form.versandArt === "digital" ? (
+                  <div>
+                    <label
+                      htmlFor={`voucher-${item.key}-email`}
+                      className={renderLabelClass(Boolean(errors.empfaengerEmail))}
+                    >
+                      E-Mail für den Versand *
+                    </label>
+                    <input
+                      id={`voucher-${item.key}-email`}
+                      type="email"
+                      className={renderInputClass(Boolean(errors.empfaengerEmail))}
+                      value={form.empfaengerEmail}
+                      onChange={(event) => handleVoucherFieldChange(item.key, "empfaengerEmail", event.target.value)}
+                      placeholder="name@example.com"
+                      required
+                    />
+                    {errors.empfaengerEmail ? (
+                      <p className="mt-1 text-xs text-error">{errors.empfaengerEmail}</p>
+                    ) : (
+                      <p className="mt-1 text-xs text-base-content/60">
+                        Wir senden den Gutschein direkt an diese Adresse.
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div>
+                      <label
+                        htmlFor={`voucher-${item.key}-strasse`}
+                        className={renderLabelClass(Boolean(errors.strasse))}
+                      >
+                        Straße und Hausnummer *
+                      </label>
+                      <input
+                        id={`voucher-${item.key}-strasse`}
+                        type="text"
+                        className={renderInputClass(Boolean(errors.strasse))}
+                        value={form.strasse}
+                        onChange={(event) => handleVoucherFieldChange(item.key, "strasse", event.target.value)}
+                        autoComplete="street-address"
+                        required
+                      />
+                      {errors.strasse ? (
+                        <p className="mt-1 text-xs text-error">{errors.strasse}</p>
+                      ) : null}
+                    </div>
+                    <div>
+                      <label htmlFor={`voucher-${item.key}-adresszusatz`} className="block text-sm font-medium text-base-content">
+                        Adresszusatz
+                      </label>
+                      <input
+                        id={`voucher-${item.key}-adresszusatz`}
+                        type="text"
+                        className="input input-bordered mt-2 w-full"
+                        value={form.adresszusatz}
+                        onChange={(event) => handleVoucherFieldChange(item.key, "adresszusatz", event.target.value)}
+                      />
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <label
+                          htmlFor={`voucher-${item.key}-plz`}
+                          className={renderLabelClass(Boolean(errors.plz))}
+                        >
+                          PLZ *
+                        </label>
+                        <input
+                          id={`voucher-${item.key}-plz`}
+                          type="text"
+                          className={renderInputClass(Boolean(errors.plz))}
+                          value={form.plz}
+                          onChange={(event) => handleVoucherFieldChange(item.key, "plz", event.target.value)}
+                          autoComplete="postal-code"
+                          required
+                        />
+                        {errors.plz ? <p className="mt-1 text-xs text-error">{errors.plz}</p> : null}
+                      </div>
+                      <div>
+                        <label
+                          htmlFor={`voucher-${item.key}-stadt`}
+                          className={renderLabelClass(Boolean(errors.stadt))}
+                        >
+                          Stadt *
+                        </label>
+                        <input
+                          id={`voucher-${item.key}-stadt`}
+                          type="text"
+                          className={renderInputClass(Boolean(errors.stadt))}
+                          value={form.stadt}
+                          onChange={(event) => handleVoucherFieldChange(item.key, "stadt", event.target.value)}
+                          autoComplete="address-level2"
+                          required
+                        />
+                        {errors.stadt ? <p className="mt-1 text-xs text-error">{errors.stadt}</p> : null}
+                      </div>
+                    </div>
+                    <div>
+                      <label
+                        htmlFor={`voucher-${item.key}-land`}
+                        className={renderLabelClass(Boolean(errors.land))}
+                      >
+                        Land *
+                      </label>
+                      <input
+                        id={`voucher-${item.key}-land`}
+                        type="text"
+                        className={renderInputClass(Boolean(errors.land))}
+                        value={form.land}
+                        onChange={(event) => handleVoucherFieldChange(item.key, "land", event.target.value)}
+                        autoComplete="country-name"
+                        required
+                      />
+                      {errors.land ? <p className="mt-1 text-xs text-error">{errors.land}</p> : null}
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label
+                      htmlFor={`voucher-${item.key}-lieferdatum`}
+                      className={renderLabelClass(Boolean(errors.lieferDatum))}
+                    >
+                      Gewünschte Zustellung
+                      <span className="text-base-content/60"> (optional)</span>
+                    </label>
+                    <input
+                      id={`voucher-${item.key}-lieferdatum`}
+                      type="date"
+                      className={renderInputClass(Boolean(errors.lieferDatum))}
+                      value={form.lieferDatum}
+                      onChange={(event) => handleVoucherFieldChange(item.key, "lieferDatum", event.target.value)}
+                    />
+                    {errors.lieferDatum ? (
+                      <p className="mt-1 text-xs text-error">{errors.lieferDatum}</p>
+                    ) : (
+                      <p className="mt-1 text-xs text-base-content/60">
+                        Wir berücksichtigen den Termin, soweit möglich.
+                      </p>
+                    )}
+                  </div>
+                  <div className="md:col-span-2">
+                    <label
+                      htmlFor={`voucher-${item.key}-nachricht`}
+                      className="block text-sm font-medium text-base-content"
+                    >
+                      Persönliche Nachricht
+                      <span className="text-base-content/60"> (optional)</span>
+                    </label>
+                    <textarea
+                      id={`voucher-${item.key}-nachricht`}
+                      className="textarea textarea-bordered mt-2 w-full min-h-[120px]"
+                      value={form.persoenlicheNachricht}
+                      onChange={(event) =>
+                        handleVoucherFieldChange(item.key, "persoenlicheNachricht", event.target.value)
+                      }
+                      placeholder="Deine Glückwünsche oder Hinweise an die beschenkte Person"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </CheckoutStepCard>
     );
   };
@@ -2295,6 +2853,7 @@ const renderPaymentStep = () => {
       <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
         <form ref={formRef} className="space-y-8" onSubmit={handlePrimaryAction}>
           {activeStepId === "participants" && renderParticipantsStep()}
+          {activeStepId === "gutscheine" && renderVoucherStep()}
           {activeStepId === "billing" && renderBillingStep()}
           {activeStepId === "overview" && renderOverviewStep()}
           {activeStepId === "payment" && renderPaymentStep()}

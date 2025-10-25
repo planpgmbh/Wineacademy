@@ -7,6 +7,7 @@ import {
   findDocumentForInvoice,
 } from '../../../../services/sevdesk';
 import { sendStornoNotificationsForOrder } from '../../utils/notifications';
+import { createGutscheineForPaidOrder } from '../../utils/gutschein-erzeugung';
 
 const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
@@ -248,6 +249,15 @@ export default {
     if (bestellungId && currentStatus === 'storniert' && previousStatus !== 'storniert') {
       await handleSevDeskStorno(bestellungId);
       await sendStornoNotificationsForOrder(strapi, bestellungId);
+    }
+
+    if (bestellungId && currentStatus === 'bezahlt' && previousStatus !== 'bezahlt') {
+      await createGutscheineForPaidOrder(strapi, bestellungId).catch((error) => {
+        strapi.log.error('[Bestellung lifecycles] Gutscheinerzeugung fehlgeschlagen.', {
+          bestellungId,
+          error: error instanceof Error ? error.message : error,
+        });
+      });
     }
   },
 };

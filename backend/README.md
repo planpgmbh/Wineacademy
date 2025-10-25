@@ -21,9 +21,9 @@ Strapi liefert die Inhalte (Seminare, Termine, Produkte, Gutscheine) und wickelt
 - **Termin:** Datum(e) (`termin.seminartag`), `planungsstatus`, Relation zu Seminar & Standort.
 - **Standort:** Veranstaltungsort (Adresse, Typ).
 - **Produkt:** Shop-Artikel (optional `gutschein`-Flag).
-- **Bestellung:** Rechnungs-/Zahlungsdaten, Positionen, Summen, Status (`offen|bezahlt|storniert`).
+- **Bestellung:** Rechnungs-/Zahlungsdaten, Positionen, Summen, Status (`offen|bezahlt|storniert`); Gutscheinpositionen speichern Versanddetails (Empfänger, Versandart, Nachricht).
 - **Buchung:** Teilnehmer eines Seminartermins; referenziert Termin & Bestellung.
-- **Gutschein:** Templates & generierte Codes inkl. Betrag/Einsatzstatus.
+- **Gutschein:** Generierte Codes inkl. Betrag/Einsatzstatus (Rabatt-/Wertgutscheine); `versandDetails` bewahrt Empfänger- und Versandinformationen. Sobald eine Bestellung auf „bezahlt“ wechselt, erzeugt Strapi für alle Gutschein-Positionen automatisch neue Codes. Präsentations-/Bookingbox-Felder (inkl. `heroDarkMode`) liegen im Single-Type `gutscheineinstellung`.
 - **Kategorie/Kunde:** Klassifizierung der Seminare bzw. CRM-Einträge inkl. Newsletter-Opt-in.
 - **Einstellung:** Single-Type für Kommunikations-Defaults (Absendername/-adresse, Antwort-Adresse, Benachrichtigungsempfänger) mit ENV-Fallback (`EMAIL_FROM`, `EMAIL_REPLY_TO`).
 - **Benachrichtigungen:** Collection-Type für transaktionale E-Mail-Layouts inkl. Platzhalterdokumentation, Testdaten und optionaler SendGrid-Vorlagen-ID.

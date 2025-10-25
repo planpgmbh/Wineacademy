@@ -1,0 +1,42 @@
+{
+  "collectionName": "components_bestellung_gutschein_details",
+  "info": {
+    "displayName": "Gutschein Details",
+    "description": "Versand- und Empfängerdaten für Gutscheinpositionen"
+  },
+  "options": {},
+  "attributes": {
+    "versandArt": {
+      "type": "enumeration",
+      "enum": ["digital", "physisch"],
+      "default": "digital"
+    },
+    "empfaengerName": {
+      "type": "string"
+    },
+    "empfaengerEmail": {
+      "type": "email"
+    },
+    "adresszusatz": {
+      "type": "string"
+    },
+    "strasse": {
+      "type": "string"
+    },
+    "plz": {
+      "type": "string"
+    },
+    "stadt": {
+      "type": "string"
+    },
+    "land": {
+      "type": "string"
+    },
+    "lieferDatum": {
+      "type": "date"
+    },
+    "persoenlicheNachricht": {
+      "type": "text"
+    }
+  }
+}
