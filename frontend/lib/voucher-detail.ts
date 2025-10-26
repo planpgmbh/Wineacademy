@@ -19,6 +19,7 @@ type StrapiVoucherTemplate = {
   bookingbox_body?: string | null;
   minBetrag?: number | null;
   maxBetrag?: number | null;
+  versandkosten?: number | null;
   bild?: StrapiMedia | null;
   hintergrundbild?: StrapiMedia | null;
   gutscheininhalte?: StrapiTab[] | null;
@@ -51,6 +52,7 @@ export type VoucherDetail = {
     defaultAmount: number;
   };
   tabs: VoucherContentTab[];
+  shippingCost?: number | null;
 };
 
 function ensureHtmlContent(value: string | null | undefined): string {
@@ -140,7 +142,8 @@ function createFallbackVoucherDetail(): VoucherDetail {
       maxAmount: null,
       defaultAmount: 25
     },
-    tabs: []
+    tabs: [],
+    shippingCost: null
   };
 }
 
@@ -196,7 +199,11 @@ export async function getVoucherDetail(): Promise<VoucherDetail> {
         maxAmount,
         defaultAmount
       },
-      tabs: toTabs(payload.gutscheininhalte)
+      tabs: toTabs(payload.gutscheininhalte),
+      shippingCost:
+        typeof payload.versandkosten === "number" && Number.isFinite(payload.versandkosten)
+          ? Math.round(payload.versandkosten * 100) / 100
+          : null
     };
   } catch (error) {
     console.warn("[voucher-detail] Konnte Gutschein-Template nicht laden, nutze Fallback:", error);

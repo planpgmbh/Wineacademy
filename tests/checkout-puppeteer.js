@@ -303,7 +303,8 @@ function buildScenarios(baseData) {
       voucherDetails: {
         selection: {
           versandArt: "digital",
-          empfaengerName: "Mara Beschenkt",
+          empfaengerVorname: "Mara",
+          empfaengerNachname: "Beschenkt",
           empfaengerEmail: "mara.beschenkt@example.com",
           lieferDatum: formatDateISO(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)),
           persoenlicheNachricht: "Alles Gute und viel Freude!"
@@ -388,7 +389,8 @@ function buildScenarios(baseData) {
       voucherDetails: {
         selection: {
           versandArt: "physisch",
-          empfaengerName: "Max Mustermann",
+          empfaengerVorname: "Max",
+          empfaengerNachname: "Mustermann",
           adresszusatz: "c/o Empfang",
           strasse: "Geschenkweg 12",
           plz: "70173",
@@ -770,7 +772,8 @@ async function fillVoucherStep(page, scenario) {
   const detailMap = scenario.voucherDetails || {};
   const defaultDetails = {
     versandArt: "digital",
-    empfaengerName: "Gutschein Empfänger",
+    empfaengerVorname: "Gutschein",
+    empfaengerNachname: "Empfänger",
     empfaengerEmail: "gutschein@example.com",
     adresszusatz: "",
     strasse: "Gutscheinweg 1",
@@ -831,7 +834,8 @@ async function fillVoucherStep(page, scenario) {
       await handle.dispose();
     };
 
-    await fillField(`#voucher-${item.key}-name`, details.empfaengerName || `Empfänger ${index + 1}`);
+    await fillField(`#voucher-${item.key}-vorname`, details.empfaengerVorname || `Empfänger ${index + 1}`);
+    await fillField(`#voucher-${item.key}-nachname`, details.empfaengerNachname || `Test ${index + 1}`);
 
     if (details.versandArt === "digital") {
       await fillField(
@@ -857,10 +861,27 @@ async function fillVoucherStep(page, scenario) {
   }
 
   await page.$eval("form", (form) => form.requestSubmit());
-  await page.waitForFunction(() => {
-    const heading = document.querySelector("h1")?.textContent || "";
-    return heading.includes("Rechnungsadresse");
-  }, { timeout: DEFAULT_TIMEOUT });
+  try {
+    await page.waitForFunction(() => {
+      const heading = document.querySelector("h1")?.textContent || "";
+      return heading.includes("Rechnungsadresse");
+    }, { timeout: DEFAULT_TIMEOUT });
+  } catch (error) {
+    const debugInfo = await page
+      .evaluate(() => {
+        const collectText = (selector) =>
+          Array.from(document.querySelectorAll(selector))
+            .map((node) => node.textContent?.trim() || "")
+            .filter((text) => text.length > 0);
+        return {
+          heading: document.querySelector("h1")?.textContent || "",
+          errors: collectText(".text-error, [role='alert']"),
+          summary: document.body.innerText.slice(0, 800)
+        };
+      })
+      .catch(() => null);
+    throw new Error(`Wechsel zur Rechnungsadresse fehlgeschlagen: ${JSON.stringify(debugInfo)}`);
+  }
 }
 
 async function fillBillingStep(page, billing) {

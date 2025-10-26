@@ -10,6 +10,7 @@ export type VoucherSelection = {
   imageAlt?: string | null;
   minAmount?: number | null;
   maxAmount?: number | null;
+  shippingCost?: number | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -22,6 +23,7 @@ type TriggerVoucherInput = {
   imageAlt?: string | null;
   minAmount?: number | null;
   maxAmount?: number | null;
+  shippingCost?: number | null;
 };
 
 export function triggerVoucherFlow(input: TriggerVoucherInput) {
@@ -34,6 +36,10 @@ export function triggerVoucherFlow(input: TriggerVoucherInput) {
     imageAlt: input.imageAlt ?? null,
     minAmount: input.minAmount ?? null,
     maxAmount: input.maxAmount ?? null,
+    shippingCost:
+      typeof input.shippingCost === "number" && Number.isFinite(input.shippingCost)
+        ? Math.round(input.shippingCost * 100) / 100
+        : null,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -79,6 +85,10 @@ export function readVoucherSelection(): VoucherSelection | null {
       imageAlt: typeof parsed.imageAlt === "string" ? parsed.imageAlt : null,
       minAmount: typeof parsed.minAmount === "number" ? parsed.minAmount : null,
       maxAmount: typeof parsed.maxAmount === "number" ? parsed.maxAmount : null,
+      shippingCost:
+        typeof parsed.shippingCost === "number" && Number.isFinite(parsed.shippingCost)
+          ? Math.round(parsed.shippingCost * 100) / 100
+          : null,
       createdAt: typeof parsed.createdAt === "string" ? parsed.createdAt : new Date().toISOString(),
       updatedAt: typeof parsed.updatedAt === "string" ? parsed.updatedAt : new Date().toISOString()
     };

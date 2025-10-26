@@ -12,6 +12,7 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
         'name',
         'minBetrag',
         'maxBetrag',
+        'versandkosten',
         'bookingbox_topline',
         'bookingbox_headline',
         'bookingbox_body',
@@ -33,6 +34,7 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
       name: template.name,
       minBetrag: template.minBetrag != null ? Number(template.minBetrag) : null,
       maxBetrag: template.maxBetrag != null ? Number(template.maxBetrag) : null,
+      versandkosten: template.versandkosten != null ? Number(template.versandkosten) : null,
       bild: template.bild ?? fallbackBild,
       hintergrundbild: template.hintergrundbild ?? fallbackBild,
       bookingbox_topline: template.bookingbox_topline ?? null,
@@ -50,7 +52,7 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
     if (!Number.isFinite(betragNum) || betragNum <= 0) return ctx.badRequest('Betrag ungültig');
     const entityService: any = strapi.entityService;
     const response = await entityService.findMany('api::gutscheineinstellung.gutscheineinstellung', {
-      fields: ['minBetrag', 'maxBetrag', 'aktiv', 'heroDarkMode'],
+      fields: ['minBetrag', 'maxBetrag', 'aktiv', 'heroDarkMode', 'versandkosten'],
       pagination: { limit: 1 },
     });
     const template = (Array.isArray(response) ? response[0] : response) as any;
@@ -64,6 +66,7 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
       betrag,
       minBetrag: min,
       maxBetrag: max,
+      versandkosten: template.versandkosten != null ? Number(template.versandkosten) : null,
     };
   },
 

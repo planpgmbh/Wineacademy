@@ -25,6 +25,7 @@ type VoucherBookingCardProps = {
   voucherDescription?: string | null;
   imageUrl?: string | null;
   imageAlt?: string | null;
+  shippingCost?: number | null;
   className?: string;
 };
 
@@ -56,7 +57,8 @@ export function VoucherBookingCard({
   voucherDescription,
   imageUrl,
   imageAlt,
-  className = ""
+  className = "",
+  shippingCost
 }: VoucherBookingCardProps) {
   const [inputValue, setInputValue] = useState(() => String(defaultAmount));
   const amount = useMemo(() => parseAmount(inputValue), [inputValue]);
@@ -94,7 +96,8 @@ export function VoucherBookingCard({
       imageUrl,
       imageAlt,
       minAmount: minAmount ?? undefined,
-      maxAmount: maxAmount ?? undefined
+      maxAmount: maxAmount ?? undefined,
+      shippingCost: shippingCost ?? undefined
     });
   };
 

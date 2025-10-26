@@ -25,6 +25,7 @@ import {
   OrderVoucherDetailsInput,
   submitOrder
 } from "@/lib/checkout";
+import { fetchJson } from "@/lib/api";
 import type { OrderResponse } from "@/lib/checkout";
 import { PayPalButtons } from "@/components/payments/PayPalButtons";
 import { CheckoutStepCard } from "@/components/checkout/CheckoutStepCard";
@@ -61,6 +62,7 @@ type VoucherSelectionState = {
   amount: number;
   title: string;
   description?: string | null;
+  shippingCost?: number | null;
 };
 
 type ParticipantFormValue = {
@@ -114,7 +116,8 @@ type BillingErrorState = {
 
 type VoucherFormValue = {
   versandArt: "digital" | "physisch";
-  empfaengerName: string;
+  empfaengerVorname: string;
+  empfaengerNachname: string;
   empfaengerEmail: string;
   adresszusatz: string;
   strasse: string;
@@ -126,7 +129,8 @@ type VoucherFormValue = {
 };
 
 type VoucherFormErrorState = {
-  empfaengerName?: string | null;
+  empfaengerVorname?: string | null;
+  empfaengerNachname?: string | null;
   empfaengerEmail?: string | null;
   strasse?: string | null;
   plz?: string | null;
@@ -184,7 +188,8 @@ const initialBillingErrors: BillingErrorState = {
 
 const createVoucherFormValue = (): VoucherFormValue => ({
   versandArt: "digital",
-  empfaengerName: "",
+  empfaengerVorname: "",
+  empfaengerNachname: "",
   empfaengerEmail: "",
   adresszusatz: "",
   strasse: "",
@@ -410,10 +415,16 @@ function computeNetAmount(gross: number | null, taxRate: number | null): number 
   return Math.round((net + Number.EPSILON) * 100) / 100;
 }
 
+function roundCurrency(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
 function computeSummaryItems(
   seminarStates: SeminarSelectionState[],
   productState: ProductSelectionState | null,
-  voucherState: VoucherSelectionState | null
+  voucherState: VoucherSelectionState | null,
+  voucherForms: Record<string, VoucherFormValue>,
+  shippingCostSetting: number | null
 ): SummaryItem[] {
   const items: SummaryItem[] = [];
 
@@ -440,18 +451,31 @@ function computeSummaryItems(
 
   if (productState) {
     const quantity = Math.max(1, productState.selection.quantity);
-    const subtotal =
+    let subtotal =
       productState.preisBrutto != null && Number.isFinite(productState.preisBrutto)
         ? productState.preisBrutto * quantity
         : productState.preisNetto != null && Number.isFinite(productState.preisNetto)
           ? productState.preisNetto * quantity
           : null;
-    const netto =
+    let netto =
       productState.preisNetto != null && Number.isFinite(productState.preisNetto)
         ? productState.preisNetto * quantity
         : subtotal != null
           ? computeNetAmount(subtotal, productState.steuerSatz)
           : null;
+
+    if (productState.isVoucher) {
+      const productForm = voucherForms?.product;
+      const productShippingCost =
+        productForm?.versandArt === 'physisch'
+          ? voucherState?.shippingCost ?? shippingCostSetting ?? null
+          : null;
+      if (productShippingCost != null && Number.isFinite(productShippingCost) && productShippingCost > 0) {
+        const shippingTotal = roundCurrency(productShippingCost * quantity);
+        subtotal = (subtotal ?? 0) + shippingTotal;
+        netto = (netto ?? 0) + shippingTotal;
+      }
+    }
 
     items.push({
       id: `product-${productState.productId}`,
@@ -466,13 +490,18 @@ function computeSummaryItems(
   }
 
   if (voucherState) {
+    const selectionForm = voucherForms?.selection;
+    const isPhysical = selectionForm?.versandArt === "physisch";
+    const shippingSource = voucherState.shippingCost ?? shippingCostSetting ?? null;
+    const shippingCost = isPhysical && shippingSource != null ? shippingSource : 0;
+    const subtotal = roundCurrency(voucherState.amount + shippingCost);
     items.push({
       id: "voucher-selection",
       title: voucherState.title,
       quantity: 1,
       description: voucherState.description ?? "Geschenkgutschein",
-      subtotal: voucherState.amount,
-      netto: voucherState.amount,
+      subtotal,
+      netto: subtotal,
       steuerSatz: 0,
       type: "gutschein"
     });
@@ -628,9 +657,43 @@ export function CheckoutClient() {
       selection,
       amount: selection.amount,
       title: selection.title,
-      description: selection.description ?? null
+      description: selection.description ?? null,
+      shippingCost: selection.shippingCost ?? null
     };
   }, [cartData.voucherSelection]);
+
+  const [shippingCostSetting, setShippingCostSetting] = useState<number | null>(
+    voucherState?.shippingCost ?? null
+  );
+
+  useEffect(() => {
+    if (voucherState?.shippingCost != null) {
+      setShippingCostSetting(Math.round(voucherState.shippingCost * 100) / 100);
+    }
+  }, [voucherState?.shippingCost]);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const template = await fetchJson<{ versandkosten?: number | null }>("/public/gutscheine/template", {
+          cache: "no-store"
+        });
+        if (!active) {
+          return;
+        }
+        const shipping = template?.versandkosten;
+        if (typeof shipping === 'number' && Number.isFinite(shipping)) {
+          setShippingCostSetting(Math.round(shipping * 100) / 100);
+        }
+      } catch (error) {
+        console.warn("[checkout] Versandkosten konnten nicht geladen werden:", error);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const [participantGroups, setParticipantGroups] = useState<ParticipantGroupState[]>([]);
   const [billing, setBilling] = useState<BillingFormValue>({
@@ -694,12 +757,6 @@ export function CheckoutClient() {
     () => steps.findIndex((step) => step.id === activeStepId),
     [steps, activeStepId]
   );
-
-  const summaryItems = useMemo(
-    () => computeSummaryItems(seminarStates, productState, voucherState),
-    [productState, seminarStates, voucherState]
-  );
-  const totals = useMemo(() => computeTotals(summaryItems, appliedVoucher), [summaryItems, appliedVoucher]);
 
   useEffect(() => {
     if (!steps.length) {
@@ -856,6 +913,12 @@ export function CheckoutClient() {
     });
   }, [voucherItems]);
 
+  const summaryItems = useMemo(
+    () => computeSummaryItems(seminarStates, productState, voucherState, voucherForms, shippingCostSetting),
+    [seminarStates, productState, voucherState, voucherForms, shippingCostSetting]
+  );
+  const totals = useMemo(() => computeTotals(summaryItems, appliedVoucher), [summaryItems, appliedVoucher]);
+
   const moveToStep = useCallback(
     (nextIndex: number) => {
       if (nextIndex < 0 || nextIndex >= steps.length) {
@@ -948,7 +1011,8 @@ export function CheckoutClient() {
         };
       });
       if (
-        field === "empfaengerName" ||
+        field === "empfaengerVorname" ||
+        field === "empfaengerNachname" ||
         field === "empfaengerEmail" ||
         field === "strasse" ||
         field === "plz" ||
@@ -1130,9 +1194,13 @@ export function CheckoutClient() {
     voucherItems.forEach((item) => {
       const form = voucherForms[item.key] ?? createVoucherFormValue();
       const errors: VoucherFormErrorState = {};
-      const trimmedName = form.empfaengerName.trim();
-      if (!trimmedName) {
-        errors.empfaengerName = "Bitte gib den Namen der beschenkten Person ein.";
+      const trimmedFirstName = form.empfaengerVorname.trim();
+      const trimmedLastName = form.empfaengerNachname.trim();
+      if (!trimmedFirstName) {
+        errors.empfaengerVorname = "Bitte gib den Vornamen der beschenkten Person ein.";
+      }
+      if (!trimmedLastName) {
+        errors.empfaengerNachname = "Bitte gib den Nachnamen der beschenkten Person ein.";
       }
       if (form.versandArt === "digital") {
         const trimmedEmail = form.empfaengerEmail.trim();
@@ -1374,19 +1442,21 @@ export function CheckoutClient() {
   }, []);
 
   const normaliseVoucherDetailsForSubmit = useCallback(
-    (form: VoucherFormValue | undefined): OrderVoucherDetailsInput | undefined => {
+    (form: VoucherFormValue | undefined, shippingCost?: number | null): OrderVoucherDetailsInput | undefined => {
       if (!form) {
         return undefined;
       }
       const versandArt = form.versandArt === "physisch" ? "physisch" : "digital";
       const trim = (value: string) => value.trim();
-      const empfaengerName = trim(form.empfaengerName);
-      if (!empfaengerName) {
+      const empfaengerVorname = trim(form.empfaengerVorname);
+      const empfaengerNachname = trim(form.empfaengerNachname);
+      if (!empfaengerVorname || !empfaengerNachname) {
         return undefined;
       }
       const details: OrderVoucherDetailsInput = {
         versandArt,
-        empfaengerName
+        empfaengerVorname,
+        empfaengerNachname
       };
       const email = trim(form.empfaengerEmail);
       if (email) {
@@ -1421,6 +1491,9 @@ export function CheckoutClient() {
       const message = trim(form.persoenlicheNachricht);
       if (message) {
         details.persoenlicheNachricht = message;
+      }
+      if (versandArt === "physisch" && shippingCost != null && Number.isFinite(shippingCost) && shippingCost > 0) {
+        details.versandkosten = Math.round(shippingCost * 100) / 100;
       }
       return details;
     },
@@ -1510,7 +1583,10 @@ export function CheckoutClient() {
             ? productState.preisNetto
             : computeNetAmount(productState.preisBrutto, productState.steuerSatz) ?? undefined;
         const productVoucherDetails = productState.isVoucher
-          ? normaliseVoucherDetailsForSubmit(voucherForms["product"])
+          ? normaliseVoucherDetailsForSubmit(
+              voucherForms["product"],
+              voucherState?.shippingCost ?? shippingCostSetting ?? null
+            )
           : undefined;
 
         positionen.push({
@@ -1526,7 +1602,10 @@ export function CheckoutClient() {
       }
 
       if (voucherState) {
-        const selectionVoucherDetails = normaliseVoucherDetailsForSubmit(voucherForms["selection"]);
+        const selectionVoucherDetails = normaliseVoucherDetailsForSubmit(
+          voucherForms["selection"],
+          voucherState?.shippingCost ?? shippingCostSetting ?? null
+        );
         positionen.push({
           typ: "gutschein",
           titel: voucherState.title,
@@ -1618,6 +1697,7 @@ export function CheckoutClient() {
     voucherForms,
     normaliseVoucherDetailsForSubmit,
     clearSelections,
+    shippingCostSetting,
     steps.length,
     router
   ]);
@@ -1954,26 +2034,52 @@ export function CheckoutClient() {
                       />
                     </button>
                   </div>
+                  {isPhysisch && voucherState?.shippingCost ? (
+                    <p className="mt-2 text-sm text-base-content/60">
+                      Es fallen Versandkosten in Höhe von {formatCurrency(voucherState.shippingCost)} an.
+                    </p>
+                  ) : null}
                 </div>
 
-                <div>
-                  <label
-                    htmlFor={`voucher-${item.key}-name`}
-                    className={renderLabelClass(Boolean(errors.empfaengerName))}
-                  >
-                    Name der beschenkten Person *
-                  </label>
-                  <input
-                    id={`voucher-${item.key}-name`}
-                    type="text"
-                    className={renderInputClass(Boolean(errors.empfaengerName))}
-                    value={form.empfaengerName}
-                    onChange={(event) => handleVoucherFieldChange(item.key, "empfaengerName", event.target.value)}
-                    required
-                  />
-                  {errors.empfaengerName ? (
-                    <p className="mt-1 text-xs text-error">{errors.empfaengerName}</p>
-                  ) : null}
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label
+                      htmlFor={`voucher-${item.key}-vorname`}
+                      className={renderLabelClass(Boolean(errors.empfaengerVorname))}
+                    >
+                      Vorname der beschenkten Person *
+                    </label>
+                    <input
+                      id={`voucher-${item.key}-vorname`}
+                      type="text"
+                      className={renderInputClass(Boolean(errors.empfaengerVorname))}
+                      value={form.empfaengerVorname}
+                      onChange={(event) => handleVoucherFieldChange(item.key, "empfaengerVorname", event.target.value)}
+                      required
+                    />
+                    {errors.empfaengerVorname ? (
+                      <p className="mt-1 text-xs text-error">{errors.empfaengerVorname}</p>
+                    ) : null}
+                  </div>
+                  <div>
+                    <label
+                      htmlFor={`voucher-${item.key}-nachname`}
+                      className={renderLabelClass(Boolean(errors.empfaengerNachname))}
+                    >
+                      Nachname der beschenkten Person *
+                    </label>
+                    <input
+                      id={`voucher-${item.key}-nachname`}
+                      type="text"
+                      className={renderInputClass(Boolean(errors.empfaengerNachname))}
+                      value={form.empfaengerNachname}
+                      onChange={(event) => handleVoucherFieldChange(item.key, "empfaengerNachname", event.target.value)}
+                      required
+                    />
+                    {errors.empfaengerNachname ? (
+                      <p className="mt-1 text-xs text-error">{errors.empfaengerNachname}</p>
+                    ) : null}
+                  </div>
                 </div>
 
                 {form.versandArt === "digital" ? (

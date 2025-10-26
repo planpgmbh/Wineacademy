@@ -344,6 +344,7 @@ async function upsertGutscheinTemplate(
   values: {
     name: string;
     beschreibung?: string;
+    versandkosten?: number;
     minBetrag?: number;
     maxBetrag?: number;
     aktiv?: boolean;
@@ -359,6 +360,7 @@ async function upsertGutscheinTemplate(
   const data: any = {
     name: values.name,
     beschreibung: values.beschreibung ?? undefined,
+    versandkosten: values.versandkosten ?? undefined,
     minBetrag: values.minBetrag ?? undefined,
     maxBetrag: values.maxBetrag ?? undefined,
     aktiv: values.aktiv ?? true,
@@ -1023,6 +1025,7 @@ const seminarSeeds: SeminarSeed[] = [
   await upsertGutscheinTemplate(strapi, {
     name: 'Geschenkgutschein',
     beschreibung: 'Verschenke frei wählbare Beträge für Seminare und Produkte.',
+    versandkosten: 4.9,
     minBetrag: 50,
     maxBetrag: 500,
     aktiv: true,

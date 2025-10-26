@@ -3,6 +3,7 @@ const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 type GutscheinTemplate = {
   minBetrag?: number | null;
   maxBetrag?: number | null;
+  versandkosten?: number | null;
 };
 
 type GutscheinRecord = {
@@ -32,6 +33,8 @@ export interface GutscheinPositionAdjustment {
   brutto: number;
   netto: number;
   steuerSatz: number;
+  versandkosten?: number;
+  basisBetrag?: number;
 }
 
 export interface GutscheinTotals {
@@ -74,7 +77,7 @@ export class GutscheinHelper {
       return this.template;
     }
     const settings = await this.strapi.entityService.findMany('api::gutscheineinstellung.gutscheineinstellung', {
-      fields: ['minBetrag', 'maxBetrag', 'aktiv'],
+      fields: ['minBetrag', 'maxBetrag', 'aktiv', 'versandkosten'],
       pagination: { limit: 1 },
     });
     const template = Array.isArray(settings) ? settings[0] : settings;
@@ -85,6 +88,7 @@ export class GutscheinHelper {
     this.template = {
       minBetrag: template.minBetrag ?? null,
       maxBetrag: template.maxBetrag ?? null,
+      versandkosten: template.versandkosten ?? null,
     };
     return this.template as GutscheinTemplate | null;
   }
@@ -117,12 +121,21 @@ export class GutscheinHelper {
       throw new Error(`Gutscheinbetrag darf höchstens ${max} sein`);
     }
 
-    const betrag = round2(betragCandidate);
+    const versandArtCandidate = (raw?.gutscheinDetails?.versandArt || raw?.versandArt || '').toString().toLowerCase();
+    const versandkosten =
+      versandArtCandidate === 'physisch' && template.versandkosten != null && Number(template.versandkosten) > 0
+        ? round2(Number(template.versandkosten))
+        : 0;
+
+    const basisBetrag = round2(betragCandidate);
+    const brutto = round2(basisBetrag + versandkosten);
 
     return {
-      brutto: betrag,
-      netto: betrag,
+      brutto,
+      netto: brutto,
       steuerSatz: 0,
+      versandkosten,
+      basisBetrag,
     };
   }
 

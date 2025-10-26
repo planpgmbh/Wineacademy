@@ -25,6 +25,7 @@ type VoucherBookingMobileProps = {
   voucherDescription?: string | null;
   imageUrl?: string | null;
   imageAlt?: string | null;
+  shippingCost?: number | null;
 };
 
 function sanitiseAmountInput(value: string): string {
@@ -54,7 +55,8 @@ export function VoucherBookingMobile({
   voucherTitle,
   voucherDescription,
   imageUrl,
-  imageAlt
+  imageAlt,
+  shippingCost
 }: VoucherBookingMobileProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showCTA, setShowCTA] = useState(false);
@@ -101,7 +103,8 @@ export function VoucherBookingMobile({
       imageUrl,
       imageAlt,
       minAmount: minAmount ?? undefined,
-      maxAmount: maxAmount ?? undefined
+      maxAmount: maxAmount ?? undefined,
+      shippingCost: shippingCost ?? undefined
     });
     setIsOpen(false);
   };

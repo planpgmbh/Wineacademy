@@ -162,7 +162,8 @@ export async function fetchProductCheckoutData(slug: string): Promise<ProductChe
 
 export type OrderVoucherDetailsInput = {
   versandArt: "digital" | "physisch";
-  empfaengerName: string;
+  empfaengerVorname: string;
+  empfaengerNachname: string;
   empfaengerEmail?: string;
   adresszusatz?: string;
   strasse?: string;
@@ -171,6 +172,7 @@ export type OrderVoucherDetailsInput = {
   land?: string;
   lieferDatum?: string;
   persoenlicheNachricht?: string;
+  versandkosten?: number;
 };
 
 export type OrderPositionInput = {

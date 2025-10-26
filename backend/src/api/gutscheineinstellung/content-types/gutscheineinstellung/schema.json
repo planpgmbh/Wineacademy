@@ -25,6 +25,10 @@
       "type": "boolean",
       "default": false
     },
+    "versandkosten": {
+      "type": "decimal",
+      "default": 0
+    },
     "minBetrag": {
       "type": "decimal"
     },

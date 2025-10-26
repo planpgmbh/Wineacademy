@@ -20,7 +20,8 @@ export default async function VoucherDetailPage() {
     voucherTitle: voucher.title,
     voucherDescription: voucher.hero.paragraphs[0] ?? voucher.bookingBox.description,
     imageUrl: voucher.mainImage?.url ?? null,
-    imageAlt: voucher.mainImage?.alt ?? null
+    imageAlt: voucher.mainImage?.alt ?? null,
+    shippingCost: voucher.shippingCost ?? null
   } as const;
 
   const DesktopStickyCard = (

@@ -1,6 +1,11 @@
 import { factories } from '@strapi/strapi';
 import { SevDeskError, downloadDocument } from '../../../services/sevdesk';
-import { GutscheinHelper, calculateGutscheinTotals, GutscheinValidationResult } from '../utils/gutschein';
+import {
+  GutscheinHelper,
+  calculateGutscheinTotals,
+  GutscheinValidationResult,
+  GutscheinPositionAdjustment,
+} from '../utils/gutschein';
 import { verifyPayPalCapture } from '../utils/paypal';
 import { syncSevDeskOrder, SevDeskSyncInput } from '../services/sevdesk-order';
 import { resolveInvoiceDownloadUrl, buildDocumentFilename, resolveOrderIdentifier } from '../utils/order-links';
@@ -24,7 +29,8 @@ type PositionInput = {
   betrag?: number;
   gutscheinDetails?: {
     versandArt?: 'digital' | 'physisch';
-    empfaengerName?: string;
+    empfaengerVorname?: string;
+    empfaengerNachname?: string;
     empfaengerEmail?: string;
     adresszusatz?: string;
     strasse?: string;
@@ -33,6 +39,7 @@ type PositionInput = {
     land?: string;
     lieferDatum?: string;
     persoenlicheNachricht?: string;
+    versandkosten?: number;
   } | null;
 };
 
@@ -275,7 +282,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
     };
 
     const gutscheinHelper = new GutscheinHelper(strapi);
-    const ensureGutscheinDetails = (details: any) => {
+    const ensureGutscheinDetails = (details: any, shippingCost?: number) => {
       if (!details || typeof details !== 'object') {
         ctx.throw(400, 'Gutscheininformationen erforderlich.');
       }
@@ -287,9 +294,28 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
       };
       const versandArtRaw = normaliseString(details.versandArt);
       const versandArt = versandArtRaw === 'physisch' ? 'physisch' : 'digital';
-      const empfaengerName = normaliseString(details.empfaengerName);
-      if (!empfaengerName) {
-        ctx.throw(400, 'Name der beschenkten Person fehlt.');
+      let empfaengerVorname = normaliseString(details.empfaengerVorname);
+      let empfaengerNachname = normaliseString(details.empfaengerNachname);
+      if (!empfaengerVorname || !empfaengerNachname) {
+        const legacyName = normaliseString((details as { empfaengerName?: string }).empfaengerName);
+        if (legacyName) {
+          const parts = legacyName.split(/\s+/).filter((part) => part.length > 0);
+          if (!empfaengerVorname && parts.length > 0) {
+            empfaengerVorname = parts.shift() ?? '';
+          }
+          if (!empfaengerNachname && parts.length > 0) {
+            empfaengerNachname = parts.join(' ');
+          }
+          if (!empfaengerNachname && empfaengerVorname) {
+            empfaengerNachname = empfaengerVorname;
+          }
+        }
+      }
+      if (!empfaengerVorname) {
+        ctx.throw(400, 'Vorname der beschenkten Person fehlt.');
+      }
+      if (!empfaengerNachname) {
+        ctx.throw(400, 'Nachname der beschenkten Person fehlt.');
       }
       let empfaengerEmail: string | undefined;
       if (versandArt === 'digital') {
@@ -329,7 +355,8 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
 
       return {
         versandArt,
-        empfaengerName,
+        empfaengerVorname,
+        empfaengerNachname,
         empfaengerEmail,
         adresszusatz,
         strasse,
@@ -338,6 +365,10 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         land,
         lieferDatum,
         persoenlicheNachricht: nachrichtRaw || undefined,
+        versandkosten:
+          versandArt === 'physisch' && Number.isFinite(Number(shippingCost)) && Number(shippingCost) > 0
+            ? round2(Number(shippingCost))
+            : undefined,
       };
     };
     for (const raw of positionsInput) {
@@ -410,7 +441,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         const summeBrutto = round2(einzelpreisBrutto * menge);
         const summeNetto = round2(einzelpreisNetto * menge);
         const summeSteuer = round2(summeBrutto - summeNetto);
-        const gutscheinDetails = ensureGutscheinDetails(raw.gutscheinDetails);
+        const gutscheinDetails = ensureGutscheinDetails(raw.gutscheinDetails, adjustment.versandkosten);
 
         positionen.push({
           typ: 'gutschein',
@@ -439,8 +470,9 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
           steuerSatz = 0;
         }
 
+        let gutscheinAdjustment: GutscheinPositionAdjustment | null = null;
         try {
-          const gutscheinAdjustment = await gutscheinHelper.applyAdjustments(raw, produkt);
+          gutscheinAdjustment = await gutscheinHelper.applyAdjustments(raw, produkt);
           if (gutscheinAdjustment) {
             brutto = gutscheinAdjustment.brutto;
             netto = gutscheinAdjustment.netto;
@@ -465,7 +497,9 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         const summeNetto = round2((netto as number) * menge);
         const summeSteuer = round2(summeBrutto - summeNetto);
         const gutscheinDetails =
-          istGutschein || typ === 'gutschein' ? ensureGutscheinDetails(raw.gutscheinDetails) : undefined;
+          istGutschein || typ === 'gutschein'
+            ? ensureGutscheinDetails(raw.gutscheinDetails, gutscheinAdjustment?.versandkosten)
+            : undefined;
         const position = {
           typ: istGutschein ? 'gutschein' : 'produkt',
           titel: raw.titel?.trim() || produkt.name,

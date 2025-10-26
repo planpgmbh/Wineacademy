@@ -13,6 +13,7 @@
         "name": "Name",
         "beschreibung": "Beschreibung",
         "heroDarkMode": "Hero Dark Mode",
+        "versandkosten": "Versandkosten (Brutto)",
         "minBetrag": "Mindestbetrag",
         "maxBetrag": "Höchstbetrag",
         "bookingbox_topline": "Bookingbox Topline",
@@ -29,7 +30,8 @@
   "components": {
     "bestellung.gutschein-details": {
       "versandArt": "Versandart",
-      "empfaengerName": "Name der beschenkten Person",
+      "empfaengerVorname": "Vorname der beschenkten Person",
+      "empfaengerNachname": "Nachname der beschenkten Person",
       "empfaengerEmail": "E-Mail der beschenkten Person",
       "adresszusatz": "Adresszusatz",
       "strasse": "Straße",
@@ -37,7 +39,8 @@
       "stadt": "Stadt",
       "land": "Land",
       "lieferDatum": "Lieferdatum",
-      "persoenlicheNachricht": "Persönliche Nachricht"
+      "persoenlicheNachricht": "Persönliche Nachricht",
+      "versandkosten": "Versandkosten"
     }
   }
 }

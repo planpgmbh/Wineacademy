@@ -11,7 +11,10 @@
       "enum": ["digital", "physisch"],
       "default": "digital"
     },
-    "empfaengerName": {
+    "empfaengerVorname": {
+      "type": "string"
+    },
+    "empfaengerNachname": {
       "type": "string"
     },
     "empfaengerEmail": {
@@ -37,6 +40,10 @@
     },
     "persoenlicheNachricht": {
       "type": "text"
+    },
+    "versandkosten": {
+      "type": "decimal",
+      "default": 0
     }
   }
 }
