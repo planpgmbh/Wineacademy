@@ -82,6 +82,7 @@ export type ProductSelection = {
   priceFormatted?: string | null;
   isVoucher?: boolean;
   steuerSatz?: number | null;
+  shippingCost?: number | null;
 };
 
 export type VoucherCartItem = {
@@ -204,20 +205,23 @@ export function readProductSelection(): ProductSelection | null {
       typeof parsed.priceNetto === "number" && Number.isFinite(parsed.priceNetto) ? parsed.priceNetto : null;
     const steuerSatz =
       typeof parsed.steuerSatz === "number" && Number.isFinite(parsed.steuerSatz) ? parsed.steuerSatz : null;
-    const priceFormatted =
-      typeof parsed.priceFormatted === "string" && parsed.priceFormatted.length > 0 ? parsed.priceFormatted : null;
-    const isVoucher = Boolean(parsed.isVoucher);
+  const priceFormatted =
+    typeof parsed.priceFormatted === "string" && parsed.priceFormatted.length > 0 ? parsed.priceFormatted : null;
+  const isVoucher = Boolean(parsed.isVoucher);
+  const shippingCost =
+    typeof parsed.shippingCost === "number" && Number.isFinite(parsed.shippingCost) ? parsed.shippingCost : null;
 
-    return {
-      quantity,
-      productSlug: productSlug ?? null,
-      productTitle,
-      priceValue,
-      priceNetto,
-      priceFormatted,
-      isVoucher,
-      steuerSatz
-    };
+  return {
+    quantity,
+    productSlug: productSlug ?? null,
+    productTitle,
+    priceValue,
+    priceNetto,
+    priceFormatted,
+    isVoucher,
+    steuerSatz,
+    shippingCost
+  };
   } catch {
     return null;
   }

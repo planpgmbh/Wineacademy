@@ -209,6 +209,8 @@ type SummaryItem = {
   netto: number | null;
   steuerSatz: number | null;
   type: "seminar" | "produkt" | "gutschein";
+  shippingCost?: number | null;
+  baseAmount?: number | null;
 };
 
 type VoucherRedemption = {
@@ -445,7 +447,8 @@ function computeSummaryItems(
       subtotal,
       netto,
       steuerSatz,
-      type: "seminar"
+      type: "seminar",
+      baseAmount: subtotal != null ? roundCurrency(subtotal) : null
     });
   });
 
@@ -463,18 +466,28 @@ function computeSummaryItems(
         : subtotal != null
           ? computeNetAmount(subtotal, productState.steuerSatz)
           : null;
+    const baseSubtotal = subtotal != null ? roundCurrency(subtotal) : null;
+    let shippingCost: number | null = null;
 
     if (productState.isVoucher) {
       const productForm = voucherForms?.product;
-      const productShippingCost =
-        productForm?.versandArt === 'physisch'
-          ? voucherState?.shippingCost ?? shippingCostSetting ?? null
+      const shippingSource =
+        productForm?.versandArt === "physisch"
+          ? productState.selection.shippingCost ?? voucherState?.shippingCost ?? shippingCostSetting ?? null
           : null;
-      if (productShippingCost != null && Number.isFinite(productShippingCost) && productShippingCost > 0) {
-        const shippingTotal = roundCurrency(productShippingCost * quantity);
-        subtotal = (subtotal ?? 0) + shippingTotal;
-        netto = (netto ?? 0) + shippingTotal;
+      if (shippingSource != null && Number.isFinite(shippingSource) && shippingSource > 0) {
+        shippingCost = roundCurrency(shippingSource * quantity);
       }
+    } else if (productState.selection.shippingCost != null && Number.isFinite(productState.selection.shippingCost)) {
+      const perUnitShipping = productState.selection.shippingCost;
+      if (perUnitShipping > 0) {
+        shippingCost = roundCurrency(perUnitShipping * quantity);
+      }
+    }
+
+    if (shippingCost && shippingCost > 0) {
+      subtotal = subtotal != null ? roundCurrency(subtotal + shippingCost) : shippingCost;
+      netto = netto != null ? roundCurrency(netto + shippingCost) : shippingCost;
     }
 
     items.push({
@@ -485,7 +498,18 @@ function computeSummaryItems(
       subtotal,
       netto,
       steuerSatz: productState.steuerSatz,
-      type: productState.isVoucher ? "gutschein" : "produkt"
+      type: productState.isVoucher ? "gutschein" : "produkt",
+      shippingCost: shippingCost && shippingCost > 0 ? shippingCost : undefined,
+      baseAmount:
+        shippingCost && shippingCost > 0
+          ? baseSubtotal != null
+            ? baseSubtotal
+            : subtotal != null
+              ? roundCurrency(subtotal - shippingCost)
+              : null
+          : subtotal != null
+            ? roundCurrency(subtotal)
+            : null
     });
   }
 
@@ -493,8 +517,9 @@ function computeSummaryItems(
     const selectionForm = voucherForms?.selection;
     const isPhysical = selectionForm?.versandArt === "physisch";
     const shippingSource = voucherState.shippingCost ?? shippingCostSetting ?? null;
-    const shippingCost = isPhysical && shippingSource != null ? shippingSource : 0;
-    const subtotal = roundCurrency(voucherState.amount + shippingCost);
+    const shippingCost = isPhysical && shippingSource != null ? roundCurrency(shippingSource) : 0;
+    const baseValue = roundCurrency(voucherState.amount);
+    const subtotal = roundCurrency(baseValue + shippingCost);
     items.push({
       id: "voucher-selection",
       title: voucherState.title,
@@ -503,7 +528,9 @@ function computeSummaryItems(
       subtotal,
       netto: subtotal,
       steuerSatz: 0,
-      type: "gutschein"
+      type: "gutschein",
+      shippingCost: shippingCost > 0 ? shippingCost : undefined,
+      baseAmount: baseValue
     });
   }
 
@@ -624,7 +651,11 @@ export function CheckoutClient() {
       priceFormatted:
         selection.priceFormatted ?? cartData.product.price.formatted ?? null,
       isVoucher: selection.isVoucher ?? cartData.product.isVoucher,
-      steuerSatz: selection.steuerSatz ?? fallbackSteuer
+      steuerSatz: selection.steuerSatz ?? fallbackSteuer,
+      shippingCost:
+        selection.shippingCost != null && Number.isFinite(selection.shippingCost)
+          ? selection.shippingCost
+          : null
     };
     const preisBrutto = normalizedSelection.priceValue ?? fallbackGross;
     const preisNetto = normalizedSelection.priceNetto ?? fallbackNetto;
@@ -2868,10 +2899,31 @@ const renderPaymentStep = () => {
                 key={item.id}
                 className={`space-y-2 ${index === 0 ? "" : "pt-4 ui-border-top"}`}
               >
-                <p className="text-base font-semibold text-base-content">{item.title}</p>
-                <p className="text-base font-semibold text-base-content text-right">
-                  {formatCurrency(item.subtotal ?? null)}
-                </p>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <p className="text-base font-semibold text-base-content">{item.title}</p>
+                    {item.description ? (
+                      <p className="text-sm text-base-content/70">{item.description}</p>
+                    ) : null}
+                  </div>
+                  <p className="text-base font-semibold text-base-content">
+                    {formatCurrency(item.subtotal ?? null)}
+                  </p>
+                </div>
+                {item.shippingCost ? (
+                  <dl className="space-y-1 text-sm text-base-content/70">
+                    {item.baseAmount != null ? (
+                      <div className="flex items-center justify-between">
+                        <dt>Artikel</dt>
+                        <dd>{formatCurrency(item.baseAmount)}</dd>
+                      </div>
+                    ) : null}
+                    <div className="flex items-center justify-between">
+                      <dt>Versand</dt>
+                      <dd>{formatCurrency(item.shippingCost)}</dd>
+                    </div>
+                  </dl>
+                ) : null}
               </li>
             ))}
           </ul>

@@ -152,6 +152,11 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
           (typeof (base as { steuerSatz?: unknown }).steuerSatz === "number"
             ? (base as { steuerSatz?: number }).steuerSatz
             : null);
+        const shippingCost =
+          data.productSelection?.shippingCost ??
+          (typeof (base as { shippingCost?: unknown }).shippingCost === "number"
+            ? (base as { shippingCost?: number }).shippingCost
+            : null);
 
         return {
           ...base,
@@ -172,6 +177,7 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
             data.product?.isVoucher ??
             data.productSelection?.isVoucher ??
             Boolean((base as { isVoucher?: unknown }).isVoucher),
+          shippingCost,
           createdAt,
           updatedAt: new Date().toISOString()
         };
@@ -185,7 +191,8 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
       data.productSelection?.priceValue,
       data.productSelection?.productSlug,
       data.productSelection?.productTitle,
-      data.productSelection?.steuerSatz
+      data.productSelection?.steuerSatz,
+      data.productSelection?.shippingCost
     ]
   );
 
