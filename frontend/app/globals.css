@@ -58,6 +58,11 @@ body {
     @apply text-6xl font-light leading-tight text-base-content;
   }
 
+  h2,
+  h3 {
+    font-family: var(--font-serifbabe), ui-serif, Georgia, serif;
+  }
+
   @screen md {
     h1 {
       @apply text-5xl;

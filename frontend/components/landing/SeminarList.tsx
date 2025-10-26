@@ -77,10 +77,7 @@ function SeminarListItem({ seminar, ctaLabel }: SeminarListItemProps) {
       </div>
 
       <div className="flex flex-1 flex-col gap-4">
-        <h3
-          className="text-2xl font-light leading-tight text-base-content md:text-[28px]"
-          style={{ fontFamily: "var(--font-serifbabe), ui-serif, Georgia, serif" }}
-        >
+        <h3 className="text-2xl font-light leading-tight text-base-content md:text-[28px]">
           {seminar.title}
         </h3>
         {seminar.shortDescription ? (
@@ -144,12 +141,7 @@ export function SeminarList({
     <section className="bg-base-200">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-16 md:px-8 md:py-20">
         {heading ? (
-          <h2
-            className="text-4xl font-light tracking-tight text-base-content md:text-5xl"
-            style={{ fontFamily: "var(--font-serifbabe), ui-serif, Georgia, serif" }}
-          >
-            {heading}
-          </h2>
+          <h2 className="text-4xl font-light tracking-tight text-base-content md:text-5xl">{heading}</h2>
         ) : null}
 
         {paragraphs.length > 0 ? (

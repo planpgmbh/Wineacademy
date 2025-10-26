@@ -29,14 +29,7 @@ export function CardGrid({ title, description, cards }: CardGridProps) {
   return (
     <section className="bg-base-100">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-16 md:px-8 md:py-20">
-        {title ? (
-          <h2
-            className="text-3xl font-semibold tracking-tight text-base-content md:text-4xl"
-            style={{ fontFamily: "var(--font-serifbabe), ui-serif, Georgia, serif" }}
-          >
-            {title}
-          </h2>
-        ) : null}
+        {title ? <h2 className="text-3xl font-semibold tracking-tight text-base-content md:text-4xl">{title}</h2> : null}
         {description ? <p className="max-w-3xl text-lg text-base-content/75">{description}</p> : null}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {cards.map((card) => {

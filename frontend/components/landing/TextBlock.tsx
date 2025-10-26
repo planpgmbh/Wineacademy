@@ -21,10 +21,7 @@ export function TextBlock({ title, html, buttonLabel, buttonLink }: TextBlockPro
   return (
     <section className="bg-base-200">
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-6 py-20 text-base-content md:px-8 md:py-24">
-        <h2
-          className="text-3xl font-semibold tracking-tight md:text-4xl"
-          style={{ fontFamily: "var(--font-serifbabe), ui-serif, Georgia, serif" }}
-        >
+        <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
           {title}
         </h2>
         {html ? (
