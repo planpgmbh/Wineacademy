@@ -1,4 +1,6 @@
-const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+import { normaliseShippingValue, roundCurrency } from '../../../utils/shipping';
+
+const round2 = roundCurrency;
 
 type GutscheinTemplate = {
   minBetrag?: number | null;
@@ -88,7 +90,7 @@ export class GutscheinHelper {
     this.template = {
       minBetrag: template.minBetrag ?? null,
       maxBetrag: template.maxBetrag ?? null,
-      versandkosten: template.versandkosten ?? null,
+      versandkosten: normaliseShippingValue(template.versandkosten),
     };
     return this.template as GutscheinTemplate | null;
   }

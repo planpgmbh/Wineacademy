@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { fetchJson, mediaUrl } from "@/lib/api";
+import { normaliseShippingInput } from "@/lib/shipping";
 import {
   BOOKING_SELECTION_STORAGE_KEY,
   readBookingSelections,
@@ -220,7 +221,7 @@ export function readProductSelection(): ProductSelection | null {
     priceFormatted,
     isVoucher,
     steuerSatz,
-    shippingCost
+    shippingCost: normaliseShippingInput(shippingCost)
   };
   } catch {
     return null;

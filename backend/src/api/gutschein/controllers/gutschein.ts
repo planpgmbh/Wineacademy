@@ -1,7 +1,8 @@
 import { factories } from '@strapi/strapi';
 import { GutscheinHelper } from '../../bestellung/utils/gutschein';
+import { normaliseShippingValue, roundCurrency } from '../../../utils/shipping';
 
-const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+const round2 = roundCurrency;
 
 export default factories.createCoreController('api::gutschein.gutschein', ({ strapi }) => ({
   async template(ctx) {
@@ -30,11 +31,12 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
     if (!template || template.aktiv === false) return ctx.notFound('Kein Gutschein-Template konfiguriert');
     const fallbackBild = { url: '/favicon.png', alternativeText: 'Gutscheinbild Platzhalter' } as any;
     const gutscheininhalte = Array.isArray((template as any).gutscheininhalte) ? (template as any).gutscheininhalte : [];
+    const shippingCost = normaliseShippingValue(template.versandkosten);
     ctx.body = {
       name: template.name,
       minBetrag: template.minBetrag != null ? Number(template.minBetrag) : null,
       maxBetrag: template.maxBetrag != null ? Number(template.maxBetrag) : null,
-      versandkosten: template.versandkosten != null ? Number(template.versandkosten) : null,
+      versandkosten: shippingCost,
       bild: template.bild ?? fallbackBild,
       hintergrundbild: template.hintergrundbild ?? fallbackBild,
       bookingbox_topline: template.bookingbox_topline ?? null,
@@ -62,11 +64,12 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
     if (min != null && betragNum < min) return ctx.badRequest(`Betrag muss mindestens ${min} sein`);
     if (max != null && betragNum > max) return ctx.badRequest(`Betrag darf höchstens ${max} sein`);
     const betrag = round2(betragNum);
+    const shippingCost = normaliseShippingValue(template.versandkosten);
     ctx.body = {
       betrag,
       minBetrag: min,
       maxBetrag: max,
-      versandkosten: template.versandkosten != null ? Number(template.versandkosten) : null,
+      versandkosten: shippingCost,
     };
   },
 

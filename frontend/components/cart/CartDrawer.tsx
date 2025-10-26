@@ -8,6 +8,7 @@ import { CartItemSeminar } from "./CartItemSeminar";
 import { CartItemProduct } from "./CartItemProduct";
 import { CartItemGutschein } from "./CartItemGutschein";
 import { useCartData } from "./useCartData";
+import { normaliseShippingInput } from "@/lib/shipping";
 
 type CartDrawerProps = {
   id: string;
@@ -152,11 +153,12 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
           (typeof (base as { steuerSatz?: unknown }).steuerSatz === "number"
             ? (base as { steuerSatz?: number }).steuerSatz
             : null);
-        const shippingCost =
+        const shippingCostRaw =
           data.productSelection?.shippingCost ??
           (typeof (base as { shippingCost?: unknown }).shippingCost === "number"
             ? (base as { shippingCost?: number }).shippingCost
             : null);
+        const shippingCost = normaliseShippingInput(shippingCostRaw);
 
         return {
           ...base,

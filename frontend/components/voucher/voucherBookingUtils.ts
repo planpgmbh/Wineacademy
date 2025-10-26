@@ -1,5 +1,7 @@
 "use client";
 
+import { normaliseShippingInput, roundCurrency } from "@/lib/shipping";
+
 export const VOUCHER_SELECTION_STORAGE_KEY = "voucher:lastSelection";
 
 export type VoucherSelection = {
@@ -27,7 +29,8 @@ type TriggerVoucherInput = {
 };
 
 export function triggerVoucherFlow(input: TriggerVoucherInput) {
-  const amount = Math.round(input.amount * 100) / 100;
+  const amount = roundCurrency(input.amount);
+  const shippingCost = normaliseShippingInput(input.shippingCost);
   const payload: VoucherSelection = {
     amount,
     title: input.title,
@@ -36,10 +39,7 @@ export function triggerVoucherFlow(input: TriggerVoucherInput) {
     imageAlt: input.imageAlt ?? null,
     minAmount: input.minAmount ?? null,
     maxAmount: input.maxAmount ?? null,
-    shippingCost:
-      typeof input.shippingCost === "number" && Number.isFinite(input.shippingCost)
-        ? Math.round(input.shippingCost * 100) / 100
-        : null,
+    shippingCost,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -72,23 +72,24 @@ export function readVoucherSelection(): VoucherSelection | null {
     if (!parsed || typeof parsed !== "object") {
       return null;
     }
-    const amount =
-      typeof parsed.amount === "number" && Number.isFinite(parsed.amount) ? Math.round(parsed.amount * 100) / 100 : null;
-    if (amount === null || amount <= 0) {
+    const amountValue =
+      typeof parsed.amount === "number" && Number.isFinite(parsed.amount)
+        ? roundCurrency(parsed.amount)
+        : typeof parsed.amount === "string"
+          ? roundCurrency(Number.parseFloat(parsed.amount.replace(/,/g, ".")))
+          : null;
+    if (amountValue === null || amountValue <= 0 || !Number.isFinite(amountValue)) {
       return null;
     }
     return {
-      amount,
+      amount: amountValue,
       title: typeof parsed.title === "string" && parsed.title.length > 0 ? parsed.title : "Geschenkgutschein",
       description: typeof parsed.description === "string" ? parsed.description : null,
       imageUrl: typeof parsed.imageUrl === "string" ? parsed.imageUrl : null,
       imageAlt: typeof parsed.imageAlt === "string" ? parsed.imageAlt : null,
       minAmount: typeof parsed.minAmount === "number" ? parsed.minAmount : null,
       maxAmount: typeof parsed.maxAmount === "number" ? parsed.maxAmount : null,
-      shippingCost:
-        typeof parsed.shippingCost === "number" && Number.isFinite(parsed.shippingCost)
-          ? Math.round(parsed.shippingCost * 100) / 100
-          : null,
+      shippingCost: normaliseShippingInput(parsed.shippingCost),
       createdAt: typeof parsed.createdAt === "string" ? parsed.createdAt : new Date().toISOString(),
       updatedAt: typeof parsed.updatedAt === "string" ? parsed.updatedAt : new Date().toISOString()
     };

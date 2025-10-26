@@ -1,4 +1,5 @@
 import { customAlphabet } from 'nanoid';
+import { normaliseShippingValue, roundCurrency } from '../../../utils/shipping';
 
 type StrapiInstance = {
   db: any;
@@ -69,7 +70,7 @@ type GutscheinSettings = {
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const nanoidSegment = customAlphabet(CODE_ALPHABET, 4);
 
-const round2 = (n: number): number => Math.round((n + Number.EPSILON) * 100) / 100;
+const round2 = roundCurrency;
 
 function generateVoucherCode(): string {
   return `${nanoidSegment()}-${nanoidSegment()}-${nanoidSegment()}-${nanoidSegment()}`;
@@ -103,12 +104,12 @@ function normaliseGutscheinDetails(
     persoenlicheNachricht: trimmed(details.persoenlicheNachricht),
     versandkosten: undefined,
   };
-  if (!result.empfaengerVorname || !result.empfaengerNachname) {
-    const legacyName = trimmed((details as { empfaengerName?: string }).empfaengerName);
-    if (legacyName) {
-      const parts = legacyName.split(/\s+/).filter(Boolean);
-      if (!result.empfaengerVorname && parts.length > 0) {
-        result.empfaengerVorname = parts.shift();
+    if (!result.empfaengerVorname || !result.empfaengerNachname) {
+      const legacyName = trimmed((details as { empfaengerName?: string }).empfaengerName);
+      if (legacyName) {
+        const parts = legacyName.split(/\s+/).filter(Boolean);
+        if (!result.empfaengerVorname && parts.length > 0) {
+          result.empfaengerVorname = parts.shift();
       }
       if (!result.empfaengerNachname && parts.length > 0) {
         result.empfaengerNachname = parts.join(' ');
@@ -123,20 +124,17 @@ function normaliseGutscheinDetails(
     result.plz = undefined;
     result.stadt = undefined;
     result.land = undefined;
-    const shipping = Number(details.versandkosten);
-    if (Number.isFinite(shipping) && shipping > 0) {
-      result.versandkosten = round2(shipping);
+    const shipping = normaliseShippingValue(details.versandkosten);
+    if (shipping != null && shipping > 0) {
+      result.versandkosten = shipping;
     }
   } else {
     result.empfaengerEmail = undefined;
     const shipping =
-      Number.isFinite(Number(details.versandkosten)) && Number(details.versandkosten) > 0
-        ? Number(details.versandkosten)
-        : defaultShipping != null && Number.isFinite(Number(defaultShipping)) && Number(defaultShipping) > 0
-          ? Number(defaultShipping)
-          : 0;
-    if (shipping > 0) {
-      result.versandkosten = round2(shipping);
+      normaliseShippingValue(details.versandkosten) ??
+      (defaultShipping != null ? normaliseShippingValue(defaultShipping) : null);
+    if (shipping != null && shipping > 0) {
+      result.versandkosten = shipping;
     }
   }
   return result;
@@ -179,9 +177,7 @@ async function loadVoucherSettings(strapi: StrapiInstance): Promise<GutscheinSet
     const record = Array.isArray(response) ? response[0] : response;
     if (record && typeof record === 'object') {
       const settings = record as GutscheinSettings;
-      if (settings.versandkosten != null && Number.isFinite(Number(settings.versandkosten))) {
-        settings.versandkosten = round2(Number(settings.versandkosten));
-      }
+      settings.versandkosten = normaliseShippingValue(settings.versandkosten);
       return settings;
     }
   } catch (error) {
@@ -215,10 +211,7 @@ function hasExistingVoucherForPosition(existing: ExistingGutschein[] | null | un
 
 function resolveVoucherAmount(position: BestellungPosition): number {
   const quantity = Math.max(1, Number(position.menge ?? 1));
-  const shipping =
-    position.gutscheinDetails?.versandkosten != null && Number.isFinite(Number(position.gutscheinDetails.versandkosten))
-      ? Number(position.gutscheinDetails.versandkosten)
-      : 0;
+  const shipping = normaliseShippingValue(position.gutscheinDetails?.versandkosten) ?? 0;
 
   const resolveBase = (): number => {
     if (position.betrag != null) {

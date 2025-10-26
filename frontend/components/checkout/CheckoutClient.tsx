@@ -26,6 +26,7 @@ import {
   submitOrder
 } from "@/lib/checkout";
 import { fetchJson } from "@/lib/api";
+import { normaliseShippingInput, roundCurrency as roundCurrencyValue } from "@/lib/shipping";
 import type { OrderResponse } from "@/lib/checkout";
 import { PayPalButtons } from "@/components/payments/PayPalButtons";
 import { CheckoutStepCard } from "@/components/checkout/CheckoutStepCard";
@@ -224,6 +225,7 @@ type SubmissionState = "idle" | "submitting" | "success" | "error";
 
 const DEFAULT_COUNTRY = "Deutschland";
 const DEFAULT_VAT_RATE = 19;
+const roundCurrency = roundCurrencyValue;
 
 const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID?.trim();
 
@@ -417,10 +419,6 @@ function computeNetAmount(gross: number | null, taxRate: number | null): number 
   return Math.round((net + Number.EPSILON) * 100) / 100;
 }
 
-function roundCurrency(value: number): number {
-  return Math.round((value + Number.EPSILON) * 100) / 100;
-}
-
 function computeSummaryItems(
   seminarStates: SeminarSelectionState[],
   productState: ProductSelectionState | null,
@@ -473,14 +471,16 @@ function computeSummaryItems(
       const productForm = voucherForms?.product;
       const shippingSource =
         productForm?.versandArt === "physisch"
-          ? productState.selection.shippingCost ?? voucherState?.shippingCost ?? shippingCostSetting ?? null
+          ? normaliseShippingInput(
+              productState.selection.shippingCost ?? voucherState?.shippingCost ?? shippingCostSetting ?? null
+            )
           : null;
-      if (shippingSource != null && Number.isFinite(shippingSource) && shippingSource > 0) {
+      if (shippingSource != null && shippingSource > 0) {
         shippingCost = roundCurrency(shippingSource * quantity);
       }
-    } else if (productState.selection.shippingCost != null && Number.isFinite(productState.selection.shippingCost)) {
-      const perUnitShipping = productState.selection.shippingCost;
-      if (perUnitShipping > 0) {
+    } else if (productState.selection.shippingCost != null) {
+      const perUnitShipping = normaliseShippingInput(productState.selection.shippingCost);
+      if (perUnitShipping != null && perUnitShipping > 0) {
         shippingCost = roundCurrency(perUnitShipping * quantity);
       }
     }
@@ -516,7 +516,7 @@ function computeSummaryItems(
   if (voucherState) {
     const selectionForm = voucherForms?.selection;
     const isPhysical = selectionForm?.versandArt === "physisch";
-    const shippingSource = voucherState.shippingCost ?? shippingCostSetting ?? null;
+    const shippingSource = normaliseShippingInput(voucherState.shippingCost ?? shippingCostSetting ?? null);
     const shippingCost = isPhysical && shippingSource != null ? roundCurrency(shippingSource) : 0;
     const baseValue = roundCurrency(voucherState.amount);
     const subtotal = roundCurrency(baseValue + shippingCost);
@@ -652,10 +652,7 @@ export function CheckoutClient() {
         selection.priceFormatted ?? cartData.product.price.formatted ?? null,
       isVoucher: selection.isVoucher ?? cartData.product.isVoucher,
       steuerSatz: selection.steuerSatz ?? fallbackSteuer,
-      shippingCost:
-        selection.shippingCost != null && Number.isFinite(selection.shippingCost)
-          ? selection.shippingCost
-          : null
+      shippingCost: normaliseShippingInput(selection.shippingCost) ?? null
     };
     const preisBrutto = normalizedSelection.priceValue ?? fallbackGross;
     const preisNetto = normalizedSelection.priceNetto ?? fallbackNetto;
@@ -689,7 +686,7 @@ export function CheckoutClient() {
       amount: selection.amount,
       title: selection.title,
       description: selection.description ?? null,
-      shippingCost: selection.shippingCost ?? null
+      shippingCost: normaliseShippingInput(selection.shippingCost)
     };
   }, [cartData.voucherSelection]);
 
@@ -707,15 +704,15 @@ export function CheckoutClient() {
     let active = true;
     (async () => {
       try {
-        const template = await fetchJson<{ versandkosten?: number | null }>("/public/gutscheine/template", {
+        const template = await fetchJson<{ versandkosten?: number | string | null }>("/public/gutscheine/template", {
           cache: "no-store"
         });
         if (!active) {
           return;
         }
-        const shipping = template?.versandkosten;
-        if (typeof shipping === 'number' && Number.isFinite(shipping)) {
-          setShippingCostSetting(Math.round(shipping * 100) / 100);
+        const shipping = normaliseShippingInput(template?.versandkosten ?? null);
+        if (shipping != null) {
+          setShippingCostSetting(shipping);
         }
       } catch (error) {
         console.warn("[checkout] Versandkosten konnten nicht geladen werden:", error);
@@ -1523,8 +1520,11 @@ export function CheckoutClient() {
       if (message) {
         details.persoenlicheNachricht = message;
       }
-      if (versandArt === "physisch" && shippingCost != null && Number.isFinite(shippingCost) && shippingCost > 0) {
-        details.versandkosten = Math.round(shippingCost * 100) / 100;
+      if (versandArt === "physisch") {
+        const normalisedShipping = normaliseShippingInput(shippingCost);
+        if (normalisedShipping != null && normalisedShipping > 0) {
+          details.versandkosten = normalisedShipping;
+        }
       }
       return details;
     },

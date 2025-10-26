@@ -1,4 +1,5 @@
 import { fetchJson, mediaUrl } from "./api";
+import { normaliseShippingInput } from "./shipping";
 
 type StrapiMedia = {
   url?: string | null;
@@ -142,8 +143,8 @@ function createFallbackVoucherDetail(): VoucherDetail {
       maxAmount: null,
       defaultAmount: 25
     },
-    tabs: [],
-    shippingCost: null
+      tabs: [],
+      shippingCost: null
   };
 }
 
@@ -200,10 +201,7 @@ export async function getVoucherDetail(): Promise<VoucherDetail> {
         defaultAmount
       },
       tabs: toTabs(payload.gutscheininhalte),
-      shippingCost:
-        typeof payload.versandkosten === "number" && Number.isFinite(payload.versandkosten)
-          ? Math.round(payload.versandkosten * 100) / 100
-          : null
+      shippingCost: normaliseShippingInput(payload.versandkosten)
     };
   } catch (error) {
     console.warn("[voucher-detail] Konnte Gutschein-Template nicht laden, nutze Fallback:", error);
