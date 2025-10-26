@@ -25,17 +25,20 @@
       "type": "richtext"
     },
     "preisNetto": {
-      "type": "decimal"
+      "type": "string",
+      "default": "0"
     },
     "preisBrutto": {
-      "type": "decimal"
+      "type": "string",
+      "default": "0"
     },
     "versandkosten": {
-      "type": "decimal",
-      "default": 0
+      "type": "string",
+      "default": "0"
     },
     "steuerSatz": {
-      "type": "decimal"
+      "type": "string",
+      "default": "19"
     },
     "mwst": {
       "type": "boolean",

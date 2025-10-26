@@ -26,14 +26,14 @@
       "default": false
     },
     "versandkosten": {
-      "type": "decimal",
-      "default": 0
+      "type": "string",
+      "default": "0"
     },
     "minBetrag": {
-      "type": "decimal"
+      "type": "string"
     },
     "maxBetrag": {
-      "type": "decimal"
+      "type": "string"
     },
     "bookingbox_topline": {
       "type": "string"

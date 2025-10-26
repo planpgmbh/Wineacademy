@@ -326,10 +326,12 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
       let empfaengerEmail: string | undefined;
       if (versandArt === 'digital') {
         const emailCandidate = normaliseString(details.empfaengerEmail);
-        if (!emailCandidate || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailCandidate)) {
-          ctx.throw(400, 'E-Mail-Adresse für den digitalen Versand ist ungültig.');
+        if (emailCandidate) {
+          if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailCandidate)) {
+            ctx.throw(400, 'E-Mail-Adresse für den digitalen Versand ist ungültig.');
+          }
+          empfaengerEmail = emailCandidate;
         }
-        empfaengerEmail = emailCandidate;
       }
       let strasse: string | undefined;
       let plz: string | undefined;

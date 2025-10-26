@@ -212,6 +212,7 @@ type SummaryItem = {
   steuerSatz: number | null;
   type: "seminar" | "produkt" | "gutschein";
   shippingCost?: number | null;
+  details?: string[];
 };
 
 type VoucherRedemption = {
@@ -285,11 +286,19 @@ const PAYPAL_CONFIRMATION_MESSAGE: Record<Exclude<PaymentMethod, "rechnung">, st
   kreditkarte: "Die Kreditkartenzahlung wurde über PayPal verarbeitet."
 };
 
+const VOUCHER_INTRO_LINES = [
+  "Schenke unvergessliche Weinerlebnisse! Mit einem Gutschein der Wine Academy Hamburg öffnest du die Türen zu spannenden Weinseminaren, Verkostungen und Events.",
+  "Verfügbar als digitaler Gutschein per E-Mail oder als handgeschriebene Karte per Post.",
+  "Einfach Betrag eingeben und verschenken."
+] as const;
+
+const SUMMARY_VOUCHER_DESCRIPTION = "Verschenke die Wine Academy als Erlebnis.";
+
 const STEP_DESCRIPTIONS: Partial<Record<StepId, string>> = {
   participants:
     "Bitte gib die Teilnehmerdaten für alle gebuchten Plätze ein. Die Angaben lassen sich vor Abschluss jederzeit anpassen.",
   gutscheine:
-    "Trage die Versandart sowie die Empfängerdaten für deine Gutscheine ein. Wir nutzen diese Angaben für den Versand und die Zustellung.",
+    `${VOUCHER_INTRO_LINES[0]} ${VOUCHER_INTRO_LINES[1]} ${VOUCHER_INTRO_LINES[2]}`,
   billing: "Wähle, ob die Rechnung auf eine Privatperson oder ein Unternehmen ausgestellt werden soll.",
   overview: "Prüfe alle Angaben vor dem Zahlungsschritt. Du kannst einzelne Bereiche jederzeit bearbeiten.",
   payment: "Wähle deine bevorzugte Zahlungsart und bestätige die rechtlichen Hinweise."
@@ -437,15 +446,28 @@ function computeSummaryItems(
     const steuerSatz = seminarState.steuerSatz ?? DEFAULT_VAT_RATE;
     const netto = subtotal != null ? computeNetAmount(subtotal, steuerSatz) : null;
 
+    const rawSlots =
+      seminarState.terminSlots && seminarState.terminSlots.length > 0
+        ? seminarState.terminSlots
+        : seminarState.terminLabel
+          ? [seminarState.terminLabel]
+          : [];
+    const formattedSlots = rawSlots.map((slot) => {
+      const withoutTime = slot.split("·")[0] ?? slot;
+      return withoutTime.replace(/,\s*/, " ").trim();
+    });
+    const seminarDescription = formattedSlots.length > 0 ? "Termine" : undefined;
+
     items.push({
       id: `seminar-${seminarState.selectionId}`,
       title: seminarState.seminarTitle,
       quantity,
-      description: [seminarState.terminLabel, seminarState.terminDescription].filter(Boolean).join(" · "),
+      description: seminarDescription,
       subtotal,
       netto,
       steuerSatz,
-      type: "seminar"
+      type: "seminar",
+      details: formattedSlots.length > 0 ? formattedSlots : undefined
     });
   });
 
@@ -499,7 +521,7 @@ function computeSummaryItems(
       id: `product-${productState.productId}`,
       title: productState.productTitle,
       quantity,
-      description: productState.isVoucher ? "Geschenkgutschein" : undefined,
+      description: productState.isVoucher ? SUMMARY_VOUCHER_DESCRIPTION : undefined,
       subtotal,
       netto,
       steuerSatz: productState.steuerSatz,
@@ -518,7 +540,7 @@ function computeSummaryItems(
       id: "voucher-selection",
       title: voucherState.title,
       quantity: 1,
-      description: voucherState.description ?? "Geschenkgutschein",
+      description: SUMMARY_VOUCHER_DESCRIPTION,
       subtotal: baseValue,
       netto: baseValue,
       steuerSatz: 0,
@@ -923,7 +945,7 @@ export function CheckoutClient() {
       items.push({
         key: "selection",
         title: voucherState.title,
-        subtitle: voucherState.description ?? null,
+        subtitle: null,
         quantity: 1
       });
     }
@@ -1241,10 +1263,8 @@ export function CheckoutClient() {
       }
       if (form.versandArt === "digital") {
         const trimmedEmail = form.empfaengerEmail.trim();
-        if (!trimmedEmail) {
-          errors.empfaengerEmail = "Bitte gib die E-Mail-Adresse für den digitalen Versand an.";
-        } else if (!emailPattern.test(trimmedEmail)) {
-          errors.empfaengerEmail = "Die E-Mail-Adresse für den digitalen Versand ist ungültig.";
+        if (trimmedEmail && !emailPattern.test(trimmedEmail)) {
+          errors.empfaengerEmail = "Die eingegebene E-Mail-Adresse ist ungültig.";
         }
       } else {
         if (!form.strasse.trim()) {
@@ -2048,7 +2068,7 @@ export function CheckoutClient() {
                       }`}
                       onClick={() => handleVoucherVersandArtChange(item.key, "digital")}
                     >
-                      Digital
+                      Per E-Mail
                       <span
                         aria-hidden="true"
                         className={`absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary transition-opacity ${
@@ -2065,7 +2085,7 @@ export function CheckoutClient() {
                       }`}
                       onClick={() => handleVoucherVersandArtChange(item.key, "physisch")}
                     >
-                      Post
+                      Per Post
                       <span
                         aria-hidden="true"
                         className={`absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary transition-opacity ${
@@ -2128,7 +2148,7 @@ export function CheckoutClient() {
                       htmlFor={`voucher-${item.key}-email`}
                       className={renderLabelClass(Boolean(errors.empfaengerEmail))}
                     >
-                      E-Mail für den Versand *
+                      E-Mail für den Versand (optional)
                     </label>
                     <input
                       id={`voucher-${item.key}-email`}
@@ -2137,13 +2157,12 @@ export function CheckoutClient() {
                       value={form.empfaengerEmail}
                       onChange={(event) => handleVoucherFieldChange(item.key, "empfaengerEmail", event.target.value)}
                       placeholder="name@example.com"
-                      required
                     />
                     {errors.empfaengerEmail ? (
                       <p className="mt-1 text-xs text-error">{errors.empfaengerEmail}</p>
                     ) : (
                       <p className="mt-1 text-xs text-base-content/60">
-                        Wir senden den Gutschein direkt an diese Adresse.
+                        Falls du eine E-Mail-Adresse angibst, senden wir den Gutschein automatisch dorthin.
                       </p>
                     )}
                   </div>
@@ -2925,6 +2944,13 @@ const renderPaymentStep = () => {
                     {item.description ? (
                       <p className="text-sm text-base-content/70">{item.description}</p>
                     ) : null}
+                    {item.details && item.details.length > 0 ? (
+                      <ul className="space-y-1 text-sm text-base-content/60">
+                        {item.details.map((detail, detailIndex) => (
+                          <li key={`${item.id}-detail-${detailIndex}`}>{detail}</li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </div>
                   <p className="text-base font-semibold text-base-content">
                     {formatCurrency(item.subtotal ?? null)}
@@ -2967,11 +2993,6 @@ const renderPaymentStep = () => {
             <dd>{formatCurrency(derivedTotal)}</dd>
           </div>
         </dl>
-        {derivedShipping > 0 ? (
-          <p className="mt-2 text-xs text-base-content/60">
-            Versandkosten werden einmalig pro Bestellung berechnet.
-          </p>
-        ) : null}
       </div>
     </aside>
   );
