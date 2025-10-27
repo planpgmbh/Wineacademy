@@ -19,10 +19,7 @@
         "heroDarkMode": "Hero Dark Mode",
         "versandkosten": "Versandkosten (Brutto)",
         "minBetrag": "Mindestbetrag",
-        "maxBetrag": "Höchstbetrag",
-        "bookingbox_topline": "Bookingbox Topline",
-        "bookingbox_headline": "Bookingbox Headline",
-        "bookingbox_body": "Bookingbox Text"
+        "maxBetrag": "Höchstbetrag"
       },
       "api::termin.termin": {
         "tageMitUhrzeit": "Tage mit Uhrzeit",
@@ -52,6 +49,11 @@
       "canonical": "Canonical URL",
       "robots": "Robots",
       "og_image": "OG-Bild"
+    },
+    "shared.bookingbox": {
+      "topline": "Bookingbox Topline",
+      "headline": "Bookingbox Headline",
+      "body": "Bookingbox Text"
     }
   }
 }

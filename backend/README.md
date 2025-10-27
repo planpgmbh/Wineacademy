@@ -17,7 +17,7 @@ Strapi liefert die Inhalte (Seminare, Termine, Produkte, Gutscheine) und wickelt
 - **Seeds:** `backend/src/index.ts` erzeugt Demo-Daten, wenn `SEED_ON_BOOT=true` gesetzt ist (nicht in Produktion aktivieren).
 
 ## Content-Modell (Kurzfassung)
-- **Seminar:** Stammdaten, Texte, Preise, Relations zu Kategorien & Terminen, Bookingbox-Felder (`bookingbox_topline`, `bookingbox_headline`, `bookingbox_body`), optionales Hero-Hintergrundbild (`hintergrundbild`) sowie wiederholbare Tabs (`seminarinhalte` mit Titel & Richtext-Inhalt).
+- **Seminar:** Stammdaten, Texte, Preise, Relations zu Kategorien & Terminen, Bookingbox-Komponente (`bookingbox` mit `topline`, `headline`, `body`), optionales Hero-Hintergrundbild (`hintergrundbild`) sowie wiederholbare Tabs (`seminarinhalte` mit Titel & Richtext-Inhalt).
 - **Termin:** Datum(e) (`termin.seminartag`), `planungsstatus`, Relation zu Seminar & Standort.
 - **Standort:** Veranstaltungsort (Adresse, Typ).
 - **Produkt:** Shop-Artikel (optional `gutschein`-Flag).

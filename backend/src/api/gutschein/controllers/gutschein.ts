@@ -14,9 +14,6 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
         'minBetrag',
         'maxBetrag',
         'versandkosten',
-        'bookingbox_topline',
-        'bookingbox_headline',
-        'bookingbox_body',
         'aktiv',
         'heroDarkMode',
       ],
@@ -24,6 +21,7 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
         bild: { fields: ['url', 'alternativeText'] },
         hintergrundbild: { fields: ['url', 'alternativeText'] },
         gutscheininhalte: true,
+        bookingbox: { fields: ['topline', 'headline', 'body'] },
       },
       pagination: { limit: 1 },
     });
@@ -32,6 +30,7 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
     const fallbackBild = { url: '/favicon.png', alternativeText: 'Gutscheinbild Platzhalter' } as any;
     const gutscheininhalte = Array.isArray((template as any).gutscheininhalte) ? (template as any).gutscheininhalte : [];
     const shippingCost = normaliseShippingValue(template.versandkosten);
+    const bookingbox = ((template as any).bookingbox ?? {}) as any;
     ctx.body = {
       name: template.name,
       minBetrag: template.minBetrag != null ? Number(template.minBetrag) : null,
@@ -39,9 +38,16 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
       versandkosten: shippingCost,
       bild: template.bild ?? fallbackBild,
       hintergrundbild: template.hintergrundbild ?? fallbackBild,
-      bookingbox_topline: template.bookingbox_topline ?? null,
-      bookingbox_headline: template.bookingbox_headline ?? null,
-      bookingbox_body: template.bookingbox_body ?? null,
+      bookingbox_topline:
+        typeof bookingbox?.topline === 'string' && bookingbox.topline.trim().length > 0
+          ? bookingbox.topline.trim()
+          : null,
+      bookingbox_headline:
+        typeof bookingbox?.headline === 'string' && bookingbox.headline.trim().length > 0
+          ? bookingbox.headline.trim()
+          : null,
+      bookingbox_body:
+        typeof bookingbox?.body === 'string' && bookingbox.body.trim().length > 0 ? bookingbox.body.trim() : null,
       gutscheininhalte,
       heroDarkMode: Boolean(template.heroDarkMode),
     };

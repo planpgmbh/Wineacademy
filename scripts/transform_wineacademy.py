@@ -17,6 +17,8 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
 from urllib.parse import urlparse
 
+from bs4 import BeautifulSoup
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 STRUCTURED_DIR = BASE_DIR / "artifacts" / "crawl" / "structured"
 CONTENT_JSON = STRUCTURED_DIR / "content.json"
@@ -39,6 +41,9 @@ class ProductRecord:
     source_url: str
     content_type: Optional[str]
     seo: Dict[str, Optional[str]]
+    short_description_plain: Optional[str]
+    description_plain: Optional[str]
+    tabs_plain: List[Dict[str, Optional[str]]]
 
 
 @dataclass
@@ -54,11 +59,24 @@ class PageRecord:
     seo: Dict[str, Optional[str]]
 
 
+@dataclass
+class CategoryRecord:
+    slug: str
+    name: str
+    description: Optional[str]
+    short_description: Optional[str]
+    seo: Dict[str, Optional[str]]
+    breadcrumbs: List[Dict[str, Optional[str]]]
+    images: List[Dict[str, Optional[str]]]
+    source_url: str
+    product_slugs: List[str]
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Wine Academy Content Transformer")
     parser.add_argument(
         "--type",
-        choices=["products", "pages", "all"],
+        choices=["products", "pages", "categories", "all"],
         default="products",
         help="Welche Inhalte transformiert werden sollen (Standard: products).",
     )
@@ -146,6 +164,111 @@ def normalize_path_slug(url: str) -> str:
     return path or "root"
 
 
+def _clean_text(value: str) -> str:
+    lines = [line.strip() for line in value.splitlines()]
+    return "\n".join([line for line in lines if line])
+
+
+def _convert_links_to_text(node: BeautifulSoup) -> None:
+    for anchor in node.find_all("a"):
+        href = anchor.get("href")
+        label = anchor.get_text(" ", strip=True)
+        replacement = label
+        if href and not href.startswith("#"):
+            if label:
+                replacement = f"{label} ({href})"
+            else:
+                replacement = href
+        anchor.replace_with(replacement if replacement else "")
+
+
+def _extract_product_texts(html: Optional[str]) -> Tuple[Optional[str], Optional[str], List[Dict[str, Optional[str]]]]:
+    if not html:
+        return None, None, []
+
+    soup = BeautifulSoup(html, "lxml")
+    short_description = None
+    short_node = soup.select_one(".woocommerce-product-details__short-description")
+    if short_node:
+        for removable in short_node.select(".product-description-link-container"):
+            removable.decompose()
+        _convert_links_to_text(short_node)
+        short_text = short_node.get_text("\n", strip=True)
+        segments = [segment for segment in (line.strip() for line in short_text.splitlines()) if segment]
+        segments = [segment for segment in segments if segment.lower() != "beschreibung"]
+        short_description = _clean_text("\n".join(segments))
+
+    tabs_plain: List[Dict[str, Optional[str]]] = []
+    for br in soup.select(".woocommerce-Tabs-panel br"):
+        br.replace_with("\n")
+
+    for panel in soup.select(".woocommerce-Tabs-panel"):
+        heading = panel.find("h2")
+        title = heading.get_text(strip=True) if heading else "Details"
+        if heading:
+            heading.extract()
+        _convert_links_to_text(panel)
+        panel_text = panel.get_text("\n", strip=True)
+        cleaned_text = _clean_text(panel_text)
+        tabs_plain.append({"title": title, "content": cleaned_text or None})
+
+    description_plain = tabs_plain[0]["content"] if tabs_plain else short_description
+    return short_description, description_plain, tabs_plain
+
+
+def _extract_category_content(html: Optional[str]) -> Tuple[Optional[str], Optional[str], List[str]]:
+    if not html:
+        return None, None, []
+
+    soup = BeautifulSoup(html, "lxml")
+
+    description = None
+    short_description = None
+
+    description_node = soup.select_one(".term-description")
+    if description_node:
+        _convert_links_to_text(description_node)
+        description = _clean_text(description_node.get_text("\n", strip=True))
+        if description:
+            short_description = description.split("\n\n")[0].strip()
+
+    if description is None:
+        paragraphs: List[str] = []
+        for paragraph in soup.select("main p"):
+            text = _clean_text(paragraph.get_text(" ", strip=True))
+            if not text:
+                continue
+            if text.lower() in {"weinkurse", "sommelier", "masterclass"}:
+                continue
+            paragraphs.append(text)
+            if len(paragraphs) >= 4:
+                break
+        if paragraphs:
+            description = "\n\n".join(paragraphs)
+            short_description = paragraphs[0]
+
+    if short_description and len(short_description) > 240:
+        truncated = short_description[:240].rsplit(" ", 1)[0]
+        if truncated:
+            short_description = truncated + " …"
+
+
+    product_slugs: List[str] = []
+    seen_slugs: set[str] = set()
+    for link in soup.select("a"):
+        href = link.get("href")
+        if not href or "/buchung/" not in href:
+            continue
+        slug = normalize_path_slug(href)
+        if slug.startswith("buchung/"):
+            slug = slug.split("/", 1)[1]
+        if slug and slug not in seen_slugs:
+            product_slugs.append(slug)
+            seen_slugs.add(slug)
+
+    return description, short_description, product_slugs
+
+
 def extract_products(
     content_entries: List[dict],
     seo_entries: Dict[str, dict],
@@ -200,6 +323,7 @@ def extract_products(
             continue
 
         content_type, seo_payload = map_migration(entry, title, meta_description, canonical)
+        short_plain, description_plain, tabs_plain = _extract_product_texts(description_html)
 
         record = ProductRecord(
             slug=slug,
@@ -214,6 +338,9 @@ def extract_products(
             source_url=source_url,
             content_type=content_type,
             seo=seo_payload,
+            short_description_plain=short_plain,
+            description_plain=description_plain,
+            tabs_plain=tabs_plain,
         )
         records.append(record)
         count += 1
@@ -316,6 +443,115 @@ def write_pages(records: Iterable[PageRecord], output_dir: Path, dry_run: bool) 
     print(f"[OK] {len(data)} Seiten exportiert -> {target}")
 
 
+def extract_categories(
+    content_entries: List[dict],
+    limit: Optional[int] = None,
+) -> List[CategoryRecord]:
+    records: List[CategoryRecord] = []
+    count = 0
+    seen_slugs: set[str] = set()
+
+    for entry in content_entries:
+        url = entry.get("url")
+        if not url:
+            continue
+
+        parsed_path = urlparse(url).path or ""
+        is_product_category = parsed_path.startswith("/produkt-kategorie/")
+        is_course_category = parsed_path.startswith("/kurse/")
+        is_events_category = parsed_path.startswith("/tastings-events")
+
+        if not (is_product_category or is_course_category or is_events_category):
+            continue
+
+        content = entry.get("content", {})
+        main_html = content.get("main_html")
+
+        description, short_description, product_slugs = _extract_category_content(main_html)
+
+        title = entry.get("title")
+        heading_text = None
+        if main_html:
+            soup = BeautifulSoup(main_html, "lxml")
+            heading_node = soup.select_one(".woocommerce-products-header__title") or soup.find("h1")
+            if heading_node:
+                heading_text = heading_node.get_text(strip=True)
+
+        if heading_text:
+            title = heading_text
+
+        if title:
+            suffixes = [" - Wine Academy Hamburg", " - Wine Academy"]
+            for suffix in suffixes:
+                if title.endswith(suffix):
+                    title = title[: -len(suffix)]
+                    break
+            title = " ".join(title.split())
+
+        if not title:
+            continue
+
+        if title.endswith(" - Wine Academy"):
+            title = title.removesuffix(" - Wine Academy")
+
+        slug_parts = normalize_path_slug(url).split("/")
+        slug = slug_parts[-1] if slug_parts else normalize_path_slug(url)
+
+        if slug in seen_slugs:
+            continue
+
+        meta_description = entry.get("meta", {}).get("description")
+        if short_description is None and meta_description:
+            short_description = meta_description.strip()
+        if description is None and meta_description:
+            description = meta_description.strip()
+
+        canonical = entry.get("meta", {}).get("canonical")
+        content_type, seo_payload = map_migration(entry, title, meta_description, canonical)
+        if not content_type:
+            content_type = "category"
+
+        breadcrumbs = _build_breadcrumbs(entry)
+        images = _normalize_images(entry)
+
+        unique_product_slugs = []
+        seen = set()
+        for prod_slug in product_slugs:
+            if prod_slug and prod_slug not in seen:
+                unique_product_slugs.append(prod_slug)
+                seen.add(prod_slug)
+
+        record = CategoryRecord(
+            slug=slug,
+            name=title,
+            description=description,
+            short_description=short_description,
+            seo=seo_payload,
+            breadcrumbs=breadcrumbs,
+            images=images,
+            source_url=url,
+            product_slugs=unique_product_slugs,
+        )
+        records.append(record)
+        seen_slugs.add(slug)
+        count += 1
+        if limit is not None and count >= limit:
+            break
+
+    return records
+
+
+def write_categories(records: Iterable[CategoryRecord], output_dir: Path, dry_run: bool) -> None:
+    data = [asdict(record) for record in records]
+    target = output_dir / "categories.json"
+    if dry_run:
+        print(f"[DRY-RUN] Würde {len(data)} Kategorien nach {target} schreiben.")
+        return
+    ensure_output_dir(output_dir)
+    target.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"[OK] {len(data)} Kategorien exportiert -> {target}")
+
+
 def build_index(entries: List[dict]) -> Dict[str, dict]:
     return {entry["url"]: entry for entry in entries if "url" in entry}
 
@@ -339,6 +575,10 @@ def main() -> None:
     if args.type in {"pages", "all"}:
         pages = extract_pages(content_entries, limit=args.limit)
         write_pages(pages, output_dir, args.dry_run)
+
+    if args.type in {"categories", "all"}:
+        categories = extract_categories(content_entries, limit=args.limit)
+        write_categories(categories, output_dir, args.dry_run)
 
 
 if __name__ == "__main__":

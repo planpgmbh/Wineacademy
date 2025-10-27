@@ -24,6 +24,15 @@
     "beschreibung": {
       "type": "richtext"
     },
+    "bookingbox": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.bookingbox"
+    },
+    "heroDarkMode": {
+      "type": "boolean",
+      "default": false
+    },
     "preis": {
       "type": "string",
       "default": "0"
@@ -64,15 +73,6 @@
       "relation": "manyToMany",
       "target": "api::kategorie.kategorie",
       "inversedBy": "seminare"
-    },
-    "bookingbox_topline": {
-      "type": "string"
-    },
-    "bookingbox_headline": {
-      "type": "string"
-    },
-    "bookingbox_body": {
-      "type": "text"
     },
     "seminarinhalte": {
       "type": "component",

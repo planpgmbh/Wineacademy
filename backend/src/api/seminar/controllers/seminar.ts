@@ -186,9 +186,6 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
         'beschreibung',
         'preis',
         'mwst',
-        'bookingbox_topline',
-        'bookingbox_headline',
-        'bookingbox_body',
       ],
       populate: {
         bild: { select: ['url', 'alternativeText'] },
@@ -198,6 +195,7 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
           select: ['id', 'name', 'slug'],
         },
         seo: true,
+        bookingbox: { select: ['topline', 'headline', 'body'] },
       },
       limit: 1,
     });
@@ -232,13 +230,31 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
         };
       });
 
+    const bookingboxRaw = ((seminar as any).bookingbox ?? {}) as any;
+    const bookingboxPayload = {
+      bookingbox_topline:
+        typeof bookingboxRaw?.topline === 'string' && bookingboxRaw.topline.trim().length > 0
+          ? bookingboxRaw.topline.trim()
+          : null,
+      bookingbox_headline:
+        typeof bookingboxRaw?.headline === 'string' && bookingboxRaw.headline.trim().length > 0
+          ? bookingboxRaw.headline.trim()
+          : null,
+      bookingbox_body:
+        typeof bookingboxRaw?.body === 'string' && bookingboxRaw.body.trim().length > 0
+          ? bookingboxRaw.body.trim()
+          : null,
+    };
+
     const withBildern = {
       ...(seminar as any),
+      ...bookingboxPayload,
       bild: (seminar as any).bild ?? fallbackBild,
       hintergrundbild: (seminar as any).hintergrundbild ?? fallbackHeroBild,
       seminarinhalte: (seminar as any).seminarinhalte ?? [],
       kategorien,
     };
+    delete (withBildern as any).bookingbox;
     ctx.body = { ...withBildern, termine };
   },
 }));

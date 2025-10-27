@@ -6,6 +6,7 @@ Diese Regeln gelten sowohl auf dem Server (Staging/Live) als auch lokal. Zu Begi
 - **Bereichsspezifische Readmes:** Bei Backend-Arbeiten vor dem Plan `backend/README.md`, bei Frontend-Arbeiten `frontend/README.md` querlesen und relevante Hinweise einplanen.
 - **Sprache:** Antworte immer auf Deutsch.
 - **Planung vor Umsetzung:** Vor jeder größeren Änderung einen kurzen Plan (2–5 Schritte) formulieren und Freigabe abwarten.
+- **Modell-Empfehlung:** Direkt nach dem Plan (und nach jedem Plan-Update) kurz begründen, ob Codex Low, Medium oder High am besten passt.
 - **Teste:** Nach Implementierungen die relevanten Tests/Linting ausführen und Ergebnisse nennen.
 - **Arbeitsprotokolle:** Backend-Fortschritt im Bereichslog (`docs/backend-arbeitsprotokoll.md`) dokumentieren und den Entwicklungsplan aktuell halten; Frontend-Anpassungen bei Bedarf direkt in den betreffenden Docs festhalten.
 - **Commits:** Nur auf ausdrückliche Anweisung committen/pushen (z. B. Befehl „commit“). Danach `git push origin staging` und Commit-ID im jeweiligen Arbeitsprotokoll vermerken.

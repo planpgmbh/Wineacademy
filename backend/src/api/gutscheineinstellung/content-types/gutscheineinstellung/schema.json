@@ -35,14 +35,10 @@
     "maxBetrag": {
       "type": "string"
     },
-    "bookingbox_topline": {
-      "type": "string"
-    },
-    "bookingbox_headline": {
-      "type": "string"
-    },
-    "bookingbox_body": {
-      "type": "text"
+    "bookingbox": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.bookingbox"
     },
     "bild": {
       "type": "media",

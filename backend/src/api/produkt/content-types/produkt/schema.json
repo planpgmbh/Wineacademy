@@ -24,6 +24,15 @@
     "beschreibung": {
       "type": "richtext"
     },
+    "bookingbox": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.bookingbox"
+    },
+    "heroDarkMode": {
+      "type": "boolean",
+      "default": false
+    },
     "preisNetto": {
       "type": "string",
       "default": "0"
@@ -65,15 +74,6 @@
         "images"
       ],
       "multiple": false
-    },
-    "bookingbox_topline": {
-      "type": "string"
-    },
-    "bookingbox_headline": {
-      "type": "string"
-    },
-    "bookingbox_body": {
-      "type": "text"
     },
     "produktinhalte": {
       "type": "component",

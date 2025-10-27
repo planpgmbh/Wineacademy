@@ -55,15 +55,13 @@ export default factories.createCoreController('api::produkt.produkt', ({ strapi 
         'mwst',
         'gutschein',
         'versandkosten',
-        'bookingbox_topline',
-        'bookingbox_headline',
-        'bookingbox_body',
       ],
       populate: {
         bild: { select: ['url', 'alternativeText'] },
         hintergrundbild: { select: ['url', 'alternativeText'] },
         produktinhalte: true,
         seo: true,
+        bookingbox: { select: ['topline', 'headline', 'body'] },
       },
     });
 
@@ -71,12 +69,32 @@ export default factories.createCoreController('api::produkt.produkt', ({ strapi 
 
     const fallbackBild = { url: '/favicon.png', alternativeText: 'Produktbild Platzhalter' } as any;
 
-    ctx.body = {
+    const bookingboxRaw = ((product as any).bookingbox ?? {}) as any;
+    const bookingboxPayload = {
+      bookingbox_topline:
+        typeof bookingboxRaw?.topline === 'string' && bookingboxRaw.topline.trim().length > 0
+          ? bookingboxRaw.topline.trim()
+          : null,
+      bookingbox_headline:
+        typeof bookingboxRaw?.headline === 'string' && bookingboxRaw.headline.trim().length > 0
+          ? bookingboxRaw.headline.trim()
+          : null,
+      bookingbox_body:
+        typeof bookingboxRaw?.body === 'string' && bookingboxRaw.body.trim().length > 0
+          ? bookingboxRaw.body.trim()
+          : null,
+    };
+
+    const payload = {
       ...(product as any),
+      ...bookingboxPayload,
       versandkosten: normaliseShippingValue((product as any).versandkosten),
       bild: product.bild ?? fallbackBild,
       hintergrundbild: product.hintergrundbild ?? fallbackBild,
       produktinhalte: Array.isArray((product as any).produktinhalte) ? (product as any).produktinhalte : [],
     };
+    delete (payload as any).bookingbox;
+
+    ctx.body = payload;
   },
 }));

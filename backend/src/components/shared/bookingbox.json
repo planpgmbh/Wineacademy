@@ -1,0 +1,19 @@
+{
+  "collectionName": "components_shared_bookingboxes",
+  "info": {
+    "displayName": "Bookingbox",
+    "description": "Texte für Booking-Callouts (Topline, Headline, Body)"
+  },
+  "options": {},
+  "attributes": {
+    "topline": {
+      "type": "string"
+    },
+    "headline": {
+      "type": "string"
+    },
+    "body": {
+      "type": "text"
+    }
+  }
+}
