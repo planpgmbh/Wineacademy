@@ -56,6 +56,7 @@ type ProductSelectionState = {
   preisNetto: number | null;
   steuerSatz: number | null;
   isVoucher: boolean;
+  shippingCost: number | null;
 };
 
 type VoucherSelectionState = {
@@ -211,7 +212,6 @@ type SummaryItem = {
   steuerSatz: number | null;
   type: "seminar" | "produkt" | "gutschein";
   shippingCost?: number | null;
-  baseAmount?: number | null;
 };
 
 type VoucherRedemption = {
@@ -445,26 +445,36 @@ function computeSummaryItems(
       subtotal,
       netto,
       steuerSatz,
-      type: "seminar",
-      baseAmount: subtotal != null ? roundCurrency(subtotal) : null
+      type: "seminar"
     });
   });
 
   if (productState) {
     const quantity = Math.max(1, productState.selection.quantity);
-    let subtotal =
+    const unitGross =
       productState.preisBrutto != null && Number.isFinite(productState.preisBrutto)
-        ? productState.preisBrutto * quantity
+        ? productState.preisBrutto
         : productState.preisNetto != null && Number.isFinite(productState.preisNetto)
-          ? productState.preisNetto * quantity
+          ? productState.preisNetto
           : null;
-    let netto =
+    const subtotal =
+      unitGross != null
+        ? roundCurrency(unitGross * quantity)
+        : productState.preisNetto != null && Number.isFinite(productState.preisNetto)
+          ? roundCurrency(productState.preisNetto * quantity)
+          : null;
+    const unitNet =
       productState.preisNetto != null && Number.isFinite(productState.preisNetto)
-        ? productState.preisNetto * quantity
+        ? productState.preisNetto
+        : unitGross != null
+          ? computeNetAmount(unitGross, productState.steuerSatz)
+          : null;
+    const netto =
+      unitNet != null
+        ? roundCurrency(unitNet * quantity)
         : subtotal != null
           ? computeNetAmount(subtotal, productState.steuerSatz)
           : null;
-    const baseSubtotal = subtotal != null ? roundCurrency(subtotal) : null;
     let shippingCost: number | null = null;
 
     if (productState.isVoucher) {
@@ -476,18 +486,13 @@ function computeSummaryItems(
             )
           : null;
       if (shippingSource != null && shippingSource > 0) {
-        shippingCost = roundCurrency(shippingSource * quantity);
+        shippingCost = roundCurrency(shippingSource);
       }
-    } else if (productState.selection.shippingCost != null) {
-      const perUnitShipping = normaliseShippingInput(productState.selection.shippingCost);
-      if (perUnitShipping != null && perUnitShipping > 0) {
-        shippingCost = roundCurrency(perUnitShipping * quantity);
+    } else {
+      const shippingSource = normaliseShippingInput(productState.selection.shippingCost);
+      if (shippingSource != null && shippingSource > 0) {
+        shippingCost = roundCurrency(shippingSource);
       }
-    }
-
-    if (shippingCost && shippingCost > 0) {
-      subtotal = subtotal != null ? roundCurrency(subtotal + shippingCost) : shippingCost;
-      netto = netto != null ? roundCurrency(netto + shippingCost) : shippingCost;
     }
 
     items.push({
@@ -499,17 +504,7 @@ function computeSummaryItems(
       netto,
       steuerSatz: productState.steuerSatz,
       type: productState.isVoucher ? "gutschein" : "produkt",
-      shippingCost: shippingCost && shippingCost > 0 ? shippingCost : undefined,
-      baseAmount:
-        shippingCost && shippingCost > 0
-          ? baseSubtotal != null
-            ? baseSubtotal
-            : subtotal != null
-              ? roundCurrency(subtotal - shippingCost)
-              : null
-          : subtotal != null
-            ? roundCurrency(subtotal)
-            : null
+      shippingCost: shippingCost && shippingCost > 0 ? shippingCost : undefined
     });
   }
 
@@ -517,20 +512,18 @@ function computeSummaryItems(
     const selectionForm = voucherForms?.selection;
     const isPhysical = selectionForm?.versandArt === "physisch";
     const shippingSource = normaliseShippingInput(voucherState.shippingCost ?? shippingCostSetting ?? null);
-    const shippingCost = isPhysical && shippingSource != null ? roundCurrency(shippingSource) : 0;
+    const shippingCost = isPhysical && shippingSource != null ? roundCurrency(shippingSource) : null;
     const baseValue = roundCurrency(voucherState.amount);
-    const subtotal = roundCurrency(baseValue + shippingCost);
     items.push({
       id: "voucher-selection",
       title: voucherState.title,
       quantity: 1,
       description: voucherState.description ?? "Geschenkgutschein",
-      subtotal,
-      netto: subtotal,
+      subtotal: baseValue,
+      netto: baseValue,
       steuerSatz: 0,
       type: "gutschein",
-      shippingCost: shippingCost > 0 ? shippingCost : undefined,
-      baseAmount: baseValue
+      shippingCost: shippingCost != null && shippingCost > 0 ? shippingCost : undefined
     });
   }
 
@@ -539,6 +532,10 @@ function computeSummaryItems(
 
 function computeTotals(items: SummaryItem[], voucher: VoucherRedemption | null) {
   const subtotal = items.reduce((acc, item) => acc + (item.subtotal ?? 0), 0);
+  const shippingCandidates = items
+    .map((item) => (item.shippingCost != null && item.shippingCost > 0 ? item.shippingCost : null))
+    .filter((value): value is number => value != null);
+  const shipping = shippingCandidates.length ? Math.max(...shippingCandidates) : 0;
   const discount = voucher ? Math.min(voucher.amount, subtotal) : 0;
   const taxableSubtotal = subtotal > 0 ? subtotal : 1;
   const taxBeforeDiscount = items.reduce((acc, item) => {
@@ -552,10 +549,17 @@ function computeTotals(items: SummaryItem[], voucher: VoucherRedemption | null) 
   }, 0);
   const tax =
     subtotal > 0 ? Math.max(0, taxBeforeDiscount - (taxBeforeDiscount * discount) / taxableSubtotal) : 0;
-  const total = Math.max(0, subtotal - discount);
+  const total = Math.max(0, subtotal - discount + shipping);
   const net = Math.max(0, total - tax);
 
-  return { subtotal, discount, tax, total, net };
+  return {
+    subtotal: roundCurrency(subtotal),
+    discount: roundCurrency(discount),
+    tax: roundCurrency(tax),
+    total: roundCurrency(total),
+    net: roundCurrency(net),
+    shipping: roundCurrency(shipping)
+  };
 }
 
 export function CheckoutClient() {
@@ -665,6 +669,10 @@ export function CheckoutClient() {
       steuerSatz = 0;
     }
 
+    const fallbackShipping = normaliseShippingInput(cartData.product.shippingCost ?? null);
+    const shippingCost = normalizedSelection.shippingCost ?? fallbackShipping ?? null;
+    normalizedSelection.shippingCost = shippingCost ?? null;
+
     return {
       selection: normalizedSelection,
       productId: cartData.product.id,
@@ -672,7 +680,8 @@ export function CheckoutClient() {
       preisBrutto,
       preisNetto,
       steuerSatz,
-      isVoucher: cartData.product.isVoucher
+      isVoucher: cartData.product.isVoucher,
+      shippingCost
     };
   }, [cartData.product, cartData.productSelection]);
 
@@ -2793,8 +2802,12 @@ const renderPaymentStep = () => {
         ? "Die Rechnung ist noch nicht verfügbar. Bitte lade diese Seite in Kürze erneut oder prüfe deine Bestellübersicht."
         : "Die Rechnung wird gleich bereitgestellt.";
     const confirmationTotals = orderInformation?.totals ?? null;
+    const confirmationShipping = confirmationTotals?.versandkosten ?? 0;
     const confirmationSubtotal = confirmationTotals
-      ? (confirmationTotals.brutto ?? 0) + (confirmationTotals.gutschein ?? 0)
+      ? Math.max(
+          0,
+          (confirmationTotals.brutto ?? 0) + (confirmationTotals.gutschein ?? 0) - (confirmationTotals.versandkosten ?? 0)
+        )
       : null;
 
     return (
@@ -2841,6 +2854,12 @@ const renderPaymentStep = () => {
                   <dd>{formatCurrency(confirmationSubtotal)}</dd>
                 </div>
               ) : null}
+              {confirmationShipping > 0 ? (
+                <div className="flex items-center justify-center gap-3">
+                  <dt className="font-medium">Versand</dt>
+                  <dd>{formatCurrency(confirmationShipping)}</dd>
+                </div>
+              ) : null}
               {confirmationTotals.gutschein ? (
                 <div className="flex items-center justify-center gap-3 text-error">
                   <dt className="font-medium">Gutschein</dt>
@@ -2871,8 +2890,9 @@ const renderPaymentStep = () => {
   };
 
   const backendTotals = submissionState === "success" && orderInformation?.totals ? orderInformation.totals : null;
+  const derivedShipping = backendTotals ? backendTotals.versandkosten ?? 0 : totals.shipping;
   const derivedSubtotal = backendTotals
-    ? (backendTotals.brutto ?? 0) + (backendTotals.gutschein ?? 0)
+    ? Math.max(0, (backendTotals.brutto ?? 0) + (backendTotals.gutschein ?? 0) - derivedShipping)
     : totals.subtotal;
   const derivedDiscount = backendTotals ? backendTotals.gutschein ?? 0 : appliedVoucher?.amount ?? 0;
   const derivedTax = backendTotals ? backendTotals.steuer ?? 0 : totals.tax;
@@ -2910,20 +2930,6 @@ const renderPaymentStep = () => {
                     {formatCurrency(item.subtotal ?? null)}
                   </p>
                 </div>
-                {item.shippingCost ? (
-                  <dl className="space-y-1 text-sm text-base-content/70">
-                    {item.baseAmount != null ? (
-                      <div className="flex items-center justify-between">
-                        <dt>Artikel</dt>
-                        <dd>{formatCurrency(item.baseAmount)}</dd>
-                      </div>
-                    ) : null}
-                    <div className="flex items-center justify-between">
-                      <dt>Versand</dt>
-                      <dd>{formatCurrency(item.shippingCost)}</dd>
-                    </div>
-                  </dl>
-                ) : null}
               </li>
             ))}
           </ul>
@@ -2940,6 +2946,12 @@ const renderPaymentStep = () => {
             <dt>Zwischensumme</dt>
             <dd>{formatCurrency(derivedSubtotal)}</dd>
           </div>
+          {derivedShipping > 0 ? (
+            <div className="flex items-center justify-between">
+              <dt>Versand</dt>
+              <dd>{formatCurrency(derivedShipping)}</dd>
+            </div>
+          ) : null}
           {derivedDiscount > 0 ? (
             <div className="flex items-center justify-between text-error">
               <dt>{discountLabel}</dt>
@@ -2955,6 +2967,11 @@ const renderPaymentStep = () => {
             <dd>{formatCurrency(derivedTotal)}</dd>
           </div>
         </dl>
+        {derivedShipping > 0 ? (
+          <p className="mt-2 text-xs text-base-content/60">
+            Versandkosten werden einmalig pro Bestellung berechnet.
+          </p>
+        ) : null}
       </div>
     </aside>
   );

@@ -125,18 +125,18 @@ export class GutscheinHelper {
 
     const versandArtCandidate = (raw?.gutscheinDetails?.versandArt || raw?.versandArt || '').toString().toLowerCase();
     const versandkosten =
-      versandArtCandidate === 'physisch' && template.versandkosten != null && Number(template.versandkosten) > 0
-        ? round2(Number(template.versandkosten))
+      versandArtCandidate === 'physisch' && template.versandkosten != null && template.versandkosten > 0
+        ? round2(template.versandkosten)
         : 0;
 
     const basisBetrag = round2(betragCandidate);
-    const brutto = round2(basisBetrag + versandkosten);
+    const brutto = basisBetrag;
 
     return {
       brutto,
       netto: brutto,
       steuerSatz: 0,
-      versandkosten,
+      versandkosten: versandkosten > 0 ? versandkosten : undefined,
       basisBetrag,
     };
   }

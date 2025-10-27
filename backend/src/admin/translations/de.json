@@ -9,6 +9,9 @@
         "hintergrundbild": "Hintergrundbild",
         "heroDarkMode": "Hero Dark Mode"
       },
+      "api::produkt.produkt": {
+        "versandkosten": "Versandkosten"
+      },
       "api::gutscheineinstellung.gutscheineinstellung": {
         "name": "Name",
         "beschreibung": "Beschreibung",

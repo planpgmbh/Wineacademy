@@ -30,6 +30,10 @@
     "preisBrutto": {
       "type": "decimal"
     },
+    "versandkosten": {
+      "type": "decimal",
+      "default": 0
+    },
     "steuerSatz": {
       "type": "decimal"
     },

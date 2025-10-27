@@ -59,6 +59,7 @@ type ProductDetailItem = {
   mwst?: boolean | null;
   gutschein?: boolean | null;
   bild?: { url?: string | null; alternativeText?: string | null } | null;
+  versandkosten?: string | number | null;
 };
 
 export type ProductCartItem = {
@@ -72,6 +73,7 @@ export type ProductCartItem = {
   imageUrl: string | null;
   imageAlt: string | null;
   isVoucher: boolean;
+  shippingCost: number | null;
 };
 
 export type ProductSelection = {
@@ -287,6 +289,7 @@ function mapProduct(item: ProductDetailItem | null | undefined): ProductCartItem
       : Number.isFinite(steuerRaw)
         ? Number(steuerRaw)
         : fallbackTax;
+  const shippingCost = normaliseShippingInput(item.versandkosten ?? null);
 
   return {
     id: item.id,
@@ -298,7 +301,8 @@ function mapProduct(item: ProductDetailItem | null | undefined): ProductCartItem
     steuerSatz,
     imageUrl: mediaUrl(item.bild?.url),
     imageAlt: item.bild?.alternativeText ?? null,
-    isVoucher: Boolean(item.gutschein)
+    isVoucher: Boolean(item.gutschein),
+    shippingCost: shippingCost
   };
 }
 

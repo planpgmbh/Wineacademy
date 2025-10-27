@@ -1,4 +1,5 @@
 import { fetchJson, postJson } from "./api";
+import { normaliseShippingInput } from "./shipping";
 
 type SeminarTermin = {
   id: number;
@@ -27,6 +28,7 @@ type PublicProductDetail = {
   steuerSatz?: string | number | null;
   mwst?: boolean | null;
   gutschein?: boolean | null;
+  versandkosten?: string | number | null;
 };
 
 export type SeminarCheckoutData = {
@@ -48,6 +50,7 @@ export type ProductCheckoutData = {
   preisNetto: number | null;
   steuerSatz: number | null;
   isVoucher: boolean;
+  shippingCost: number | null;
 };
 
 const PRICE_FORMATTER = new Intl.NumberFormat("de-DE", {
@@ -156,7 +159,8 @@ export async function fetchProductCheckoutData(slug: string): Promise<ProductChe
     preisBrutto,
     preisNetto,
     steuerSatz,
-    isVoucher: Boolean(payload.gutschein)
+    isVoucher: Boolean(payload.gutschein),
+    shippingCost: normaliseShippingInput(payload.versandkosten ?? null)
   };
 }
 
@@ -235,6 +239,7 @@ export type OrderResponse = {
     netto?: number;
     steuer?: number;
     gutschein?: number;
+    versandkosten?: number;
   };
   downloads?: {
     rechnung?: string | null;
@@ -258,6 +263,7 @@ export type OrderStatusResponse = {
     netto?: number;
     steuer?: number;
     gutschein?: number;
+    versandkosten?: number;
   };
   gutscheine?: { code: string; betrag: number }[];
   downloads?: {

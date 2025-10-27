@@ -7,13 +7,21 @@ export function normaliseShippingInput(value: unknown): number | null {
   }
 
   if (typeof value === "string") {
-    const sanitised = value.replace(/[^0-9,.-]/g, "").replace(/,/g, ".");
+    const trimmed = value.trim();
+    const sanitised = trimmed.replace(/[^0-9,.-]/g, "").replace(/,/g, ".");
     if (!sanitised) {
       return null;
     }
-    const parsed = Number.parseFloat(sanitised);
+    let parsed = Number.parseFloat(sanitised);
     if (!Number.isFinite(parsed)) {
       return null;
+    }
+    const hasDecimal = /[.,]/.test(sanitised);
+    if (!hasDecimal && Number.isInteger(parsed)) {
+      const abs = Math.abs(parsed);
+      if (abs >= 100 && abs < 10000) {
+        parsed /= 100;
+      }
     }
     return roundCurrency(parsed);
   }

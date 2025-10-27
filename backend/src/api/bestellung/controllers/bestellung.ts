@@ -15,6 +15,7 @@ import {
   sendOrderNotifications,
   getOrderNotificationFetchOptions,
 } from '../utils/notifications';
+import { normaliseShippingValue, roundCurrency } from '../../../utils/shipping';
 
 type PositionInput = {
   typ?: 'seminar' | 'produkt' | 'gutschein';
@@ -27,6 +28,7 @@ type PositionInput = {
   einzelpreisBrutto?: number;
   steuerSatz?: number;
   betrag?: number;
+  versandkosten?: number;
   gutscheinDetails?: {
     versandArt?: 'digital' | 'physisch';
     empfaengerVorname?: string;
@@ -53,7 +55,7 @@ type TeilnehmerInput = {
   terminId: number;
 };
 
-const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+const round2 = roundCurrency;
 
 const findOrderByIdentifier = async (
   strapi: any,
@@ -262,10 +264,11 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
 
     const seminarSeats = new Map<number, { menge: number; brutto: number; netto: number; titel: string; steuerSatz: number }>();
     const positionen: any[] = [];
+    const shippingCandidates: number[] = [];
     const loadProdukt = async (id: number) => {
       return strapi.db.query('api::produkt.produkt').findOne({
         where: { id, aktiv: true },
-        select: ['id', 'name', 'preisNetto', 'preisBrutto', 'steuerSatz', 'mwst', 'gutschein'],
+        select: ['id', 'name', 'preisNetto', 'preisBrutto', 'steuerSatz', 'mwst', 'gutschein', 'versandkosten'],
       });
     };
 
@@ -294,6 +297,9 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
       };
       const versandArtRaw = normaliseString(details.versandArt);
       const versandArt = versandArtRaw === 'physisch' ? 'physisch' : 'digital';
+      const providedShipping = normaliseShippingValue((details as { versandkosten?: unknown }).versandkosten);
+      const overrideShipping = normaliseShippingValue(shippingCost);
+      const effectiveShipping = overrideShipping ?? providedShipping ?? null;
       let empfaengerVorname = normaliseString(details.empfaengerVorname);
       let empfaengerNachname = normaliseString(details.empfaengerNachname);
       if (!empfaengerVorname || !empfaengerNachname) {
@@ -366,8 +372,8 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         lieferDatum,
         persoenlicheNachricht: nachrichtRaw || undefined,
         versandkosten:
-          versandArt === 'physisch' && Number.isFinite(Number(shippingCost)) && Number(shippingCost) > 0
-            ? round2(Number(shippingCost))
+          versandArt === 'physisch' && effectiveShipping != null && effectiveShipping > 0
+            ? round2(effectiveShipping)
             : undefined,
       };
     };
@@ -441,9 +447,10 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         const summeBrutto = round2(einzelpreisBrutto * menge);
         const summeNetto = round2(einzelpreisNetto * menge);
         const summeSteuer = round2(summeBrutto - summeNetto);
-        const gutscheinDetails = ensureGutscheinDetails(raw.gutscheinDetails, adjustment.versandkosten);
+        const shippingCandidate = adjustment.versandkosten ?? normaliseShippingValue(raw?.gutscheinDetails?.versandkosten);
+        const gutscheinDetails = ensureGutscheinDetails(raw.gutscheinDetails, shippingCandidate);
 
-        positionen.push({
+        const position = {
           typ: 'gutschein',
           titel,
           beschreibung,
@@ -455,7 +462,12 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
           summeNetto,
           summeSteuer,
           gutscheinDetails,
-        });
+          versandkosten: shippingCandidate != null && shippingCandidate > 0 ? round2(shippingCandidate) : undefined,
+        };
+        positionen.push(position);
+        if (position.versandkosten != null && position.versandkosten > 0) {
+          shippingCandidates.push(position.versandkosten);
+        }
       } else {
         const produktId = Number(raw.produktId);
         if (!Number.isFinite(produktId)) return ctx.badRequest('Produkt-ID fehlt');
@@ -470,6 +482,10 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
           steuerSatz = 0;
         }
 
+        const produktVersandkosten = normaliseShippingValue((produkt as any)?.versandkosten);
+        const rawShipping = normaliseShippingValue((raw as { versandkosten?: number }).versandkosten);
+        let effectiveShipping = rawShipping ?? produktVersandkosten ?? null;
+
         let gutscheinAdjustment: GutscheinPositionAdjustment | null = null;
         try {
           gutscheinAdjustment = await gutscheinHelper.applyAdjustments(raw, produkt);
@@ -477,6 +493,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
             brutto = gutscheinAdjustment.brutto;
             netto = gutscheinAdjustment.netto;
             steuerSatz = gutscheinAdjustment.steuerSatz;
+            effectiveShipping = gutscheinAdjustment.versandkosten ?? effectiveShipping;
           }
         } catch (voucherError: any) {
           return ctx.badRequest(voucherError?.message ?? 'Gutschein ungültig');
@@ -498,7 +515,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         const summeSteuer = round2(summeBrutto - summeNetto);
         const gutscheinDetails =
           istGutschein || typ === 'gutschein'
-            ? ensureGutscheinDetails(raw.gutscheinDetails, gutscheinAdjustment?.versandkosten)
+            ? ensureGutscheinDetails(raw.gutscheinDetails, effectiveShipping ?? undefined)
             : undefined;
         const position = {
           typ: istGutschein ? 'gutschein' : 'produkt',
@@ -512,9 +529,20 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
           summeBrutto,
           summeNetto,
           summeSteuer,
+          versandkosten:
+            !istGutschein && effectiveShipping != null && effectiveShipping > 0 ? round2(effectiveShipping) : undefined,
           ...(istGutschein ? { gutscheinDetails } : {}),
         };
         positionen.push(position);
+        const positionShippingCandidate =
+          position.versandkosten != null && position.versandkosten > 0
+            ? position.versandkosten
+            : istGutschein && gutscheinDetails?.versandkosten != null && gutscheinDetails.versandkosten > 0
+              ? round2(gutscheinDetails.versandkosten)
+              : undefined;
+        if (positionShippingCandidate != null) {
+          shippingCandidates.push(positionShippingCandidate);
+        }
       }
     }
 
@@ -562,6 +590,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
     const summePositionenNetto = round2(normalisedPositions.reduce((acc, p) => acc + (p.summeNetto ?? 0), 0));
     const summePositionenBrutto = round2(normalisedPositions.reduce((acc, p) => acc + (p.summeBrutto ?? 0), 0));
     const summeSteuer = round2(normalisedPositions.reduce((acc, p) => acc + (p.summeSteuer ?? 0), 0));
+    const versandkosten = shippingCandidates.length ? round2(Math.max(...shippingCandidates)) : 0;
 
     const voucherCodeRaw = typeof body.gutscheinCode === 'string' ? body.gutscheinCode : '';
     let appliedVoucher: GutscheinValidationResult | null = null;
@@ -589,7 +618,10 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
       summeSteuer,
       gutscheinBetrag
     );
-    const expectedTotal = gutscheinTotals.dueBrutto;
+    const dueBrutto = round2(gutscheinTotals.dueBrutto + versandkosten);
+    const dueNetto = round2(gutscheinTotals.dueNetto + versandkosten);
+    const dueSteuer = gutscheinTotals.dueSteuer;
+    const expectedTotal = dueBrutto;
 
     const zahlungsmethode = body.zahlungsmethode === 'paypal' ? 'paypal' : (body.zahlungsmethode === 'rechnung' ? 'rechnung' : body.zahlungsmethode || 'rechnung');
     let zahlungsreferenz: string | undefined = body.zahlungsreferenz ? String(body.zahlungsreferenz) : undefined;
@@ -601,7 +633,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         zahlungsreferenz = captureId;
       }
 
-      const { summeGutschein, dueBrutto, dueNetto, dueSteuer } = gutscheinTotals;
+      const { summeGutschein } = gutscheinTotals;
       const newsletterOptIn = !!body.newsletterOptIn;
       const normalisedVoucherCode = appliedVoucher?.code
         ? appliedVoucher.code
@@ -609,7 +641,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
           ? gutscheinHelper.normaliseCode(voucherCodeRaw)
           : undefined;
 
-            const bestellungData: any = {
+      const bestellungData: any = {
         rechnungstyp,
         firmenname: body.firmenname,
         ustId: body.ustId,
@@ -631,6 +663,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         zuZahlenBrutto: dueBrutto,
         zuZahlenNetto: dueNetto,
         zuZahlenSteuer: dueSteuer,
+        versandkosten: versandkosten > 0 ? versandkosten : null,
         zahlungsmethode,
         zahlungsreferenz,
         paypalOrderId: body.paypalOrderId ? String(body.paypalOrderId) : undefined,
@@ -718,6 +751,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
             netto: dueNetto,
             steuer: dueSteuer,
             gutschein: summeGutschein,
+            versandkosten: versandkosten > 0 ? versandkosten : 0,
           },
         });
       } catch (notificationErr: any) {
@@ -738,6 +772,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
           netto: orderSnapshot.zuZahlenNetto ?? orderSnapshot.summePositionenNetto,
           steuer: orderSnapshot.zuZahlenSteuer ?? orderSnapshot.summeSteuer,
           gutschein: orderSnapshot.gutscheinBetrag ?? 0,
+          versandkosten: orderSnapshot.versandkosten ?? 0,
         },
         gutscheine: gutscheine.map((g: any) => ({ code: g.code, betrag: g.betrag })),
       };

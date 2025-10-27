@@ -25,6 +25,7 @@
     "summeNetto": { "type": "decimal" },
     "summeBrutto": { "type": "decimal" },
     "summeSteuer": { "type": "decimal" },
+    "versandkosten": { "type": "decimal" },
     "gutscheinDetails": {
       "type": "component",
       "component": "bestellung.gutschein-details"

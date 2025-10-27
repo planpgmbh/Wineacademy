@@ -31,6 +31,7 @@ type BestellungPosition = {
   betrag?: number;
   summeBrutto?: number;
   einzelpreisBrutto?: number;
+  versandkosten?: number;
   gutscheinDetails?: GutscheinDetails | null;
 };
 
@@ -104,12 +105,12 @@ function normaliseGutscheinDetails(
     persoenlicheNachricht: trimmed(details.persoenlicheNachricht),
     versandkosten: undefined,
   };
-    if (!result.empfaengerVorname || !result.empfaengerNachname) {
-      const legacyName = trimmed((details as { empfaengerName?: string }).empfaengerName);
-      if (legacyName) {
-        const parts = legacyName.split(/\s+/).filter(Boolean);
-        if (!result.empfaengerVorname && parts.length > 0) {
-          result.empfaengerVorname = parts.shift();
+  if (!result.empfaengerVorname || !result.empfaengerNachname) {
+    const legacyName = trimmed((details as { empfaengerName?: string }).empfaengerName);
+    if (legacyName) {
+      const parts = legacyName.split(/\s+/).filter(Boolean);
+      if (!result.empfaengerVorname && parts.length > 0) {
+        result.empfaengerVorname = parts.shift();
       }
       if (!result.empfaengerNachname && parts.length > 0) {
         result.empfaengerNachname = parts.join(' ');
@@ -127,6 +128,8 @@ function normaliseGutscheinDetails(
     const shipping = normaliseShippingValue(details.versandkosten);
     if (shipping != null && shipping > 0) {
       result.versandkosten = shipping;
+    } else {
+      result.versandkosten = undefined;
     }
   } else {
     result.empfaengerEmail = undefined;
@@ -212,6 +215,7 @@ function hasExistingVoucherForPosition(existing: ExistingGutschein[] | null | un
 function resolveVoucherAmount(position: BestellungPosition): number {
   const quantity = Math.max(1, Number(position.menge ?? 1));
   const shipping = normaliseShippingValue(position.gutscheinDetails?.versandkosten) ?? 0;
+  const explicitShipping = normaliseShippingValue(position.versandkosten);
 
   const resolveBase = (): number => {
     if (position.betrag != null) {
@@ -228,8 +232,16 @@ function resolveVoucherAmount(position: BestellungPosition): number {
   };
 
   const base = resolveBase();
-  const adjusted = base - shipping;
-  return adjusted > 0 ? round2(adjusted) : 0;
+  let amount = round2(base);
+
+  if (shipping > 0 && explicitShipping == null) {
+    const perUnitShipping = round2(shipping / quantity);
+    if (amount > perUnitShipping) {
+      amount = round2(amount - perUnitShipping);
+    }
+  }
+
+  return amount > 0 ? amount : 0;
 }
 
 export async function createGutscheineForPaidOrder(strapi: StrapiInstance, bestellungId: number): Promise<void> {

@@ -1,10 +1,22 @@
 import { factories } from '@strapi/strapi';
+import { normaliseShippingValue } from '../../../utils/shipping';
 
 export default factories.createCoreController('api::produkt.produkt', ({ strapi }) => ({
   async publicList(ctx) {
     const products = await strapi.db.query('api::produkt.produkt').findMany({
       where: { aktiv: true, publishedAt: { $not: null } },
-      select: ['id', 'name', 'slug', 'kurzbeschreibung', 'preisBrutto', 'preisNetto', 'steuerSatz', 'mwst', 'gutschein'],
+      select: [
+        'id',
+        'name',
+        'slug',
+        'kurzbeschreibung',
+        'preisBrutto',
+        'preisNetto',
+        'steuerSatz',
+        'mwst',
+        'gutschein',
+        'versandkosten',
+      ],
       populate: {
         bild: { select: ['url', 'alternativeText'] },
         hintergrundbild: { select: ['url', 'alternativeText'] },
@@ -14,11 +26,15 @@ export default factories.createCoreController('api::produkt.produkt', ({ strapi 
 
     const fallbackBild = { url: '/favicon.png', alternativeText: 'Produktbild Platzhalter' } as any;
 
-    ctx.body = products.map((product) => ({
-      ...(product as any),
-      bild: product.bild ?? fallbackBild,
-      hintergrundbild: product.hintergrundbild ?? fallbackBild,
-    }));
+    ctx.body = products.map((product) => {
+      const shippingCost = normaliseShippingValue((product as any).versandkosten);
+      return {
+        ...(product as any),
+        versandkosten: shippingCost,
+        bild: product.bild ?? fallbackBild,
+        hintergrundbild: product.hintergrundbild ?? fallbackBild,
+      };
+    });
   },
 
   async publicDetail(ctx) {
@@ -38,6 +54,7 @@ export default factories.createCoreController('api::produkt.produkt', ({ strapi 
         'steuerSatz',
         'mwst',
         'gutschein',
+        'versandkosten',
         'bookingbox_topline',
         'bookingbox_headline',
         'bookingbox_body',
@@ -55,6 +72,7 @@ export default factories.createCoreController('api::produkt.produkt', ({ strapi 
 
     ctx.body = {
       ...(product as any),
+      versandkosten: normaliseShippingValue((product as any).versandkosten),
       bild: product.bild ?? fallbackBild,
       hintergrundbild: product.hintergrundbild ?? fallbackBild,
       produktinhalte: Array.isArray((product as any).produktinhalte) ? (product as any).produktinhalte : [],

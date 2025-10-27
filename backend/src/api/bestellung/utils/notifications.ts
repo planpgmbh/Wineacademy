@@ -108,10 +108,18 @@ const buildPositionsListText = (positions: PositionSummary[]): string => {
     .join('\n');
 };
 
+type NotificationTotals = {
+  brutto: number;
+  netto: number;
+  steuer: number;
+  gutschein: number;
+  versandkosten?: number;
+};
+
 export interface OrderNotificationContext {
   order: any;
   positions: PositionSummary[];
-  totals: { brutto: number; netto: number; steuer: number; gutschein: number };
+  totals: NotificationTotals;
 }
 
 const buildCustomerPlatzhalter = (context: OrderNotificationContext) => {
@@ -330,11 +338,12 @@ export async function sendStornoNotificationsForOrder(strapi: any, orderId: numb
 
     const positionsSource = Array.isArray((order as any)?.positionen) ? (order as any).positionen : [];
     const positions = summarisePositionsForMail(positionsSource);
-    const totals = {
+    const totals: NotificationTotals = {
       brutto: toNumberOrZero(order.zuZahlenBrutto ?? order.summePositionenBrutto),
       netto: toNumberOrZero(order.zuZahlenNetto ?? order.summePositionenNetto),
       steuer: toNumberOrZero(order.zuZahlenSteuer ?? order.summeSteuer),
       gutschein: toNumberOrZero(order.gutscheinBetrag),
+      versandkosten: toNumberOrZero(order.versandkosten),
     };
 
     await sendStornoNotifications(strapi, {

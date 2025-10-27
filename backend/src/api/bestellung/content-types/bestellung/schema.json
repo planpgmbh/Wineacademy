@@ -83,6 +83,9 @@
     "zuZahlenSteuer": {
       "type": "decimal"
     },
+    "versandkosten": {
+      "type": "decimal"
+    },
     "waehrung": {
       "type": "string",
       "default": "EUR"
