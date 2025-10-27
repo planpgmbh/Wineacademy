@@ -1,0 +1,29 @@
+{
+  "collectionName": "components_seo_meta",
+  "info": {
+    "displayName": "Meta",
+    "description": "SEO-Metadaten für Seiten & Produkte"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "text"
+    },
+    "canonical": {
+      "type": "string"
+    },
+    "robots": {
+      "type": "string"
+    },
+    "og_image": {
+      "type": "media",
+      "allowedTypes": [
+        "images"
+      ],
+      "multiple": false
+    }
+  }
+}

@@ -4,10 +4,11 @@
       "api::kategorie.kategorie": {
         "name": "Name",
         "slug": "Slug",
-        "seoTitle": "SEO-Titel",
-        "seoDescription": "SEO-Beschreibung",
+        "kurzbeschreibung": "Kurzbeschreibung",
+        "beschreibung": "Beschreibung",
         "hintergrundbild": "Hintergrundbild",
-        "heroDarkMode": "Hero Dark Mode"
+        "heroDarkMode": "Hero Dark Mode",
+        "seo": "SEO"
       },
       "api::produkt.produkt": {
         "versandkosten": "Versandkosten"
@@ -44,6 +45,13 @@
       "lieferDatum": "Lieferdatum",
       "persoenlicheNachricht": "Persönliche Nachricht",
       "versandkosten": "Versandkosten"
+    },
+    "seo.meta": {
+      "title": "SEO-Titel",
+      "description": "Meta-Beschreibung",
+      "canonical": "Canonical URL",
+      "robots": "Robots",
+      "og_image": "OG-Bild"
     }
   }
 }

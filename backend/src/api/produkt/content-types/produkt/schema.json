@@ -79,6 +79,11 @@
       "type": "component",
       "repeatable": true,
       "component": "produkt.tab"
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "seo.meta"
     }
   }
 }

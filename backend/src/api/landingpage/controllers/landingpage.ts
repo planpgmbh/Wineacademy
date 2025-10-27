@@ -30,6 +30,7 @@ export default factories.createCoreController(CONTENT_UID, ({ strapi }) => ({
             },
           },
         },
+        seo: true,
       },
       limit: 1,
     } as any);
@@ -44,6 +45,7 @@ export default factories.createCoreController(CONTENT_UID, ({ strapi }) => ({
       titel: entry.titel,
       slug: entry.slug,
       abschnitte: entry.abschnitte ?? [],
+      seo: entry.seo ?? null,
       updatedAt: entry.updatedAt ?? null,
     };
   },

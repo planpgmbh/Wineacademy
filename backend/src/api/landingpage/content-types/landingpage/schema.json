@@ -37,6 +37,11 @@
         "landing.hero-carousel",
         "landing.seminar-liste"
       ]
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "seo.meta"
     }
   }
 }

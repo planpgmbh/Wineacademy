@@ -81,7 +81,6 @@ async function upsertSeminar(
     slug?: string;
     kurzbeschreibung?: string;
     beschreibung?: string;
-    infos?: string;
     preis?: number;
     mwst?: boolean;
     kapazitaet?: number;
@@ -225,6 +224,7 @@ async function upsertLandingPage(
     titel: string;
     slug: string;
     abschnitte: Array<Record<string, unknown>>;
+    seo?: Record<string, unknown> | null;
   }
 ) {
   const slug = slugify(values.slug);
@@ -236,6 +236,7 @@ async function upsertLandingPage(
     titel: values.titel,
     slug,
     abschnitte: values.abschnitte,
+    seo: values.seo ?? null,
     publishedAt: nowIso(),
   };
 
@@ -525,7 +526,6 @@ async function runSeed(strapi: any) {
     slug: string;
     kurzbeschreibung: string;
     beschreibung: string;
-    infos?: string;
     preis?: number;
     mwst?: boolean;
     aktiv: boolean;
@@ -918,7 +918,6 @@ const seminarSeeds: SeminarSeed[] = [
       slug: seminardata.slug,
       kurzbeschreibung: seminardata.kurzbeschreibung,
       beschreibung: seminardata.beschreibung,
-      infos: seminardata.infos,
       preis: seminardata.preis,
       mwst: seminardata.mwst,
       aktiv: seminardata.aktiv,

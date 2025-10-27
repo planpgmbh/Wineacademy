@@ -31,15 +31,14 @@
       ],
       "multiple": false
     },
-    "seoTitle": {
-      "type": "string"
-    },
-    "seoDescription": {
-      "type": "text"
-    },
     "heroDarkMode": {
       "type": "boolean",
       "default": false
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "seo.meta"
     },
     "seminare": {
       "type": "relation",

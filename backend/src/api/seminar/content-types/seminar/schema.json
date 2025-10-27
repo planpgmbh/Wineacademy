@@ -24,9 +24,6 @@
     "beschreibung": {
       "type": "richtext"
     },
-    "infos": {
-      "type": "text"
-    },
     "preis": {
       "type": "string",
       "default": "0"
@@ -81,6 +78,11 @@
       "type": "component",
       "repeatable": true,
       "component": "seminar.tab"
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "seo.meta"
     }
   }
 }

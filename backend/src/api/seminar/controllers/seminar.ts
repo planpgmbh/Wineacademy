@@ -184,7 +184,6 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
         'slug',
         'kurzbeschreibung',
         'beschreibung',
-        'infos',
         'preis',
         'mwst',
         'bookingbox_topline',
@@ -198,6 +197,7 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
         kategorien: {
           select: ['id', 'name', 'slug'],
         },
+        seo: true,
       },
       limit: 1,
     });

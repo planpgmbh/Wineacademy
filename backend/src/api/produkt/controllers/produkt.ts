@@ -63,6 +63,7 @@ export default factories.createCoreController('api::produkt.produkt', ({ strapi 
         bild: { select: ['url', 'alternativeText'] },
         hintergrundbild: { select: ['url', 'alternativeText'] },
         produktinhalte: true,
+        seo: true,
       },
     });
 
