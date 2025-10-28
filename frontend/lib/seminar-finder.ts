@@ -155,8 +155,8 @@ function formatLocationLabel(raw: PublicSeminarTerm["standort"]): string {
 
 export async function getSeminarFinderData(): Promise<SeminarFinderData> {
   const [categoriesPayload, seminarsPayload] = await Promise.all([
-    fetchJson<PublicCategory[]>("/public/kategorien"),
-    fetchJson<PublicSeminar[]>("/public/seminare")
+    fetchJson<PublicCategory[]>("/public/kategorien", { cache: "no-store" }),
+    fetchJson<PublicSeminar[]>("/public/seminare", { cache: "no-store" })
   ]);
 
   const orderedSlugs: string[] = [];

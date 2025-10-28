@@ -2,12 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState, type JSX } from "react";
 
 import { fetchUpcomingSeminars, type UpcomingSeminar } from "@/lib/upcoming-seminars";
+import { resolveSectionBackground, SECTION_BACKGROUND_CSS_VAR, type SectionBackgroundKey } from "@/lib/landing";
 
 type SeminarListProps = {
-  heading?: string | null;
+  headline?: string | null;
+  headlineLevel: "h2" | "h3" | "h4";
   intro?: string | null;
   categorySlug: string;
   ctaLabel: string;
@@ -16,6 +18,7 @@ type SeminarListProps = {
   initialItems: UpcomingSeminar[];
   initialError?: string | null;
   limit: number;
+  background?: SectionBackgroundKey | null;
 };
 
 const DAY_FORMATTER = new Intl.DateTimeFormat("de-DE", { day: "2-digit" });
@@ -94,7 +97,8 @@ function SeminarListItem({ seminar, ctaLabel }: SeminarListItemProps) {
 }
 
 export function SeminarList({
-  heading,
+  headline,
+  headlineLevel,
   intro,
   categorySlug,
   ctaLabel,
@@ -102,7 +106,8 @@ export function SeminarList({
   showLoadMore,
   initialItems,
   initialError = null,
-  limit
+  limit,
+  background
 }: SeminarListProps) {
   const loadLimit = Math.max(1, limit);
   const [items, setItems] = useState<UpcomingSeminar[]>(() => initialItems);
@@ -136,13 +141,29 @@ export function SeminarList({
   };
 
   const paragraphs = intro ? formatParagraphs(intro) : [];
+  const showHeadline = typeof headline === "string" && headline.trim().length > 0;
+  const resolvedBackground = resolveSectionBackground(background ?? null);
+  const style = useMemo(() => ({ backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` }), [resolvedBackground]);
+
+  const headingTags: Record<"h2" | "h3" | "h4", keyof JSX.IntrinsicElements> = {
+    h2: "h2",
+    h3: "h3",
+    h4: "h4"
+  };
+
+  const headingClasses: Record<"h2" | "h3" | "h4", string> = {
+    h2: "text-4xl font-light tracking-tight text-base-content md:text-5xl",
+    h3: "text-3xl font-semibold tracking-tight text-base-content md:text-4xl",
+    h4: "text-2xl font-semibold tracking-tight text-base-content md:text-3xl"
+  };
+
+  const HeadingTag = headingTags[headlineLevel];
+  const headingClass = headingClasses[headlineLevel];
 
   return (
-    <section className="bg-base-200">
+    <section style={style}>
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-16 md:px-8 md:py-20">
-        {heading ? (
-          <h2 className="text-4xl font-light tracking-tight text-base-content md:text-5xl">{heading}</h2>
-        ) : null}
+        {showHeadline ? <HeadingTag className={headingClass}>{headline}</HeadingTag> : null}
 
         {paragraphs.length > 0 ? (
           <div className="max-w-3xl space-y-4 text-lg leading-relaxed text-base-content/75">

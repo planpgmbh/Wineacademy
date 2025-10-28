@@ -1,16 +1,17 @@
 "use client";
 
+import { resolveSectionBackground, SECTION_BACKGROUND_CSS_VAR, type SectionBackgroundKey } from "@/lib/landing";
+
 type Card = {
   id: number;
-  title: string;
-  subtitle?: string | null;
+  headline: string;
+  intro?: string | null;
   link?: string | null;
 };
 
 type CardGridProps = {
-  title?: string | null;
-  description?: string | null;
   cards: Card[];
+  background?: SectionBackgroundKey | null;
 };
 
 const resolveLinkAttributes = (href: string) => {
@@ -21,16 +22,17 @@ const resolveLinkAttributes = (href: string) => {
   return { href };
 };
 
-export function CardGrid({ title, description, cards }: CardGridProps) {
+export function CardGrid({ cards, background }: CardGridProps) {
   if (cards.length === 0) {
     return null;
   }
 
+  const resolvedBackground = resolveSectionBackground(background);
+  const style = { backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` };
+
   return (
-    <section className="bg-base-100">
+    <section style={style}>
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-16 md:px-8 md:py-20">
-        {title ? <h2 className="text-3xl font-semibold tracking-tight text-base-content md:text-4xl">{title}</h2> : null}
-        {description ? <p className="max-w-3xl text-lg text-base-content/75">{description}</p> : null}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {cards.map((card) => {
             const hasLink = card.link && card.link.trim().length > 0;
@@ -43,8 +45,8 @@ export function CardGrid({ title, description, cards }: CardGridProps) {
                 className="group flex flex-col gap-3 rounded-3xl border border-base-200 bg-base-100 p-6 shadow-sm transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
                 {...cardProps}
               >
-                <h3 className="text-xl font-semibold text-base-content">{card.title}</h3>
-                {card.subtitle ? <p className="text-base text-base-content/70">{card.subtitle}</p> : null}
+                <h3 className="text-xl font-semibold text-base-content">{card.headline}</h3>
+                {card.intro ? <p className="text-base text-base-content/70">{card.intro}</p> : null}
                 {hasLink ? <span className="text-sm font-semibold text-primary">Mehr erfahren →</span> : null}
               </CardTag>
             );

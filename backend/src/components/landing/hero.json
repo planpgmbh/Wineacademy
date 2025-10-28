@@ -5,11 +5,16 @@
     "description": "Großes Hero-Element mit Video-Hintergrund und Call-to-Action."
   },
   "attributes": {
-    "titel": {
+    "headline": {
       "type": "string",
       "required": true
     },
-    "text": {
+    "headlineLevel": {
+      "type": "enumeration",
+      "enum": ["h1", "h2", "h3", "h4"],
+      "default": "h2"
+    },
+    "einleitung": {
       "type": "text"
     },
     "videoUrl": {

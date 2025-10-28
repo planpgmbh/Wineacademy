@@ -1,5 +1,47 @@
 import { fetchJson, mediaUrl } from "./api";
 
+export type SectionBackgroundKey =
+  | "neutral"
+  | "black"
+  | "wine-blue"
+  | "wine-blue-light"
+  | "wine-blue-lighter"
+  | "wine-blue-lightest"
+  | "wine-blue-dark"
+  | "wine-blue-darker"
+  | "wine-blue-darkest";
+
+const SECTION_BACKGROUND_KEYS = new Set<SectionBackgroundKey>([
+  "neutral",
+  "black",
+  "wine-blue",
+  "wine-blue-light",
+  "wine-blue-lighter",
+  "wine-blue-lightest",
+  "wine-blue-dark",
+  "wine-blue-darker",
+  "wine-blue-darkest"
+]);
+
+export const SECTION_BACKGROUND_CSS_VAR: Record<SectionBackgroundKey, string> = {
+  neutral: "--section-bg-neutral",
+  black: "--section-bg-black",
+  "wine-blue": "--section-bg-wine-blue",
+  "wine-blue-light": "--section-bg-wine-blue-light",
+  "wine-blue-lighter": "--section-bg-wine-blue-lighter",
+  "wine-blue-lightest": "--section-bg-wine-blue-lightest",
+  "wine-blue-dark": "--section-bg-wine-blue-dark",
+  "wine-blue-darker": "--section-bg-wine-blue-darker",
+  "wine-blue-darkest": "--section-bg-wine-blue-darkest"
+};
+
+export function resolveSectionBackground(value?: SectionBackgroundKey | null): SectionBackgroundKey {
+  if (value && SECTION_BACKGROUND_KEYS.has(value)) {
+    return value;
+  }
+  return "neutral";
+}
+
 type StrapiUploadFile = {
   url: string;
   alternativeText?: string | null;
@@ -16,8 +58,9 @@ type StrapiCategorySummary = {
 
 type StrapiHeroComponent = {
   __component: "landing.hero";
-  titel: string;
-  text?: string | null;
+  headline: string;
+  headlineLevel?: "h1" | "h2" | "h3" | "h4" | null;
+  einleitung?: string | null;
   videoUrl?: string | null;
   posterUrl?: string | null;
   buttonLabel?: string | null;
@@ -26,16 +69,19 @@ type StrapiHeroComponent = {
 
 type StrapiHeroCarouselComponent = {
   __component: "landing.hero-carousel";
-  titel: string;
-  text?: string | null;
+  headline: string;
+  headlineLevel?: "h1" | "h2" | "h3" | "h4" | null;
+  einleitung?: string | null;
   rotationDelaySeconds?: number | null;
   bilder?: StrapiUploadFile[] | null;
 };
 
 type StrapiSeminarListComponent = {
   __component: "landing.seminar-liste";
-  ueberschrift?: string | null;
+  headline?: string | null;
+  headlineLevel?: "h2" | "h3" | "h4" | null;
   einleitung?: string | null;
+  sectionBackground?: string | null;
   limit?: number | null;
   ctaLabel?: string | null;
   mehrButtonLabel?: string | null;
@@ -45,22 +91,23 @@ type StrapiSeminarListComponent = {
 
 type StrapiCardComponent = {
   id?: number | null;
-  titel?: string | null;
-  untertitel?: string | null;
+  headline?: string | null;
+  einleitung?: string | null;
   link?: string | null;
 };
 
 type StrapiCardGridComponent = {
   __component: "landing.card-grid";
-  titel?: string | null;
-  beschreibung?: string | null;
+  sectionBackground?: string | null;
   karten?: StrapiCardComponent[] | null;
 };
 
 type StrapiTextBlockComponent = {
   __component: "landing.text-block";
-  titel: string;
-  text?: string | null;
+  headline: string;
+  headlineLevel?: "h2" | "h3" | "h4" | null;
+  sectionBackground?: string | null;
+  einleitung?: string | null;
   buttonLabel?: string | null;
   buttonLink?: string | null;
 };
@@ -68,15 +115,39 @@ type StrapiTextBlockComponent = {
 type StrapiIconItemComponent = {
   id?: number | null;
   icon?: string | null;
-  titel?: string | null;
-  text?: string | null;
+  headline?: string | null;
+  einleitung?: string | null;
 };
 
 type StrapiIconGridComponent = {
   __component: "landing.icon-grid";
-  titel?: string | null;
-  beschreibung?: string | null;
+  headline?: string | null;
+  headlineLevel?: "h2" | "h3" | "h4" | null;
+  sectionBackground?: string | null;
+  einleitung?: string | null;
   items?: StrapiIconItemComponent[] | null;
+};
+
+type StrapiTabItemComponent = {
+  id?: number | string | null;
+  headline?: string | null;
+  inhalt?: string | null;
+};
+
+type StrapiTabsComponent = {
+  __component: "landing.tabs";
+  headline?: string | null;
+  headlineLevel?: "h2" | "h3" | "h4" | null;
+  sectionBackground?: string | null;
+  tabs?: StrapiTabItemComponent[] | null;
+};
+
+type StrapiSeminarFinderComponent = {
+  __component: "landing.seminar-finder";
+  headline?: string | null;
+  headlineLevel?: "h2" | "h3" | "h4" | null;
+  sectionBackground?: string | null;
+  standardKategorie?: StrapiCategorySummary | null;
 };
 
 type StrapiLandingComponent =
@@ -86,102 +157,14 @@ type StrapiLandingComponent =
   | StrapiCardGridComponent
   | StrapiTextBlockComponent
   | StrapiIconGridComponent
+  | StrapiTabsComponent
+  | StrapiSeminarFinderComponent
   | (Record<string, unknown> & { __component?: string });
 
 type StrapiLandingResponse = {
   titel: string;
   slug: string;
   abschnitte: StrapiLandingComponent[];
-};
-
-export type LandingHeroCarouselSection = {
-  type: "hero-carousel";
-  title: string;
-  intro?: string | null;
-  rotationIntervalMs: number;
-  slides: {
-    src: string;
-    alt: string;
-  }[];
-};
-
-export type LandingHeroVideoSection = {
-  type: "hero-video";
-  title: string;
-  text?: string | null;
-  videoUrl?: string | null;
-  posterUrl?: string | null;
-  buttonLabel?: string | null;
-  buttonLink?: string | null;
-};
-
-export type LandingSeminarListSection = {
-  type: "seminar-list";
-  heading?: string | null;
-  intro?: string | null;
-  limit: number;
-  showLoadMore: boolean;
-  ctaLabel: string;
-  loadMoreLabel: string;
-  category: {
-    id: number;
-    name: string;
-    slug: string;
-    shortDescription?: string | null;
-  };
-};
-
-export type LandingCardGridSection = {
-  type: "card-grid";
-  title?: string | null;
-  description?: string | null;
-  cards: {
-    id: number;
-    title: string;
-    subtitle?: string | null;
-    link?: string | null;
-  }[];
-};
-
-export type LandingTextBlockSection = {
-  type: "text-block";
-  title: string;
-  html?: string | null;
-  buttonLabel?: string | null;
-  buttonLink?: string | null;
-};
-
-export type LandingIconGridSection = {
-  type: "icon-grid";
-  title?: string | null;
-  description?: string | null;
-  items: {
-    id: number;
-    icon: string;
-    title: string;
-    text?: string | null;
-  }[];
-};
-
-type LandingUnknownSection = {
-  type: "unknown";
-  component: string;
-  data: Record<string, unknown>;
-};
-
-export type LandingSection =
-  | LandingHeroVideoSection
-  | LandingHeroCarouselSection
-  | LandingCardGridSection
-  | LandingTextBlockSection
-  | LandingIconGridSection
-  | LandingSeminarListSection
-  | LandingUnknownSection;
-
-export type LandingPage = {
-  title: string;
-  slug: string;
-  sections: LandingSection[];
 };
 
 const toSlideAlt = (file: StrapiUploadFile): string => {
@@ -201,15 +184,181 @@ const normaliseString = (value: string | null | undefined): string => {
   return typeof value === "string" ? value.trim() : "";
 };
 
-const normaliseSlug = (value: string | null | undefined, fallback: string, id: number): string => {
-  if (typeof value === "string" && value.trim().length > 0) {
-    return value.trim();
-  }
-  const slugFromName = fallback
+const normaliseOptionalString = (value: string | null | undefined): string | null => {
+  const trimmed = normaliseString(value);
+  return trimmed.length > 0 ? trimmed : null;
+};
+
+const slugify = (value: string): string => {
+  return value
+    .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-  return slugFromName.length > 0 ? slugFromName : `category-${id}`;
+};
+
+const normaliseSlug = (value: string | null | undefined, fallback: string, id: number): string => {
+  if (typeof value === "string") {
+    const prepared = slugify(value);
+    if (prepared.length > 0) {
+      return prepared;
+    }
+  }
+
+  const fallbackSlug = slugify(fallback);
+  if (fallbackSlug.length > 0) {
+    return fallbackSlug;
+  }
+
+  return `item-${id}`;
+};
+
+const normaliseRichText = (value: string | null | undefined): string | null => {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
+const normaliseHeroHeadingLevel = (value: string | null | undefined): "h1" | "h2" | "h3" | "h4" => {
+  if (value === "h1" || value === "h3" || value === "h4") {
+    return value;
+  }
+  return "h2";
+};
+
+const normaliseHeadingLevel = (value: string | null | undefined): "h2" | "h3" | "h4" => {
+  if (value === "h3" || value === "h4") {
+    return value;
+  }
+  return "h2";
+};
+
+const normaliseBackgroundKey = (value: string | null | undefined): SectionBackgroundKey | null => {
+  if (typeof value === "string" && SECTION_BACKGROUND_KEYS.has(value as SectionBackgroundKey)) {
+    return value as SectionBackgroundKey;
+  }
+  return null;
+};
+
+export type LandingHeroCarouselSection = {
+  type: "hero-carousel";
+  headline: string;
+  headlineLevel: "h1" | "h2" | "h3" | "h4";
+  intro?: string | null;
+  rotationIntervalMs: number;
+  slides: {
+    src: string;
+    alt: string;
+  }[];
+};
+
+export type LandingHeroVideoSection = {
+  type: "hero-video";
+  headline: string;
+  headlineLevel: "h1" | "h2" | "h3" | "h4";
+  intro?: string | null;
+  videoUrl?: string | null;
+  posterUrl?: string | null;
+  buttonLabel?: string | null;
+  buttonLink?: string | null;
+};
+
+export type LandingCardGridSection = {
+  type: "card-grid";
+  background: SectionBackgroundKey | null;
+  cards: {
+    id: number;
+    headline: string;
+    intro?: string | null;
+    link?: string | null;
+  }[];
+};
+
+export type LandingTextBlockSection = {
+  type: "text-block";
+  headline: string;
+  headlineLevel: "h2" | "h3" | "h4";
+  background: SectionBackgroundKey | null;
+  html?: string | null;
+  buttonLabel?: string | null;
+  buttonLink?: string | null;
+};
+
+export type LandingIconGridSection = {
+  type: "icon-grid";
+  headline?: string | null;
+  headlineLevel: "h2" | "h3" | "h4";
+  intro?: string | null;
+  background: SectionBackgroundKey | null;
+  items: {
+    id: number;
+    icon: string;
+    headline: string;
+    intro?: string | null;
+  }[];
+};
+
+export type LandingSeminarListSection = {
+  type: "seminar-list";
+  headline?: string | null;
+  headlineLevel: "h2" | "h3" | "h4";
+  intro?: string | null;
+  background: SectionBackgroundKey | null;
+  limit: number;
+  showLoadMore: boolean;
+  ctaLabel: string;
+  loadMoreLabel: string;
+  category: {
+    id: number;
+    name: string;
+    slug: string;
+    shortDescription?: string | null;
+  };
+};
+
+export type LandingTabsSection = {
+  type: "tabs";
+  headline?: string | null;
+  headlineLevel: "h2" | "h3" | "h4";
+  background: SectionBackgroundKey | null;
+  tabs: {
+    id: string;
+    headline: string;
+    contentHtml: string;
+  }[];
+};
+
+export type LandingSeminarFinderSection = {
+  type: "seminar-finder";
+  headline?: string | null;
+  headlineLevel: "h2" | "h3" | "h4";
+  background: SectionBackgroundKey | null;
+  initialCategorySlug?: string | null;
+};
+
+type LandingUnknownSection = {
+  type: "unknown";
+  component: string;
+  data: Record<string, unknown>;
+};
+
+export type LandingSection =
+  | LandingHeroVideoSection
+  | LandingHeroCarouselSection
+  | LandingCardGridSection
+  | LandingTextBlockSection
+  | LandingIconGridSection
+  | LandingSeminarListSection
+  | LandingTabsSection
+  | LandingSeminarFinderSection
+  | LandingUnknownSection;
+
+export type LandingPage = {
+  title: string;
+  slug: string;
+  sections: LandingSection[];
 };
 
 const transformHeroCarousel = (component: StrapiHeroCarouselComponent): LandingHeroCarouselSection => {
@@ -228,29 +377,31 @@ const transformHeroCarousel = (component: StrapiHeroCarouselComponent): LandingH
         }
         return {
           src,
-          alt: toSlideAlt(file),
+          alt: toSlideAlt(file)
         };
       })
       .filter((slide): slide is { src: string; alt: string } => Boolean(slide)) ?? [];
 
   return {
     type: "hero-carousel",
-    title: component.titel,
-    intro: component.text ?? null,
+    headline: normaliseString(component.headline) || "Hero",
+    headlineLevel: normaliseHeroHeadingLevel(component.headlineLevel ?? null),
+    intro: normaliseRichText(component.einleitung ?? null),
     rotationIntervalMs,
-    slides,
+    slides
   };
 };
 
 const transformHeroVideo = (component: StrapiHeroComponent): LandingHeroVideoSection => {
   return {
     type: "hero-video",
-    title: component.titel,
-    text: component.text ?? null,
+    headline: normaliseString(component.headline) || "Hero",
+    headlineLevel: normaliseHeroHeadingLevel(component.headlineLevel ?? null),
+    intro: normaliseRichText(component.einleitung ?? null),
     videoUrl: component.videoUrl ?? null,
     posterUrl: component.posterUrl ?? null,
-    buttonLabel: component.buttonLabel ?? null,
-    buttonLink: component.buttonLink ?? null
+    buttonLabel: normaliseOptionalString(component.buttonLabel ?? null),
+    buttonLink: normaliseOptionalString(component.buttonLink ?? null)
   };
 };
 
@@ -265,8 +416,8 @@ const transformSeminarList = (
       type: "unknown",
       component: component.__component,
       data: {
-        reason: "missing-category",
-      },
+        reason: "missing-category"
+      }
     };
   }
 
@@ -275,17 +426,19 @@ const transformSeminarList = (
 
   return {
     type: "seminar-list",
-    heading: normaliseString(component.ueberschrift) || null,
-    intro: normaliseString(component.einleitung) || null,
+    headline: normaliseOptionalString(component.headline ?? null),
+    headlineLevel: normaliseHeadingLevel(component.headlineLevel ?? null),
+    intro: normaliseRichText(component.einleitung ?? null),
+    background: normaliseBackgroundKey(component.sectionBackground ?? null),
     limit,
     showLoadMore: component.mehrButtonAktiv !== false,
-    ctaLabel: normaliseString(component.ctaLabel) || "Zum Seminar",
-    loadMoreLabel: normaliseString(component.mehrButtonLabel) || "Mehr laden",
+    ctaLabel: normaliseString(component.ctaLabel ?? null) || "Zum Seminar",
+    loadMoreLabel: normaliseString(component.mehrButtonLabel ?? null) || "Mehr laden",
     category: {
       id: category.id,
       name: name.length > 0 ? name : "Kategorie",
       slug,
-      shortDescription: normaliseString(category.kurzbeschreibung) || null
+      shortDescription: normaliseOptionalString(category.kurzbeschreibung ?? null)
     }
   };
 };
@@ -294,23 +447,22 @@ const transformCardGrid = (component: StrapiCardGridComponent): LandingCardGridS
   const cards =
     component.karten
       ?.map((card, index) => {
-        const title = normaliseString(card?.titel ?? null);
-        if (title.length === 0) {
+        const headline = normaliseString(card?.headline ?? null);
+        if (headline.length === 0) {
           return null;
         }
         return {
           id: typeof card?.id === "number" ? card.id : index,
-          title,
-          subtitle: normaliseString(card?.untertitel ?? null) || null,
-          link: normaliseString(card?.link ?? null) || null
+          headline,
+          intro: normaliseOptionalString(card?.einleitung ?? null),
+          link: normaliseOptionalString(card?.link ?? null)
         };
       })
       .filter((card): card is NonNullable<typeof card> => Boolean(card)) ?? [];
 
   return {
     type: "card-grid",
-    title: normaliseString(component.titel ?? null) || null,
-    description: normaliseString(component.beschreibung ?? null) || null,
+    background: normaliseBackgroundKey(component.sectionBackground ?? null),
     cards
   };
 };
@@ -318,10 +470,12 @@ const transformCardGrid = (component: StrapiCardGridComponent): LandingCardGridS
 const transformTextBlock = (component: StrapiTextBlockComponent): LandingTextBlockSection => {
   return {
     type: "text-block",
-    title: component.titel,
-    html: component.text ?? null,
-    buttonLabel: component.buttonLabel ?? null,
-    buttonLink: component.buttonLink ?? null
+    headline: normaliseString(component.headline) || "Textblock",
+    headlineLevel: normaliseHeadingLevel(component.headlineLevel ?? null),
+    background: normaliseBackgroundKey(component.sectionBackground ?? null),
+    html: normaliseRichText(component.einleitung ?? null),
+    buttonLabel: normaliseOptionalString(component.buttonLabel ?? null),
+    buttonLink: normaliseOptionalString(component.buttonLink ?? null)
   };
 };
 
@@ -329,24 +483,67 @@ const transformIconGrid = (component: StrapiIconGridComponent): LandingIconGridS
   const items =
     component.items
       ?.map((item, index) => {
-        const title = normaliseString(item?.titel ?? null);
-        if (title.length === 0) {
+        const headline = normaliseString(item?.headline ?? null);
+        if (headline.length === 0) {
           return null;
         }
         return {
           id: typeof item?.id === "number" ? item.id : index,
           icon: normaliseString(item?.icon ?? null) || "sparkles",
-          title,
-          text: normaliseString(item?.text ?? null) || null
+          headline,
+          intro: normaliseRichText(item?.einleitung ?? null)
         };
       })
       .filter((item): item is NonNullable<typeof item> => Boolean(item)) ?? [];
 
   return {
     type: "icon-grid",
-    title: normaliseString(component.titel ?? null) || null,
-    description: normaliseString(component.beschreibung ?? null) || null,
+    headline: normaliseOptionalString(component.headline ?? null),
+    headlineLevel: normaliseHeadingLevel(component.headlineLevel ?? null),
+    intro: normaliseRichText(component.einleitung ?? null),
+    background: normaliseBackgroundKey(component.sectionBackground ?? null),
     items
+  };
+};
+
+const transformTabsSection = (component: StrapiTabsComponent): LandingTabsSection => {
+  const tabs =
+    component.tabs
+      ?.map((tab, index) => {
+        const headline = normaliseString(tab?.headline ?? null);
+        const contentHtml = normaliseRichText(tab?.inhalt ?? null);
+        if (headline.length === 0 || !contentHtml) {
+          return null;
+        }
+        const id = typeof tab?.id === "number" || typeof tab?.id === "string" ? String(tab.id) : `tab-${index + 1}`;
+        return {
+          id,
+          headline,
+          contentHtml
+        };
+      })
+      .filter((tab): tab is NonNullable<typeof tab> => Boolean(tab)) ?? [];
+
+  return {
+    type: "tabs",
+    headline: normaliseOptionalString(component.headline ?? null),
+    headlineLevel: normaliseHeadingLevel(component.headlineLevel ?? null),
+    background: normaliseBackgroundKey(component.sectionBackground ?? null),
+    tabs
+  };
+};
+
+const transformSeminarFinderSection = (
+  component: StrapiSeminarFinderComponent
+): LandingSeminarFinderSection => {
+  const categorySlug = normaliseOptionalString(component.standardKategorie?.slug ?? null);
+
+  return {
+    type: "seminar-finder",
+    headline: normaliseOptionalString(component.headline ?? null),
+    headlineLevel: normaliseHeadingLevel(component.headlineLevel ?? null),
+    background: normaliseBackgroundKey(component.sectionBackground ?? null),
+    initialCategorySlug: categorySlug
   };
 };
 
@@ -369,16 +566,22 @@ const transformSection = (component: StrapiLandingComponent): LandingSection => 
   if (component.__component === "landing.icon-grid") {
     return transformIconGrid(component as StrapiIconGridComponent);
   }
+  if (component.__component === "landing.tabs") {
+    return transformTabsSection(component as StrapiTabsComponent);
+  }
+  if (component.__component === "landing.seminar-finder") {
+    return transformSeminarFinderSection(component as StrapiSeminarFinderComponent);
+  }
   return {
     type: "unknown",
     component: component.__component ?? "unbekannt",
-    data: component as Record<string, unknown>,
+    data: component as Record<string, unknown>
   };
 };
 
 export async function fetchLandingPage(slug: string): Promise<LandingPage> {
   const response = await fetchJson<StrapiLandingResponse>(`/public/landing-pages/${slug}`, {
-    next: { revalidate: 120, tags: [`landing-${slug}`] },
+    cache: "no-store"
   });
 
   const sections = Array.isArray(response.abschnitte)
@@ -388,6 +591,6 @@ export async function fetchLandingPage(slug: string): Promise<LandingPage> {
   return {
     title: response.titel,
     slug: response.slug,
-    sections,
+    sections
   };
 }

@@ -7,18 +7,28 @@ import { HeroCarousel } from "@/components/landing/HeroCarousel";
 import { HeroVideo } from "@/components/landing/HeroVideo";
 import { IconGrid } from "@/components/landing/IconGrid";
 import { SeminarList } from "@/components/landing/SeminarList";
+import { TabsSection } from "@/components/landing/TabsSection";
 import { TextBlock } from "@/components/landing/TextBlock";
+import { SeminarFinder as LandingSeminarFinder } from "@/components/seminar/SeminarFinder";
 import {
   fetchLandingPage,
   type LandingHeroCarouselSection,
   type LandingHeroVideoSection,
   type LandingPage,
   type LandingSection,
-  type LandingSeminarListSection
+  type LandingSeminarFinderSection,
+  type LandingSeminarListSection,
+  type LandingTabsSection
 } from "@/lib/landing";
+import { getSeminarFinderData } from "@/lib/seminar-finder";
 import { fetchUpcomingSeminars } from "@/lib/upcoming-seminars";
 
 export const revalidate = 120;
+
+const FALLBACK_METADATA = {
+  title: "Wine Academy Landingpage",
+  description: "Landingpage der Wine Academy Hamburg."
+};
 
 async function resolveLanding(slug: string): Promise<LandingPage | null> {
   try {
@@ -29,7 +39,7 @@ async function resolveLanding(slug: string): Promise<LandingPage | null> {
   }
 }
 
-function findHeroSection(sections: LandingSection[]): LandingHeroCarouselSection | null {
+function findHeroCarousel(sections: LandingSection[]): LandingHeroCarouselSection | null {
   for (const section of sections) {
     if (section.type === "hero-carousel") {
       return section;
@@ -38,7 +48,7 @@ function findHeroSection(sections: LandingSection[]): LandingHeroCarouselSection
   return null;
 }
 
-function findHeroVideoSection(sections: LandingSection[]): LandingHeroVideoSection | null {
+function findHeroVideo(sections: LandingSection[]): LandingHeroVideoSection | null {
   for (const section of sections) {
     if (section.type === "hero-video") {
       return section;
@@ -46,15 +56,6 @@ function findHeroVideoSection(sections: LandingSection[]): LandingHeroVideoSecti
   }
   return null;
 }
-
-function findSeminarSections(sections: LandingSection[]): LandingSeminarListSection[] {
-  return sections.filter((section): section is LandingSeminarListSection => section.type === "seminar-list");
-}
-
-const FALLBACK_METADATA = {
-  title: "Wine Academy Landingpage",
-  description: "Landingpage der Wine Academy Hamburg."
-};
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -64,12 +65,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return FALLBACK_METADATA;
   }
 
-  const heroVideo = findHeroVideoSection(landing.sections);
-  const hero = findHeroSection(landing.sections);
+  const heroVideo = findHeroVideo(landing.sections);
+  const heroCarousel = findHeroCarousel(landing.sections);
 
   return {
     title: landing.title ?? slug,
-    description: heroVideo?.text ?? hero?.intro ?? FALLBACK_METADATA.description
+    description: heroVideo?.intro ?? heroCarousel?.intro ?? FALLBACK_METADATA.description
   };
 }
 
@@ -81,8 +82,20 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
     return notFound();
   }
 
-  const content: ReactNode[] = [];
   const sections = Array.isArray(landing.sections) ? landing.sections : [];
+
+  const needsSeminarFinderData = sections.some((section) => section.type === "seminar-finder");
+  let seminarFinderData: Awaited<ReturnType<typeof getSeminarFinderData>> | null = null;
+
+  if (needsSeminarFinderData) {
+    try {
+      seminarFinderData = await getSeminarFinderData();
+    } catch (error) {
+      console.error("[landing] SeminarFinder-Daten konnten nicht geladen werden:", error);
+    }
+  }
+
+  const content: ReactNode[] = [];
 
   for (let index = 0; index < sections.length; index += 1) {
     const section = sections[index];
@@ -91,8 +104,9 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
       content.push(
         <HeroVideo
           key={`hero-video-${index}`}
-          title={section.title}
-          text={section.text}
+          headline={section.headline}
+          headlineLevel={section.headlineLevel}
+          intro={section.intro}
           videoUrl={section.videoUrl}
           posterUrl={section.posterUrl}
           buttonLabel={section.buttonLabel}
@@ -105,8 +119,9 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
     if (section.type === "hero-carousel") {
       content.push(
         <HeroCarousel
-          key={`hero-${index}`}
-          title={section.title ?? landing.title ?? slug}
+          key={`hero-carousel-${index}`}
+          headline={section.headline}
+          headlineLevel={section.headlineLevel}
           intro={section.intro}
           slides={section.slides}
           rotationIntervalMs={section.rotationIntervalMs}
@@ -117,12 +132,7 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
 
     if (section.type === "card-grid") {
       content.push(
-        <CardGrid
-          key={`card-grid-${index}`}
-          title={section.title}
-          description={section.description}
-          cards={section.cards}
-        />
+        <CardGrid key={`card-grid-${index}`} cards={section.cards} background={section.background} />
       );
       continue;
     }
@@ -131,7 +141,9 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
       content.push(
         <TextBlock
           key={`text-block-${index}`}
-          title={section.title}
+          headline={section.headline}
+          headlineLevel={section.headlineLevel}
+          background={section.background}
           html={section.html}
           buttonLabel={section.buttonLabel}
           buttonLink={section.buttonLink}
@@ -144,16 +156,31 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
       content.push(
         <IconGrid
           key={`icon-grid-${index}`}
-          title={section.title}
-          description={section.description}
+          headline={section.headline}
+          headlineLevel={section.headlineLevel}
+          intro={section.intro}
+          background={section.background}
           items={section.items}
         />
       );
       continue;
     }
 
+    if (section.type === "tabs") {
+      content.push(renderTabsSection(section, index));
+      continue;
+    }
+
     if (section.type === "seminar-list") {
       content.push(await renderSeminarList(section, index));
+      continue;
+    }
+
+    if (section.type === "seminar-finder") {
+      const finder = renderSeminarFinder(section, index, seminarFinderData);
+      if (finder) {
+        content.push(finder);
+      }
       continue;
     }
 
@@ -168,7 +195,8 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
     content.unshift(
       <HeroCarousel
         key="hero-fallback"
-        title={landing.title ?? slug}
+        headline={landing.title ?? slug}
+        headlineLevel="h2"
         intro={null}
         slides={[]}
         rotationIntervalMs={8000}
@@ -177,6 +205,18 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
   }
 
   return <main className="flex flex-col">{content}</main>;
+}
+
+function renderTabsSection(section: LandingTabsSection, index: number) {
+  return (
+    <TabsSection
+      key={`tabs-${index}`}
+      headline={section.headline}
+      headlineLevel={section.headlineLevel}
+      background={section.background}
+      tabs={section.tabs}
+    />
+  );
 }
 
 async function renderSeminarList(section: LandingSeminarListSection, index: number) {
@@ -197,14 +237,13 @@ async function renderSeminarList(section: LandingSeminarListSection, index: numb
     initialError = "Seminare konnten nicht geladen werden.";
   }
 
-  const heading = section.heading ?? null;
-  const intro = section.intro ?? null;
-
   return (
     <SeminarList
       key={`seminar-list-${section.category.slug}-${index}`}
-      heading={heading}
-      intro={intro}
+      headline={section.headline}
+      headlineLevel={section.headlineLevel}
+      intro={section.intro}
+      background={section.background}
       categorySlug={section.category.slug}
       ctaLabel={section.ctaLabel}
       loadMoreLabel={section.loadMoreLabel}
@@ -212,6 +251,28 @@ async function renderSeminarList(section: LandingSeminarListSection, index: numb
       initialItems={initialItems}
       initialError={initialError}
       limit={section.limit}
+    />
+  );
+}
+
+function renderSeminarFinder(
+  section: LandingSeminarFinderSection,
+  index: number,
+  data: Awaited<ReturnType<typeof getSeminarFinderData>> | null
+) {
+  if (!data) {
+    return null;
+  }
+
+  return (
+    <LandingSeminarFinder
+      key={`seminar-finder-${index}`}
+      headline={section.headline}
+      headlineLevel={section.headlineLevel}
+      background={section.background}
+      categories={data.categories}
+      locations={data.locations}
+      initialCategorySlug={section.initialCategorySlug}
     />
   );
 }

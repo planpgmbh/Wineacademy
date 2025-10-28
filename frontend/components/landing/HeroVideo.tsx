@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
+import type { JSX } from "react";
 
 type HeroVideoProps = {
-  title: string;
-  text?: string | null;
+  headline: string;
+  headlineLevel: "h1" | "h2" | "h3" | "h4";
+  intro?: string | null;
   videoUrl?: string | null;
   posterUrl?: string | null;
   buttonLabel?: string | null;
@@ -28,9 +30,25 @@ const resolveLinkProps = (href: string) => {
   return { href };
 };
 
-export function HeroVideo({ title, text, videoUrl, posterUrl, buttonLabel, buttonLink }: HeroVideoProps) {
-  const paragraphs = useMemo(() => extractParagraphs(text), [text]);
+const headingStyles: Record<"h1" | "h2" | "h3" | "h4", string> = {
+  h1: "text-4xl sm:text-5xl md:text-6xl",
+  h2: "text-4xl sm:text-5xl md:text-6xl",
+  h3: "text-3xl sm:text-4xl md:text-5xl",
+  h4: "text-2xl sm:text-3xl md:text-4xl"
+};
+
+const headingTags: Record<"h1" | "h2" | "h3" | "h4", keyof JSX.IntrinsicElements> = {
+  h1: "h1",
+  h2: "h2",
+  h3: "h3",
+  h4: "h4"
+};
+
+export function HeroVideo({ headline, headlineLevel, intro, videoUrl, posterUrl, buttonLabel, buttonLink }: HeroVideoProps) {
+  const paragraphs = useMemo(() => extractParagraphs(intro), [intro]);
   const showButton = buttonLabel && buttonLabel.trim().length > 0 && buttonLink && buttonLink.trim().length > 0;
+  const HeadingTag = headingTags[headlineLevel];
+  const headingClass = headingStyles[headlineLevel];
 
   return (
     <section className="relative isolate flex min-h-[620px] items-center justify-center overflow-hidden bg-base-200">
@@ -51,7 +69,7 @@ export function HeroVideo({ title, text, videoUrl, posterUrl, buttonLabel, butto
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-black/60 via-black/40 to-black/70" aria-hidden="true" />
 
       <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center gap-6 px-6 py-24 text-center md:gap-8 md:py-32">
-        <h1 className="text-4xl font-semibold tracking-tight text-base-100 sm:text-5xl md:text-6xl">{title}</h1>
+        <HeadingTag className={`font-semibold tracking-tight text-base-100 ${headingClass}`}>{headline}</HeadingTag>
         {paragraphs.length > 0 ? (
           <p className="max-w-2xl text-lg leading-relaxed text-base-100/90 md:text-xl">
             {paragraphs.map((paragraph, index) => (

@@ -1,13 +1,13 @@
 {
-  "collectionName": "components_landing_text_blocks",
+  "collectionName": "components_landing_seminar_finders",
   "info": {
-    "displayName": "Textblock",
-    "description": "Überschrift mit Fließtext und optionalem CTA."
+    "displayName": "Seminar Finder",
+    "description": "Filtermodul zur Seminar-Suche auf Landingpages"
   },
+  "options": {},
   "attributes": {
     "headline": {
-      "type": "string",
-      "required": true
+      "type": "string"
     },
     "headlineLevel": {
       "type": "enumeration",
@@ -28,14 +28,10 @@
         "wine-blue-darkest"
       ]
     },
-    "einleitung": {
-      "type": "richtext"
-    },
-    "buttonLabel": {
-      "type": "string"
-    },
-    "buttonLink": {
-      "type": "string"
+    "standardKategorie": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::kategorie.kategorie"
     }
   }
 }

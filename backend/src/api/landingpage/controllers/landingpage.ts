@@ -28,6 +28,18 @@ export default factories.createCoreController(CONTENT_UID, ({ strapi }) => ({
                 }
               }
             },
+            "landing.tabs": {
+              populate: {
+                tabs: true
+              }
+            },
+            "landing.seminar-finder": {
+              populate: {
+                standardKategorie: {
+                  fields: ["id", "name", "slug"]
+                }
+              }
+            }
           },
         },
         seo: true,

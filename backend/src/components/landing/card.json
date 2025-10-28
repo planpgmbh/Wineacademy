@@ -5,11 +5,11 @@
     "description": "Einfache Karte für Teaser-Abschnitte."
   },
   "attributes": {
-    "titel": {
+    "headline": {
       "type": "string",
       "required": true
     },
-    "untertitel": {
+    "einleitung": {
       "type": "string"
     },
     "link": {

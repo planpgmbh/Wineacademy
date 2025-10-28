@@ -55,7 +55,8 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
       <SeminarFinder
         id="category-content"
-        title="Finde dein passendes Seminar"
+        headline="Finde dein passendes Seminar"
+        headlineLevel="h2"
         categories={seminarFinderData.categories}
         locations={seminarFinderData.locations}
         initialCategorySlug={category.slug}

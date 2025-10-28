@@ -5,11 +5,19 @@
     "description": "Mehrspaltiges Grid aus einfachen Karten."
   },
   "attributes": {
-    "titel": {
-      "type": "string"
-    },
-    "beschreibung": {
-      "type": "text"
+    "sectionBackground": {
+      "type": "enumeration",
+      "enum": [
+        "neutral",
+        "black",
+        "wine-blue",
+        "wine-blue-light",
+        "wine-blue-lighter",
+        "wine-blue-lightest",
+        "wine-blue-dark",
+        "wine-blue-darker",
+        "wine-blue-darkest"
+      ]
     },
     "karten": {
       "type": "component",

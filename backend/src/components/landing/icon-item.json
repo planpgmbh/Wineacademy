@@ -20,11 +20,11 @@
       ],
       "default": "wine-glass"
     },
-    "titel": {
+    "headline": {
       "type": "string",
       "required": true
     },
-    "text": {
+    "einleitung": {
       "type": "text"
     }
   }

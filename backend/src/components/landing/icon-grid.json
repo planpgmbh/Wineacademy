@@ -5,10 +5,29 @@
     "description": "Grid mit drei hervorgehobenen Vorteilen inklusive Icon."
   },
   "attributes": {
-    "titel": {
+    "headline": {
       "type": "string"
     },
-    "beschreibung": {
+    "headlineLevel": {
+      "type": "enumeration",
+      "enum": ["h2", "h3", "h4"],
+      "default": "h2"
+    },
+    "sectionBackground": {
+      "type": "enumeration",
+      "enum": [
+        "neutral",
+        "black",
+        "wine-blue",
+        "wine-blue-light",
+        "wine-blue-lighter",
+        "wine-blue-lightest",
+        "wine-blue-dark",
+        "wine-blue-darker",
+        "wine-blue-darkest"
+      ]
+    },
+    "einleitung": {
       "type": "text"
     },
     "items": {

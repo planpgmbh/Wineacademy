@@ -1,0 +1,17 @@
+{
+  "collectionName": "components_landing_tabs_items",
+  "info": {
+    "displayName": "Tab",
+    "description": "Inhaltlicher Tab für Landingpages"
+  },
+  "options": {},
+  "attributes": {
+    "headline": {
+      "type": "string",
+      "required": true
+    },
+    "inhalt": {
+      "type": "richtext"
+    }
+  }
+}

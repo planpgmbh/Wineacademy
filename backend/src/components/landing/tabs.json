@@ -1,13 +1,13 @@
 {
-  "collectionName": "components_landing_text_blocks",
+  "collectionName": "components_landing_tabs_groups",
   "info": {
-    "displayName": "Textblock",
-    "description": "Überschrift mit Fließtext und optionalem CTA."
+    "displayName": "Tabs",
+    "description": "Tab-Gruppe für Landingpages"
   },
+  "options": {},
   "attributes": {
     "headline": {
-      "type": "string",
-      "required": true
+      "type": "string"
     },
     "headlineLevel": {
       "type": "enumeration",
@@ -28,14 +28,11 @@
         "wine-blue-darkest"
       ]
     },
-    "einleitung": {
-      "type": "richtext"
-    },
-    "buttonLabel": {
-      "type": "string"
-    },
-    "buttonLink": {
-      "type": "string"
+    "tabs": {
+      "type": "component",
+      "repeatable": true,
+      "component": "landing.tab",
+      "min": 1
     }
   }
 }

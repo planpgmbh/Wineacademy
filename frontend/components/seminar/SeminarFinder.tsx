@@ -1,19 +1,23 @@
-'use client';
+"use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type JSX } from "react";
 import Link from "next/link";
+
 import type { SeminarFinderCategory, SeminarFinderLocation } from "@/lib/seminar-finder";
+import { resolveSectionBackground, SECTION_BACKGROUND_CSS_VAR, type SectionBackgroundKey } from "@/lib/landing";
 
 const ALL_CATEGORIES = "all";
 const ALL_LOCATIONS = "all";
 
 type SeminarFinderProps = {
   id?: string;
-  title?: string;
+  headline?: string | null;
+  headlineLevel: "h2" | "h3" | "h4";
   categories: SeminarFinderCategory[];
   locations: SeminarFinderLocation[];
   initialCategorySlug?: string | null;
   initialLocationId?: string | null;
+  background?: SectionBackgroundKey | null;
 };
 
 const buttonBaseClasses =
@@ -23,13 +27,27 @@ const buttonActiveClasses =
 const buttonInactiveClasses =
   "ui-border bg-base-100 text-base-content hover:bg-base-200 hover:text-base-content/80 focus-visible:outline-base-content";
 
+const headingTags: Record<"h2" | "h3" | "h4", keyof JSX.IntrinsicElements> = {
+  h2: "h2",
+  h3: "h3",
+  h4: "h4"
+};
+
+const headingClasses: Record<"h2" | "h3" | "h4", string> = {
+  h2: "text-4xl font-light tracking-tight text-base-content md:text-5xl",
+  h3: "text-3xl font-semibold tracking-tight text-base-content md:text-4xl",
+  h4: "text-2xl font-semibold tracking-tight text-base-content md:text-3xl"
+};
+
 export function SeminarFinder({
   id,
-  title = "Finde deine passende Vortbildung",
+  headline,
+  headlineLevel,
   categories,
   locations,
   initialCategorySlug,
-  initialLocationId
+  initialLocationId,
+  background
 }: SeminarFinderProps) {
   const safeCategories = useMemo(
     () => (Array.isArray(categories) ? categories : []),
@@ -94,59 +112,71 @@ export function SeminarFinder({
   const categoriesToDisplay =
     hasSeminars || selectedCategory === ALL_CATEGORIES ? categoriesWithSeminars : fallbackCategories;
 
+  const resolvedBackground = resolveSectionBackground(background ?? null);
+  const style = useMemo(
+    () => ({ backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` }),
+    [resolvedBackground]
+  );
+
+  const showHeadline = typeof headline === "string" && headline.trim().length > 0;
+  const HeadingTag = headingTags[headlineLevel];
+  const headingClass = headingClasses[headlineLevel];
+
   return (
-    <section id={id ?? undefined} className="mx-auto max-w-6xl px-6 py-16 md:px-8">
-      <div className="space-y-10">
-        <div className="space-y-3">
-          <h2 className="text-xl font-semibold text-base-content md:text-2xl">{title}</h2>
-        </div>
+    <section id={id ?? undefined} style={style}>
+      <div className="mx-auto max-w-6xl px-6 py-16 md:px-8">
+        <div className="space-y-10">
+          {showHeadline ? (
+            <div className="space-y-3">
+              <HeadingTag className={headingClass}>{headline}</HeadingTag>
+            </div>
+          ) : null}
 
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap gap-3 lg:max-w-4xl">
-            <button
-              type="button"
-              className={`${buttonBaseClasses} ${
-                selectedCategory === ALL_CATEGORIES ? buttonActiveClasses : buttonInactiveClasses
-              }`}
-              onClick={() => setSelectedCategory(ALL_CATEGORIES)}
-            >
-              Alle Kategorien
-            </button>
-
-            {safeCategories.map((category) => (
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap gap-3 lg:max-w-4xl">
               <button
-                key={category.slug}
                 type="button"
                 className={`${buttonBaseClasses} ${
-                  selectedCategory === category.slug ? buttonActiveClasses : buttonInactiveClasses
+                  selectedCategory === ALL_CATEGORIES ? buttonActiveClasses : buttonInactiveClasses
                 }`}
-                onClick={() => setSelectedCategory(category.slug)}
+                onClick={() => setSelectedCategory(ALL_CATEGORIES)}
               >
-                {category.name}
+                Alle Kategorien
               </button>
-            ))}
+
+              {safeCategories.map((category) => (
+                <button
+                  key={category.slug}
+                  type="button"
+                  className={`${buttonBaseClasses} ${
+                    selectedCategory === category.slug ? buttonActiveClasses : buttonInactiveClasses
+                  }`}
+                  onClick={() => setSelectedCategory(category.slug)}
+                >
+                  {category.name}
+                </button>
+              ))}
+            </div>
+
+            <label className="flex items-center gap-3 text-base-content/80">
+              <span className="text-sm font-semibold text-base-content/60">Standort</span>
+              <select
+                className="select select-bordered select-sm w-48 border-base-300 bg-base-100 text-base-content shadow-sm shadow-base-300/40"
+                value={selectedLocation}
+                onChange={(event) => setSelectedLocation(event.target.value)}
+              >
+                <option value={ALL_LOCATIONS}>Alle Standorte</option>
+                {safeLocations.map((location) => (
+                  <option key={location.id} value={location.id}>
+                    {location.label}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
 
-          <label className="flex items-center gap-3 text-base-content/80">
-            <span className="text-sm font-semibold text-base-content/60">Standort</span>
-            <select
-              className="select select-bordered select-sm w-48 border-base-300 bg-base-100 text-base-content shadow-sm shadow-base-300/40"
-              value={selectedLocation}
-              onChange={(event) => setSelectedLocation(event.target.value)}
-            >
-              <option value={ALL_LOCATIONS}>Alle Standorte</option>
-              {safeLocations.map((location) => (
-                <option key={location.id} value={location.id}>
-                  {location.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        <div className="space-y-8">
-          {categoriesToDisplay.map(({ category, seminars }) => {
-            return (
+          <div className="space-y-8">
+            {categoriesToDisplay.map(({ category, seminars }) => (
               <div
                 key={category.slug}
                 className="rounded-[24px] bg-secondary px-6 py-8 text-secondary-content shadow-[0_18px_40px_-24px_rgba(34,55,99,0.55)] md:px-10 md:py-10"
@@ -199,15 +229,15 @@ export function SeminarFinder({
                   </div>
                 )}
               </div>
-            );
-          })}
+            ))}
 
-          {!hasSeminars && selectedCategory === ALL_CATEGORIES ? (
-            <div className="rounded-3xl border border-dashed border-base-300 p-10 text-center text-base-content/70">
-              Es sind keine Seminare für diese Filterkombination verfügbar. Ändere die Auswahl, um weitere Seminare zu
-              entdecken.
-            </div>
-          ) : null}
+            {!hasSeminars && selectedCategory === ALL_CATEGORIES ? (
+              <div className="rounded-3xl border border-dashed border-base-300 p-10 text-center text-base-content/70">
+                Es sind keine Seminare für diese Filterkombination verfügbar. Ändere die Auswahl, um weitere Seminare zu
+                entdecken.
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
     </section>

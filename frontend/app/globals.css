@@ -18,6 +18,15 @@
   --color-base-content: oklch(21% 0.006 285.885);
   --color-primary: oklch(80% 0.105 251.813);
   --color-primary-content: oklch(39% 0.09 240.876);
+  --section-bg-neutral: var(--color-base-200);
+  --section-bg-black: oklch(10% 0 0);
+  --section-bg-wine-blue: var(--color-primary);
+  --section-bg-wine-blue-light: oklch(88% 0.08 251.813);
+  --section-bg-wine-blue-lighter: oklch(92% 0.06 251.813);
+  --section-bg-wine-blue-lightest: oklch(96% 0.04 251.813);
+  --section-bg-wine-blue-dark: oklch(60% 0.1 251.813);
+  --section-bg-wine-blue-darker: oklch(45% 0.09 251.813);
+  --section-bg-wine-blue-darkest: oklch(35% 0.08 251.813);
   --color-secondary: #506A7E;
   --color-secondary-content: oklch(98% 0.003 247.858);
   --color-accent: oklch(0.583 0.082 244.6);

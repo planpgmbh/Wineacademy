@@ -35,7 +35,9 @@
         "landing.text-block",
         "landing.icon-grid",
         "landing.hero-carousel",
-        "landing.seminar-liste"
+        "landing.seminar-liste",
+        "landing.tabs",
+        "landing.seminar-finder"
       ]
     },
     "seo": {

@@ -5,11 +5,16 @@
     "description": "Hero-Sektion mit vollflächigem Bildkarussell, Titel und Einleitungstext."
   },
   "attributes": {
-    "titel": {
+    "headline": {
       "type": "string",
       "required": true
     },
-    "text": {
+    "headlineLevel": {
+      "type": "enumeration",
+      "enum": ["h1", "h2", "h3", "h4"],
+      "default": "h2"
+    },
+    "einleitung": {
       "type": "text"
     },
     "rotationDelaySeconds": {
