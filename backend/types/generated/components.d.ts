@@ -118,6 +118,21 @@ export interface LandingHeroCarousel extends Struct.ComponentSchema {
   };
 }
 
+export interface LandingHeroSmall extends Struct.ComponentSchema {
+  collectionName: 'components_landing_hero_smalls';
+  info: {
+    description: 'Kompakter Hero-Bereich mit stark weichgezeichnetem Hintergrundbild.';
+    displayName: 'Hero (Klein)';
+  };
+  attributes: {
+    headline: Schema.Attribute.String & Schema.Attribute.Required;
+    headlineLevel: Schema.Attribute.Enumeration<['h1', 'h2', 'h3', 'h4']> &
+      Schema.Attribute.DefaultTo<'h2'>;
+    einleitung: Schema.Attribute.Text;
+    hintergrundbild: Schema.Attribute.Media<'images'>;
+  };
+}
+
 export interface LandingCard extends Struct.ComponentSchema {
   collectionName: 'components_landing_cards';
   info: {
@@ -348,6 +363,7 @@ declare module '@strapi/strapi' {
       'landing.card-grid': LandingCardGrid;
       'landing.hero': LandingHero;
       'landing.hero-carousel': LandingHeroCarousel;
+      'landing.hero-small': LandingHeroSmall;
       'landing.icon-grid': LandingIconGrid;
       'landing.icon-item': LandingIconItem;
       'landing.seminar-liste': LandingSeminarListe;

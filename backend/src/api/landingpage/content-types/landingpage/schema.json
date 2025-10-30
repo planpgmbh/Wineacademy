@@ -31,10 +31,11 @@
       "type": "dynamiczone",
       "components": [
         "landing.hero",
+        "landing.hero-carousel",
+        "landing.hero-small",
         "landing.card-grid",
         "landing.text-block",
         "landing.icon-grid",
-        "landing.hero-carousel",
         "landing.seminar-liste",
         "landing.tabs",
         "landing.seminar-finder"

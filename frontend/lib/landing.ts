@@ -76,6 +76,14 @@ type StrapiHeroCarouselComponent = {
   bilder?: StrapiUploadFile[] | null;
 };
 
+type StrapiHeroSmallComponent = {
+  __component: "landing.hero-small";
+  headline: string;
+  headlineLevel?: "h1" | "h2" | "h3" | "h4" | null;
+  einleitung?: string | null;
+  hintergrundbild?: StrapiUploadFile | null;
+};
+
 type StrapiSeminarListComponent = {
   __component: "landing.seminar-liste";
   headline?: string | null;
@@ -153,6 +161,7 @@ type StrapiSeminarFinderComponent = {
 type StrapiLandingComponent =
   | StrapiHeroComponent
   | StrapiHeroCarouselComponent
+  | StrapiHeroSmallComponent
   | StrapiSeminarListComponent
   | StrapiCardGridComponent
   | StrapiTextBlockComponent
@@ -254,6 +263,17 @@ export type LandingHeroCarouselSection = {
   }[];
 };
 
+export type LandingHeroSmallSection = {
+  type: "hero-small";
+  headline: string;
+  headlineLevel: "h1" | "h2" | "h3" | "h4";
+  intro?: string | null;
+  image?: {
+    src: string;
+    alt: string;
+  } | null;
+};
+
 export type LandingHeroVideoSection = {
   type: "hero-video";
   headline: string;
@@ -347,6 +367,7 @@ type LandingUnknownSection = {
 export type LandingSection =
   | LandingHeroVideoSection
   | LandingHeroCarouselSection
+  | LandingHeroSmallSection
   | LandingCardGridSection
   | LandingTextBlockSection
   | LandingIconGridSection
@@ -389,6 +410,29 @@ const transformHeroCarousel = (component: StrapiHeroCarouselComponent): LandingH
     intro: normaliseRichText(component.einleitung ?? null),
     rotationIntervalMs,
     slides
+  };
+};
+
+const transformHeroSmall = (component: StrapiHeroSmallComponent): LandingHeroSmallSection => {
+  const media = component.hintergrundbild ?? null;
+  let image: LandingHeroSmallSection["image"] = null;
+
+  if (media?.url) {
+    const src = mediaUrl(media.url);
+    if (src) {
+      image = {
+        src,
+        alt: toSlideAlt(media)
+      };
+    }
+  }
+
+  return {
+    type: "hero-small",
+    headline: normaliseString(component.headline) || "Hero",
+    headlineLevel: normaliseHeroHeadingLevel(component.headlineLevel ?? null),
+    intro: normaliseRichText(component.einleitung ?? null),
+    image
   };
 };
 
@@ -553,6 +597,9 @@ const transformSection = (component: StrapiLandingComponent): LandingSection => 
   }
   if (component.__component === "landing.hero-carousel") {
     return transformHeroCarousel(component as StrapiHeroCarouselComponent);
+  }
+  if (component.__component === "landing.hero-small") {
+    return transformHeroSmall(component as StrapiHeroSmallComponent);
   }
   if (component.__component === "landing.seminar-liste") {
     return transformSeminarList(component as StrapiSeminarListComponent);

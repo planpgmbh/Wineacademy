@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { CardGrid } from "@/components/landing/CardGrid";
 import { HeroCarousel } from "@/components/landing/HeroCarousel";
+import { HeroSmall } from "@/components/landing/HeroSmall";
 import { HeroVideo } from "@/components/landing/HeroVideo";
 import { IconGrid } from "@/components/landing/IconGrid";
 import { SeminarList } from "@/components/landing/SeminarList";
@@ -13,6 +14,7 @@ import { SeminarFinder as LandingSeminarFinder } from "@/components/seminar/Semi
 import {
   fetchLandingPage,
   type LandingHeroCarouselSection,
+  type LandingHeroSmallSection,
   type LandingHeroVideoSection,
   type LandingPage,
   type LandingSection,
@@ -48,6 +50,15 @@ function findHeroCarousel(sections: LandingSection[]): LandingHeroCarouselSectio
   return null;
 }
 
+function findHeroSmall(sections: LandingSection[]): LandingHeroSmallSection | null {
+  for (const section of sections) {
+    if (section.type === "hero-small") {
+      return section;
+    }
+  }
+  return null;
+}
+
 function findHeroVideo(sections: LandingSection[]): LandingHeroVideoSection | null {
   for (const section of sections) {
     if (section.type === "hero-video") {
@@ -67,10 +78,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const heroVideo = findHeroVideo(landing.sections);
   const heroCarousel = findHeroCarousel(landing.sections);
+  const heroSmall = findHeroSmall(landing.sections);
 
   return {
     title: landing.title ?? slug,
-    description: heroVideo?.intro ?? heroCarousel?.intro ?? FALLBACK_METADATA.description
+    description: heroVideo?.intro ?? heroCarousel?.intro ?? heroSmall?.intro ?? FALLBACK_METADATA.description
   };
 }
 
@@ -125,6 +137,19 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
           intro={section.intro}
           slides={section.slides}
           rotationIntervalMs={section.rotationIntervalMs}
+        />
+      );
+      continue;
+    }
+
+    if (section.type === "hero-small") {
+      content.push(
+        <HeroSmall
+          key={`hero-small-${index}`}
+          headline={section.headline}
+          headlineLevel={section.headlineLevel}
+          intro={section.intro}
+          image={section.image}
         />
       );
       continue;
@@ -189,7 +214,8 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
 
   const hasHero =
     sections.some((section) => section.type === "hero-carousel") ||
-    sections.some((section) => section.type === "hero-video");
+    sections.some((section) => section.type === "hero-video") ||
+    sections.some((section) => section.type === "hero-small");
 
   if (!hasHero) {
     content.unshift(

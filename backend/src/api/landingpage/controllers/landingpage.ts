@@ -17,10 +17,11 @@ export default factories.createCoreController(CONTENT_UID, ({ strapi }) => ({
         abschnitte: {
           on: {
             "landing.hero": true,
+            "landing.hero-carousel": { populate: { bilder: true } },
+            "landing.hero-small": { populate: { hintergrundbild: true } },
             "landing.text-block": true,
             "landing.card-grid": { populate: { karten: true } },
             "landing.icon-grid": { populate: { items: true } },
-            "landing.hero-carousel": { populate: { bilder: true } },
             "landing.seminar-liste": {
               populate: {
                 seminarkategorie: {
