@@ -1,0 +1,33 @@
+{
+  "name": "Prüfung WSET® Level 3 Weine",
+  "slug": "buchung-pruefung-wset-level-3-weine",
+  "kurzbeschreibung": "Prüfungsanmeldung für WSET® Level 3 Weine: Theorie & Verkostung. Auch für Wiederholungsprüfungen Theorie & Tasting.",
+  "beschreibung": "Prüfungsanmeldung für WSET® Level 3 Weine.",
+  "preis": "285.00",
+  "mwst": true,
+  "kapazitaet": 30,
+  "heroDarkMode": false,
+  "aktiv": true,
+  "bookingbox": {
+    "topline": "Jetzt Anmelden",
+    "headline": "Sichere dir deinen Platz",
+    "body": "Prüfungsanmeldung für WSET® Level 3 Weine: Theorie & Verkostung. Auch für Wiederholungsprüfungen Theorie & Tasting."
+  },
+  "seminarinhalte": [
+    {
+      "titel": "Beschreibung",
+      "inhalt": "Du hast bereits einen Kurs besucht bei der Wine Academy Hamburg besucht?\nDu hast noch keine Prüfung für\nWSET® Level 3 Weine (https://www.wineacademy.de/buchung/wset-level-3-weine/)\nabgelegt?\nDu brauchst eine Wiederholungsprüfung?\nDann buche jetzt Deinen Platz.\nDu hast bereits einen Teil der Prüfung bestanden und wiederholst nur einen Teil?\nDann buche hier Deinen Termin für die\nTheorieprüfung (https://www.wineacademy.de/buchung/wset-level-3-weine-theorie-pruefung/)\noder\nTasting-Prüfung (https://www.wineacademy.de/buchung/wset-level-3-weine-verkostungs-pruefung/)\n.\nAlle Infos zu den Prüfungsinhalten findest Du in der\nSpezifikation (https://www.wsetglobal.com/media/4722/wset_l3wines_specification_de_aug2017.pdf)\nWSET Level 3 Weine."
+    },
+    {
+      "titel": "Infos",
+      "inhalt": "TERMINE:\n27.11.2025\nPREIS:\n285,00 €\nORT:\nWine Academy Hamburg\nEimsbütteler Chaussee 37\n20259 Hamburg\nZULASSUNGSVORAUSSETZUNG:\nKursbesuch Level 3 Weine (Bestätigung erforderlich)\nANMELDUNG:\nBis 12 Werktage vor dem Prüfungstermin\nUHRZEIT:\n09:30 Uhr\nDATE_OVERRIDE\nPrüfungsdatum auf Anfrage"
+    }
+  ],
+  "seo": {
+    "title": "Prüfung WSET® Level 3 Weine",
+    "description": "Prüfungsanmeldung für WSET® Level 3 Weine: Theorie & Verkostung. Auch für Wiederholungsprüfungen Theorie & Tasting."
+  },
+  "kategorien": [
+    "wset"
+  ]
+}

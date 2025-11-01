@@ -12,7 +12,7 @@ export default factories.createCoreController(CONTENT_UID, ({ strapi }) => ({
 
     const entries = await strapi.entityService.findMany(CONTENT_UID as any, {
       filters: { slug },
-      publicationState: "live",
+      status: "published",
       populate: {
         abschnitte: {
           on: {
@@ -37,6 +37,9 @@ export default factories.createCoreController(CONTENT_UID, ({ strapi }) => ({
             "landing.seminar-finder": {
               populate: {
                 standardKategorie: {
+                  fields: ["id", "name", "slug"]
+                },
+                sichtbareFilter: {
                   fields: ["id", "name", "slug"]
                 }
               }

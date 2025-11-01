@@ -299,6 +299,7 @@ function renderSeminarFinder(
       categories={data.categories}
       locations={data.locations}
       initialCategorySlug={section.initialCategorySlug}
+      allowedCategorySlugs={section.allowedCategorySlugs}
     />
   );
 }

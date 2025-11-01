@@ -1,0 +1,30 @@
+{
+  "name": "Berufspezialist/in gepr. Sommelier/Sommelière (IHK) - Wine Academy Hamburg",
+  "slug": "buchung-gepr-sommelier-sommeliere-ihk",
+  "kurzbeschreibung": "Entdecke die vielfältige Welt der Weine und Getränke mit der IHK Weiterbildung zum/r Berufsspezialist/In Sommelier/Sommelière! Werde zum modernen Gastgeber mit praxisnahem und zeitgemäßem Knowhow. Berufsbegleitend und individuell.",
+  "beschreibung": "Entdecke die vielfältige Welt der Weine und Getränke mit der IHK Weiterbildung zum/r Berufsspezialist/In Sommelier/Sommelière! Werde zum modernen Gastgeber mit praxisnahem und zeitgemäßem Knowhow. Berufsbegleitend und individuell.",
+  "preis": "8000.00",
+  "mwst": true,
+  "kapazitaet": 30,
+  "heroDarkMode": false,
+  "aktiv": true,
+  "bookingbox": {
+    "topline": "Jetzt Anmelden",
+    "headline": "Sichere dir deinen Platz",
+    "body": "Entdecke die vielfältige Welt der Weine und Getränke mit der IHK Weiterbildung zum/r Berufsspezialist/In Sommelier/Sommelière! Werde zum modernen Gastgeber mit praxisnahem und zeitgemäßem Knowhow. Berufsbegleitend und individuell."
+  },
+  "seminarinhalte": [
+    {
+      "titel": "Beschreibung",
+      "inhalt": "STARTTERMIN:\nFebruar 2025\nFebruar 2026\nPREIS:\n€ 8000,00\nORT:\nWine Academy Hamburg\nEimsbütteler Chaussee 37\n20259 Hamburg\nPRÜFUNGSTERMIN:\n15.09 – 16.09.2025\n14.09. – 15.09.2026"
+    }
+  ],
+  "seo": {
+    "title": "Berufspezialist/in gepr. Sommelier/Sommelière (IHK) - Wine Academy Hamburg",
+    "description": "Entdecke die vielfältige Welt der Weine und Getränke mit der IHK Weiterbildung zum/r Berufsspezialist/In Sommelier/Sommelière! Werde zum modernen Gastgeber mit praxisnahem und zeitgemäßem Knowhow. Berufsbegleitend und individuell."
+  },
+  "kategorien": [
+    "kurse",
+    "sommelier"
+  ]
+}

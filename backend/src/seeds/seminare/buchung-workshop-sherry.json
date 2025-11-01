@@ -1,0 +1,33 @@
+{
+  "name": "Workshop: Sherry - Wine Academy Hamburg",
+  "slug": "buchung-workshop-sherry",
+  "kurzbeschreibung": "Sherry Workshop in Hamburg: Entdecke ungespriteten Sherry, neue Rebsorten & Terroir aus Jerez. Aktuelle Trends & Verkostung bei der Wine Academy Hamburg.",
+  "beschreibung": "Was passiert, wenn ein Klassiker alte Regeln hinter sich lässt?\nUngespritet, lagenbezogen, vielfältiger denn je – Sherry erfindet sich gerade neu.\nIn unserem Workshop erfährst du, was sich in Jerez wirklich verändert hat – und wie das schmeckt.",
+  "preis": "29.00",
+  "mwst": true,
+  "kapazitaet": 30,
+  "heroDarkMode": false,
+  "aktiv": true,
+  "bookingbox": {
+    "topline": "Jetzt Anmelden",
+    "headline": "Sichere dir deinen Platz",
+    "body": "Sherry Workshop in Hamburg: Entdecke ungespriteten Sherry, neue Rebsorten & Terroir aus Jerez. Aktuelle Trends & Verkostung bei der Wine Academy Hamburg."
+  },
+  "seminarinhalte": [
+    {
+      "titel": "Beschreibung",
+      "inhalt": "Sherry. Aber anders.\nEin Wein, der Geschichte atmet. Geschichte, die gerade neu geschrieben wird:\nIn kaum einer europäischen Weinregion tut sich derzeit so viel wie im andalusischen Jerez. Ob ungespritete Finos, neue autochthone Rebsorten oder offiziell zugelassene Einzellagen – der klassische Sherry erlebt einen tiefgreifenden Wandel. Dieser Workshop nimmt die jüngsten Entwicklungen genau unter die Lupe und zeigt, wie sich Herkunft, Stil und Qualität in der D.O. Jerez neu definieren.\nInhalte des Workshops:\nRegelreform der\nD.O. Jerez (https://www.sherry.wine)\n(seit 2022)\n: Was hat sich geändert – und warum?\nAufspritung war gestern:\nDer Weg zum ungespriteten Sherry\nWiederentdeckte Vielfalt\n: Sechs neue/alte Rebsorten und ihre stilistische Bedeutung\nPagos und Terroir\n: Einzellagen im Sherry – endlich sichtbar gemacht\nNeue offizielle Kategorien\n: Fino Viejo, Manzanilla Pasada & Co.\nVerkostung\n: Klassische und moderne Stilistiken im direkten Vergleich\nFür wen ist dieser Workshop gedacht?\nFür\nSommeliers (https://www.wineacademy.de/buchung/gepr-sommelier-sommeliere-ihk/)\n, Fachhändler:innen, Weinbegeisterte und alle, die Sherry neu verstehen wollen. Vorkenntnisse sind willkommen, aber nicht Voraussetzung."
+    },
+    {
+      "titel": "Infos",
+      "inhalt": "TERMINE:\nMontag, 30.06.2025\nDAUER:\n17.00 – 19:00 Uhr\nORT:\nWine Academy Hamburg\nEimsbütteler Chaussee 37\n20259 Hamburg"
+    }
+  ],
+  "seo": {
+    "title": "Workshop: Sherry - Wine Academy Hamburg",
+    "description": "Sherry Workshop in Hamburg: Entdecke ungespriteten Sherry, neue Rebsorten & Terroir aus Jerez. Aktuelle Trends & Verkostung bei der Wine Academy Hamburg."
+  },
+  "kategorien": [
+    "tastings-events"
+  ]
+}

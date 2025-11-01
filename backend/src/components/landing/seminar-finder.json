@@ -32,6 +32,11 @@
       "type": "relation",
       "relation": "oneToOne",
       "target": "api::kategorie.kategorie"
+    },
+    "sichtbareFilter": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::kategorie.kategorie"
     }
   }
 }

@@ -77,6 +77,7 @@ export interface LandingSeminarFinder extends Struct.ComponentSchema {
       'wine-blue-darkest'
     ]>;
     standardKategorie: Schema.Attribute.Relation<'oneToOne', 'api::kategorie.kategorie'>;
+    sichtbareFilter: Schema.Attribute.Relation<'oneToMany', 'api::kategorie.kategorie'>;
   };
 }
 
@@ -266,7 +267,8 @@ export interface LandingTextBlock extends Struct.ComponentSchema {
       'wine-blue-darker',
       'wine-blue-darkest'
     ]>;
-    einleitung: Schema.Attribute.RichText;
+    einleitung: Schema.Attribute.Text &
+      Schema.Attribute.CustomField<'plugin::advanced-richtext.advanced-richtext'>;
     buttonLabel: Schema.Attribute.String;
     buttonLink: Schema.Attribute.String;
   };

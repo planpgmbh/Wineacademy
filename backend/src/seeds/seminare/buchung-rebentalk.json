@@ -1,0 +1,31 @@
+{
+  "name": "Reben Talk - Wine Academy Hamburg",
+  "slug": "buchung-rebentalk",
+  "kurzbeschreibung": "1 Rebsorte. 4 Weine. 1,5 Stunden. Tasting in Hamburg: 4 Weine in 90 Min. entdecken Weinwissen, Verkostung & Austausch im Afterwork-Format.",
+  "beschreibung": "1 Rebsorte\n4 Weine\n1,5 Stunden\n(kleine Snacks inklusive)",
+  "preis": "39.00",
+  "mwst": true,
+  "kapazitaet": 30,
+  "heroDarkMode": false,
+  "aktiv": true,
+  "bookingbox": {
+    "topline": "Jetzt Anmelden",
+    "headline": "Sichere dir deinen Platz",
+    "body": "1 Rebsorte. 4 Weine. 1,5 Stunden. Tasting in Hamburg: 4 Weine in 90 Min. entdecken Weinwissen, Verkostung & Austausch im Afterwork-Format."
+  },
+  "seminarinhalte": [
+    {
+      "titel": "Beschreibung",
+      "inhalt": "Rebsorte des Monats – Reben-Talk in der\nWine Academy Hamburg (https://www.wineacademy.de/wein-neu-entdecken/)\n.\nEin Rebsorten-Tasting, das auf den Punkt kommt: Jeden dritten Donnerstag im Monat legen wir 1,5 Stunden lang den Fokus auf eine Rebsorte. Wir verkosten gemeinsam vier ausgewählte Weine, die das Typische der Rebsorte zeigen.\nOb Klassiker oder Neuentdeckung: Wir geben euch Einblick, ordnen ein und laden zum Mitdiskutieren ein. Keine Frontalverkostung, sondern ein offenes Afterwork-Format mit Fragen, Eindrücken und Austausch.\nDazu gibt’s ein paar kleine Snacks.\n13.11.2025: Syrah/Shiraz\n11.12.2025: Bubbles around the world\n22.01.2026:\nalkoholfreie Proxys (https://www.wineacademy.de/buchung/workshop-alkoholfreie-getraenke/)\n19.02.2026: Cabernet Franc\n19.03.2026: Sangiovese\n23.04.2026: Grenache Blanc\n21.05.2026: Trollinger/Vernatsch\n18.06.2026: Müller-Thurgau\nJuli: Fußball-Pause\n20.08.2026: Alvarinho /Albariño\n17.09.2026: Assyrtiko\n15.10.2026: Nebbiolo\n19.11.2026: Monastrell/Mourvédre\n17.12.2026:\nBubbles (https://www.wineacademy.de/buchung/masterclass-champagner/)\naround the World\nJETZT BUCHEN"
+    },
+    {
+      "titel": "Infos",
+      "inhalt": "TERMINE:\n16.10.2025: Viognier\n13.11.2025: Syrah/Shiraz\n11.12.2025: Bubbles around the world\n22.01.2026: alkoholfreie Proxys\n19.02.2026: Cabernet Franc\n19.03.2026: Sangiovese\n23.04.2026: Grenache Blanc\n21.05.2026: Trollinger/Vernatsch\n18.06.2026: Müller-Thurgau\nJuli: Fußball-Pause\n20.08.2026: Alvarinho /Albariño\n17.09.2026: Assyrtiko\n15.10.2026: Nebbiolo\n19.11.2026: Monastrell/Mourvèdre\n17.12.2026: Bubbles around the World\nDAUER:\n18.30 – 20.00 Uhr\nPREIS:\n€ 39,00\nORT:\nWine Academy Hamburg\nEimsbütteler Chaussee 37\n20259 Hamburg"
+    }
+  ],
+  "seo": {
+    "title": "Reben Talk - Wine Academy Hamburg",
+    "description": "1 Rebsorte. 4 Weine. 1,5 Stunden. Tasting in Hamburg: 4 Weine in 90 Min. entdecken Weinwissen, Verkostung & Austausch im Afterwork-Format."
+  },
+  "kategorien": []
+}

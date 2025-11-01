@@ -1,0 +1,33 @@
+{
+  "name": "Wiederholungsprüfung WSET Level 3 Wein Wine Academy Hamburg",
+  "slug": "buchung-wset-level-3-weine-theorie-pruefung",
+  "kurzbeschreibung": "Prüfungstermin für WSET® Level 3 Weine: Wiederholungsprüfung für den Theorieteil.",
+  "beschreibung": "Prüfungsanmeldung für WSET Level 3 Weine THEORIE.\nNur für Wiederholungsprüfungen.\nNur für Kursteilnehmer:innen der Wine Academy Hamburg.",
+  "preis": "165.00",
+  "mwst": true,
+  "kapazitaet": 30,
+  "heroDarkMode": false,
+  "aktiv": true,
+  "bookingbox": {
+    "topline": "Jetzt Anmelden",
+    "headline": "Sichere dir deinen Platz",
+    "body": "Prüfungstermin für WSET® Level 3 Weine: Wiederholungsprüfung für den Theorieteil."
+  },
+  "seminarinhalte": [
+    {
+      "titel": "Beschreibung",
+      "inhalt": "Du hast bereits einen Kurs bei der Wine Academy Hamburg besucht?\nDu hast noch keine Prüfung für WSET® Level 3 Weine abgelegt?\nDu brauchst eine Wiederholungsprüfung?\nDann buche\nhier (https://www.wineacademy.de/buchung/pruefung-wset-level-3-weine/)\ndeinen Platz."
+    },
+    {
+      "titel": "Infos",
+      "inhalt": "PREIS:\n165,00 €\nORT:\nWine Academy Hamburg\nEimsbütteler Chaussee 37\n20259 Hamburg\nZULASSUNGSVORAUSSETZUNG:\nKursbesuch WSET Level 3 Weine (Wine Academy Hamburg). Wenn Du woanders einen Kurs besucht hast, schreib uns eine E-Mail.\nANMELDUNG:\nBis 12 Werktage vor dem Prüfungstermin"
+    }
+  ],
+  "seo": {
+    "title": "Wiederholungsprüfung WSET Level 3 Wein Wine Academy Hamburg",
+    "description": "Prüfungstermin für WSET® Level 3 Weine: Wiederholungsprüfung für den Theorieteil."
+  },
+  "kategorien": [
+    "wset"
+  ]
+}

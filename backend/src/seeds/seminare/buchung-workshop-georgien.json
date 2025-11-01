@@ -1,0 +1,33 @@
+{
+  "name": "Workshop: Georgien - Wine Academy Hamburg",
+  "slug": "buchung-workshop-georgien",
+  "kurzbeschreibung": "Georgien-die Wiege des Weines. Erfahrt mehr über dieses spannende und ursprüngliche Weinanbaugebiet zwischen Europa und Asien in der Wine Academy Hamburg.",
+  "beschreibung": "Georgien-die Wiege des Weines. Erfahrt mehr über dieses spannende und ursprüngliche Weinanbaugebiet zwischen Europa und Asien in der Wine Academy Hamburg.",
+  "preis": "29.00",
+  "mwst": true,
+  "kapazitaet": 30,
+  "heroDarkMode": false,
+  "aktiv": true,
+  "bookingbox": {
+    "topline": "Jetzt Anmelden",
+    "headline": "Sichere dir deinen Platz",
+    "body": "Georgien-die Wiege des Weines. Erfahrt mehr über dieses spannende und ursprüngliche Weinanbaugebiet zwischen Europa und Asien in der Wine Academy Hamburg."
+  },
+  "seminarinhalte": [
+    {
+      "titel": "Beschreibung",
+      "inhalt": "Georgien. Wo alles begann.\nGeorgien gilt als die Wiege des Weins.\n8.000 Jahre Weingeschichte, 525 einheimische Rebsorten, Wein in Tonamphoren – und ein Land, in dem Wein bis heute Kultur, Identität und Alltag ist. Doch was bedeutet das konkret für Stil, Herkunft und Qualität?\nDieser Workshop gibt einen kompakten Überblick über das Weinland Georgien – von seiner bewegten Geschichte bis hin zu den Besonderheiten des georgischen Terroirs und der uralten Weinbereitung im Qvevri.\nModeriert wird der Workshop von Maik Schipmann, der sich in die faszinierende Weinwelt Georgiens “reingenerdet” hat. Seine Schaffensstätte ist das\n“Weinland Waterfront” (https://www.weinlandhamburg.de/)\nin Hamburg, woher auch die Weine für die Verkostung kommen werden.\nInhalte des Workshops:\nÜberblick\n: Einführung in das Weinland Georgien\nDie Weinregionen Georgiens\n: 10 Regionen, 29 PDOs\nDie Rebsorten\n: Über 525 Rebsorten – aber welche zählen wirklich?\nDie Qvevri\n: Ton, Tradition, Tuner – die Amphore als Stilgeber\nDie Weinstile aus Georgien\n: Klassisch, natürlich, puristisch\nVerkostung\n: Weine aus einer anderen Zeit, die Lust auf mehr machen\nFür wen ist dieser Workshop gedacht?\nFür\nSommeliers (https://www.wineacademy.de/buchung/gepr-sommelier-sommeliere-ihk/)\n, Fachhändler:innen, Weinbegeisterte und alle, die das Weinland Georgien kennenlernen wollen. Vorkenntnisse sind willkommen, aber nicht Voraussetzung."
+    },
+    {
+      "titel": "Infos",
+      "inhalt": "TERMINE:\nMontag, 21.07.2025\nDAUER:\n17.00 – 19:00 Uhr\nORT:\nWine Academy Hamburg\nEimsbütteler Chaussee 37\n20259 Hamburg"
+    }
+  ],
+  "seo": {
+    "title": "Workshop: Georgien - Wine Academy Hamburg",
+    "description": "Georgien-die Wiege des Weines. Erfahrt mehr über dieses spannende und ursprüngliche Weinanbaugebiet zwischen Europa und Asien in der Wine Academy Hamburg."
+  },
+  "kategorien": [
+    "tastings-events"
+  ]
+}

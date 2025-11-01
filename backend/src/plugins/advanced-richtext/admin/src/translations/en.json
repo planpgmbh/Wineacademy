@@ -1,0 +1,6 @@
+{
+  "advanced-richtext.field.label": "Richtext (Advanced)",
+  "advanced-richtext.field.description": "Structured text with toolbar and HTML view toggle.",
+  "advanced-richtext.field.toggle.visual": "Visual",
+  "advanced-richtext.field.toggle.html": "HTML"
+}

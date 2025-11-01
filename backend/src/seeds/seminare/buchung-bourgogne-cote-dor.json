@@ -1,0 +1,35 @@
+{
+  "name": "Bourgogne – die Côte d’Or - Wine Academy Hamburg",
+  "slug": "buchung-bourgogne-cote-dor",
+  "kurzbeschreibung": "Côte d'Or: Verkoste exklusive Weine der Côte de Nuits u. Côte de Beaune. Entdecke einzigartige Weine aus Pinot Noir u. Chardonnay in der Wine Academy Hamburg.",
+  "beschreibung": "Dieser Höhepunkt des Bourgogne-Kurs-Trios widmet sich ganz der renommierten Côte d’Or.\nGemeinsam erkunden wir einen Tag lang die beiden prestigeträchtigen Unterregionen Côte de Beaune und Côte de Nuits, verkosten ausgewählte Weine und beschäftigen uns intensiv mit dem einzigartigen Terroir, das die Weine dieser Region so unverwechselbar macht.",
+  "preis": "450.00",
+  "mwst": true,
+  "kapazitaet": 30,
+  "heroDarkMode": false,
+  "aktiv": true,
+  "bookingbox": {
+    "topline": "Jetzt Anmelden",
+    "headline": "Sichere dir deinen Platz",
+    "body": "Côte d'Or: Verkoste exklusive Weine der Côte de Nuits u. Côte de Beaune. Entdecke einzigartige Weine aus Pinot Noir u. Chardonnay in der Wine Academy Hamburg."
+  },
+  "seminarinhalte": [
+    {
+      "titel": "Beschreibung",
+      "inhalt": "Die\nBourgogne (https://www.wineacademy.de/kurse/weinkurse/bourgogne/)\numfasst etwa 30.000 Hektar und teilt sich auf 84 verschiedenen Appellationen. Davon entfallen rund 7.500 Hektar auf die prestigeträchtige Côte d’Or, die sich in die Côte de Nuits und die Côte de Beaune aufteilt. Beide erstrecken sich über jeweils etwa 20 Kilometer von Nord nach Süd und sind vor allem vom Pinot Noir geprägt, der sich an der Côte d’Or in einer einzigartigen Vielfalt präsentiert.\nGanze 66 Appellationen sind in der Côte d’Or zu finden – ein klares Zeugnis für die beeindruckende Komplexität und Vielfalt dieser Region. Obwohl Pinot Noir dominiert, gibt es ebenso ikonische Lagen für Chardonnay, die als absolute Referenz gelten. Unser Ziel für diesen Tag ist es, euch sowohl einen tiefen Einblick als auch einen umfassenden Überblick zu verschaffen und die Feinheiten dieser einzigartigen Weinlandschaft nachvollziehbar zu machen.\nEin zentrales Thema des Tages wird das „Terroir“ der Bourgogne sein: von seiner geologischen Entstehung bis hin zur Auswirkung auf die Stilistik der Weine in beiden Tälern. Dieses Wissen werden wir durch eine exklusive Verkostung veranschaulichen.\nAn diesem Tag verkosten wir mindestens 16 herausragende Weine aller Klassifikationsstufen aus der Côte d’Or, um die Vielfalt dieser berühmten Region greifbar zu machen.\nDer Kurs findet mit Unterstützung des\nBIVB (https://www.vins-bourgogne.fr/mentions-legales/willkommen-auf-der-website-vins-de-bourgogne-.,2313,17457.html)\n(Bureau Interprofessionnel des Vins de Bourgogne) statt."
+    },
+    {
+      "titel": "Infos",
+      "inhalt": "TERMINE:\n08.11.2025\n28.03.2025\nDAUER:\n1 Tag, anschließende Kurzprüfung\n09:30 bis 17:00 Uhr\nORT:\nWine Academy Hamburg\nEimsbütteler Chaussee 37\n20259 Hamburg\nABSCHLUSS:\nAbschlusszertifikat der Wine Academy Hamburg\nANMELDUNG:\nmind. 2 Werktage vor dem Kurstermin"
+    }
+  ],
+  "seo": {
+    "title": "Bourgogne – die Côte d’Or - Wine Academy Hamburg",
+    "description": "Côte d'Or: Verkoste exklusive Weine der Côte de Nuits u. Côte de Beaune. Entdecke einzigartige Weine aus Pinot Noir u. Chardonnay in der Wine Academy Hamburg."
+  },
+  "kategorien": [
+    "bourgogne",
+    "kurse",
+    "weinkurse"
+  ]
+}

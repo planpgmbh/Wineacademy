@@ -18,6 +18,7 @@ type SeminarFinderProps = {
   initialCategorySlug?: string | null;
   initialLocationId?: string | null;
   background?: SectionBackgroundKey | null;
+  allowedCategorySlugs?: string[] | null;
 };
 
 const buttonBaseClasses =
@@ -47,36 +48,72 @@ export function SeminarFinder({
   locations,
   initialCategorySlug,
   initialLocationId,
-  background
+  background,
+  allowedCategorySlugs
 }: SeminarFinderProps) {
-  const safeCategories = useMemo(
-    () => (Array.isArray(categories) ? categories : []),
-    [categories]
-  );
-  const safeLocations = useMemo(
-    () => (Array.isArray(locations) ? locations : []),
-    [locations]
-  );
+  const allowedCategorySet = useMemo(() => {
+    if (!Array.isArray(allowedCategorySlugs)) {
+      return null;
+    }
+    const cleaned = allowedCategorySlugs
+      .map((slug) => (typeof slug === "string" ? slug.trim() : ""))
+      .filter((slug) => slug.length > 0);
+    if (cleaned.length === 0) {
+      return null;
+    }
+    return new Set(cleaned);
+  }, [allowedCategorySlugs]);
+
+  const availableCategories = useMemo(() => {
+    const base = Array.isArray(categories) ? categories : [];
+    if (!allowedCategorySet) {
+      return base;
+    }
+    const filtered = base.filter((category) => allowedCategorySet.has(category.slug));
+    return filtered.length > 0 ? filtered : base;
+  }, [categories, allowedCategorySet]);
+
+  const relevantLocationIds = useMemo(() => {
+    const ids = new Set<string>();
+    availableCategories.forEach((category) => {
+      category.seminars.forEach((seminar) => {
+        seminar.locationIds.forEach((locationId) => {
+          ids.add(locationId);
+        });
+      });
+    });
+    return Array.from(ids);
+  }, [availableCategories]);
+
+  const availableLocations = useMemo(() => {
+    const base = Array.isArray(locations) ? locations : [];
+    if (relevantLocationIds.length === 0) {
+      return base;
+    }
+    const relevantSet = new Set(relevantLocationIds);
+    const filtered = base.filter((location) => relevantSet.has(location.id));
+    return filtered.length > 0 ? filtered : base;
+  }, [locations, relevantLocationIds]);
 
   const initialCategory = useMemo(() => {
     if (typeof initialCategorySlug === "string") {
-      const match = safeCategories.find((category) => category.slug === initialCategorySlug);
+      const match = availableCategories.find((category) => category.slug === initialCategorySlug);
       if (match) {
         return match.slug;
       }
     }
     return ALL_CATEGORIES;
-  }, [initialCategorySlug, safeCategories]);
+  }, [initialCategorySlug, availableCategories]);
 
   const initialLocation = useMemo(() => {
     if (typeof initialLocationId === "string") {
-      const match = safeLocations.find((location) => location.id === initialLocationId);
+      const match = availableLocations.find((location) => location.id === initialLocationId);
       if (match) {
         return match.id;
       }
     }
     return ALL_LOCATIONS;
-  }, [initialLocationId, safeLocations]);
+  }, [initialLocationId, availableLocations]);
 
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [selectedLocation, setSelectedLocation] = useState<string>(initialLocation);
@@ -84,8 +121,8 @@ export function SeminarFinder({
   const { categoriesWithSeminars, fallbackCategories } = useMemo(() => {
     const baseCategories =
       selectedCategory === ALL_CATEGORIES
-        ? safeCategories
-        : safeCategories.filter((category) => category.slug === selectedCategory);
+        ? availableCategories
+        : availableCategories.filter((category) => category.slug === selectedCategory);
 
     const filtered = baseCategories.map((category) => {
       const seminars = category.seminars.filter((seminar) => {
@@ -106,7 +143,7 @@ export function SeminarFinder({
       categoriesWithSeminars: nonEmpty,
       fallbackCategories: filtered
     };
-  }, [safeCategories, selectedCategory, selectedLocation]);
+  }, [availableCategories, selectedCategory, selectedLocation]);
 
   const hasSeminars = categoriesWithSeminars.length > 0;
   const categoriesToDisplay =
@@ -144,7 +181,7 @@ export function SeminarFinder({
                 Alle Kategorien
               </button>
 
-              {safeCategories.map((category) => (
+              {availableCategories.map((category) => (
                 <button
                   key={category.slug}
                   type="button"
@@ -166,7 +203,7 @@ export function SeminarFinder({
                 onChange={(event) => setSelectedLocation(event.target.value)}
               >
                 <option value={ALL_LOCATIONS}>Alle Standorte</option>
-                {safeLocations.map((location) => (
+                {availableLocations.map((location) => (
                   <option key={location.id} value={location.id}>
                     {location.label}
                   </option>

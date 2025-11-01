@@ -156,6 +156,7 @@ type StrapiSeminarFinderComponent = {
   headlineLevel?: "h2" | "h3" | "h4" | null;
   sectionBackground?: string | null;
   standardKategorie?: StrapiCategorySummary | null;
+  sichtbareFilter?: StrapiCategorySummary[] | null;
 };
 
 type StrapiLandingComponent =
@@ -356,6 +357,7 @@ export type LandingSeminarFinderSection = {
   headlineLevel: "h2" | "h3" | "h4";
   background: SectionBackgroundKey | null;
   initialCategorySlug?: string | null;
+  allowedCategorySlugs: string[] | null;
 };
 
 type LandingUnknownSection = {
@@ -581,13 +583,18 @@ const transformSeminarFinderSection = (
   component: StrapiSeminarFinderComponent
 ): LandingSeminarFinderSection => {
   const categorySlug = normaliseOptionalString(component.standardKategorie?.slug ?? null);
+  const allowedCategorySlugs =
+    component.sichtbareFilter
+      ?.map((item) => normaliseOptionalString(item?.slug ?? null))
+      .filter((slug): slug is string => Boolean(slug)) ?? [];
 
   return {
     type: "seminar-finder",
     headline: normaliseOptionalString(component.headline ?? null),
     headlineLevel: normaliseHeadingLevel(component.headlineLevel ?? null),
     background: normaliseBackgroundKey(component.sectionBackground ?? null),
-    initialCategorySlug: categorySlug
+    initialCategorySlug: categorySlug,
+    allowedCategorySlugs: allowedCategorySlugs.length > 0 ? allowedCategorySlugs : null
   };
 };
 

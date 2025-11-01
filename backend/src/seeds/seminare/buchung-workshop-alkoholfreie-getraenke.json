@@ -1,0 +1,33 @@
+{
+  "name": "Workshop: Alkoholfreie Getränke - Wine Academy Hamburg",
+  "slug": "buchung-workshop-alkoholfreie-getraenke",
+  "kurzbeschreibung": "Alkoholfrei & voller Geschmack: Entdecke die Vielfalt alkoholfreier Getränke – aromatisch, kreativ und alles andere als ein Kompromiss.",
+  "beschreibung": "Alkoholfrei & voller Geschmack: Entdecke die Vielfalt alkoholfreier Getränke – aromatisch, kreativ und alles andere als ein Kompromiss.",
+  "preis": "39.00",
+  "mwst": true,
+  "kapazitaet": 30,
+  "heroDarkMode": false,
+  "aktiv": true,
+  "bookingbox": {
+    "topline": "Jetzt Anmelden",
+    "headline": "Sichere dir deinen Platz",
+    "body": "Alkoholfrei & voller Geschmack: Entdecke die Vielfalt alkoholfreier Getränke – aromatisch, kreativ und alles andere als ein Kompromiss."
+  },
+  "seminarinhalte": [
+    {
+      "titel": "Beschreibung",
+      "inhalt": "Workshop: Alkoholfreie Getränke. Mehr als eine Alternative\nPassend zum Dry-January wollen wir mit euch den Reben-Talk mal anders denken:\nDiesmal gibts nicht 4 Weine – eine Rebsorte, sondern 4 nicht-alkoholische Alternativen. Für uns ist alkoholfreie Getränkebegleitung mehr als entalkoholisierter Wein – sie ist kreativ, vielseitig und voller Aromenvielfalt. In diesem Workshop zeigen wir euch, wie spannende alkoholfreie Pairings zu einem echten Genussmoment werden können.\nOb fermentiert, tee-basiert, infused oder als proxy: Wir verkosten verschiedene alkoholfreie Getränke und Speisenbegleiter. Dabei geht es nicht nur ums Probieren, sondern auch ums Verstehen – welche\nAromen (https://www.wineacademy.de/buchung/sensorik-basic/)\nharmonieren, welche Texturen tragen und wie man alkoholfreie Alternativen gezielt einsetzt. Dazu machen wir passende Snacks und probieren uns durch die verschiedenen Foodpairing-Kombis.\nFür wen?\nFür Genussmenschen, Gastgeber: innen\n,\nSommeliers/ièren\n,\nGastronom: innen und alle, die alkoholfreie Begleitung nicht als Plan B, sondern als echte Option sehen.\nWas dich erwartet:\nEinführung in die alkoholfreie Getränkewelt\nPairing-Prinzipien & Aromakombinationen\nVerkostung & Austausch\nInspiration für Alltag und Gastronomie\nEin Workshop für alle, die Geschmack neu denken wollen – ohne Alkohol, aber mit voller Aufmerksamkeit fürs Detail."
+    },
+    {
+      "titel": "Infos",
+      "inhalt": "TERMINE:\nDonnerstag, 22.01.2026\nDAUER:\n18.30 – 20:00 Uhr\nORT:\nWine Academy Hamburg\nEimsbütteler Chaussee 37\n20259 Hamburg\nPREIS:\n39,00 €"
+    }
+  ],
+  "seo": {
+    "title": "Workshop: Alkoholfreie Getränke - Wine Academy Hamburg",
+    "description": "Alkoholfrei & voller Geschmack: Entdecke die Vielfalt alkoholfreier Getränke – aromatisch, kreativ und alles andere als ein Kompromiss."
+  },
+  "kategorien": [
+    "tastings-events"
+  ]
+}

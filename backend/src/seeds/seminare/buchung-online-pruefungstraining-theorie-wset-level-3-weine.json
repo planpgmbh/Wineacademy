@@ -1,0 +1,33 @@
+{
+  "name": "Online Prüfungstraining für WSET® Level 3 Weine",
+  "slug": "buchung-online-pruefungstraining-theorie-wset-level-3-weine",
+  "kurzbeschreibung": "Online-Prüfungstraining für WSET® Level 3 Weine. Gemeinsam holen wir das Beste aus Deiner Prüfungsvorbereitung. Hol Dir unsere Tips und Tricks zu WSET® Level 3!",
+  "beschreibung": "ONLINE-Prüfungsvorbereitung für WSET Level 3 Theorieprüfung.\nIndividuell auf Deine Bedürfnisse abgestimmt.\nMit Wunschtermin!",
+  "preis": "95.00",
+  "mwst": true,
+  "kapazitaet": 30,
+  "heroDarkMode": false,
+  "aktiv": true,
+  "bookingbox": {
+    "topline": "Jetzt Anmelden",
+    "headline": "Sichere dir deinen Platz",
+    "body": "Online-Prüfungstraining für WSET® Level 3 Weine. Gemeinsam holen wir das Beste aus Deiner Prüfungsvorbereitung. Hol Dir unsere Tips und Tricks zu WSET® Level 3!"
+  },
+  "seminarinhalte": [
+    {
+      "titel": "Beschreibung",
+      "inhalt": "DIESER KURS FINDET ONLINE STATT\nDu hast den Kurs\nWSET® Level 3 Weine (https://www.wineacademy.de/buchung/wset-level-3-weine/)\nabgeschlossen, möchtest aber zusätzliche Unterstützung zur Vorbereitung auf die Prüfung?\nBei deinem ersten Versuch hast du die Prüfung nicht bestanden und möchtest nun Expertenhilfe, um dich auf einen weiteren Versuch vorzubereiten?\nDu wünschst dir Expertentipps, Strategien und Anleitung, um den berüchtigten und schwierigen Theorieteil der\nWSET® Level 3 Prüfung (https://www.wineacademy.de/buchung/pruefung-wset-level-3-weine/)\nzu meistern? Dann bist du hier genau richtig!\nEs geht nicht nur darum, die Fakten auswendig zu lernen, sondern auch zu wissen, wie man diese in der Prüfung richtig anwendet. Wir besprechen in einer exklusiven Einzelstunde mit Dir Strategien, die Du beim theoretischen Prüfungsteil anwenden kannst, und helfen Dir, Selbstvertrauen zu gewinnen.  Gemeinsam verbessern wir Deine Chancen, diese anspruchsvolle Prüfung mit Bravour zu bestehen."
+    },
+    {
+      "titel": "Infos",
+      "inhalt": "TERMINE:\nkontaktiere uns für Deinen individuellen Termin!\nUHRZEIT:\n09:00 Uhr\nGerne können wir auch eine individuelle Zeit abstimmen. Einfach kurz eine Mail schreiben oder anrufen.\nPREIS:\n€ 95,00\nDATE_OVERRIDE\nindividueller Termin – schreib uns!"
+    }
+  ],
+  "seo": {
+    "title": "Online Prüfungstraining für WSET® Level 3 Weine",
+    "description": "Online-Prüfungstraining für WSET® Level 3 Weine. Gemeinsam holen wir das Beste aus Deiner Prüfungsvorbereitung. Hol Dir unsere Tips und Tricks zu WSET® Level 3!"
+  },
+  "kategorien": [
+    "wset"
+  ]
+}

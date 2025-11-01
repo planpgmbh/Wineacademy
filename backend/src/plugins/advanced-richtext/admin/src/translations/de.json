@@ -1,0 +1,6 @@
+{
+  "advanced-richtext.field.label": "Richtext (Erweitert)",
+  "advanced-richtext.field.description": "Strukturierte Texte mit Toolbar und HTML-Umschaltung.",
+  "advanced-richtext.field.toggle.visual": "Visuell",
+  "advanced-richtext.field.toggle.html": "HTML"
+}

@@ -1,0 +1,29 @@
+{
+  "titel": "Zahlungsarten",
+  "slug": "zahlungsarten",
+  "abschnitte": [
+    {
+      "__component": "landing.hero-small",
+      "headline": "Zahlungsarten",
+      "headlineLevel": "h1",
+      "einleitung": "Übersicht über akzeptierte Zahlungsmethoden für Kurse, Events und Shop-Produkte.",
+      "hintergrundbild": null
+    },
+    {
+      "__component": "landing.text-block",
+      "headline": "Zahlungsarten der Wine Academy Hamburg",
+      "headlineLevel": "h2",
+      "sectionBackground": "neutral",
+      "einleitung": "<p><strong>Zahlungsarten</strong></p>\n\n<p>Wir bieten Ihnen folgende Zahlungsarten an. Suchen Sie sich einfach die für Sie optimale Zahlart aus. Die Versandkosten sind teilweise abhängig von der gewählten Zahlungsart. Die in den jeweiligen Angeboten angeführten Preise stellen Endpreise dar. Sie beinhalten alle Preisbestandteile einschließlich etwaig anfallender Steuern wie Mehrwertsteuer. Nur bei grenzüberschreitender Lieferung können im Einzelfall weitere Steuern (z.B. im Falle eines innergemeinschaftlichen Erwerbs) und/oder Abgaben (z.B. Zölle) von Ihnen zu zahlen sein, jedoch nicht an den Verkäufer, sondern an die dort zuständigen Zoll- bzw. Steuerbehörden. Die anfallenden Liefer- und Versandkosten sind nicht im Kaufpreis enthalten, sie sind über die Seite „Versandkosten“ aufrufbar, werden im Laufe des Bestellvorganges gesondert ausgewiesen und sind von Ihnen zusätzlich zu tragen.</p>\n\n<p><em>Lastschrift</em><br/>Wir ziehen den Rechnungsbetrag Ihrer Bestellung von Ihrem hinterlegten Bankkonto nach der getätigten Bestellung ein.</p>\n\n<p><em>Auf Rechnung</em><br/>Einfach bestellen und im Anschluß erst bezahlen.</p>\n\n<p><em>Kreditkarte</em><br/>Zahlen Sie ganz einfach per Kreditkarte.</p>\n\n<p><em>PayPal</em><br/>Noch schneller und sicherer bezahlen mit ihrem PayPal-Konto.</p>\n\n<p><em>Vorkasse</em><br/>Kostenloser Versand innerhalb Deutschlands (Außer Express-Versand)</p>\n\n<p>Bitte überweisen Sie den Gesamtbetrag Ihrer Bestellung auf unser Konto:</p>\n\n<p>Kontoinhaber: FN Wine Academy Hamburg GmbH<br/>Kontonummer: 1504 6081 57<br/>BLZ: 20050550<br/>Kreditinstitut: Hamburger Sparkasse<br/>SWIFT: HASPDEHHXXX<br/>IBAN: DE81 2005 0550 1504 6081 57</p>",
+      "buttonLabel": null,
+      "buttonLink": null
+    }
+  ],
+  "seo": {
+    "title": "Zahlungsarten | Wine Academy Hamburg",
+    "description": "Alle verfügbaren Zahlungsarten der Wine Academy Hamburg inklusive Details zu Rechnung & PayPal.",
+    "canonical": "https://www.wineacademy.de/zahlungsweisen",
+    "robots": "index,follow",
+    "og_image": null
+  }
+}

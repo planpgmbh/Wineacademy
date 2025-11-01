@@ -1,0 +1,33 @@
+{
+  "name": "Workshop: Regenerativer Weinbau - Wine Academy Hamburg",
+  "slug": "buchung-workshop-regenerativer-weinbau",
+  "kurzbeschreibung": "Weinbau neu denken: Workshop mit Steven Schmidt zu Regenerative Viticulture: Erfahre mehr über regenerativen Weinbau u. lebendige Böden. Nachhaltig u. praxisnah",
+  "beschreibung": "Was macht einen lebendigen Weinberg aus? Wie entstehen Reben, die mit Klima und Boden im Einklang stehen? In diesem Workshop erfährst du, wie regenerativer Weinbau funktioniert – verständlich, praxisnah und mitten aus dem Winzeralltag. Mit dabei: Steven Schmidt von der Weinmanufaktur Schmidt, der zeigt, wie nachhaltiger Weinbau an der Mosel heute aussehen kann.",
+  "preis": "29.00",
+  "mwst": true,
+  "kapazitaet": 30,
+  "heroDarkMode": false,
+  "aktiv": true,
+  "bookingbox": {
+    "topline": "Jetzt Anmelden",
+    "headline": "Sichere dir deinen Platz",
+    "body": "Weinbau neu denken: Workshop mit Steven Schmidt zu Regenerative Viticulture: Erfahre mehr über regenerativen Weinbau u. lebendige Böden. Nachhaltig u. praxisnah"
+  },
+  "seminarinhalte": [
+    {
+      "titel": "Beschreibung",
+      "inhalt": "Workshop: Regenerativer Weinbau – Zukunft beginnt im Boden\nRegenerativer Weinbau denkt Landwirtschaft neu – nicht nur nachhaltig, sondern aufbauend. Statt Böden einfach nur zu schonen, geht es darum, sie wieder lebendig zu machen: durch Humusaufbau, Biodiversität, tief wurzelnde Begrünung und natürliche Kreisläufe. Das Ziel? Gesunde Reben, stabile Erträge, widerstandsfähige Ökosysteme – und aktiver Klimaschutz durch CO₂-Bindung im Boden.\nIn diesem Workshop der\nWine Academy (https://www.wineacademy.de/wein-neu-entdecken/)\nHamburg werfen wir gemeinsam  einen praxisnahen Blick auf die Prinzipien des regenerativen Weinbaus – inspiriert von internationalen Vorreitern wie der\nRegenerative Viticulture Foundation (https://www.regenerativeviticulture.org)\n. Wir diskutieren, wie sich Begrünung, Kompostwirtschaft, minimaler Bodeneingriff und Förderung von Artenvielfalt im Weinberg konkret umsetzen lassen – und was das für die Qualität im Glas bedeutet.\nMit dabei: Steven Schmidt von der Weinmanufaktur Steven Schmidt\nEin besonderes Highlight des Workshops:\nSteven Schmidt (https://www.theschmidtwein.de)\nbringt seine Erfahrungen direkt aus dem Weinberg mit. An der Mittelmosel bewirtschaftet er alte Reben in Steillagen – biologisch, mit Blick auf Bodenaufbau und Artenvielfalt. Steven teilt, wie er regenerative Prinzipien Schritt für Schritt in die Praxis überträgt, was gut funktioniert – und wo es noch hakt. Offen, ehrlich und mit einer ordentlichen Portion Moselrealität."
+    },
+    {
+      "titel": "Infos",
+      "inhalt": "TERMINE:\nMontag, 12.05.2025\nDAUER:\n17.00 – 19:00 Uhr\nORT:\nWine Academy Hamburg\nEimsbütteler Chaussee 37\n20259 Hamburg"
+    }
+  ],
+  "seo": {
+    "title": "Workshop: Regenerativer Weinbau - Wine Academy Hamburg",
+    "description": "Weinbau neu denken: Workshop mit Steven Schmidt zu Regenerative Viticulture: Erfahre mehr über regenerativen Weinbau u. lebendige Böden. Nachhaltig u. praxisnah"
+  },
+  "kategorien": [
+    "tastings-events"
+  ]
+}

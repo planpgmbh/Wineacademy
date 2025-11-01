@@ -1,0 +1,36 @@
+{
+  "name": "Masterclass Sake - Wine Academy Hamburg - Sake Kurs",
+  "slug": "buchung-masterclass-sake",
+  "kurzbeschreibung": "Alles über Sake erfahren: Geschichte, Herstellung, Reissorten, Kategorien, Verkostung, Lagerung, Speisekombination. Der spannende Einstieg in die Welt des Sake.",
+  "beschreibung": "Sake nimmt zwar auf dem lokalen Markt eine Nischenposition ein, aber die Nachfrage wächst stetig und es ist längst kein ungewöhnliches Getränk mehr. Restaurants bieten passende Sake-Begleitungen zu ihren Menüs an, Bars verwenden Sake in ihren Cocktails. Auch im gut sortierten Einzelhandel und sogar in Supermärkten ist der „Nektar aus Reis“ mittlerweile erhältlich. Dieser Sake Kurs bietet eine einzigartige Gelegenheit, sich einen Tag lang mit diesem faszinierenden Getränk auseinanderzusetzen.",
+  "preis": "249.00",
+  "mwst": true,
+  "kapazitaet": 30,
+  "heroDarkMode": false,
+  "aktiv": true,
+  "bookingbox": {
+    "topline": "Jetzt Anmelden",
+    "headline": "Sichere dir deinen Platz",
+    "body": "Alles über Sake erfahren: Geschichte, Herstellung, Reissorten, Kategorien, Verkostung, Lagerung, Speisekombination. Der spannende Einstieg in die Welt des Sake."
+  },
+  "seminarinhalte": [
+    {
+      "titel": "Beschreibung",
+      "inhalt": "KURSINFO\nSake besitzt in Japan eine über 2000 Jahre alte Tradition. Dort ist Sake nicht nur ein Getränk, sondern repräsentiert auch japanische Geschichte, Kultur, Glauben und das Wissen um eines der ältesten Verfahren zur Getränkeherstellung.\nIm ersten Teil des Sake Kurs wird erläutert, was Sake ist und welche Zutaten für seine Herstellung verwendet werden können. Anschließend werden die einzelnen Schritte der Sake-Produktion betrachtet, die maßgeblich die spätere Qualität des Getränks bestimmen. Der Sake-Brauer hat dabei die Wahl zwischen verschiedenen Reissorten, die sowohl die Verarbeitung als auch den Geschmack des Sake beeinflussen. Dabei werden die Eigenschaften von Premium-Sake-Reis erklärt und eine Abgrenzung zu Tafelreis vorgenommen, wobei erneut auf wesentliche Herstellungsschritte eingegangen wird.\nMit diesem Wissen wird ein Überblick über die verschiedenen Sake-Kategorien und -Stile gegeben, die sich geschmacklich stark unterscheiden. Vor der Verkostung von Sake-Beispielen wird eine strukturierte Herangehensweise zur Sake-Verkostung vermittelt.\nUm die wesentlichen Informationen auf einem Sake-Etikett entschlüsseln zu können, gibt es einen kurzen Kanji-Exkurs mit spielerischem Lerneffekt.\nSake verhält sich in Bezug auf Lagerung und Service anders als beispielsweise\nWein (https://www.wineacademy.de/kalender/weinkurse/)\n. Es wird erklärt, wie Sake gelagert werden sollte, wie lange er nach dem Öffnen haltbar ist, wie er sich im Laufe der Zeit verändern kann und wie er serviert wird – einschließlich der Wahl des richtigen Glases, der optimalen Temperatur sowie der geeigneten Gefäße.\nEin wesentlicher Punkt, um Sake professionell anzubieten, ist die Kombination von Sake und Speisen. Dies beschränkt sich selbstverständlich nicht nur auf die japanische Küche. Anhand einer kleinen Auswahl an Speisen wird aufgezeigt, welche Kombinationen besonders gut harmonieren.\nLERNZIELE\nDefinition von Sake und Benennung der verwendeten Zutaten\nVerständnis der einzelnen Schritte der Sake-Herstellung\nKenntnis der verschiedenen Reissorten, die für die Sake-Herstellung verwendet werden\nUnterscheidung der verschiedenen Kategorien und Stile von Sake\nEinführung in die\nstrukturierte Verkostung (https://www.wsetglobal.com/media/10482/1497-wset-l3-sake-sat-aw.pdf)\nvon Sake\nGrundlegende Einführung in japanische Kanji und deren Bedeutung auf Sake-Etiketten\nWissen über die richtige Lagerung und den Service von Sake\nKompetenz in der Kombination von Sake mit verschiedenen Speisen\nPRÜFUNG UND ZERTIFIKAT\nAm Ende des Kurstages findet eine kleine Abschlussprüfung statt. Nach erfolgreichem Abschluss erhalten die TeilnehmerInnen ein Zertifikat der Wine Academy Hamburg.\nIM PREIS INBEGRIFFEN\nSchulungsunterlagen in deutscher Sprache\nVerkostung von mindestens 8 Sake\nOriginalzertifikat der\nWine Academy Hamburg (https://www.wineacademy.de/)\nANMELDUNG\nDie Anmeldung und Bezahlung des Kurses müssen mindestens 2 Werktage vor dem Prüfungstermin erfolgen. Bei Bedarf einer späteren Anmeldung kontaktiert uns gerne."
+    },
+    {
+      "titel": "Infos",
+      "inhalt": "TERMINE:\n17.09.2025\nDAUER:\n1 Tag, anschließende Kurzprüfung\n09:30 bis 17:00 Uhr\nORT:\nWine Academy Hamburg\nEimsbütteler Chaussee 37\n20259 Hamburg\nABSCHLUSS:\nZertifikat der Wine Academy Hamburg\nDATE_OVERRIDE\n17.09.2025 (ausgebucht)"
+    }
+  ],
+  "seo": {
+    "title": "Masterclass Sake - Wine Academy Hamburg - Sake Kurs",
+    "description": "Alles über Sake erfahren: Geschichte, Herstellung, Reissorten, Kategorien, Verkostung, Lagerung, Speisekombination. Der spannende Einstieg in die Welt des Sake."
+  },
+  "kategorien": [
+    "kurse",
+    "masterclass",
+    "sommelier",
+    "weinkurse"
+  ]
+}

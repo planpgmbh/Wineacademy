@@ -1,0 +1,29 @@
+{
+  "titel": "Widerruf",
+  "slug": "widerruf",
+  "abschnitte": [
+    {
+      "__component": "landing.hero-small",
+      "headline": "Widerrufsbelehrung",
+      "headlineLevel": "h1",
+      "einleitung": "Informationen zu Widerrufsrecht, Fristen und Rückabwicklung für Verbraucherverträge.",
+      "hintergrundbild": null
+    },
+    {
+      "__component": "landing.text-block",
+      "headline": "Widerrufsbelehrung",
+      "headlineLevel": "h2",
+      "sectionBackground": "neutral",
+      "einleitung": "<p><strong>Widerrufsbelehrung für einen Vertrag über die Lieferung von digitalen Inhalten, die nicht auf einem körperlichen Datenträger geliefert werden</strong><br/><em>Widerrufsbelehrung</em><br/>Verbraucher ist jede natürliche Person, die ein Rechtsgeschäft zu Zwecken abschließt, die überwiegend weder ihrer gewerblichen noch ihrer selbständigen beruflichen Tätigkeit zugerechnet werden können.</p>\n\n<p><em>Widerrufsrecht</em><br/>Sie haben das Recht, binnen vierzehn Tagen ohne Angabe von Gründen diesen Vertrag zu widerrufen. Die Widerrufsfrist beträgt vierzehn Tage ab dem Tag des Vertragsschlusses. Um Ihr Widerrufsrecht auszuüben, müssen Sie uns ([FN Wine Academy Hamburg GmbH, Eimsbütteler Chaussee 37, 20259 Hamburg, post@wineacademy.de) mittels einer eindeutigen Erklärung (z.B. ein mit der Post versandter Brief, oder eine E-Mail) über Ihren Entschluss, diesen Vertrag zu widerrufen, informieren. Sie können dafür das beigefügte Muster-Widerrufsformular verwenden, das jedoch nicht vorgeschrieben ist. Zur Wahrung der Widerrufsfrist reicht es aus, dass Sie die Mitteilung über die Ausübung des Widerrufsrechts vor Ablauf der Widerrufsfrist absenden.</p>\n\n<p><em>Folgen des Widerrufs</em><br/>Wenn Sie diesen Vertrag widerrufen, haben wir Ihnen alle Zahlungen, die wir von Ihnen erhalten haben, einschließlich der Lieferkosten (mit Ausnahme der zusätzlichen Kosten, die sich daraus ergeben, dass Sie eine andere Art der Lieferung als die von uns angebotene, günstigste Standardlieferung gewählt haben), unverzüglich und spätestens binnen vierzehn Tagen ab dem Tag zurückzuzahlen, an dem die Mitteilung über Ihren Widerruf dieses Vertrags bei uns eingegangen ist. Für diese Rückzahlung verwenden wir dasselbe Zahlungsmittel, das Sie bei der ursprünglichen Transaktion eingesetzt haben, es sei denn, mit Ihnen wurde ausdrücklich etwas anderes vereinbart; in keinem Fall werden Ihnen wegen dieser Rückzahlung Entgelte berechnet.</p>\n\n<p><em>Muster-Widerrufsformular</em><br/>(Wenn Sie den Vertrag widerrufen wollen, dann füllen Sie bitte dieses Formular aus und senden Sie es zurück.)<br/>– An [FN Wine Academy Hamburg GmbH, Eimsbütteler Chaussee 37, 20259 Hamburg, post@wineacademy.de:<br/>– Hiermit widerrufe(n) ich/wir (*) den von mir/uns (*) abgeschlossenen Vertrag über den Kauf der folgenden Waren (*)/ die Erbringung der folgenden Dienstleistung (*)<br/>– Bestellt am (*)/erhalten am (*)<br/>– Name des/der Verbraucher(s)<br/>– Anschrift des/der Verbraucher(s)<br/>– Unterschrift des/der Verbraucher(s) (nur bei Mitteilung auf Papier)<br/>– Datum<br/>—————————————<br/>(*) Unzutreffendes streichen.</p>\n\n<p><em>Ausschluss bzw. vorzeitiges Erlöschen des Widerrufsrechts</em><br/>Das Widerrufsrecht besteht nicht bei Verträgen zur Lieferung von digitalen Inhalten, die nicht vorgefertigt sind und für deren Herstellung eine individuelle Auswahl oder Bestimmung durch den Verbraucher maßgeblich ist oder die eindeutig auf die persönlichen Bedürfnisse des Verbrauchers zugeschnitten sind.<br/>Das Widerrufsrecht erlischt vorzeitig, wenn wir mit der Ausführung des Vertrages erst begonnen haben, nachdem Sie a) dazu Ihre ausdrückliche Zustimmung gegeben und gleichzeitig Ihre Kenntnis davon bestätigt haben, dass Sie Ihr Widerrufsrecht mit Beginn der Vertragserfüllung unsererseits verlieren sowie b) wir Ihnen den Inhalt Ihrer Erklärung innerhalb einer angemessenen Frist nach Vertragsschluss, spätestens jedoch bei der Lieferung der Ware oder bevor mit der Ausführung der Dienstleistung begonnen wird, auf einem dauerhaften Datenträger zur Verfügung gestellt haben. Wir weisen darauf hin, dass wir den Vertragsschluss von der vorgenannten Zustimmung und Bestätigung abhängig machen können. Das Widerrufsrecht erlischt vorzeitig, wenn wir mit der Ausführung des Vertrages erst begonnen haben, nachdem Sie dazu Ihre ausdrückliche Zustimmung gegeben und gleichzeitig Ihre Kenntnis davon bestätigt haben, dass Sie Ihr Widerrufsrecht mit Beginn der Vertragserfüllung unsererseits verlieren. Wir weisen darauf hin, dass wir den Vertragsschluss von der vorgenannten Zustimmung und Bestätigung abhängig machen können.</p>",
+      "buttonLabel": null,
+      "buttonLink": null
+    }
+  ],
+  "seo": {
+    "title": "Widerruf | Wine Academy Hamburg",
+    "description": "Widerrufsrecht und Musterformular der Wine Academy Hamburg nach Fernabsatzrecht.",
+    "canonical": "https://www.wineacademy.de/widerruf",
+    "robots": "index,follow",
+    "og_image": null
+  }
+}

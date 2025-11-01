@@ -1,0 +1,29 @@
+{
+  "titel": "Bildnachweise",
+  "slug": "bildnachweise",
+  "abschnitte": [
+    {
+      "__component": "landing.hero-small",
+      "headline": "Bildnachweise",
+      "headlineLevel": "h1",
+      "einleitung": "Urheberangaben und Quellen zu den verwendeten Fotos und Grafiken.",
+      "hintergrundbild": null
+    },
+    {
+      "__component": "landing.text-block",
+      "headline": "Bildnachweise",
+      "headlineLevel": "h2",
+      "sectionBackground": "neutral",
+      "einleitung": "<p>WSET-Kurs-Bilder &amp; Cover: www.wsetglobal.com</p>\n\n<p>Alle weiteren Aufnahmen und Fotos sind Eigentum der FN Wine Academy Hamburg GmbH.</p>",
+      "buttonLabel": null,
+      "buttonLink": null
+    }
+  ],
+  "seo": {
+    "title": "Bildnachweise | Wine Academy Hamburg",
+    "description": "Alle Bildquellen und Urheber der visuellen Inhalte der Wine Academy Hamburg.",
+    "canonical": "https://www.wineacademy.de/bildnachweise",
+    "robots": "index,follow",
+    "og_image": null
+  }
+}

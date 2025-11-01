@@ -1,0 +1,32 @@
+{
+  "name": "WSET Level 3: Info-Veranstaltung ONLINE - Wine Academy",
+  "slug": "buchung-wset-level-3-info-veranstaltung-online",
+  "kurzbeschreibung": "Online-Info-Veranstaltung für WSET® Level 3 Weine. Gemeinsam holen wir das Beste aus Deiner Kursvorbereitung. Hol Dir unsere Tips und Tricks zu WSET® Level 3!",
+  "preis": "0.00",
+  "mwst": true,
+  "kapazitaet": 30,
+  "heroDarkMode": false,
+  "aktiv": true,
+  "bookingbox": {
+    "topline": "Jetzt Anmelden",
+    "headline": "Sichere dir deinen Platz",
+    "body": "Online-Info-Veranstaltung für WSET® Level 3 Weine. Gemeinsam holen wir das Beste aus Deiner Kursvorbereitung. Hol Dir unsere Tips und Tricks zu WSET® Level 3!"
+  },
+  "seminarinhalte": [
+    {
+      "titel": "Beschreibung",
+      "inhalt": "Die Info-Veranstaltung für WSET Level 3 findet ONLINE via Microsoft Teams statt.\nEinen Link verschicken wir per Mail."
+    },
+    {
+      "titel": "Infos",
+      "inhalt": "TERMINE:\nMittwoch 09.10.2024: 19:00 Uhr\nDonnerstag 10.10.2024: 10:00 Uhr\nONLINE\nvia Microsoft Teams"
+    }
+  ],
+  "seo": {
+    "title": "WSET Level 3: Info-Veranstaltung ONLINE - Wine Academy",
+    "description": "Online-Info-Veranstaltung für WSET® Level 3 Weine. Gemeinsam holen wir das Beste aus Deiner Kursvorbereitung. Hol Dir unsere Tips und Tricks zu WSET® Level 3!"
+  },
+  "kategorien": [
+    "wset"
+  ]
+}
