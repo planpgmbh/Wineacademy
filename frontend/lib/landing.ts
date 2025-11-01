@@ -112,12 +112,13 @@ type StrapiCardGridComponent = {
 
 type StrapiTextBlockComponent = {
   __component: "landing.text-block";
-  headline: string;
-  headlineLevel?: "h2" | "h3" | "h4" | null;
   sectionBackground?: string | null;
   einleitung?: string | null;
   buttonLabel?: string | null;
   buttonLink?: string | null;
+  /** Legacy-Felder – werden zu HTML migriert */
+  headline?: string | null;
+  headlineLevel?: "h2" | "h3" | "h4" | null;
 };
 
 type StrapiIconItemComponent = {
@@ -231,6 +232,24 @@ const normaliseRichText = (value: string | null | undefined): string | null => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
+const escapeHtml = (value: string): string =>
+  value.replace(/[&<>"']/g, (char) => {
+    switch (char) {
+      case "&":
+        return "&amp;";
+      case "<":
+        return "&lt;";
+      case ">":
+        return "&gt;";
+      case '"':
+        return "&quot;";
+      case "'":
+        return "&#39;";
+      default:
+        return char;
+    }
+  });
+
 const normaliseHeroHeadingLevel = (value: string | null | undefined): "h1" | "h2" | "h3" | "h4" => {
   if (value === "h1" || value === "h3" || value === "h4") {
     return value;
@@ -299,8 +318,6 @@ export type LandingCardGridSection = {
 
 export type LandingTextBlockSection = {
   type: "text-block";
-  headline: string;
-  headlineLevel: "h2" | "h3" | "h4";
   background: SectionBackgroundKey | null;
   html?: string | null;
   buttonLabel?: string | null;
@@ -514,12 +531,26 @@ const transformCardGrid = (component: StrapiCardGridComponent): LandingCardGridS
 };
 
 const transformTextBlock = (component: StrapiTextBlockComponent): LandingTextBlockSection => {
+  const background = normaliseBackgroundKey(component.sectionBackground ?? null);
+  const richText = normaliseRichText(component.einleitung ?? null);
+  const rawHeading = normaliseString(component.headline ?? null);
+  const isPlaceholderHeading = rawHeading.toLowerCase() === "textblock" || rawHeading.length === 0;
+  const heading = isPlaceholderHeading ? "" : rawHeading;
+  const headingLevel = normaliseHeadingLevel(component.headlineLevel ?? null);
+
+  const headingHtml = heading.length > 0 ? `<${headingLevel}>${escapeHtml(heading)}</${headingLevel}>` : "";
+  const htmlParts: string[] = [];
+  if (headingHtml.length > 0) {
+    htmlParts.push(headingHtml);
+  }
+  if (richText) {
+    htmlParts.push(richText);
+  }
+
   return {
     type: "text-block",
-    headline: normaliseString(component.headline) || "Textblock",
-    headlineLevel: normaliseHeadingLevel(component.headlineLevel ?? null),
-    background: normaliseBackgroundKey(component.sectionBackground ?? null),
-    html: normaliseRichText(component.einleitung ?? null),
+    background,
+    html: htmlParts.length > 0 ? htmlParts.join("\n") : null,
     buttonLabel: normaliseOptionalString(component.buttonLabel ?? null),
     buttonLink: normaliseOptionalString(component.buttonLink ?? null)
   };
@@ -642,9 +673,9 @@ export async function fetchLandingPage(slug: string): Promise<LandingPage> {
     ? response.abschnitte.map(transformSection)
     : [];
 
-  return {
-    title: response.titel,
-    slug: response.slug,
+ return {
+   title: response.titel,
+   slug: response.slug,
     sections
   };
 }

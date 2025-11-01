@@ -166,8 +166,6 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
       content.push(
         <TextBlock
           key={`text-block-${index}`}
-          headline={section.headline}
-          headlineLevel={section.headlineLevel}
           background={section.background}
           html={section.html}
           buttonLabel={section.buttonLabel}

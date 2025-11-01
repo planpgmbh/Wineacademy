@@ -249,13 +249,10 @@ export interface LandingSeminarListe extends Struct.ComponentSchema {
 export interface LandingTextBlock extends Struct.ComponentSchema {
   collectionName: 'components_landing_text_blocks';
   info: {
-    description: 'Überschrift mit Fließtext und optionalem CTA.';
+    description: 'Freier Richtext mit optionalem CTA-Button.';
     displayName: 'Textblock';
   };
   attributes: {
-    headline: Schema.Attribute.String & Schema.Attribute.Required;
-    headlineLevel: Schema.Attribute.Enumeration<['h2', 'h3', 'h4']> &
-      Schema.Attribute.DefaultTo<'h2'>;
     sectionBackground: Schema.Attribute.Enumeration<[
       'neutral',
       'black',

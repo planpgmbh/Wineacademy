@@ -11,9 +11,6 @@ const plugin = {
       id: pluginId,
       name: displayName,
     });
-
-    console.info('[advanced-richtext] Admin register() aufgerufen – Custom Field wird registriert.');
-
     app.customFields.register({
       name: 'advanced-richtext',
       pluginId,

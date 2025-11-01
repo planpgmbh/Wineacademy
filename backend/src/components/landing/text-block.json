@@ -2,18 +2,9 @@
   "collectionName": "components_landing_text_blocks",
   "info": {
     "displayName": "Textblock",
-    "description": "Überschrift mit Fließtext und optionalem CTA."
+    "description": "Freier Richtext mit optionalem CTA-Button."
   },
   "attributes": {
-    "headline": {
-      "type": "string",
-      "required": true
-    },
-    "headlineLevel": {
-      "type": "enumeration",
-      "enum": ["h2", "h3", "h4"],
-      "default": "h2"
-    },
     "sectionBackground": {
       "type": "enumeration",
       "enum": [
