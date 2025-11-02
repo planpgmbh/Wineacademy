@@ -81,7 +81,7 @@ export function CartItemProduct({ product, quantity = 1, onQuantityChange, onRem
         </svg>
       </button>
       <header className="flex flex-col gap-2 pr-8">
-        <h3 className="text-base font-medium leading-snug">
+        <h3 className="heading-label">
           {product.title}
         </h3>
         <p className="text-sm text-base-content/80">

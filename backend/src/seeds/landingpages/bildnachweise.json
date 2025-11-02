@@ -14,7 +14,7 @@
       "headline": "Bildnachweise",
       "headlineLevel": "h2",
       "sectionBackground": "neutral",
-      "einleitung": "<p>WSET-Kurs-Bilder &amp; Cover: www.wsetglobal.com</p>\n\n<p>Alle weiteren Aufnahmen und Fotos sind Eigentum der FN Wine Academy Hamburg GmbH.</p>",
+      "einleitung": "<h2>Bildquellen</h2>\n\n<ul>\n  <li>WSET-Kursbilder &amp; Cover: <a href=\"https://www.wsetglobal.com\">wsetglobal.com</a></li>\n  <li>Alle weiteren Aufnahmen: FN Wine Academy Hamburg GmbH</li>\n</ul>",
       "buttonLabel": null,
       "buttonLink": null
     }

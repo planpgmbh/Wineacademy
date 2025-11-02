@@ -81,7 +81,7 @@ export function CartItemSeminar({ seminar, selection, onQuantityChange, onRemove
       </button>
       <div className="flex flex-1 flex-col gap-4">
         <header className="space-y-2 pr-8">
-          <h3 className="text-base font-medium leading-snug">
+          <h3 className="heading-label">
             {title}
           </h3>
         </header>

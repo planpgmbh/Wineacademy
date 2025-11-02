@@ -1929,7 +1929,7 @@ export function CheckoutClient() {
       <CheckoutStepCard withDividers contentClassName="space-y-0">
         {participantGroupsWithMeta.map(({ seminar, group }) => (
           <div key={group.selectionId} className="py-6 first:pt-0 last:pb-0">
-            <h3 className="text-lg font-semibold text-base-content">{seminar.seminarTitle}</h3>
+            <h3 className="heading-ui">{seminar.seminarTitle}</h3>
             <div className="mt-6 space-y-6">
               {group.participants.map((participant, index) => {
                 const errorState = group.errors[index] ?? createParticipantErrorState();
@@ -2047,7 +2047,7 @@ export function CheckoutClient() {
 
           return (
             <div key={item.key} className="py-6 first:pt-0 last:pb-0">
-              <h3 className="text-lg font-semibold text-base-content">
+              <h3 className="heading-ui">
                 {item.title}
                 {item.quantity > 1 ? ` (x${item.quantity})` : ""}
               </h3>
@@ -2496,7 +2496,7 @@ const renderOverviewStep = () => {
         <div className="py-6 first:pt-0 last:pb-0">
           <div className="rounded-2xl border ui-border bg-base-100 p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <h3 className="text-lg font-semibold text-base-content">Teilnehmerdaten</h3>
+              <h3 className="heading-ui">Teilnehmerdaten</h3>
               <button type="button" className="btn btn-link btn-sm px-0" onClick={() => goToStep("participants")}>
                 Bearbeiten
               </button>
@@ -2554,7 +2554,7 @@ const renderOverviewStep = () => {
       <div className="py-6 first:pt-0 last:pb-0">
         <div className="rounded-2xl border ui-border bg-base-100 p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <h3 className="text-lg font-semibold text-base-content">Rechnungsadresse</h3>
+            <h3 className="heading-ui">Rechnungsadresse</h3>
             <button type="button" className="btn btn-link btn-sm px-0" onClick={() => goToStep("billing")}>
               Bearbeiten
             </button>
@@ -2580,7 +2580,7 @@ const renderOverviewStep = () => {
 
       <div className="py-6 first:pt-0 last:pb-0">
         <div className="rounded-2xl border ui-border bg-base-100 p-5">
-          <h3 className="text-lg font-semibold text-base-content">Rabatt / Gutscheincode</h3>
+          <h3 className="heading-ui">Rabatt / Gutscheincode</h3>
           <div className="mt-4 flex flex-col gap-3 md:flex-row">
             <input
               type="text"
@@ -2638,7 +2638,7 @@ const renderOverviewStep = () => {
 
       <div className="py-6 first:pt-0 last:pb-0">
         <div className={`rounded-2xl border bg-base-100 p-5 ${agreementBorderClass}`}>
-          <h3 className="text-lg font-semibold text-base-content">Rechtliche Hinweise</h3>
+          <h3 className="heading-ui">Rechtliche Hinweise</h3>
           <div className="mt-4 space-y-4">
             <div>
               <label className="label w-full cursor-pointer items-start gap-3 whitespace-normal">
@@ -2766,7 +2766,7 @@ const renderPaymentStep = () => {
       {currentPayPalOption ? (
         <div className="py-6 first:pt-0 last:pb-0">
           <div className="rounded-2xl border border-primary/50 bg-primary/5 p-5">
-            <h3 className="text-base font-semibold text-base-content">{currentPayPalOption.title}</h3>
+            <h3 className="heading-ui">{currentPayPalOption.title}</h3>
             <p className="mt-1 text-sm text-base-content/70">{currentPayPalOption.helper}</p>
             <div className="mt-4">
               <PayPalButtons
@@ -2832,7 +2832,7 @@ const renderPaymentStep = () => {
     return (
       <div className="flex min-h-[calc(100vh-6rem)] items-center justify-center px-6 py-12 md:px-8">
         <div className="max-w-3xl rounded-2xl border border-base-200 bg-base-100 p-10 text-center shadow-sm">
-          <h2 className="text-3xl font-semibold text-base-content">Vielen Dank für deine Bestellung!</h2>
+          <h2 className="heading-section">Vielen Dank für deine Bestellung!</h2>
           <p className="mt-4 text-base text-base-content/80">
             {orderInformation?.bestellnummer
               ? `Deine Bestellnummer lautet ${orderInformation.bestellnummer}.`
@@ -2926,7 +2926,7 @@ const renderPaymentStep = () => {
     <aside className="overflow-hidden rounded-2xl bg-base-100 shadow-sm">
       <div className="px-6 py-8 space-y-6">
         <div>
-          <h2 className="text-lg font-semibold text-base-content">Deine Bestellung</h2>
+          <h2 className="heading-card">Deine Bestellung</h2>
         </div>
 
         <div className="ui-border-top" aria-hidden="true" />
@@ -3012,7 +3012,7 @@ const renderPaymentStep = () => {
   if (!hasSelections && submissionState !== "success") {
     return (
       <div className="mx-auto max-w-3xl px-6 py-16 text-center md:px-8">
-        <h1 className="text-3xl font-semibold text-base-content">Dein Warenkorb ist leer</h1>
+        <h1 className="heading-section">Dein Warenkorb ist leer</h1>
         <p className="mt-4 text-base text-base-content/70">
           Füge zunächst ein Seminar oder Produkt hinzu, um mit der Bestellung fortzufahren.
         </p>

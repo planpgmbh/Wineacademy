@@ -40,7 +40,7 @@ export function CartItemGutschein({ voucher, onRemove }: CartItemGutscheinProps)
         </svg>
       </button>
       <header className="flex flex-col gap-2 pr-8">
-        <h3 className="text-base font-medium leading-snug">{voucher.title}</h3>
+        <h3 className="heading-label">{voucher.title}</h3>
         <p className="text-sm text-base-content/80">
           {voucher.description ?? "Dein Gutschein zum Verschenken"}
         </p>

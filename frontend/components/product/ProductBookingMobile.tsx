@@ -148,7 +148,7 @@ export function ProductBookingMobile({
                       {highlightLabel}
                     </span>
                   ) : null}
-                  <h2 className="text-2xl font-light leading-tight text-base-content">{title}</h2>
+                  <h2 className="heading-card">{title}</h2>
                   <p className="text-lg font-light text-base-content/80">{price}</p>
                 </div>
 

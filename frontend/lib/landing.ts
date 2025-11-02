@@ -35,11 +35,22 @@ export const SECTION_BACKGROUND_CSS_VAR: Record<SectionBackgroundKey, string> = 
   "wine-blue-darkest": "--section-bg-wine-blue-darkest"
 };
 
+const DARK_SECTION_BACKGROUNDS = new Set<SectionBackgroundKey>([
+  "black",
+  "wine-blue-dark",
+  "wine-blue-darker",
+  "wine-blue-darkest"
+]);
+
 export function resolveSectionBackground(value?: SectionBackgroundKey | null): SectionBackgroundKey {
   if (value && SECTION_BACKGROUND_KEYS.has(value)) {
     return value;
   }
   return "neutral";
+}
+
+export function isDarkSectionBackground(value: SectionBackgroundKey): boolean {
+  return DARK_SECTION_BACKGROUNDS.has(value);
 }
 
 type StrapiUploadFile = {

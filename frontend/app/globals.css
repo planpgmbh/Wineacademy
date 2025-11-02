@@ -62,24 +62,192 @@ body {
 }
 
 @layer base {
-  h1 {
-    font-family: var(--font-serifbabe), ui-serif, Georgia, serif;
-    @apply text-6xl font-light leading-tight text-base-content;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--color-base-content);
+    text-wrap: balance;
   }
 
+  h1,
   h2,
   h3 {
     font-family: var(--font-serifbabe), ui-serif, Georgia, serif;
+    font-weight: 300;
+    letter-spacing: -0.01em;
   }
 
-  @screen md {
-    h1 {
-      @apply text-5xl;
-    }
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-serifbabe), ui-serif, Georgia, serif;
+    letter-spacing: -0.005em;
+  }
+
+  h1 {
+    font-size: clamp(2.75rem, 1.5rem + 3vw, 3.875rem);
+    line-height: 1.08;
+    margin: 0 0 2rem;
+  }
+
+  h2 {
+    font-size: clamp(2.125rem, 1.4rem + 2.5vw, 3rem);
+    line-height: 1.12;
+    margin: 0 0 1.75rem;
+  }
+
+  h3 {
+    font-size: clamp(1.75rem, 1.2rem + 1.75vw, 2.375rem);
+    line-height: 1.18;
+    margin: 0 0 1.5rem;
+  }
+
+  h4 {
+    font-size: clamp(1.5rem, 1.05rem + 1.25vw, 2rem);
+    font-weight: 400;
+    line-height: 1.2;
+    margin: 0 0 1.25rem;
+  }
+
+  h5 {
+    font-size: clamp(1.25rem, 0.95rem + 0.9vw, 1.6rem);
+    font-weight: 500;
+    line-height: 1.25;
+    margin: 0 0 1rem;
+  }
+
+  h6 {
+    font-size: clamp(1.125rem, 0.9rem + 0.7vw, 1.4rem);
+    font-weight: 600;
+    line-height: 1.25;
+    margin: 0 0 0.75rem;
   }
 }
 
 @layer utilities {
+
+  .heading-section {
+    text-wrap: balance;
+    font-size: clamp(2.25rem, 1.55rem + 2.75vw, 3.25rem);
+    line-height: 1.08;
+    margin-bottom: 1.5rem;
+  }
+
+  .heading-card {
+    @apply font-light;
+    font-size: clamp(1.375rem, 1.05rem + 1.2vw, 1.875rem);
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+
+  .heading-ui {
+    @apply font-sans font-semibold;
+    font-size: clamp(1.05rem, 0.95rem + 0.6vw, 1.35rem);
+    line-height: 1.25;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  .heading-label {
+    @apply font-sans font-medium;
+    font-size: clamp(1rem, 0.95rem + 0.35vw, 1.15rem);
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  .heading-hero {
+    text-wrap: balance;
+    font-size: clamp(3rem, 1.8rem + 4vw, 4.75rem);
+    line-height: 1.05;
+  }
+
+  .heading-on-dark {
+    color: var(--color-base-100);
+    text-shadow: 0 2px 6px rgba(9, 9, 9, 0.35);
+  }
+
+  .prose-legal :where(h2) {
+    margin-top: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .prose-legal :where(h3) {
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .prose-legal :where(p) {
+    margin: 0;
+  }
+
+  .prose-legal :where(p + p),
+  .prose-legal :where(p + ul),
+  .prose-legal :where(p + ol) {
+    margin-top: 1.5rem;
+  }
+
+  .prose-legal :where(h2 + p),
+  .prose-legal :where(h2 + ul),
+  .prose-legal :where(h2 + ol),
+  .prose-legal :where(h3 + p),
+  .prose-legal :where(h3 + ul),
+  .prose-legal :where(h3 + ol) {
+    margin-top: 0.75rem;
+  }
+
+  .prose-legal :where(ul),
+  .prose-legal :where(ol) {
+    margin: 0;
+    padding-left: 1.75rem;
+  }
+
+  .prose-legal :where(ul) {
+    list-style: disc;
+    list-style-position: outside;
+  }
+
+  .prose-legal :where(ol) {
+    list-style: decimal;
+    list-style-position: outside;
+  }
+
+  .prose-legal :where(li) {
+    margin: 0;
+    padding-left: 0.25rem;
+  }
+
+  .prose-legal :where(li > p) {
+    margin: 0;
+  }
+
+  .prose-legal :where(li > p + p) {
+    margin-top: 0.75rem;
+  }
+
+  .prose-legal :where(li > ul),
+  .prose-legal :where(li > ol) {
+    margin-top: 0.75rem;
+  }
+
+  .prose-legal :where(li + li) {
+    margin-top: 0.75rem;
+  }
+
+  .prose-legal :where(strong) {
+    color: inherit;
+  }
+
+  .prose-legal :where(ul + p),
+  .prose-legal :where(ul + h3),
+  .prose-legal :where(ul + h4),
+  .prose-legal :where(ol + p),
+  .prose-legal :where(ol + h3),
+  .prose-legal :where(ol + h4) {
+    margin-top: 1.5rem;
+  }
 
   .input,
   .textarea,

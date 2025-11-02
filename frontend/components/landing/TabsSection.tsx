@@ -2,7 +2,12 @@
 
 import { useMemo, useState, type JSX } from "react";
 
-import { resolveSectionBackground, SECTION_BACKGROUND_CSS_VAR, type SectionBackgroundKey } from "@/lib/landing";
+import {
+  resolveSectionBackground,
+  SECTION_BACKGROUND_CSS_VAR,
+  isDarkSectionBackground,
+  type SectionBackgroundKey
+} from "@/lib/landing";
 
 type TabsSectionProps = {
   headline?: string | null;
@@ -22,9 +27,9 @@ const headingTags: Record<"h2" | "h3" | "h4", keyof JSX.IntrinsicElements> = {
 };
 
 const headingClasses: Record<"h2" | "h3" | "h4", string> = {
-  h2: "text-4xl font-light tracking-tight text-base-content md:text-5xl",
-  h3: "text-3xl font-semibold tracking-tight text-base-content md:text-4xl",
-  h4: "text-2xl font-semibold tracking-tight text-base-content md:text-3xl"
+  h2: "heading-section",
+  h3: "",
+  h4: ""
 };
 
 export function TabsSection({ headline, headlineLevel, background, tabs }: TabsSectionProps) {
@@ -42,6 +47,7 @@ export function TabsSection({ headline, headlineLevel, background, tabs }: TabsS
     () => ({ backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` }),
     [resolvedBackground]
   );
+  const isDarkBackground = isDarkSectionBackground(resolvedBackground);
 
   if (validTabs.length === 0) {
     return null;
@@ -49,12 +55,22 @@ export function TabsSection({ headline, headlineLevel, background, tabs }: TabsS
 
   const showHeadline = typeof headline === "string" && headline.trim().length > 0;
   const HeadingTag = headingTags[headlineLevel];
-  const headingClass = headingClasses[headlineLevel];
+  const headingClass = [headingClasses[headlineLevel], isDarkBackground ? "heading-on-dark" : ""]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
   const activeTab = validTabs.find((tab) => tab.id === activeId) ?? validTabs[0];
+  const inactiveTabClass = isDarkBackground
+    ? "text-base-100/70 hover:text-base-100"
+    : "text-base-content/60 hover:text-base-content";
 
   return (
     <section style={style}>
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-10 px-6 py-16 md:px-8 md:py-20">
+      <div
+        className={`mx-auto flex w-full max-w-5xl flex-col gap-10 px-6 py-16 md:px-8 md:py-20 ${
+          isDarkBackground ? "text-base-100" : ""
+        }`}
+      >
         {showHeadline ? <HeadingTag className={headingClass}>{headline}</HeadingTag> : null}
 
         <div className="space-y-8">
@@ -69,8 +85,8 @@ export function TabsSection({ headline, headlineLevel, background, tabs }: TabsS
                     type="button"
                     className={`tab relative whitespace-nowrap px-1 pb-3 text-base font-medium transition-colors ${
                       isActive
-                        ? "font-semibold text-base-content after:absolute after:bottom-[1px] after:left-0 after:h-1 after:w-full after:rounded-full after:bg-primary after:content-['']"
-                        : "text-base-content/60 hover:text-base-content"
+                        ? `font-semibold ${isDarkBackground ? "text-base-100" : "text-base-content"} after:absolute after:bottom-[1px] after:left-0 after:h-1 after:w-full after:rounded-full after:bg-primary after:content-['']`
+                        : inactiveTabClass
                     }`}
                     tabIndex={isActive ? 0 : -1}
                     aria-selected={isActive}

@@ -105,11 +105,7 @@ export function DetailPageHero({
             </div>
           ) : null}
 
-          <h1
-            className={
-              preferDarkMode ? "text-primary drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]" : undefined
-            }
-          >
+          <h1 className={preferDarkMode ? "heading-on-dark" : undefined}>
             {title}
           </h1>
 

@@ -5,7 +5,12 @@ import Link from "next/link";
 import { useMemo, useState, type JSX } from "react";
 
 import { fetchUpcomingSeminars, type UpcomingSeminar } from "@/lib/upcoming-seminars";
-import { resolveSectionBackground, SECTION_BACKGROUND_CSS_VAR, type SectionBackgroundKey } from "@/lib/landing";
+import {
+  resolveSectionBackground,
+  SECTION_BACKGROUND_CSS_VAR,
+  isDarkSectionBackground,
+  type SectionBackgroundKey
+} from "@/lib/landing";
 
 type SeminarListProps = {
   headline?: string | null;
@@ -80,7 +85,7 @@ function SeminarListItem({ seminar, ctaLabel }: SeminarListItemProps) {
       </div>
 
       <div className="flex flex-1 flex-col gap-4">
-        <h3 className="text-2xl font-light leading-tight text-base-content md:text-[28px]">
+        <h3 className="heading-card">
           {seminar.title}
         </h3>
         {seminar.shortDescription ? (
@@ -143,7 +148,11 @@ export function SeminarList({
   const paragraphs = intro ? formatParagraphs(intro) : [];
   const showHeadline = typeof headline === "string" && headline.trim().length > 0;
   const resolvedBackground = resolveSectionBackground(background ?? null);
-  const style = useMemo(() => ({ backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` }), [resolvedBackground]);
+  const isDarkBackground = isDarkSectionBackground(resolvedBackground);
+  const style = useMemo(
+    () => ({ backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` }),
+    [resolvedBackground]
+  );
 
   const headingTags: Record<"h2" | "h3" | "h4", keyof JSX.IntrinsicElements> = {
     h2: "h2",
@@ -152,21 +161,30 @@ export function SeminarList({
   };
 
   const headingClasses: Record<"h2" | "h3" | "h4", string> = {
-    h2: "text-4xl font-light tracking-tight text-base-content md:text-5xl",
-    h3: "text-3xl font-semibold tracking-tight text-base-content md:text-4xl",
-    h4: "text-2xl font-semibold tracking-tight text-base-content md:text-3xl"
+    h2: "heading-section",
+    h3: "",
+    h4: ""
   };
 
   const HeadingTag = headingTags[headlineLevel];
-  const headingClass = headingClasses[headlineLevel];
+  const headingClass = [headingClasses[headlineLevel], isDarkBackground ? "heading-on-dark" : ""]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+  const introTextClass = isDarkBackground ? "text-base-100/85" : "text-base-content/75";
+  const emptyStateClass = isDarkBackground ? "text-base-100/80" : "text-base-content/70";
 
   return (
     <section style={style}>
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-16 md:px-8 md:py-20">
+      <div
+        className={`mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-16 md:px-8 md:py-20 ${
+          isDarkBackground ? "text-base-100" : ""
+        }`}
+      >
         {showHeadline ? <HeadingTag className={headingClass}>{headline}</HeadingTag> : null}
 
         {paragraphs.length > 0 ? (
-          <div className="max-w-3xl space-y-4 text-lg leading-relaxed text-base-content/75">
+          <div className={`max-w-3xl space-y-4 text-lg leading-relaxed ${introTextClass}`}>
             {paragraphs.map((paragraph, index) => (
               <p key={index}>{paragraph}</p>
             ))}
@@ -174,7 +192,9 @@ export function SeminarList({
         ) : null}
 
         {items.length === 0 ? (
-          <div className="rounded-3xl bg-base-100 px-6 py-12 text-center text-base-content/70 shadow-sm ring-1 ring-base-300 md:px-10">
+          <div
+            className={`rounded-3xl bg-base-100 px-6 py-12 text-center shadow-sm ring-1 ring-base-300 md:px-10 ${emptyStateClass}`}
+          >
             Aktuell sind keine Termine geplant.
           </div>
         ) : (

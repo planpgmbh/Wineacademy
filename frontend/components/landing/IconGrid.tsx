@@ -2,7 +2,12 @@
 
 import type { JSX, ReactElement } from "react";
 
-import { resolveSectionBackground, SECTION_BACKGROUND_CSS_VAR, type SectionBackgroundKey } from "@/lib/landing";
+import {
+  resolveSectionBackground,
+  SECTION_BACKGROUND_CSS_VAR,
+  isDarkSectionBackground,
+  type SectionBackgroundKey
+} from "@/lib/landing";
 
 type IconName =
   | "award"
@@ -204,11 +209,11 @@ const headingTags: Record<"h2" | "h3" | "h4", keyof JSX.IntrinsicElements> = {
   h4: "h4"
 };
 
-const headingClasses: Record<"h2" | "h3" | "h4", string> = {
-  h2: "text-4xl font-light tracking-tight text-base-content md:text-5xl",
-  h3: "text-3xl font-semibold tracking-tight text-base-content md:text-4xl",
-  h4: "text-2xl font-semibold tracking-tight text-base-content md:text-3xl"
-};
+  const headingClasses: Record<"h2" | "h3" | "h4", string> = {
+    h2: "heading-section",
+    h3: "",
+    h4: ""
+  };
 
 export function IconGrid({ headline, headlineLevel, intro, background, items }: IconGridProps) {
   if (items.length === 0) {
@@ -217,6 +222,7 @@ export function IconGrid({ headline, headlineLevel, intro, background, items }: 
 
   const resolvedBackground = resolveSectionBackground(background ?? null);
   const style = { backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` };
+  const isDarkBackground = isDarkSectionBackground(resolvedBackground);
   const showHeadline = typeof headline === "string" && headline.trim().length > 0;
   const paragraphs =
     intro
@@ -225,14 +231,22 @@ export function IconGrid({ headline, headlineLevel, intro, background, items }: 
       .filter((paragraph) => paragraph.length > 0) ?? [];
 
   const HeadingTag = headingTags[headlineLevel];
-  const headingClass = headingClasses[headlineLevel];
+  const headingClass = [headingClasses[headlineLevel], isDarkBackground ? "heading-on-dark" : ""]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+  const introTextClass = isDarkBackground ? "text-base-100/85" : "text-base-content/75";
 
   return (
     <section style={style}>
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-20 md:px-8 md:py-24">
+      <div
+        className={`mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-20 md:px-8 md:py-24 ${
+          isDarkBackground ? "text-base-100" : ""
+        }`}
+      >
         {showHeadline ? <HeadingTag className={headingClass}>{headline}</HeadingTag> : null}
         {paragraphs.length > 0 ? (
-          <div className="max-w-3xl space-y-4 text-lg text-base-content/75">
+          <div className={`max-w-3xl space-y-4 text-lg ${introTextClass}`}>
             {paragraphs.map((paragraph, index) => (
               <p key={index}>{paragraph}</p>
             ))}
@@ -242,12 +256,12 @@ export function IconGrid({ headline, headlineLevel, intro, background, items }: 
           {items.map((item) => (
             <article
               key={item.id}
-              className="flex flex-col gap-4 rounded-3xl border border-base-200 bg-base-100 p-6 shadow-sm transition hover:border-primary/60 hover:shadow-md"
+              className="flex flex-col gap-4 rounded-3xl border border-base-200 bg-base-100 p-6 text-base-content shadow-sm transition hover:border-primary/60 hover:shadow-md"
             >
               <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
                 {renderIcon(item.icon)}
               </span>
-              <h3 className="text-xl font-semibold text-base-content">{item.headline}</h3>
+              <h3 className="heading-ui">{item.headline}</h3>
               {item.intro ? <p className="text-base text-base-content/70">{item.intro}</p> : null}
             </article>
           ))}

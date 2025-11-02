@@ -37,7 +37,7 @@ export function CheckoutStepCard({
     <section className={`rounded-2xl border p-6 shadow-sm md:p-8 ${variantClassName} ${className ?? ""}`.trim()}>
       {hasHeader ? (
         <div className="space-y-2">
-          {title ? <h2 className="text-xl font-semibold text-base-content">{title}</h2> : null}
+          {title ? <h2 className="heading-ui">{title}</h2> : null}
           {description ? <p className="text-sm text-base-content/70">{description}</p> : null}
         </div>
       ) : null}

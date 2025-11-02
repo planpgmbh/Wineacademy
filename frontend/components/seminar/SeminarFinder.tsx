@@ -4,7 +4,12 @@ import { useMemo, useState, type JSX } from "react";
 import Link from "next/link";
 
 import type { SeminarFinderCategory, SeminarFinderLocation } from "@/lib/seminar-finder";
-import { resolveSectionBackground, SECTION_BACKGROUND_CSS_VAR, type SectionBackgroundKey } from "@/lib/landing";
+import {
+  resolveSectionBackground,
+  SECTION_BACKGROUND_CSS_VAR,
+  isDarkSectionBackground,
+  type SectionBackgroundKey
+} from "@/lib/landing";
 
 const ALL_CATEGORIES = "all";
 const ALL_LOCATIONS = "all";
@@ -35,9 +40,9 @@ const headingTags: Record<"h2" | "h3" | "h4", keyof JSX.IntrinsicElements> = {
 };
 
 const headingClasses: Record<"h2" | "h3" | "h4", string> = {
-  h2: "text-4xl font-light tracking-tight text-base-content md:text-5xl",
-  h3: "text-3xl font-semibold tracking-tight text-base-content md:text-4xl",
-  h4: "text-2xl font-semibold tracking-tight text-base-content md:text-3xl"
+  h2: "heading-section",
+  h3: "",
+  h4: ""
 };
 
 export function SeminarFinder({
@@ -150,6 +155,7 @@ export function SeminarFinder({
     hasSeminars || selectedCategory === ALL_CATEGORIES ? categoriesWithSeminars : fallbackCategories;
 
   const resolvedBackground = resolveSectionBackground(background ?? null);
+  const isDarkBackground = isDarkSectionBackground(resolvedBackground);
   const style = useMemo(
     () => ({ backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` }),
     [resolvedBackground]
@@ -157,7 +163,10 @@ export function SeminarFinder({
 
   const showHeadline = typeof headline === "string" && headline.trim().length > 0;
   const HeadingTag = headingTags[headlineLevel];
-  const headingClass = headingClasses[headlineLevel];
+  const headingClass = [headingClasses[headlineLevel], isDarkBackground ? "heading-on-dark" : ""]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
 
   return (
     <section id={id ?? undefined} style={style}>
@@ -219,7 +228,7 @@ export function SeminarFinder({
                 className="rounded-[24px] bg-secondary px-6 py-8 text-secondary-content shadow-[0_18px_40px_-24px_rgba(34,55,99,0.55)] md:px-10 md:py-10"
               >
                 <div className="space-y-3">
-                  <h3 className="text-xl font-semibold md:text-2xl">{category.name}</h3>
+                  <h3 className="heading-ui">{category.name}</h3>
                   {category.shortDescription ? (
                     <p className="max-w-3xl text-sm leading-relaxed text-secondary-content/80 md:text-base">
                       {category.shortDescription}
@@ -235,7 +244,7 @@ export function SeminarFinder({
                         className="rounded-2xl bg-base-100 p-5 md:flex md:items-center md:justify-between md:px-7 md:py-6"
                       >
                         <div className="space-y-2 md:max-w-2xl">
-                          <h4 className="text-base font-semibold text-base-content md:text-lg">{seminar.name}</h4>
+                          <h4 className="heading-ui">{seminar.name}</h4>
                           {seminar.shortDescription ? (
                             <p className="text-sm leading-relaxed text-base-content/70 md:text-base">
                               {seminar.shortDescription}

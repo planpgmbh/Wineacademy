@@ -145,7 +145,7 @@ export function SeminarBookingCard({
         ) : null}
 
         <div className="space-y-1.5">
-          <h2 className="text-[1.75rem] font-light leading-tight text-base-content">{title}</h2>
+          <h2 className="heading-card">{title}</h2>
           <p className="text-lg font-light text-base-content/80">{price}</p>
         </div>
 

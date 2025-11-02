@@ -12,10 +12,10 @@ type HeroSmallProps = {
 };
 
 const headingStyles: Record<"h1" | "h2" | "h3" | "h4", string> = {
-  h1: "text-4xl sm:text-5xl md:text-6xl",
-  h2: "text-4xl sm:text-5xl md:text-6xl",
-  h3: "text-3xl sm:text-4xl md:text-5xl",
-  h4: "text-2xl sm:text-3xl md:text-4xl"
+  h1: "heading-hero",
+  h2: "heading-hero",
+  h3: "heading-section",
+  h4: "heading-section"
 };
 
 const headingTags: Record<"h1" | "h2" | "h3" | "h4", keyof JSX.IntrinsicElements> = {
@@ -45,7 +45,7 @@ export function HeroSmall({ headline, headlineLevel, intro, image }: HeroSmallPr
     <section className="relative isolate overflow-hidden">
       <div className="min-h-[280px] px-6 py-16 sm:py-20">
         <div className="relative z-10 mx-auto flex max-w-4xl flex-col gap-6 text-center text-base-100">
-          <HeadingTag className={`font-semibold leading-tight tracking-tight ${headingClass}`}>
+          <HeadingTag className={`heading-on-dark leading-tight tracking-tight ${headingClass}`}>
             {headline}
           </HeadingTag>
           {paragraphs.length > 0 ? (

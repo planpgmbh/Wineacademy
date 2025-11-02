@@ -31,10 +31,10 @@ const resolveLinkProps = (href: string) => {
 };
 
 const headingStyles: Record<"h1" | "h2" | "h3" | "h4", string> = {
-  h1: "text-4xl sm:text-5xl md:text-6xl",
-  h2: "text-4xl sm:text-5xl md:text-6xl",
-  h3: "text-3xl sm:text-4xl md:text-5xl",
-  h4: "text-2xl sm:text-3xl md:text-4xl"
+  h1: "heading-hero",
+  h2: "heading-hero",
+  h3: "heading-section",
+  h4: "heading-section"
 };
 
 const headingTags: Record<"h1" | "h2" | "h3" | "h4", keyof JSX.IntrinsicElements> = {
@@ -69,7 +69,9 @@ export function HeroVideo({ headline, headlineLevel, intro, videoUrl, posterUrl,
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-black/60 via-black/40 to-black/70" aria-hidden="true" />
 
       <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center gap-6 px-6 py-24 text-center md:gap-8 md:py-32">
-        <HeadingTag className={`font-semibold tracking-tight text-base-100 ${headingClass}`}>{headline}</HeadingTag>
+        <HeadingTag className={`heading-on-dark ${headingClass}`}>
+          {headline}
+        </HeadingTag>
         {paragraphs.length > 0 ? (
           <p className="max-w-2xl text-lg leading-relaxed text-base-100/90 md:text-xl">
             {paragraphs.map((paragraph, index) => (
