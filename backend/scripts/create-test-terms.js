@@ -9,6 +9,7 @@
  *     node ./scripts/create-test-terms.js
  */
 
+const path = require("node:path");
 const { createStrapi } = require("@strapi/strapi");
 
 const MIN_TERMS_PER_SEMINAR = 3;
@@ -139,7 +140,8 @@ const createTerm = async (strapi, seminar, categories, standort, startDateStr) =
 };
 
 (async () => {
-  const strapi = await createStrapi({ distDir: "./dist" });
+  const distDir = path.join(__dirname, "..", "dist");
+  const strapi = await createStrapi({ distDir });
   await strapi.load();
 
   try {
