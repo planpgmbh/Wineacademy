@@ -52,6 +52,7 @@ export type SeminarFinderSeminar = {
   shortDescription: string | null;
   priceLabel: string | null;
   locationIds: string[];
+  nextDateIso: string | null;
 };
 
 export type SeminarFinderCategory = {
@@ -153,6 +154,60 @@ function formatLocationLabel(raw: PublicSeminarTerm["standort"]): string {
   return "Standort";
 }
 
+const normaliseDateString = (value: unknown): string | null => {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
+type TermDate = {
+  raw: string;
+  parsed: Date;
+};
+
+const parseTermDate = (value: string | null): TermDate | null => {
+  if (!value) {
+    return null;
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return { raw: value, parsed };
+};
+
+const startOfToday = () => {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+};
+
+const findNextTermDate = (terms: PublicSeminarTerm[] | null | undefined): string | null => {
+  if (!Array.isArray(terms) || terms.length === 0) {
+    return null;
+  }
+
+  const dates: TermDate[] = [];
+  terms.forEach((term) => {
+    const raw = normaliseDateString(term.starttag ?? null);
+    const parsed = parseTermDate(raw);
+    if (parsed) {
+      dates.push(parsed);
+    }
+  });
+
+  if (dates.length === 0) {
+    return null;
+  }
+
+  dates.sort((a, b) => a.parsed.getTime() - b.parsed.getTime());
+
+  const today = startOfToday();
+  const upcoming = dates.find((entry) => entry.parsed >= today) ?? dates[0] ?? null;
+  return upcoming ? upcoming.raw : null;
+};
+
 export async function getSeminarFinderData(): Promise<SeminarFinderData> {
   const [categoriesPayload, seminarsPayload] = await Promise.all([
     fetchJson<PublicCategory[]>("/public/kategorien", { cache: "no-store" }),
@@ -200,6 +255,7 @@ export async function getSeminarFinderData(): Promise<SeminarFinderData> {
 
     const locationIds: string[] = [];
     const uniqueLocationIds = new Set<string>();
+    const nextDateIso = findNextTermDate(seminar.termine ?? null);
 
     (seminar.termine ?? []).forEach((termin) => {
       const locationId = createLocationId(termin.standort ?? null);
@@ -227,7 +283,8 @@ export async function getSeminarFinderData(): Promise<SeminarFinderData> {
       name,
       shortDescription,
       priceLabel,
-      locationIds
+      locationIds,
+      nextDateIso
     };
 
     const categories = Array.isArray(seminar.kategorien) ? seminar.kategorien : [];

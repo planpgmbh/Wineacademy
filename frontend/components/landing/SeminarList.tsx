@@ -1,9 +1,5 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import { useMemo, useState, type JSX } from "react";
-
 import { fetchUpcomingSeminars, type UpcomingSeminar } from "@/lib/upcoming-seminars";
 import {
   resolveSectionBackground,
@@ -11,6 +7,11 @@ import {
   isDarkSectionBackground,
   type SectionBackgroundKey
 } from "@/lib/landing";
+import Image from "next/image";
+import Link from "next/link";
+import { useMemo, useState, type JSX } from "react";
+
+import { SeminarDateBadge } from "@/components/shared/SeminarDateBadge";
 
 type SeminarListProps = {
   headline?: string | null;
@@ -26,17 +27,12 @@ type SeminarListProps = {
   background?: SectionBackgroundKey | null;
 };
 
-const DAY_FORMATTER = new Intl.DateTimeFormat("de-DE", { day: "2-digit" });
-const MONTH_FORMATTER = new Intl.DateTimeFormat("de-DE", { month: "short" });
-
 const formatParagraphs = (text: string): string[] => {
   return text
     .split(/\n+/)
     .map((paragraph) => paragraph.trim())
     .filter((paragraph) => paragraph.length > 0);
 };
-
-const formatMonth = (value: Date): string => MONTH_FORMATTER.format(value).toUpperCase();
 
 const formatImageSrc = (item: UpcomingSeminar): { src: string | null; alt: string } => {
   const alt =
@@ -53,14 +49,11 @@ type SeminarListItemProps = {
 };
 
 function SeminarListItem({ seminar, ctaLabel }: SeminarListItemProps) {
-  const seminarDate = new Date(seminar.nextDateIso);
-  const day = DAY_FORMATTER.format(seminarDate);
-  const month = formatMonth(seminarDate);
   const image = formatImageSrc(seminar);
 
   return (
-    <article className="flex flex-col gap-6 rounded-3xl bg-base-100 p-6 shadow-sm ring-1 ring-base-300 md:flex-row md:items-stretch md:gap-8 md:p-8">
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl bg-base-200 md:h-auto md:w-60 md:flex-none">
+    <article className="grid grid-cols-[auto_1fr] gap-[var(--gap-seminar-columns)] rounded-3xl bg-base-100 p-6 shadow-sm ring-1 ring-base-300 md:grid-cols-[minmax(0,15rem)_var(--width-seminar-date)_minmax(0,1fr)] md:items-start md:p-8">
+      <div className="relative col-span-full aspect-[4/3] w-full overflow-hidden rounded-3xl bg-base-200 md:col-span-1 md:row-span-full md:h-auto">
         {image.src ? (
           <Image
             src={image.src}
@@ -77,25 +70,25 @@ function SeminarListItem({ seminar, ctaLabel }: SeminarListItemProps) {
         )}
       </div>
 
-      <div className="flex items-center justify-start gap-2 text-base-content/80 md:w-24 md:flex-col md:items-center md:justify-center md:text-center">
-        <span className="text-4xl font-semibold tracking-tight md:text-5xl">{day}</span>
-        <span className="text-sm font-semibold uppercase tracking-[0.35em] text-base-content/60 md:tracking-[0.4em]">
-          {month}
-        </span>
+      <div className="row-start-2 justify-self-center md:col-start-2 md:row-start-1 md:justify-self-center">
+        <SeminarDateBadge date={seminar.nextDateIso} />
       </div>
 
-      <div className="flex flex-1 flex-col gap-4">
-        <h3 className="heading-card">
-          {seminar.title}
-        </h3>
-        {seminar.shortDescription ? (
-          <p className="text-base text-base-content/80 md:text-lg">{seminar.shortDescription}</p>
-        ) : null}
-        <div>
-          <Link className="btn btn-primary min-w-[160px]" href={`/seminare/${encodeURIComponent(seminar.slug)}`}>
-            {ctaLabel}
-          </Link>
+      <div className="col-start-2 row-start-2 flex flex-col gap-3 md:col-start-3 md:row-start-1 md:gap-4">
+        <div className="space-y-2">
+          <h3 className="text-2xl font-semibold text-base-content md:hidden">
+            {seminar.title}
+          </h3>
+          <h3 className="hidden md:block heading-card">
+            {seminar.title}
+          </h3>
+          {seminar.shortDescription ? (
+            <p className="text-base text-base-content/80 md:text-lg">{seminar.shortDescription}</p>
+          ) : null}
         </div>
+        <Link className="btn btn-primary min-w-[160px] self-start" href={`/seminare/${encodeURIComponent(seminar.slug)}`}>
+          {ctaLabel}
+        </Link>
       </div>
     </article>
   );

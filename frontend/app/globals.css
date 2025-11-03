@@ -55,6 +55,9 @@
   color-scheme: light;
   --ui-border-line-width: 1px;
   --ui-border-line-color: var(--color-base-700);
+  /* Shared layout tokens for SeminarList & SeminarFinder */
+  --gap-seminar-columns: 1.6rem;
+  --width-seminar-date: 4rem;
 }
 
 body {

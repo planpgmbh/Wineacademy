@@ -1,15 +1,16 @@
 "use client";
 
-import { useMemo, useState, type JSX } from "react";
 import Link from "next/link";
+import { useMemo, useState, type JSX } from "react";
 
-import type { SeminarFinderCategory, SeminarFinderLocation } from "@/lib/seminar-finder";
+import type { SeminarFinderCategory, SeminarFinderLocation, SeminarFinderSeminar } from "@/lib/seminar-finder";
 import {
   resolveSectionBackground,
   SECTION_BACKGROUND_CSS_VAR,
   isDarkSectionBackground,
   type SectionBackgroundKey
 } from "@/lib/landing";
+import { SeminarDateBadge } from "@/components/shared/SeminarDateBadge";
 
 const ALL_CATEGORIES = "all";
 const ALL_LOCATIONS = "all";
@@ -204,7 +205,7 @@ export function SeminarFinder({
               ))}
             </div>
 
-            <label className="flex items-center gap-3 text-base-content/80">
+            <label className="flex items-center gap-3 text-base-content/80 lg:self-start">
               <span className="text-sm font-semibold text-base-content/60">Standort</span>
               <select
                 className="select select-bordered select-sm w-48 border-base-300 bg-base-100 text-base-content shadow-sm shadow-base-300/40"
@@ -228,7 +229,9 @@ export function SeminarFinder({
                 className="rounded-[24px] bg-secondary px-6 py-8 text-secondary-content shadow-[0_18px_40px_-24px_rgba(34,55,99,0.55)] md:px-10 md:py-10"
               >
                 <div className="space-y-3">
-                  <h3 className="heading-ui">{category.name}</h3>
+                  <h3 className="font-serif text-3xl font-light text-secondary-content md:text-[2.1rem]">
+                    {category.name}
+                  </h3>
                   {category.shortDescription ? (
                     <p className="max-w-3xl text-sm leading-relaxed text-secondary-content/80 md:text-base">
                       {category.shortDescription}
@@ -237,33 +240,9 @@ export function SeminarFinder({
                 </div>
 
                 {seminars.length > 0 ? (
-                  <div className="mt-8 space-y-5">
+                  <div className="mt-8 space-y-[var(--gap-seminar-columns)]">
                     {seminars.map((seminar) => (
-                      <article
-                        key={seminar.id}
-                        className="rounded-2xl bg-base-100 p-5 md:flex md:items-center md:justify-between md:px-7 md:py-6"
-                      >
-                        <div className="space-y-2 md:max-w-2xl">
-                          <h4 className="heading-ui">{seminar.name}</h4>
-                          {seminar.shortDescription ? (
-                            <p className="text-sm leading-relaxed text-base-content/70 md:text-base">
-                              {seminar.shortDescription}
-                            </p>
-                          ) : null}
-                        </div>
-
-                        <div className="mt-6 flex flex-col items-start gap-3 md:mt-0 md:flex-row md:items-center">
-                          {seminar.priceLabel ? (
-                            <span className="text-base font-semibold text-base-content md:text-lg">{seminar.priceLabel}</span>
-                          ) : null}
-                          <Link
-                            href={`/seminare/${seminar.slug}`}
-                            className="btn btn-primary"
-                          >
-                            Zum Seminar
-                          </Link>
-                        </div>
-                      </article>
+                      <SeminarFinderCard key={seminar.id} seminar={seminar} />
                     ))}
                   </div>
                 ) : (
@@ -287,5 +266,65 @@ export function SeminarFinder({
         </div>
       </div>
     </section>
+  );
+}
+
+type SeminarFinderCardProps = {
+  seminar: SeminarFinderSeminar;
+};
+
+function SeminarFinderCard({ seminar }: SeminarFinderCardProps) {
+  return (
+    <article className="flex flex-col gap-3 rounded-2xl bg-base-100 p-5 md:grid md:grid-cols-[var(--width-seminar-date)_minmax(0,1fr)_auto_auto] md:items-start md:gap-[var(--gap-seminar-columns)] md:px-7 md:py-6">
+      <SeminarFinderCardMobile seminar={seminar} />
+      <SeminarFinderCardDesktop seminar={seminar} />
+    </article>
+  );
+}
+
+function SeminarFinderCardMobile({ seminar }: SeminarFinderCardProps) {
+  return (
+    <div className="flex items-start gap-4 md:hidden">
+      {seminar.nextDateIso ? <SeminarDateBadge date={seminar.nextDateIso} className="shrink-0" /> : null}
+      <div className="flex flex-1 flex-col gap-3">
+        <h4 className="font-sans text-base font-semibold text-base-content [&]:m-0">{seminar.name}</h4>
+        {seminar.shortDescription ? (
+          <p className="text-sm leading-relaxed text-base-content/70">{seminar.shortDescription}</p>
+        ) : null}
+        <div className="flex w-full items-center justify-between gap-3">
+          <span className="font-sans text-xl font-semibold text-base-content">{seminar.priceLabel ?? ""}</span>
+          <Link
+            href={`/seminare/${seminar.slug}`}
+            className="btn btn-primary min-w-[140px] px-4"
+          >
+            Zum Seminar
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SeminarFinderCardDesktop({ seminar }: SeminarFinderCardProps) {
+  return (
+    <>
+      <div className="hidden md:flex md:col-start-1 md:items-center md:justify-center">
+        {seminar.nextDateIso ? <SeminarDateBadge date={seminar.nextDateIso} /> : null}
+      </div>
+      <div className="hidden md:flex md:col-start-2 md:flex-col md:gap-3">
+        <h4 className="font-sans text-base font-semibold text-base-content md:text-lg [&]:m-0">{seminar.name}</h4>
+        {seminar.shortDescription ? (
+          <p className="text-sm leading-relaxed text-base-content/70 md:text-base">{seminar.shortDescription}</p>
+        ) : null}
+      </div>
+      <div className="hidden md:flex md:col-start-3 md:items-center md:justify-end md:self-center">
+        <span className="font-sans text-base font-semibold text-base-content md:text-lg">{seminar.priceLabel ?? ""}</span>
+      </div>
+      <div className="hidden md:flex md:col-start-4 md:items-center md:justify-end md:self-center">
+        <Link href={`/seminare/${seminar.slug}`} className="btn btn-primary min-w-[160px]">
+          Zum Seminar
+        </Link>
+      </div>
+    </>
   );
 }
