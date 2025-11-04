@@ -39,7 +39,7 @@ export function CardGrid({ cards, background }: CardGridProps) {
   return (
     <section style={style}>
       <div
-        className={`mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-[var(--section-padding-y)] md:px-8 md:py-[var(--section-padding-y-lg)] ${
+        className={`mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)] md:gap-8 ${
           isDarkBackground ? "text-base-100" : ""
         }`}
       >

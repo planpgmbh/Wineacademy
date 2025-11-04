@@ -67,13 +67,13 @@ export function TabsSection({ headline, headlineLevel, background, tabs }: TabsS
   return (
     <section style={style}>
       <div
-        className={`mx-auto flex w-full max-w-5xl flex-col gap-10 px-6 py-[var(--section-padding-y)] md:px-8 md:py-[var(--section-padding-y-lg)] ${
+        className={`mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)] md:gap-10 ${
           isDarkBackground ? "text-base-100" : ""
         }`}
       >
         {showHeadline ? <HeadingTag className={headingClass}>{headline}</HeadingTag> : null}
 
-        <div className="space-y-8">
+        <div className="space-y-5 md:space-y-8">
           <div className="ui-border-bottom overflow-x-auto">
             <div role="tablist" className="tabs -mb-[1px] gap-4 md:gap-6">
               {validTabs.map((tab) => {
@@ -100,7 +100,7 @@ export function TabsSection({ headline, headlineLevel, background, tabs }: TabsS
           </div>
 
           <div
-            className="rounded-3xl bg-base-100 p-8 text-base leading-relaxed text-base-content/80 shadow-sm ring-1 ring-base-300 [&_a]:text-primary [&_a]:underline [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-5 [&_p:not(:first-child)]:mt-4 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5"
+            className="rounded-3xl bg-base-100 p-6 text-base leading-relaxed text-base-content/80 shadow-sm ring-1 ring-base-300 md:p-8 [&_a]:text-primary [&_a]:underline [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-5 [&_p:not(:first-child)]:mt-4 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5"
             dangerouslySetInnerHTML={{ __html: activeTab.contentHtml }}
           />
         </div>

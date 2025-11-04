@@ -75,7 +75,7 @@ export function HeroCarousel({ headline, headlineLevel, intro, slides, rotationI
 
   if (slideCount === 0) {
     return (
-      <section className="flex min-h-[420px] items-center justify-center bg-base-100 px-6 py-24 text-center mb-[var(--section-padding-y)] md:mb-[var(--section-padding-y-lg)]">
+      <section className="flex min-h-[420px] items-center justify-center bg-base-100 px-6 py-24 text-center mb-[calc(var(--section-padding-y)*1.5)] md:mb-[var(--section-padding-y-xl)]">
         <div className="mx-auto max-w-3xl space-y-6">
           <HeadingTag className={headingClass}>{headline}</HeadingTag>
           {intro ? <p className="text-lg text-base-content/80">{intro}</p> : null}
@@ -85,7 +85,7 @@ export function HeroCarousel({ headline, headlineLevel, intro, slides, rotationI
   }
 
   return (
-    <section className="relative isolate flex min-h-[600px] items-center justify-center overflow-hidden mb-[var(--section-padding-y)] md:mb-[var(--section-padding-y-lg)]">
+    <section className="relative isolate flex min-h-[600px] items-center justify-center overflow-hidden mb-[calc(var(--section-padding-y)*1.5)] md:mb-[var(--section-padding-y-xl)]">
       {validSlides.map((slide, index) => (
         <Image
           key={`${slide.src}-${index}`}
