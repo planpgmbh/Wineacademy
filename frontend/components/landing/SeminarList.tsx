@@ -170,7 +170,7 @@ export function SeminarList({
   return (
     <section style={style}>
       <div
-        className={`mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-[var(--section-padding-y)] md:px-8 md:py-[var(--section-padding-y-lg)] ${
+        className={`mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)] md:gap-10 ${
           isDarkBackground ? "text-base-100" : ""
         }`}
       >
@@ -186,12 +186,12 @@ export function SeminarList({
 
         {items.length === 0 ? (
           <div
-            className={`rounded-3xl bg-base-100 px-6 py-12 text-center shadow-sm ring-1 ring-base-300 md:px-10 ${emptyStateClass}`}
+            className={`rounded-3xl bg-base-100 px-6 py-10 text-center shadow-sm ring-1 ring-base-300 md:px-10 md:py-12 ${emptyStateClass}`}
           >
             Aktuell sind keine Termine geplant.
           </div>
         ) : (
-          <div className="flex flex-col gap-10 md:gap-12">
+          <div className="flex flex-col gap-8 md:gap-12">
             {items.map((seminar) => (
               <SeminarListItem key={`${seminar.id}-${seminar.nextDateTimestamp}`} seminar={seminar} ctaLabel={ctaLabel} />
             ))}

@@ -164,7 +164,12 @@ export function SeminarFinder({
 
   const showHeadline = typeof headline === "string" && headline.trim().length > 0;
   const HeadingTag = headingTags[headlineLevel];
-  const headingClass = [headingClasses[headlineLevel], isDarkBackground ? "heading-on-dark" : ""]
+  const headingClass = [
+    headingClasses[headlineLevel],
+    isDarkBackground ? "heading-on-dark" : "",
+    "!mb-4",
+    "md:!mb-6"
+  ]
     .filter(Boolean)
     .join(" ")
     .trim();
@@ -179,50 +184,67 @@ export function SeminarFinder({
             </div>
           ) : null}
 
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex flex-wrap gap-3 lg:max-w-4xl">
-              <button
-                type="button"
-                className={`${buttonBaseClasses} ${
-                  selectedCategory === ALL_CATEGORIES ? buttonActiveClasses : buttonInactiveClasses
-                }`}
-                onClick={() => setSelectedCategory(ALL_CATEGORIES)}
-              >
-                Alle Kategorien
-              </button>
-
-              {availableCategories.map((category) => (
-                <button
-                  key={category.slug}
-                  type="button"
-                  className={`${buttonBaseClasses} ${
-                    selectedCategory === category.slug ? buttonActiveClasses : buttonInactiveClasses
-                  }`}
-                  onClick={() => setSelectedCategory(category.slug)}
-                >
-                  {category.name}
-                </button>
-              ))}
-            </div>
-
-            <label className="flex items-center gap-3 text-base-content/80 lg:self-start">
-              <span className="text-sm font-semibold text-base-content/60">Standort</span>
+          <div className="space-y-2 md:space-y-0">
+            <div className="md:hidden">
               <select
-                className="select select-bordered select-sm w-48 border-base-300 bg-base-100 text-base-content shadow-sm shadow-base-300/40"
-                value={selectedLocation}
-                onChange={(event) => setSelectedLocation(event.target.value)}
+                className="select select-bordered select-sm w-full border-base-300 bg-base-100 text-base-content shadow-sm shadow-base-300/40"
+                value={selectedCategory}
+                onChange={(event) => setSelectedCategory(event.target.value)}
               >
-                <option value={ALL_LOCATIONS}>Alle Standorte</option>
-                {availableLocations.map((location) => (
-                  <option key={location.id} value={location.id}>
-                    {location.label}
+                <option value={ALL_CATEGORIES}>Alle Kategorien</option>
+                {availableCategories.map((category) => (
+                  <option key={category.slug} value={category.slug}>
+                    {category.name}
                   </option>
                 ))}
               </select>
-            </label>
+            </div>
+
+            <div className="hidden md:flex md:flex-col md:gap-5 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-wrap gap-3 lg:max-w-4xl">
+                <button
+                  type="button"
+                  className={`${buttonBaseClasses} ${
+                    selectedCategory === ALL_CATEGORIES ? buttonActiveClasses : buttonInactiveClasses
+                  }`}
+                  onClick={() => setSelectedCategory(ALL_CATEGORIES)}
+                >
+                  Alle Kategorien
+                </button>
+
+                {availableCategories.map((category) => (
+                  <button
+                    key={category.slug}
+                    type="button"
+                    className={`${buttonBaseClasses} ${
+                      selectedCategory === category.slug ? buttonActiveClasses : buttonInactiveClasses
+                    }`}
+                    onClick={() => setSelectedCategory(category.slug)}
+                  >
+                    {category.name}
+                  </button>
+                ))}
+              </div>
+
+              <label className="hidden items-center gap-3 text-base-content/80 md:flex lg:self-start">
+                <span className="text-sm font-semibold text-base-content/60">Standort</span>
+                <select
+                  className="select select-bordered select-sm w-48 border-base-300 bg-base-100 text-base-content shadow-sm shadow-base-300/40"
+                  value={selectedLocation}
+                  onChange={(event) => setSelectedLocation(event.target.value)}
+                >
+                  <option value={ALL_LOCATIONS}>Alle Standorte</option>
+                  {availableLocations.map((location) => (
+                    <option key={location.id} value={location.id}>
+                      {location.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
           </div>
 
-          <div className="space-y-8">
+          <div className="space-y-6 md:space-y-8">
             {categoriesToDisplay.map(({ category, seminars }) => (
               <div
                 key={category.slug}
@@ -240,13 +262,13 @@ export function SeminarFinder({
                 </div>
 
                 {seminars.length > 0 ? (
-                  <div className="mt-8 space-y-[var(--gap-seminar-columns)]">
+                  <div className="mt-6 space-y-[var(--gap-seminar-columns)] md:mt-8">
                     {seminars.map((seminar) => (
                       <SeminarFinderCard key={seminar.id} seminar={seminar} />
                     ))}
                   </div>
                 ) : (
-                  <div className="mt-8 rounded-2xl border border-secondary/40 bg-secondary-content/10 p-8 text-secondary-content">
+                  <div className="mt-6 rounded-2xl border border-secondary/40 bg-secondary-content/10 p-8 text-secondary-content md:mt-8">
                     <p className="text-base font-medium text-secondary-content">
                       Aktuell gibt es keine Seminare, die zu diesem Standort-Filter passen. Ändere die Auswahl, um
                       weitere Seminare zu entdecken.

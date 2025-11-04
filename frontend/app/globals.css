@@ -59,8 +59,11 @@
   --gap-seminar-columns: 1.6rem;
   --width-seminar-date: 4rem;
   /* Vertical spacing for Landing-Sektionen */
-  --section-padding-y: 3rem;
-  --section-padding-y-lg: 2rem;
+  --section-padding-y: 1rem;
+  --section-padding-y-lg: 1.5rem;
+  --section-padding-y-xl: 3rem;
+  --section-padding-y-tight: 1.125rem;
+  --section-padding-y-compact: 0.9rem;
 }
 
 body {
@@ -140,13 +143,6 @@ body {
     font-size: clamp(2.25rem, 1.55rem + 2.75vw, 3.25rem);
     line-height: 1.08;
     margin-bottom: 1.5rem;
-  }
-
-  .heading-card {
-    @apply font-light;
-    font-size: clamp(1.375rem, 1.05rem + 1.2vw, 1.875rem);
-    line-height: 1.2;
-    margin-bottom: 1rem;
   }
 
   .heading-ui {
