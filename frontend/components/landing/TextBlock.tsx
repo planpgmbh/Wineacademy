@@ -69,7 +69,7 @@ export function TextBlock({ background, html, buttonLabel, buttonLink }: TextBlo
   return (
     <section style={style}>
       <div
-        className={`mx-auto flex w-full max-w-4xl flex-col gap-8 px-6 py-20 md:px-8 md:py-24 ${
+        className={`mx-auto flex w-full max-w-4xl flex-col gap-8 px-6 py-[var(--section-padding-y)] md:px-8 md:py-[var(--section-padding-y-lg)] ${
           isDarkBackground ? "text-base-100" : "text-base-content"
         }`}
       >

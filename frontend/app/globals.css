@@ -58,6 +58,9 @@
   /* Shared layout tokens for SeminarList & SeminarFinder */
   --gap-seminar-columns: 1.6rem;
   --width-seminar-date: 4rem;
+  /* Vertical spacing for Landing-Sektionen */
+  --section-padding-y: 3rem;
+  --section-padding-y-lg: 2rem;
 }
 
 body {
@@ -175,6 +178,10 @@ body {
   .prose-legal :where(h2) {
     margin-top: 3rem;
     margin-bottom: 1rem;
+  }
+
+  .prose-legal :where(:first-child:is(h2, h3, h4)) {
+    margin-top: 0;
   }
 
   .prose-legal :where(h3) {

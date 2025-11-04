@@ -137,7 +137,7 @@ export function DetailPageHero({
 
   return (
     <section
-      className={`relative isolate flex min-h-[500px] items-center overflow-hidden bg-base-200 ${
+      className={`relative isolate flex min-h-[500px] items-center overflow-hidden bg-base-200 mb-[var(--section-padding-y)] md:mb-[var(--section-padding-y-lg)] ${
         preferDarkMode ? "text-base-100" : ""
       }`}
     >

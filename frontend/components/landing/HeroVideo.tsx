@@ -51,7 +51,7 @@ export function HeroVideo({ headline, headlineLevel, intro, videoUrl, posterUrl,
   const headingClass = headingStyles[headlineLevel];
 
   return (
-    <section className="relative isolate flex min-h-[620px] items-center justify-center overflow-hidden bg-base-200">
+    <section className="relative isolate flex min-h-[620px] items-center justify-center overflow-hidden bg-base-200 mb-[var(--section-padding-y)] md:mb-[var(--section-padding-y-lg)]">
       {videoUrl ? (
         <video
           className="absolute inset-0 -z-20 h-full w-full object-cover"

@@ -170,7 +170,7 @@ export function SeminarList({
   return (
     <section style={style}>
       <div
-        className={`mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-16 md:px-8 md:py-20 ${
+        className={`mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-[var(--section-padding-y)] md:px-8 md:py-[var(--section-padding-y-lg)] ${
           isDarkBackground ? "text-base-100" : ""
         }`}
       >
