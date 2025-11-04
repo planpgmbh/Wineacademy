@@ -52,7 +52,7 @@ function SeminarListItem({ seminar, ctaLabel }: SeminarListItemProps) {
   const image = formatImageSrc(seminar);
 
   return (
-    <article className="grid grid-cols-[auto_1fr] gap-[var(--gap-seminar-columns)] rounded-3xl bg-base-100 p-6 shadow-sm ring-1 ring-base-300 md:grid-cols-[minmax(0,15rem)_var(--width-seminar-date)_minmax(0,1fr)] md:items-start md:p-8">
+    <article className="flex flex-col gap-6 rounded-3xl bg-base-100 p-6 shadow-sm ring-1 ring-base-300 md:grid md:grid-cols-[minmax(0,15rem)_var(--width-seminar-date)_minmax(0,1fr)] md:gap-[var(--gap-seminar-columns)] md:items-start md:p-8">
       <div className="relative col-span-full aspect-[4/3] w-full overflow-hidden rounded-3xl bg-base-200 md:col-span-1 md:row-span-full md:h-auto">
         {image.src ? (
           <Image
@@ -70,11 +70,11 @@ function SeminarListItem({ seminar, ctaLabel }: SeminarListItemProps) {
         )}
       </div>
 
-      <div className="row-start-2 justify-self-center md:col-start-2 md:row-start-1 md:justify-self-center">
+      <div className="hidden md:flex md:col-start-2 md:row-start-1 md:items-center md:justify-center md:justify-self-center">
         <SeminarDateBadge date={seminar.nextDateIso} />
       </div>
 
-      <div className="col-start-2 row-start-2 flex flex-col gap-3 md:col-start-3 md:row-start-1 md:gap-4">
+      <div className="flex flex-col gap-3 md:col-start-3 md:row-start-1 md:gap-4">
         <div className="space-y-2">
           <h3 className="text-2xl font-semibold text-base-content md:hidden">
             {seminar.title}

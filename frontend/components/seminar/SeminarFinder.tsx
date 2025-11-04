@@ -284,22 +284,19 @@ function SeminarFinderCard({ seminar }: SeminarFinderCardProps) {
 
 function SeminarFinderCardMobile({ seminar }: SeminarFinderCardProps) {
   return (
-    <div className="flex items-start gap-4 md:hidden">
-      {seminar.nextDateIso ? <SeminarDateBadge date={seminar.nextDateIso} className="shrink-0" /> : null}
-      <div className="flex flex-1 flex-col gap-3">
-        <h4 className="font-sans text-base font-semibold text-base-content [&]:m-0">{seminar.name}</h4>
-        {seminar.shortDescription ? (
-          <p className="text-sm leading-relaxed text-base-content/70">{seminar.shortDescription}</p>
-        ) : null}
-        <div className="flex w-full items-center justify-between gap-3">
-          <span className="font-sans text-xl font-semibold text-base-content">{seminar.priceLabel ?? ""}</span>
-          <Link
-            href={`/seminare/${seminar.slug}`}
-            className="btn btn-primary min-w-[140px] px-4"
-          >
-            Zum Seminar
-          </Link>
-        </div>
+    <div className="flex flex-col gap-3 md:hidden">
+      <h4 className="font-sans text-base font-semibold text-base-content [&]:m-0">{seminar.name}</h4>
+      {seminar.shortDescription ? (
+        <p className="text-sm leading-relaxed text-base-content/70">{seminar.shortDescription}</p>
+      ) : null}
+      <div className="flex w-full items-center justify-between gap-3">
+        <span className="font-sans text-xl font-semibold text-base-content">{seminar.priceLabel ?? ""}</span>
+        <Link
+          href={`/seminare/${seminar.slug}`}
+          className="btn btn-primary min-w-[140px] px-4"
+        >
+          Zum Seminar
+        </Link>
       </div>
     </div>
   );
