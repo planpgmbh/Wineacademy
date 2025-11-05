@@ -1,0 +1,30 @@
+{
+  "collectionName": "components_landing_column_sections",
+  "info": {
+    "displayName": "Spalten",
+    "description": "Abschnitt mit bis zu drei individuell befüllbaren Spalten."
+  },
+  "attributes": {
+    "sectionBackground": {
+      "type": "enumeration",
+      "enum": [
+        "neutral",
+        "black",
+        "wine-blue",
+        "wine-blue-light",
+        "wine-blue-lighter",
+        "wine-blue-lightest",
+        "wine-blue-dark",
+        "wine-blue-darker",
+        "wine-blue-darkest"
+      ]
+    },
+    "spalten": {
+      "type": "component",
+      "repeatable": true,
+      "component": "landing.column",
+      "min": 1,
+      "max": 3
+    }
+  }
+}

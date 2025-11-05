@@ -128,6 +128,18 @@ type StrapiCardGridComponent = {
   karten?: StrapiCardComponent[] | null;
 };
 
+type StrapiColumnComponent = {
+  id?: number | null;
+  bild?: StrapiUploadFile | null;
+  inhalt?: string | null;
+};
+
+type StrapiColumnsComponent = {
+  __component: "landing.columns";
+  sectionBackground?: string | null;
+  spalten?: StrapiColumnComponent[] | null;
+};
+
 type StrapiTextBlockComponent = {
   __component: "landing.text-block";
   sectionBackground?: string | null;
@@ -184,6 +196,7 @@ type StrapiLandingComponent =
   | StrapiHeroSmallComponent
   | StrapiSeminarListComponent
   | StrapiCardGridComponent
+  | StrapiColumnsComponent
   | StrapiTextBlockComponent
   | StrapiIconGridComponent
   | StrapiTabsComponent
@@ -355,6 +368,19 @@ export type LandingCardGridSection = {
   }[];
 };
 
+export type LandingColumnsSection = {
+  type: "columns";
+  background: SectionBackgroundKey | null;
+  columns: {
+    id: number;
+    html?: string | null;
+    image?: {
+      src: string;
+      alt: string;
+    } | null;
+  }[];
+};
+
 export type LandingTextBlockSection = {
   type: "text-block";
   background: SectionBackgroundKey | null;
@@ -427,6 +453,7 @@ export type LandingSection =
   | LandingHeroCarouselSection
   | LandingHeroSmallSection
   | LandingCardGridSection
+  | LandingColumnsSection
   | LandingTextBlockSection
   | LandingIconGridSection
   | LandingSeminarListSection
@@ -586,6 +613,43 @@ const transformCardGrid = (component: StrapiCardGridComponent): LandingCardGridS
   };
 };
 
+const transformColumnsSection = (component: StrapiColumnsComponent): LandingColumnsSection => {
+  const columns =
+    component.spalten
+      ?.map((column, index) => {
+        const html = normaliseRichText(column?.inhalt ?? null);
+
+        let image: { src: string; alt: string } | null = null;
+        const media = column?.bild ?? null;
+        if (media?.url) {
+          const src = mediaUrl(media.url);
+          if (src) {
+            image = {
+              src,
+              alt: toSlideAlt(media)
+            };
+          }
+        }
+
+        if (!html && !image) {
+          return null;
+        }
+
+        return {
+          id: typeof column?.id === "number" ? column.id : index,
+          html,
+          image
+        };
+      })
+      .filter((column): column is NonNullable<typeof column> => Boolean(column)) ?? [];
+
+  return {
+    type: "columns",
+    background: normaliseBackgroundKey(component.sectionBackground ?? null),
+    columns
+  };
+};
+
 const transformTextBlock = (component: StrapiTextBlockComponent): LandingTextBlockSection => {
   const background = normaliseBackgroundKey(component.sectionBackground ?? null);
   const richText = normaliseRichText(component.einleitung ?? null);
@@ -700,6 +764,9 @@ const transformSection = (component: StrapiLandingComponent): LandingSection => 
   }
   if (component.__component === "landing.card-grid") {
     return transformCardGrid(component as StrapiCardGridComponent);
+  }
+  if (component.__component === "landing.columns") {
+    return transformColumnsSection(component as StrapiColumnsComponent);
   }
   if (component.__component === "landing.text-block") {
     return transformTextBlock(component as StrapiTextBlockComponent);

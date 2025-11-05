@@ -51,12 +51,14 @@ const AdvancedRichTextInput: React.FC<AdvancedRichTextInputProps> = ({
   const safeValue = useMemo(() => (typeof value === 'string' ? value : ''), [value]);
   const [htmlValue, setHtmlValue] = useState<string>(safeValue);
   const [activeFormats, setActiveFormats] = useState<Record<string, any>>({});
+  const lastPropValueRef = useRef(safeValue);
 
   useEffect(() => {
-    if (safeValue !== htmlValue) {
+    if (safeValue !== lastPropValueRef.current) {
       setHtmlValue(safeValue);
+      lastPropValueRef.current = safeValue;
     }
-  }, [safeValue, htmlValue]);
+  }, [safeValue]);
 
   const label = intlLabel?.id
     ? formatMessage(intlLabel)

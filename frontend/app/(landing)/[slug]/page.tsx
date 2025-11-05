@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { CardGrid } from "@/components/landing/CardGrid";
+import { ColumnsSection } from "@/components/landing/ColumnsSection";
 import { HeroCarousel } from "@/components/landing/HeroCarousel";
 import { HeroSmall } from "@/components/landing/HeroSmall";
 import { HeroVideo } from "@/components/landing/HeroVideo";
@@ -158,6 +159,13 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
     if (section.type === "card-grid") {
       content.push(
         <CardGrid key={`card-grid-${index}`} cards={section.cards} background={section.background} />
+      );
+      continue;
+    }
+
+    if (section.type === "columns") {
+      content.push(
+        <ColumnsSection key={`columns-${index}`} background={section.background} columns={section.columns} />
       );
       continue;
     }
