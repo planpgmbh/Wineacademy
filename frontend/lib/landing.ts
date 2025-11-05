@@ -42,6 +42,9 @@ const DARK_SECTION_BACKGROUNDS = new Set<SectionBackgroundKey>([
   "wine-blue-darkest"
 ]);
 
+const CARD_TEXT_ALIGNMENTS = new Set<"left" | "center" | "right">(["left", "center", "right"]);
+const CARD_VERTICAL_ALIGNMENTS = new Set<"top" | "center" | "bottom">(["top", "center", "bottom"]);
+
 export function resolveSectionBackground(value?: SectionBackgroundKey | null): SectionBackgroundKey {
   if (value && SECTION_BACKGROUND_KEYS.has(value)) {
     return value;
@@ -113,6 +116,10 @@ type StrapiCardComponent = {
   headline?: string | null;
   einleitung?: string | null;
   link?: string | null;
+  textAlignment?: "left" | "center" | "right" | null;
+  verticalAlignment?: "top" | "center" | "bottom" | null;
+  backgroundImage?: StrapiUploadFile | null;
+  darkModeEnabled?: boolean | null;
 };
 
 type StrapiCardGridComponent = {
@@ -282,6 +289,20 @@ const normaliseBackgroundKey = (value: string | null | undefined): SectionBackgr
   return null;
 };
 
+const normaliseCardTextAlignment = (value: string | null | undefined): "left" | "center" | "right" => {
+  if (typeof value === "string" && CARD_TEXT_ALIGNMENTS.has(value as "left" | "center" | "right")) {
+    return value as "left" | "center" | "right";
+  }
+  return "left";
+};
+
+const normaliseCardVerticalAlignment = (value: string | null | undefined): "top" | "center" | "bottom" => {
+  if (typeof value === "string" && CARD_VERTICAL_ALIGNMENTS.has(value as "top" | "center" | "bottom")) {
+    return value as "top" | "center" | "bottom";
+  }
+  return "top";
+};
+
 export type LandingHeroCarouselSection = {
   type: "hero-carousel";
   headline: string;
@@ -324,6 +345,13 @@ export type LandingCardGridSection = {
     headline: string;
     intro?: string | null;
     link?: string | null;
+    textAlign: "left" | "center" | "right";
+    verticalAlign: "top" | "center" | "bottom";
+    backgroundImage?: {
+      src: string;
+      alt: string;
+    } | null;
+    darkMode: boolean;
   }[];
 };
 
@@ -525,11 +553,28 @@ const transformCardGrid = (component: StrapiCardGridComponent): LandingCardGridS
         if (headline.length === 0) {
           return null;
         }
+
+        let backgroundImage: { src: string; alt: string } | null = null;
+        const media = card?.backgroundImage ?? null;
+        if (media?.url) {
+          const src = mediaUrl(media.url);
+          if (src) {
+            backgroundImage = {
+              src,
+              alt: toSlideAlt(media)
+            };
+          }
+        }
+
         return {
           id: typeof card?.id === "number" ? card.id : index,
           headline,
           intro: normaliseOptionalString(card?.einleitung ?? null),
-          link: normaliseOptionalString(card?.link ?? null)
+          link: normaliseOptionalString(card?.link ?? null),
+          textAlign: normaliseCardTextAlignment(card?.textAlignment ?? null),
+          verticalAlign: normaliseCardVerticalAlignment(card?.verticalAlignment ?? null),
+          backgroundImage,
+          darkMode: Boolean(card?.darkModeEnabled)
         };
       })
       .filter((card): card is NonNullable<typeof card> => Boolean(card)) ?? [];

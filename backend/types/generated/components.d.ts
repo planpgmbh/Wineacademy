@@ -144,6 +144,12 @@ export interface LandingCard extends Struct.ComponentSchema {
     headline: Schema.Attribute.String & Schema.Attribute.Required;
     einleitung: Schema.Attribute.String;
     link: Schema.Attribute.String;
+    textAlignment: Schema.Attribute.Enumeration<['left', 'center', 'right']> &
+      Schema.Attribute.DefaultTo<'left'>;
+    verticalAlignment: Schema.Attribute.Enumeration<['top', 'center', 'bottom']> &
+      Schema.Attribute.DefaultTo<'top'>;
+    backgroundImage: Schema.Attribute.Media<'images'>;
+    darkModeEnabled: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
   };
 }
 
