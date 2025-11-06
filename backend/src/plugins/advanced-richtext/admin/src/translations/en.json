@@ -2,5 +2,20 @@
   "advanced-richtext.field.label": "Richtext (Advanced)",
   "advanced-richtext.field.description": "Structured text with toolbar and HTML view toggle.",
   "advanced-richtext.field.toggle.visual": "Visual",
-  "advanced-richtext.field.toggle.html": "HTML"
+  "advanced-richtext.field.toggle.html": "HTML",
+  "advanced-richtext.field.toggle.preview": "Preview",
+  "advanced-richtext.field.headingSize.groupLabel": "Heading size",
+  "advanced-richtext.field.headingSize.xs": "XS",
+  "advanced-richtext.field.headingSize.s": "S",
+  "advanced-richtext.field.headingSize.m": "M",
+  "advanced-richtext.field.headingSize.l": "L",
+  "advanced-richtext.field.headingLevel.groupLabel": "Heading level",
+  "advanced-richtext.field.headingLevel.none": "Text",
+  "advanced-richtext.field.action.bold": "Bold",
+  "advanced-richtext.field.action.italic": "Italic",
+  "advanced-richtext.field.action.underline": "Underline",
+  "advanced-richtext.field.action.orderedList": "Ordered list",
+  "advanced-richtext.field.action.bulletList": "Bullet list",
+  "advanced-richtext.field.action.link": "Insert link",
+  "advanced-richtext.field.action.clear": "Clear formatting"
 }

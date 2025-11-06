@@ -54,6 +54,11 @@ export function CardGrid({ cards, background }: CardGridProps) {
   const resolvedBackground = resolveSectionBackground(background);
   const style = { backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` };
   const isDarkBackground = isDarkSectionBackground(resolvedBackground);
+  const headingHoverShift: Record<Card["verticalAlign"], string> = {
+    top: "md:group-hover:-translate-y-1",
+    center: "md:group-hover:-translate-y-3",
+    bottom: "md:group-hover:-translate-y-5"
+  };
 
   return (
     <section style={style}>
@@ -79,6 +84,36 @@ export function CardGrid({ cards, background }: CardGridProps) {
             const introColorClass = card.darkMode ? "text-base-100/80" : "text-base-content/70";
             const ctaColorClass = card.darkMode ? "text-base-100" : "text-primary";
             const overlayTintClass = card.darkMode ? "bg-neutral-900/70" : "bg-base-100/80";
+            const headlineClasses = [
+              "heading-card-grid transform-gpu transition-all duration-300 ease-out",
+              "md:translate-y-0",
+              headingHoverShift[card.verticalAlign],
+              card.darkMode ? "text-base-100" : ""
+            ]
+              .filter(Boolean)
+              .join(" ");
+            const detailContainerClasses = [
+              "mt-3 flex w-full flex-col gap-2 text-inherit",
+              "md:mt-0 md:max-h-0 md:translate-y-4 md:opacity-0 md:overflow-hidden md:pointer-events-none md:transition-all md:duration-300 md:ease-out",
+              "md:group-hover:mt-3 md:group-hover:max-h-96 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:group-hover:pointer-events-auto"
+            ]
+              .filter(Boolean)
+              .join(" ");
+            const introClasses = [
+              `text-base ${introColorClass}`,
+              "md:opacity-0 md:translate-y-2 md:transition md:duration-300 md:ease-out",
+              "md:group-hover:opacity-100 md:group-hover:translate-y-0"
+            ]
+              .filter(Boolean)
+              .join(" ");
+            const ctaClasses = [
+              `text-sm font-semibold ${ctaColorClass}`,
+              "md:opacity-0 md:translate-y-2 md:transition md:duration-300 md:ease-out",
+              "md:group-hover:opacity-100 md:group-hover:translate-y-0"
+            ]
+              .filter(Boolean)
+              .join(" ");
+            const hasDetails = Boolean(card.intro) || hasLink;
 
             return (
               <CardTag
@@ -97,11 +132,15 @@ export function CardGrid({ cards, background }: CardGridProps) {
                   </>
                 ) : null}
                 <div
-                  className={`relative flex min-h-[14rem] flex-col gap-3 p-6 ${horizontalAlignClasses[card.textAlign]} ${verticalAlignClasses[card.verticalAlign]} ${textColorClass}`}
+                  className={`relative flex min-h-[16rem] flex-col p-6 ${horizontalAlignClasses[card.textAlign]} ${verticalAlignClasses[card.verticalAlign]} ${textColorClass}`}
                 >
-                  <h3 className="heading-ui">{card.headline}</h3>
-                  {card.intro ? <p className={`text-base ${introColorClass}`}>{card.intro}</p> : null}
-                  {hasLink ? <span className={`text-sm font-semibold ${ctaColorClass}`}>Mehr erfahren →</span> : null}
+                  <h3 className={headlineClasses}>{card.headline}</h3>
+                  {hasDetails ? (
+                    <div className={detailContainerClasses}>
+                      {card.intro ? <p className={introClasses}>{card.intro}</p> : null}
+                      {hasLink ? <span className={ctaClasses}>Mehr erfahren →</span> : null}
+                    </div>
+                  ) : null}
                 </div>
               </CardTag>
             );

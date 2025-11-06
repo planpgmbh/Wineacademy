@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type JSX } from "react";
+import { useMemo, type JSX } from "react";
 
 import {
   resolveSectionBackground,
@@ -8,6 +8,7 @@ import {
   isDarkSectionBackground,
   type SectionBackgroundKey
 } from "@/lib/landing";
+import { ContentTabs } from "@/components/common/ContentTabs";
 
 type TabsSectionProps = {
   headline?: string | null;
@@ -41,7 +42,15 @@ export function TabsSection({ headline, headlineLevel, background, tabs }: TabsS
     [tabs]
   );
 
-  const [activeId, setActiveId] = useState(() => validTabs[0]?.id ?? "");
+  const normalizedTabs = useMemo(
+    () =>
+      validTabs.map((tab) => ({
+        id: tab.id,
+        label: tab.headline,
+        contentHtml: tab.contentHtml
+      })),
+    [validTabs]
+  );
   const resolvedBackground = resolveSectionBackground(background ?? null);
   const style = useMemo(
     () => ({ backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` }),
@@ -59,10 +68,9 @@ export function TabsSection({ headline, headlineLevel, background, tabs }: TabsS
     .filter(Boolean)
     .join(" ")
     .trim();
-  const activeTab = validTabs.find((tab) => tab.id === activeId) ?? validTabs[0];
-  const inactiveTabClass = isDarkBackground
-    ? "text-base-100/70 hover:text-base-100"
-    : "text-base-content/60 hover:text-base-content";
+  const inactiveTabClass = isDarkBackground ? "text-base-100/70 hover:text-base-100" : undefined;
+  const activeTabClass = isDarkBackground ? "text-base-100" : undefined;
+  const contentClass = isDarkBackground ? "text-base-100/80 [&_a]:text-primary-200" : undefined;
 
   return (
     <section style={style}>
@@ -73,37 +81,16 @@ export function TabsSection({ headline, headlineLevel, background, tabs }: TabsS
       >
         {showHeadline ? <HeadingTag className={headingClass}>{headline}</HeadingTag> : null}
 
-        <div className="space-y-5 md:space-y-8">
-          <div className="ui-border-bottom overflow-x-auto">
-            <div role="tablist" className="tabs -mb-[1px] gap-4 md:gap-6">
-              {validTabs.map((tab) => {
-                const isActive = tab.id === activeTab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    role="tab"
-                    type="button"
-                    className={`tab relative whitespace-nowrap px-1 pb-3 text-base font-medium transition-colors ${
-                      isActive
-                        ? `font-semibold ${isDarkBackground ? "text-base-100" : "text-base-content"} after:absolute after:bottom-[1px] after:left-0 after:h-1 after:w-full after:rounded-full after:bg-primary after:content-['']`
-                        : inactiveTabClass
-                    }`}
-                    tabIndex={isActive ? 0 : -1}
-                    aria-selected={isActive}
-                    onClick={() => setActiveId(tab.id)}
-                  >
-                    {tab.headline}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div
-            className="rounded-3xl bg-base-100 p-6 text-base leading-relaxed text-base-content/80 shadow-sm ring-1 ring-base-300 md:p-8 [&_a]:text-primary [&_a]:underline [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-5 [&_p:not(:first-child)]:mt-4 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5"
-            dangerouslySetInnerHTML={{ __html: activeTab.contentHtml }}
-          />
-        </div>
+        <ContentTabs
+          tabs={normalizedTabs}
+          classNames={{
+            tabList: "gap-6",
+            tabButton: "px-0",
+            activeTabButton: activeTabClass,
+            inactiveTabButton: inactiveTabClass,
+            content: contentClass
+          }}
+        />
       </div>
     </section>
   );

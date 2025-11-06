@@ -306,14 +306,14 @@ const normaliseCardTextAlignment = (value: string | null | undefined): "left" | 
   if (typeof value === "string" && CARD_TEXT_ALIGNMENTS.has(value as "left" | "center" | "right")) {
     return value as "left" | "center" | "right";
   }
-  return "left";
+  return "center";
 };
 
 const normaliseCardVerticalAlignment = (value: string | null | undefined): "top" | "center" | "bottom" => {
   if (typeof value === "string" && CARD_VERTICAL_ALIGNMENTS.has(value as "top" | "center" | "bottom")) {
     return value as "top" | "center" | "bottom";
   }
-  return "top";
+  return "center";
 };
 
 export type LandingHeroCarouselSection = {

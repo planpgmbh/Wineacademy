@@ -55,6 +55,18 @@ export interface GutscheinTab extends Struct.ComponentSchema {
   };
 }
 
+export interface SeminarTab extends Struct.ComponentSchema {
+  collectionName: 'components_seminar_tabs';
+  info: {
+    description: 'Ein Inhaltstab für Seminardetails';
+    displayName: 'Tab';
+  };
+  attributes: {
+    inhalt: Schema.Attribute.CustomField<'plugin::advanced-richtext.advanced-richtext'>;
+    titel: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
 export interface LandingSeminarFinder extends Struct.ComponentSchema {
   collectionName: 'components_landing_seminar_finders';
   info: {
@@ -284,7 +296,7 @@ export interface LandingTab extends Struct.ComponentSchema {
     displayName: 'Tab';
   };
   attributes: {
-    inhalt: Schema.Attribute.RichText;
+    inhalt: Schema.Attribute.CustomField<'plugin::advanced-richtext.advanced-richtext'>;
     headline: Schema.Attribute.String & Schema.Attribute.Required;
   };
 }
@@ -377,6 +389,7 @@ declare module '@strapi/strapi' {
       'landing.tabs': LandingTabs;
       'landing.text-block': LandingTextBlock;
       'produkt.tab': ProduktTab;
+      'seminar.tab': SeminarTab;
       'system.benachrichtigungsempfaenger': SystemBenachrichtigungsempfaenger;
       'termin.seminartag': TerminSeminartag;
     }

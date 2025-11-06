@@ -20,7 +20,24 @@ export default factories.createCoreController(CONTENT_UID, ({ strapi }) => ({
             "landing.hero-carousel": { populate: { bilder: true } },
             "landing.hero-small": { populate: { hintergrundbild: true } },
             "landing.text-block": true,
-            "landing.card-grid": { populate: { karten: true } },
+            "landing.card-grid": {
+              populate: {
+                karten: {
+                  populate: {
+                    backgroundImage: true
+                  }
+                }
+              }
+            },
+            "landing.columns": {
+              populate: {
+                spalten: {
+                  populate: {
+                    bild: true
+                  }
+                }
+              }
+            },
             "landing.icon-grid": { populate: { items: true } },
             "landing.seminar-liste": {
               populate: {
