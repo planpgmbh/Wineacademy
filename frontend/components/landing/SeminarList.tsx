@@ -27,7 +27,10 @@ type SeminarListProps = {
   background?: SectionBackgroundKey | null;
 };
 
-const formatParagraphs = (text: string): string[] => {
+const formatParagraphs = (text?: string | null): string[] => {
+  if (!text) {
+    return [];
+  }
   return text
     .split(/\n+/)
     .map((paragraph) => paragraph.trim())
@@ -35,12 +38,9 @@ const formatParagraphs = (text: string): string[] => {
 };
 
 const formatImageSrc = (item: UpcomingSeminar): { src: string | null; alt: string } => {
-  const alt =
-    item.image.alt && item.image.alt.trim().length > 0 ? item.image.alt.trim() : item.title.trim();
-  return {
-    src: item.image.src && item.image.src.length > 0 ? item.image.src : null,
-    alt: alt.length > 0 ? alt : "Seminarbild"
-  };
+  const alt = item.image.alt?.trim() || item.title.trim() || "Seminarbild";
+  const src = item.image.src && item.image.src.length > 0 ? item.image.src : null;
+  return { src, alt };
 };
 
 type SeminarListItemProps = {
@@ -50,10 +50,11 @@ type SeminarListItemProps = {
 
 function SeminarListItem({ seminar, ctaLabel }: SeminarListItemProps) {
   const image = formatImageSrc(seminar);
+  const seminarHref = `/seminare/${encodeURIComponent(seminar.slug)}`;
 
   return (
-    <article className="flex flex-col gap-6 rounded-3xl bg-base-100 p-6 shadow-sm ring-1 ring-base-300 md:grid md:grid-cols-[minmax(0,15rem)_var(--width-seminar-date)_minmax(0,1fr)] md:gap-[var(--gap-seminar-columns)] md:items-start md:p-8">
-      <div className="relative col-span-full aspect-[4/3] w-full overflow-hidden rounded-3xl bg-base-200 md:col-span-1 md:row-span-full md:h-auto">
+    <article className="group grid gap-6 md:grid-cols-[280px_var(--width-seminar-date)_minmax(0,1fr)] md:items-start md:gap-[var(--gap-seminar-columns)]">
+      <div className="relative col-span-full aspect-[4/3] w-full overflow-hidden bg-base-200 md:col-span-1 md:row-span-full md:h-[190px] md:w-[280px]">
         {image.src ? (
           <Image
             src={image.src}
@@ -61,7 +62,6 @@ function SeminarListItem({ seminar, ctaLabel }: SeminarListItemProps) {
             fill
             sizes="(min-width: 1024px) 240px, (min-width: 768px) 280px, 100vw"
             className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-            priority={false}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-sm text-base-content/60">
@@ -70,23 +70,20 @@ function SeminarListItem({ seminar, ctaLabel }: SeminarListItemProps) {
         )}
       </div>
 
-      <div className="hidden md:flex md:col-start-2 md:row-start-1 md:items-center md:justify-center md:justify-self-center">
+      <div className="flex items-start text-base-content/80 md:col-start-2 md:row-span-full md:justify-center md:self-start">
         <SeminarDateBadge date={seminar.nextDateIso} />
       </div>
 
-      <div className="flex flex-col gap-3 md:col-start-3 md:row-start-1 md:gap-4">
+      <div className="flex flex-col gap-3 md:col-start-3 md:row-start-1 md:gap-4 md:self-start">
         <div className="space-y-2">
-          <h3 className="text-2xl font-semibold text-base-content md:hidden">
-            {seminar.title}
-          </h3>
-          <h3 className="hidden md:block heading-card">
+          <h3 className="heading-card rt-heading-xs font-semibold leading-tight text-base-content !mt-0 !mb-0">
             {seminar.title}
           </h3>
           {seminar.shortDescription ? (
-            <p className="text-base text-base-content/80 md:text-lg">{seminar.shortDescription}</p>
+            <p className="text-base text-base-content/80">{seminar.shortDescription}</p>
           ) : null}
         </div>
-        <Link className="btn btn-primary min-w-[160px] self-start" href={`/seminare/${encodeURIComponent(seminar.slug)}`}>
+        <Link className="btn btn-primary min-w-[160px] self-start" href={seminarHref}>
           {ctaLabel}
         </Link>
       </div>
@@ -109,7 +106,6 @@ export function SeminarList({
 }: SeminarListProps) {
   const loadLimit = Math.max(1, limit);
   const [items, setItems] = useState<UpcomingSeminar[]>(() => initialItems);
-  const [offset, setOffset] = useState(initialItems.length);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(showLoadMore && initialItems.length >= loadLimit);
   const [error, setError] = useState<string | null>(initialError);
@@ -121,13 +117,13 @@ export function SeminarList({
     setIsLoading(true);
     setError(null);
     try {
+      const offset = items.length;
       const nextItems = await fetchUpcomingSeminars({
         categorySlug,
         limit: loadLimit,
         offset
       });
       setItems((current) => [...current, ...nextItems]);
-      setOffset((current) => current + nextItems.length);
       if (nextItems.length < loadLimit) {
         setHasMore(false);
       }
@@ -138,8 +134,9 @@ export function SeminarList({
     }
   };
 
-  const paragraphs = intro ? formatParagraphs(intro) : [];
-  const showHeadline = typeof headline === "string" && headline.trim().length > 0;
+  const paragraphs = formatParagraphs(intro);
+  const trimmedHeadline = headline?.trim() ?? "";
+  const showHeadline = trimmedHeadline.length > 0;
   const resolvedBackground = resolveSectionBackground(background ?? null);
   const isDarkBackground = isDarkSectionBackground(resolvedBackground);
   const style = useMemo(
@@ -147,20 +144,11 @@ export function SeminarList({
     [resolvedBackground]
   );
 
-  const headingTags: Record<"h2" | "h3" | "h4", keyof JSX.IntrinsicElements> = {
-    h2: "h2",
-    h3: "h3",
-    h4: "h4"
-  };
-
-  const headingClasses: Record<"h2" | "h3" | "h4", string> = {
-    h2: "heading-section",
-    h3: "",
-    h4: ""
-  };
-
-  const HeadingTag = headingTags[headlineLevel];
-  const headingClass = [headingClasses[headlineLevel], isDarkBackground ? "heading-on-dark" : ""]
+  const HeadingTag = headlineLevel as keyof JSX.IntrinsicElements;
+  const headingClass = [
+    headlineLevel === "h2" ? "heading-section" : "",
+    isDarkBackground ? "heading-on-dark" : ""
+  ]
     .filter(Boolean)
     .join(" ")
     .trim();
@@ -170,11 +158,11 @@ export function SeminarList({
   return (
     <section style={style}>
       <div
-        className={`mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)] md:gap-10 ${
+        className={`mx-auto flex w-full max-w-4xl flex-col gap-2 px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)] md:gap-4 ${
           isDarkBackground ? "text-base-100" : ""
         }`}
       >
-        {showHeadline ? <HeadingTag className={headingClass}>{headline}</HeadingTag> : null}
+        {showHeadline ? <HeadingTag className={headingClass}>{trimmedHeadline}</HeadingTag> : null}
 
         {paragraphs.length > 0 ? (
           <div className={`max-w-3xl space-y-4 text-lg leading-relaxed ${introTextClass}`}>
