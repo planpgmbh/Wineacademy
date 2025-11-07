@@ -83,7 +83,7 @@ export function CardGrid({ cards, background }: CardGridProps) {
             const textColorClass = card.darkMode ? "text-base-100" : "text-base-content";
             const introColorClass = card.darkMode ? "text-base-100/80" : "text-base-content/70";
             const ctaColorClass = card.darkMode ? "text-base-100" : "text-primary";
-            const overlayTintClass = card.darkMode ? "bg-neutral-900/70" : "bg-base-100/80";
+            const overlayTintClass = card.darkMode ? "bg-neutral-900/30" : "bg-base-100/80";
             const headlineClasses = [
               "heading-card-grid transform-gpu transition-all duration-300 ease-out",
               "md:translate-y-0",
@@ -133,6 +133,7 @@ export function CardGrid({ cards, background }: CardGridProps) {
                 ) : null}
                 <div
                   className={`relative flex min-h-[16rem] flex-col p-6 ${horizontalAlignClasses[card.textAlign]} ${verticalAlignClasses[card.verticalAlign]} ${textColorClass}`}
+                  style={card.darkMode ? { textShadow: "0 2px 6px rgba(0, 0, 0, 0.45)" } : undefined}
                 >
                   <h3 className={headlineClasses}>{card.headline}</h3>
                   {hasDetails ? (
