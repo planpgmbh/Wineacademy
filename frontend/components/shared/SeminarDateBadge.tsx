@@ -61,8 +61,9 @@ export function SeminarDateBadge({ date, className, align = "center" }: SeminarD
         className
       )}
     >
-      <span className="text-4xl font-semibold tracking-tight text-base-content md:text-5xl">{dateParts.day}</span>
-      <span className="text-sm font-semibold uppercase tracking-[0.35em] text-base-content/60 md:tracking-[0.4em]">
+      <span className="text-3xl font-semibold tracking-tight text-base-content md:text-4xl">{dateParts.day}</span>
+      <span className="hidden h-px w-8 bg-base-content/30 md:block" aria-hidden="true" />
+      <span className="text-xs font-semibold uppercase tracking-[0.3em] text-base-content/60 md:tracking-[0.35em]">
         {dateParts.month}
       </span>
     </div>

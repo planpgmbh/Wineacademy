@@ -73,7 +73,7 @@ function SeminarListItem({ seminar, ctaLabel }: SeminarListItemProps) {
   const mobileToplineDate = useMemo(() => formatToplineDate(seminar.nextDateIso), [seminar.nextDateIso]);
 
   return (
-    <article className="group grid gap-6 md:grid-cols-[280px_var(--width-seminar-date)_minmax(0,1fr)] md:items-start md:gap-[var(--gap-seminar-columns)]">
+    <article className="group grid gap-4 md:grid-cols-[280px_var(--width-seminar-date)_minmax(0,1fr)] md:items-start md:gap-6">
       <div className="relative col-span-full aspect-[4/3] w-full overflow-hidden bg-base-200 md:col-span-1 md:row-span-full md:h-[170px] md:w-[280px]">
         {image.src ? (
           <Image
@@ -206,7 +206,7 @@ export function SeminarList({
             Aktuell sind keine Termine geplant.
           </div>
         ) : (
-          <div className="flex flex-col gap-12 md:gap-16">
+          <div className="flex flex-col gap-10 md:gap-14">
             {items.map((seminar) => (
               <SeminarListItem key={`${seminar.id}-${seminar.nextDateTimestamp}`} seminar={seminar} ctaLabel={ctaLabel} />
             ))}
