@@ -9,7 +9,11 @@ import {
   type BookingSelection,
   type ProductSelection
 } from "@/components/cart/useCartData";
-import { BOOKING_SELECTION_STORAGE_KEY } from "@/components/seminar/bookingUtils";
+import {
+  BOOKING_SELECTION_STORAGE_KEY,
+  removeBookingSelection,
+  setBookingSelectionQuantity
+} from "@/components/seminar/bookingUtils";
 import { PRODUCT_SELECTION_STORAGE_KEY } from "@/components/product/productBookingUtils";
 import {
   VOUCHER_SELECTION_STORAGE_KEY,
@@ -30,6 +34,14 @@ import { normaliseShippingInput, roundCurrency as roundCurrencyValue } from "@/l
 import type { OrderResponse } from "@/lib/checkout";
 import { PayPalButtons } from "@/components/payments/PayPalButtons";
 import { CheckoutStepCard } from "@/components/checkout/CheckoutStepCard";
+import { CartItemSeminar } from "@/components/cart/CartItemSeminar";
+import { CartItemProduct } from "@/components/cart/CartItemProduct";
+import { CartItemGutschein } from "@/components/cart/CartItemGutschein";
+import {
+  clearStoredVoucherSelection,
+  prepareProductSelectionPayload,
+  updateStoredProductSelection
+} from "@/components/cart/cartActions";
 
 const INVOICE_POLL_INTERVAL_MS = 5000;
 const MAX_INVOICE_POLL_ATTEMPTS = 12;
@@ -589,6 +601,7 @@ export function CheckoutClient() {
   const formRef = useRef<HTMLFormElement | null>(null);
   const cartState = useCartData();
   const cartData = cartState.data;
+  const seminarEntries = cartData.seminars ?? [];
 
   const isPayPalConfigured = Boolean(PAYPAL_CLIENT_ID);
 
@@ -1008,6 +1021,45 @@ export function CheckoutClient() {
     }
     moveToStep(activeStepIndex - 1);
   }, [activeStepIndex, moveToStep]);
+
+  const handleSummarySeminarQuantityChange = useCallback((selectionId: string, nextQuantity: number) => {
+    setBookingSelectionQuantity(selectionId, nextQuantity);
+  }, []);
+
+  const handleSummarySeminarRemove = useCallback((selectionId: string) => {
+    removeBookingSelection(selectionId);
+  }, []);
+
+  const handleSummaryProductQuantityChange = useCallback(
+    (nextQuantity: number) => {
+      if (!cartData.product && !cartData.productSelection) {
+        return;
+      }
+      const payloadQuantity = Math.max(1, Math.trunc(nextQuantity));
+      updateStoredProductSelection((current) =>
+        prepareProductSelectionPayload(current, {
+          slug: cartData.product?.slug ?? cartData.productSelection?.productSlug ?? null,
+          title: cartData.product?.title ?? cartData.productSelection?.productTitle ?? null,
+          priceValue: cartData.product?.price.value ?? cartData.productSelection?.priceValue ?? null,
+          priceNetto: cartData.product?.priceNetto ?? cartData.productSelection?.priceNetto ?? null,
+          priceFormatted: cartData.product?.price.formatted ?? cartData.productSelection?.priceFormatted ?? null,
+          steuerSatz: cartData.product?.steuerSatz ?? cartData.productSelection?.steuerSatz ?? null,
+          isVoucher: cartData.product?.isVoucher ?? cartData.productSelection?.isVoucher ?? undefined,
+          shippingCost: cartData.productSelection?.shippingCost ?? null,
+          quantity: payloadQuantity
+        })
+      );
+    },
+    [cartData.product, cartData.productSelection]
+  );
+
+  const handleSummaryProductRemove = useCallback(() => {
+    updateStoredProductSelection(() => null);
+  }, []);
+
+  const handleSummaryVoucherRemove = useCallback(() => {
+    clearStoredVoucherSelection();
+  }, []);
 
   const handleParticipantChange = useCallback(
     (selectionId: string, index: number, field: keyof ParticipantFormValue, value: string) => {
@@ -1929,13 +1981,16 @@ export function CheckoutClient() {
       <CheckoutStepCard withDividers contentClassName="space-y-0">
         {participantGroupsWithMeta.map(({ seminar, group }) => (
           <div key={group.selectionId} className="py-6 first:pt-0 last:pb-0">
-            <h3 className="heading-ui">{seminar.seminarTitle}</h3>
+            <h3 className="heading-checkout">{seminar.seminarTitle}</h3>
             <div className="mt-6 space-y-6">
               {group.participants.map((participant, index) => {
                 const errorState = group.errors[index] ?? createParticipantErrorState();
                 const specialNeedsInputId = `${group.selectionId}-participant-${index}-special-needs`;
                 return (
-                  <div key={`${group.selectionId}-${index}`} className="rounded-2xl border ui-border bg-base-100 p-5">
+                  <div
+                    key={`${group.selectionId}-${index}`}
+                    className={`${index === 0 ? "" : "ui-border-top pt-6"} space-y-4`}
+                  >
                     <p className="text-sm font-semibold text-base-content">Teilnehmer {index + 1}</p>
                     <div className="mt-4 grid gap-4 md:grid-cols-2">
                       <label className="form-control">
@@ -2360,8 +2415,9 @@ export function CheckoutClient() {
 
     return (
       <CheckoutStepCard contentClassName="space-y-6">
-        <div>
-          <div role="tablist" aria-label="Rechnungstyp" className="flex gap-6 ui-border-bottom">
+        <div className="space-y-4">
+          <h3 className="heading-checkout">Deine Adresse</h3>
+          <div role="tablist" aria-label="Rechnungstyp" className="mt-5 flex gap-6 ui-border-bottom">
             <button
               type="button"
               role="tab"
@@ -2494,51 +2550,53 @@ const renderOverviewStep = () => {
     <CheckoutStepCard withDividers contentClassName="space-y-0">
       {hasSeminarSelection ? (
         <div className="py-6 first:pt-0 last:pb-0">
-          <div className="rounded-2xl border ui-border bg-base-100 p-5">
+          <div className="rounded-2xl bg-base-100">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <h3 className="heading-ui">Teilnehmerdaten</h3>
+              <h3 className="heading-checkout">Teilnehmerdaten</h3>
               <button type="button" className="btn btn-link btn-sm px-0" onClick={() => goToStep("participants")}>
                 Bearbeiten
               </button>
             </div>
-            <div className="mt-4 space-y-6 text-sm text-base-content/80">
+            <div className="mt-5 space-y-6 text-sm text-base-content/80">
               {participantGroupsWithMeta.map(({ seminar, group }, seminarIndex) => (
-                <div key={group.selectionId} className={seminarIndex === 0 ? "" : "ui-border-top pt-4"}>
+                <div key={group.selectionId} className={seminarIndex === 0 ? "" : "ui-border-top pt-5"}>
                   <p className="text-base font-semibold text-base-content">{seminar.seminarTitle}</p>
                   {seminar.seminarDescription ? (
-                    <p className="mt-1 text-sm text-base-content/70">{seminar.seminarDescription}</p>
+                    <p className="mt-2 text-sm text-base-content/80">{seminar.seminarDescription}</p>
                   ) : null}
-                  <div className="mt-2 space-y-2">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-base-content/60">Termine</span>
+                  <div className="mt-5 space-y-3">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-base-content">Termine:</span>
                     {seminar.terminSlots.length > 0 ? (
-                      <ul className="space-y-1 text-sm text-base-content/70">
+                      <ul className="space-y-1.5 text-sm text-base-content/80">
                         {seminar.terminSlots.map((slot, slotIndex) => (
                           <li key={`${group.selectionId}-termin-${slotIndex}`}>{slot}</li>
                         ))}
                       </ul>
                     ) : (
-                      <p className="text-sm text-base-content/70">{seminar.terminLabel}</p>
+                      <p className="text-sm text-base-content/80">{seminar.terminLabel}</p>
                     )}
                   </div>
-                  <div className="mt-6 space-y-3">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-base-content/60">Teilnehmer</span>
-                    <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="mt-5 space-y-4">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-base-content">Teilnehmer:</span>
+                    <div className="mt-3 flex flex-wrap gap-4 text-sm text-base-content/80">
                       {group.participants.map((participant, index) => (
                         <div
                           key={`${group.selectionId}-${index}`}
-                          className="rounded-xl border ui-border bg-base-100/80 p-4 space-y-2"
+                          className="flex max-w-xs flex-col gap-1 rounded-2xl border ui-border bg-base-100/80 px-4 py-3 shadow-sm"
                         >
-                          <p className="text-sm font-semibold text-base-content">
+                          <p className="font-semibold text-base-content">
                             {participant.firstName || "—"} {participant.lastName || "—"}
                           </p>
                           {participant.email ? (
-                            <p className="text-sm text-base-content/70">{participant.email}</p>
-                          ) : null}
+                            <p className="mt-1 text-base-content/80">{participant.email}</p>
+                          ) : (
+                            <p className="mt-1 text-base-content/60">Keine E-Mail hinterlegt</p>
+                          )}
                           {participant.wsetNumber ? (
-                            <p className="text-sm text-base-content/70">WSET Candidate Number: {participant.wsetNumber}</p>
+                            <p className="mt-1 text-base-content/80">WSET Candidate Number: {participant.wsetNumber}</p>
                           ) : null}
                           {participant.specialNeeds ? (
-                            <p className="text-sm text-base-content/70">Besondere Bedürfnisse: {participant.specialNeeds}</p>
+                            <p className="mt-1 text-base-content/80">Besondere Bedürfnisse: {participant.specialNeeds}</p>
                           ) : null}
                         </div>
                       ))}
@@ -2552,23 +2610,32 @@ const renderOverviewStep = () => {
       ) : null}
 
       <div className="py-6 first:pt-0 last:pb-0">
-        <div className="rounded-2xl border ui-border bg-base-100 p-5">
+        <div className="rounded-2xl bg-base-100">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <h3 className="heading-ui">Rechnungsadresse</h3>
+            <h3 className="heading-checkout">Rechnungsadresse</h3>
             <button type="button" className="btn btn-link btn-sm px-0" onClick={() => goToStep("billing")}>
               Bearbeiten
             </button>
           </div>
           <div className="mt-4 space-y-4 text-sm text-base-content/80">
             <div className="space-y-2">
-              <p className="text-base font-semibold text-base-content">{billing.companyName || billing.contactFirstName}</p>
-              <p>
+              <p className="text-base font-semibold text-base-content">
+                {billing.type === "firma" && billing.companyName
+                  ? billing.companyName
+                  : `${billing.contactFirstName} ${billing.contactLastName}`}
+              </p>
+              {billing.type === "firma" ? (
+                <p className="text-base-content">
+                  {billing.contactFirstName} {billing.contactLastName}
+                </p>
+              ) : null}
+              <p className="text-base-content">
                 {billing.street}
                 <br />
                 {billing.zip} {billing.city}
               </p>
-              <p className="text-base-content/70">{billing.country}</p>
-              <div className="mt-2 space-y-1 text-base-content/70">
+              <p className="text-base-content">{billing.country}</p>
+              <div className="mt-2 space-y-1 text-base-content">
                 <p>E-Mail: {billing.contactEmail}</p>
                 {billing.type === "firma" && billing.invoiceEmail ? <p>Rechnungs-E-Mail: {billing.invoiceEmail}</p> : null}
                 <p>Telefon: {billing.phone}</p>
@@ -2579,8 +2646,8 @@ const renderOverviewStep = () => {
       </div>
 
       <div className="py-6 first:pt-0 last:pb-0">
-        <div className="rounded-2xl border ui-border bg-base-100 p-5">
-          <h3 className="heading-ui">Rabatt / Gutscheincode</h3>
+        <div className="rounded-2xl bg-base-100">
+          <h3 className="heading-checkout">Rabatt / Gutscheincode</h3>
           <div className="mt-4 flex flex-col gap-3 md:flex-row">
             <input
               type="text"
@@ -2620,16 +2687,16 @@ const renderOverviewStep = () => {
               )}
             </div>
           </div>
-          {voucherMessage ? <p className="mt-3 text-sm text-base-content/70">{voucherMessage}</p> : null}
+          {voucherMessage ? <p className="mt-3 text-sm text-base-content/80">{voucherMessage}</p> : null}
           {appliedVoucher ? (
             <div className="mt-4 rounded-xl border border-primary bg-primary/5 p-4 text-sm text-base-content">
               <p className="font-semibold">Rabattcode angewendet: {appliedVoucher.code.toUpperCase()}</p>
-              <p className="mt-1 text-base-content/70">
+              <p className="mt-1 text-base-content/80">
                 Abzug: {formatCurrency(appliedVoucher.amount)}
                 {appliedVoucher.remaining != null ? ` · Restguthaben: ${formatCurrency(appliedVoucher.remaining)}` : null}
               </p>
               {appliedVoucher.description ? (
-                <p className="mt-1 text-base-content/60">{appliedVoucher.description}</p>
+                <p className="mt-1 text-base-content/80">{appliedVoucher.description}</p>
               ) : null}
             </div>
           ) : null}
@@ -2637,8 +2704,8 @@ const renderOverviewStep = () => {
       </div>
 
       <div className="py-6 first:pt-0 last:pb-0">
-        <div className={`rounded-2xl border bg-base-100 p-5 ${agreementBorderClass}`}>
-          <h3 className="heading-ui">Rechtliche Hinweise</h3>
+        <div className={`rounded-2xl bg-base-100 ${agreementsBoxHasError ? "border border-error" : ""}`}>
+          <h3 className="heading-checkout">Rechtliche Hinweise</h3>
           <div className="mt-4 space-y-4">
             <div>
               <label className="label w-full cursor-pointer items-start gap-3 whitespace-normal">
@@ -2931,34 +2998,51 @@ const renderPaymentStep = () => {
 
         <div className="ui-border-top" aria-hidden="true" />
 
-        {summaryItems.length > 0 ? (
-          <ul className="space-y-4">
-            {summaryItems.map((item, index) => (
-              <li
-                key={item.id}
-                className={`space-y-2 ${index === 0 ? "" : "pt-4 ui-border-top"}`}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-1">
-                    <p className="text-base font-semibold text-base-content">{item.title}</p>
-                    {item.description ? (
-                      <p className="text-sm text-base-content/70">{item.description}</p>
-                    ) : null}
-                    {item.details && item.details.length > 0 ? (
-                      <ul className="space-y-1 text-sm text-base-content/60">
-                        {item.details.map((detail, detailIndex) => (
-                          <li key={`${item.id}-detail-${detailIndex}`}>{detail}</li>
-                        ))}
-                      </ul>
-                    ) : null}
-                  </div>
-                  <p className="text-base font-semibold text-base-content">
-                    {formatCurrency(item.subtotal ?? null)}
-                  </p>
-                </div>
-              </li>
+        {seminarEntries.length > 0 || cartData.product || cartData.voucher ? (
+          <div className="flex flex-col gap-6">
+            {seminarEntries.map((entry) => (
+              <CartItemSeminar
+                key={entry.selection.id}
+                seminar={entry.seminar}
+                selection={entry.selection}
+                variant="summary"
+                showRemoveButton={false}
+                onQuantityChange={(next) => handleSummarySeminarQuantityChange(entry.selection.id, next)}
+                onRemove={() => handleSummarySeminarRemove(entry.selection.id)}
+              />
             ))}
-          </ul>
+            {cartData.product ? (
+              <CartItemProduct
+                product={{
+                  id: cartData.product.id,
+                  title: cartData.product.title,
+                  description: cartData.product.description,
+                  price: cartData.product.price,
+                  imageUrl: cartData.product.imageUrl,
+                  imageAlt: cartData.product.imageAlt
+                }}
+                quantity={Math.max(1, Math.trunc(cartData.productSelection?.quantity ?? 1))}
+                onQuantityChange={handleSummaryProductQuantityChange}
+                onRemove={handleSummaryProductRemove}
+                variant="summary"
+                showRemoveButton={false}
+              />
+            ) : null}
+            {cartData.voucher ? (
+              <CartItemGutschein
+                voucher={{
+                  title: cartData.voucher.title,
+                  description: cartData.voucher.description,
+                  formattedValue: cartData.voucher.formattedValue,
+                  imageUrl: cartData.voucher.imageUrl,
+                  imageAlt: cartData.voucher.imageAlt
+                }}
+                onRemove={handleSummaryVoucherRemove}
+                variant="summary"
+                showRemoveButton={false}
+              />
+            ) : null}
+          </div>
         ) : (
           <p className="text-sm text-base-content/60">
             Keine Artikel ausgewählt. Bitte füge ein Seminar, Produkt oder einen Gutschein hinzu.

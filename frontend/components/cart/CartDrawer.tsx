@@ -8,65 +8,17 @@ import { CartItemSeminar } from "./CartItemSeminar";
 import { CartItemProduct } from "./CartItemProduct";
 import { CartItemGutschein } from "./CartItemGutschein";
 import { useCartData } from "./useCartData";
-import { normaliseShippingInput } from "@/lib/shipping";
+import {
+  clearStoredVoucherSelection,
+  prepareProductSelectionPayload,
+  updateStoredProductSelection
+} from "./cartActions";
 
 type CartDrawerProps = {
   id: string;
   open: boolean;
   onClose: () => void;
 };
-
-const PRODUCT_SELECTION_STORAGE_KEY = "cart:productSelection";
-const VOUCHER_SELECTION_STORAGE_KEY = "voucher:lastSelection";
-
-function updateStoredProductSelection(
-  updater: (current: Record<string, unknown> | null) => Record<string, unknown> | null
-) {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  let current: Record<string, unknown> | null = null;
-  try {
-    const raw = window.localStorage.getItem(PRODUCT_SELECTION_STORAGE_KEY);
-    current = raw ? JSON.parse(raw) : null;
-  } catch {
-    current = null;
-  }
-
-  const next = updater(current);
-
-  try {
-    if (next) {
-      window.localStorage.setItem(PRODUCT_SELECTION_STORAGE_KEY, JSON.stringify(next));
-    } else {
-      window.localStorage.removeItem(PRODUCT_SELECTION_STORAGE_KEY);
-    }
-  } catch (error) {
-    console.warn("[cart] Konnte Produktauswahl nicht speichern:", error);
-  }
-
-  if (typeof document !== "undefined") {
-    document.dispatchEvent(new CustomEvent("product:pending", { detail: next ?? null }));
-  }
-
-  return next;
-}
-
-function clearStoredVoucherSelection() {
-  if (typeof window === "undefined") {
-    return;
-  }
-  try {
-    window.localStorage.removeItem(VOUCHER_SELECTION_STORAGE_KEY);
-  } catch (error) {
-    console.warn("[cart] Konnte Gutschein-Auswahl nicht entfernen:", error);
-  }
-
-  if (typeof document !== "undefined") {
-    document.dispatchEvent(new CustomEvent("voucher:pending", { detail: null }));
-  }
-}
 
 export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
   const { status, data } = useCartData();
@@ -119,71 +71,19 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
       const nextQuantity = Math.max(1, quantity);
       setProductQuantity(nextQuantity);
 
-      updateStoredProductSelection((current) => {
-        const base = (current && typeof current === "object") ? current : {};
-        const slug =
-          data.product?.slug ??
-          data.productSelection?.productSlug ??
-          (typeof (base as { slug?: unknown }).slug === "string" ? (base as { slug?: string }).slug : null);
-        const createdAt =
-          typeof (base as { createdAt?: unknown }).createdAt === "string"
-            ? (base as { createdAt?: string }).createdAt
-            : new Date().toISOString();
-        const priceValue =
-          data.product?.price.value ??
-          data.productSelection?.priceValue ??
-          (typeof (base as { priceValue?: unknown }).priceValue === "number"
-            ? (base as { priceValue?: number }).priceValue
-            : null);
-        const priceNetto =
-          data.product?.priceNetto ??
-          data.productSelection?.priceNetto ??
-          (typeof (base as { priceNetto?: unknown }).priceNetto === "number"
-            ? (base as { priceNetto?: number }).priceNetto
-            : null);
-        const priceFormatted =
-          data.product?.price.formatted ??
-          data.productSelection?.priceFormatted ??
-          (typeof (base as { priceFormatted?: unknown }).priceFormatted === "string"
-            ? (base as { priceFormatted?: string }).priceFormatted
-            : null);
-        const steuerSatz =
-          data.product?.steuerSatz ??
-          data.productSelection?.steuerSatz ??
-          (typeof (base as { steuerSatz?: unknown }).steuerSatz === "number"
-            ? (base as { steuerSatz?: number }).steuerSatz
-            : null);
-        const shippingCostRaw =
-          data.productSelection?.shippingCost ??
-          (typeof (base as { shippingCost?: unknown }).shippingCost === "number"
-            ? (base as { shippingCost?: number }).shippingCost
-            : null);
-        const shippingCost = normaliseShippingInput(shippingCostRaw);
-
-        return {
-          ...base,
-          type: "product",
-          slug,
-          productSlug: slug,
-          title:
-            data.product?.title ??
-            data.productSelection?.productTitle ??
-            ((base as { title?: unknown }).title as string | null | undefined) ??
-            null,
-          quantity: nextQuantity,
-          priceValue,
-          priceNetto,
-          priceFormatted,
-          steuerSatz,
-          isVoucher:
-            data.product?.isVoucher ??
-            data.productSelection?.isVoucher ??
-            Boolean((base as { isVoucher?: unknown }).isVoucher),
-          shippingCost,
-          createdAt,
-          updatedAt: new Date().toISOString()
-        };
-      });
+      updateStoredProductSelection((current) =>
+        prepareProductSelectionPayload(current, {
+          slug: data.product?.slug ?? data.productSelection?.productSlug ?? null,
+          title: data.product?.title ?? data.productSelection?.productTitle ?? null,
+          priceValue: data.product?.price.value ?? data.productSelection?.priceValue ?? null,
+          priceNetto: data.product?.priceNetto ?? data.productSelection?.priceNetto ?? null,
+          priceFormatted: data.product?.price.formatted ?? data.productSelection?.priceFormatted ?? null,
+          steuerSatz: data.product?.steuerSatz ?? data.productSelection?.steuerSatz ?? null,
+          isVoucher: data.product?.isVoucher ?? data.productSelection?.isVoucher ?? undefined,
+          shippingCost: data.productSelection?.shippingCost ?? null,
+          quantity: nextQuantity
+        })
+      );
     },
     [
       data.product,
@@ -261,6 +161,7 @@ export function CartDrawer({ id, open, onClose }: CartDrawerProps) {
                         key={entry.selection.id}
                         seminar={entry.seminar}
                         selection={entry.selection}
+                        controlled
                         onQuantityChange={(nextQuantity) => handleSeminarQuantityChange(entry.selection.id, nextQuantity)}
                         onRemove={() => handleSeminarRemove(entry.selection.id)}
                       />
