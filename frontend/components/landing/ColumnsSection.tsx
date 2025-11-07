@@ -66,6 +66,14 @@ export function ColumnsSection({ background, columns }: ColumnsSectionProps) {
     return null;
   }
 
+  const columnCount = items.length;
+  const columnLayoutClass =
+    columnCount <= 1
+      ? "grid-cols-1 md:grid-cols-1 lg:grid-cols-1"
+      : columnCount === 2
+        ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2"
+        : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3";
+
   const resolvedBackground = resolveSectionBackground(background ?? null);
   const style = { backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` };
   const isDarkBackground = isDarkSectionBackground(resolvedBackground);
@@ -75,7 +83,7 @@ export function ColumnsSection({ background, columns }: ColumnsSectionProps) {
       <div
         className={`mx-auto w-full max-w-6xl px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)]`}
       >
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className={`grid gap-6 ${columnLayoutClass}`}>
           {items.map((column) => {
             const cardTone = isDarkBackground
               ? "border-neutral-700 bg-neutral-900 text-base-100"

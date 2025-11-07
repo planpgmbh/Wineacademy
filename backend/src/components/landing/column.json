@@ -5,6 +5,11 @@
     "description": "Einzelne Spalte innerhalb des Spalten-Layouts."
   },
   "attributes": {
+    "titel": {
+      "type": "string",
+      "private": true,
+      "default": "Spalte"
+    },
     "bild": {
       "type": "media",
       "allowedTypes": ["images"]

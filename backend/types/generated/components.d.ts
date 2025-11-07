@@ -165,6 +165,48 @@ export interface LandingCard extends Struct.ComponentSchema {
   };
 }
 
+export interface LandingColumn extends Struct.ComponentSchema {
+  collectionName: 'components_landing_columns_items';
+  info: {
+    description: 'Einzelne Spalte innerhalb des Spalten-Layouts.';
+    displayName: 'Spalte';
+  };
+  attributes: {
+    titel: Schema.Attribute.String & Schema.Attribute.Private & Schema.Attribute.DefaultTo<'Spalte'>;
+    bild: Schema.Attribute.Media<'images'>;
+    inhalt: Schema.Attribute.CustomField<'plugin::advanced-richtext.advanced-richtext'>;
+  };
+}
+
+export interface LandingColumns extends Struct.ComponentSchema {
+  collectionName: 'components_landing_column_sections';
+  info: {
+    description: 'Abschnitt mit bis zu drei individuell befüllbaren Spalten.';
+    displayName: 'Spalten';
+  };
+  attributes: {
+    sectionBackground: Schema.Attribute.Enumeration<[
+      'neutral',
+      'black',
+      'wine-blue',
+      'wine-blue-light',
+      'wine-blue-lighter',
+      'wine-blue-lightest',
+      'wine-blue-dark',
+      'wine-blue-darker',
+      'wine-blue-darkest'
+    ]>;
+    spalten: Schema.Attribute.Component<'landing.column', true> &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 1;
+          max: 3;
+        },
+        number
+      >;
+  };
+}
+
 export interface LandingCardGrid extends Struct.ComponentSchema {
   collectionName: 'components_landing_card_grids';
   info: {
@@ -381,6 +423,8 @@ declare module '@strapi/strapi' {
       'landing.hero': LandingHero;
       'landing.hero-carousel': LandingHeroCarousel;
       'landing.hero-small': LandingHeroSmall;
+      'landing.column': LandingColumn;
+      'landing.columns': LandingColumns;
       'landing.icon-grid': LandingIconGrid;
       'landing.icon-item': LandingIconItem;
       'landing.seminar-liste': LandingSeminarListe;
