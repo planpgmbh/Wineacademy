@@ -37,10 +37,29 @@ const formatParagraphs = (text?: string | null): string[] => {
     .filter((paragraph) => paragraph.length > 0);
 };
 
+const TOPLINE_DATE_FORMATTER = new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "short" });
+
+const TOPLINE_DAY_FORMATTER = new Intl.DateTimeFormat("de-DE", { day: "2-digit" });
+const TOPLINE_MONTH_FORMATTER = new Intl.DateTimeFormat("de-DE", { month: "long" });
+
 const formatImageSrc = (item: UpcomingSeminar): { src: string | null; alt: string } => {
   const alt = item.image.alt?.trim() || item.title.trim() || "Seminarbild";
   const src = item.image.src && item.image.src.length > 0 ? item.image.src : null;
   return { src, alt };
+};
+
+const formatToplineDate = (value?: string | Date | null): { day: string; month: string } | null => {
+  if (!value) {
+    return null;
+  }
+  const parsed = typeof value === "string" ? new Date(value) : value;
+  if (!(parsed instanceof Date) || Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return {
+    day: TOPLINE_DAY_FORMATTER.format(parsed),
+    month: TOPLINE_MONTH_FORMATTER.format(parsed).toUpperCase()
+  };
 };
 
 type SeminarListItemProps = {
@@ -51,10 +70,11 @@ type SeminarListItemProps = {
 function SeminarListItem({ seminar, ctaLabel }: SeminarListItemProps) {
   const image = formatImageSrc(seminar);
   const seminarHref = `/seminare/${encodeURIComponent(seminar.slug)}`;
+  const mobileToplineDate = useMemo(() => formatToplineDate(seminar.nextDateIso), [seminar.nextDateIso]);
 
   return (
     <article className="group grid gap-6 md:grid-cols-[280px_var(--width-seminar-date)_minmax(0,1fr)] md:items-start md:gap-[var(--gap-seminar-columns)]">
-      <div className="relative col-span-full aspect-[4/3] w-full overflow-hidden bg-base-200 md:col-span-1 md:row-span-full md:h-[190px] md:w-[280px]">
+      <div className="relative col-span-full aspect-[4/3] w-full overflow-hidden bg-base-200 md:col-span-1 md:row-span-full md:h-[170px] md:w-[280px]">
         {image.src ? (
           <Image
             src={image.src}
@@ -70,13 +90,20 @@ function SeminarListItem({ seminar, ctaLabel }: SeminarListItemProps) {
         )}
       </div>
 
-      <div className="flex items-start text-base-content/80 md:col-start-2 md:row-span-full md:justify-center md:self-start">
+      <div className="hidden items-start text-base-content/80 md:col-start-2 md:row-span-full md:flex md:justify-center md:self-start">
         <SeminarDateBadge date={seminar.nextDateIso} />
       </div>
 
       <div className="flex flex-col gap-3 md:col-start-3 md:row-start-1 md:gap-4 md:self-start">
-        <div className="space-y-2">
-          <h3 className="heading-card rt-heading-xs font-semibold leading-tight text-base-content !mt-0 !mb-0">
+        <div className="space-y-1">
+          {mobileToplineDate ? (
+            <p className="flex items-baseline gap-1.5 text-base font-semibold uppercase leading-tight md:hidden">
+              <span className="text-base-content">{mobileToplineDate.day}</span>
+              <span className="text-base-content/30">|</span>
+              <span className="font-normal text-base-content/60">{mobileToplineDate.month}</span>
+            </p>
+          ) : null}
+          <h3 className="heading-card rt-heading-xs font-semibold leading-tight text-balance text-base-content !mt-0 mb-1.5 !text-[1.35rem]">
             {seminar.title}
           </h3>
           {seminar.shortDescription ? (
@@ -179,7 +206,7 @@ export function SeminarList({
             Aktuell sind keine Termine geplant.
           </div>
         ) : (
-          <div className="flex flex-col gap-8 md:gap-12">
+          <div className="flex flex-col gap-12 md:gap-16">
             {items.map((seminar) => (
               <SeminarListItem key={`${seminar.id}-${seminar.nextDateTimestamp}`} seminar={seminar} ctaLabel={ctaLabel} />
             ))}
