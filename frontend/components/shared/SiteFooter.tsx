@@ -134,7 +134,7 @@ export async function SiteFooter() {
   const regularSections = sections.filter((section) => section.type !== "logos");
 
   return (
-    <footer className="border-t border-primary/40 bg-primary text-primary-content">
+    <footer className="mt-12 border-t border-primary/40 bg-primary text-primary-content md:mt-20">
       <div className="mx-auto max-w-screen-xl px-6 py-14 md:px-10 lg:px-12">
         <div className="footer grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
           {regularSections.map((section, index) => {
