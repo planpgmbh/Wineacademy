@@ -33,11 +33,7 @@ export default factories.createCoreController(CONTENT_UID, ({ strapi }) => ({
             },
             "landing.columns": {
               populate: {
-                spalten: {
-                  populate: {
-                    bild: true
-                  }
-                }
+                spalten: true
               }
             },
             "landing.seminar-liste": {

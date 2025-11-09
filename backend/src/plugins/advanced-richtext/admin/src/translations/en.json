@@ -17,5 +17,6 @@
   "advanced-richtext.field.action.orderedList": "Ordered list",
   "advanced-richtext.field.action.bulletList": "Bullet list",
   "advanced-richtext.field.action.link": "Insert link",
+  "advanced-richtext.field.action.image": "Insert image",
   "advanced-richtext.field.action.clear": "Clear formatting"
 }

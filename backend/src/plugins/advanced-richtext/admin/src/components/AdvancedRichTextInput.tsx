@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { Box, Button, Field, Flex, SingleSelect, SingleSelectOption, Textarea, VisuallyHidden } from '@strapi/design-system';
+import { useStrapiApp } from '@strapi/admin/strapi-admin';
 import { useIntl } from 'react-intl';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -14,7 +15,9 @@ import {
   Underline as UnderlineIcon,
   BulletList as BulletListIcon,
   NumberList as NumberListIcon,
+  Image as ImageIcon,
 } from '@strapi/icons';
+import type { File as MediaLibraryFile } from '@strapi/upload/dist/shared/contracts/files';
 
 const Quill = ReactQuill.Quill;
 const HEADING_SIZE_VALUES = ['xs', 's', 'm', 'l'] as const;
@@ -28,6 +31,22 @@ const LEGACY_HEADING_SIZE_MAP: Record<string, HeadingSizeValue> = {
 
 const HEADING_LEVEL_VALUES = ['none', '2', '3', '4'] as const;
 type HeadingLevelValue = (typeof HEADING_LEVEL_VALUES)[number];
+
+const HTML_ESCAPE_LOOKUP: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;'
+};
+
+const escapeHtml = (value: string) => String(value ?? '').replace(/[&<>"']/g, (char) => HTML_ESCAPE_LOOKUP[char] ?? char);
+
+const buildFullWidthFigureHtml = (src: string, alt: string) => {
+  const safeSrc = escapeHtml(src);
+  const safeAlt = escapeHtml(alt);
+  return `<figure class="advanced-richtext__figure advanced-richtext__figure--full"><img src="${safeSrc}" alt="${safeAlt}" loading="lazy" /></figure><p><br/></p>`;
+};
 
 if (Quill) {
   try {
@@ -79,7 +98,7 @@ type AdvancedRichTextInputProps = {
 
 const quillModules = { toolbar: false };
 
-const quillFormats = ['header', 'bold', 'italic', 'underline', 'list', 'bullet', 'link', 'heading-size'];
+const quillFormats = ['header', 'bold', 'italic', 'underline', 'list', 'bullet', 'link', 'heading-size', 'image'];
 
 const ToolbarButton = styled.button.attrs({ type: 'button' })`
   background-color: var(--ds-colors-neutral0);
@@ -147,6 +166,16 @@ const AdvancedRichTextInput: React.FC<AdvancedRichTextInputProps> = ({
   const lastPropValueRef = useRef(safeValue);
   const isVisualMode = mode === 'visual';
   const toolbarDisabled = disabled || !isVisualMode;
+  const mediaLibraryComponent = useStrapiApp<React.ComponentType<any> | null>(
+    'AdvancedRichTextInput',
+    (state) => state.components?.['media-library'] ?? null
+  );
+  const [isMediaLibraryOpen, setIsMediaLibraryOpen] = useState(false);
+  const mediaLibraryAvailable = Boolean(mediaLibraryComponent);
+  const MediaLibraryDialogComponent = mediaLibraryComponent;
+  const handleMediaLibraryClose = useCallback(() => {
+    setIsMediaLibraryOpen(false);
+  }, []);
 
   useEffect(() => {
     if (safeValue !== lastPropValueRef.current) {
@@ -227,6 +256,10 @@ const AdvancedRichTextInput: React.FC<AdvancedRichTextInputProps> = ({
     id: `${pluginId}.field.action.link`,
     defaultMessage: 'Insert link',
   });
+  const imageLabel = formatMessage({
+    id: `${pluginId}.field.action.image`,
+    defaultMessage: 'Insert image',
+  });
   const clearLabel = formatMessage({
     id: `${pluginId}.field.action.clear`,
     defaultMessage: 'Clear formatting',
@@ -279,6 +312,54 @@ const AdvancedRichTextInput: React.FC<AdvancedRichTextInputProps> = ({
   );
 
   const getEditor = useCallback(() => quillRef.current?.getEditor() ?? null, []);
+
+  const insertImageAsset = useCallback(
+    (asset: MediaLibraryFile) => {
+      if (!asset) return;
+      const instance = getEditor();
+      if (!instance) return;
+      const rawSrc = asset.url ?? asset.previewUrl;
+      if (!rawSrc) return;
+      instance.focus();
+      const range = instance.getSelection(true);
+      const insertIndex = range ? range.index : instance.getLength();
+      const altSource = asset.alternativeText ?? asset.caption ?? asset.name ?? '';
+      const htmlFragment = buildFullWidthFigureHtml(rawSrc, altSource ?? '');
+      instance.clipboard.dangerouslyPasteHTML(insertIndex, htmlFragment, 'user');
+      const nextValue = instance.root?.innerHTML ?? '';
+      handleChange(nextValue);
+      const applyCursor = () => {
+        const cursorIndex = Math.min(insertIndex + 2, instance.getLength());
+        instance.setSelection(cursorIndex, 0, 'silent');
+        instance.focus();
+      };
+      if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+        window.requestAnimationFrame(applyCursor);
+      } else {
+        applyCursor();
+      }
+    },
+    [getEditor, handleChange]
+  );
+
+  const handleMediaLibrarySelect = useCallback(
+    (selectedAssets: MediaLibraryFile[]) => {
+      if (Array.isArray(selectedAssets) && selectedAssets.length > 0) {
+        insertImageAsset(selectedAssets[0]);
+      }
+      handleMediaLibraryClose();
+    },
+    [handleMediaLibraryClose, insertImageAsset]
+  );
+
+  const handleImageButtonClick = useCallback(() => {
+    if (!mediaLibraryAvailable) {
+      return;
+    }
+    setIsMediaLibraryOpen(true);
+  }, [mediaLibraryAvailable]);
+
+  const imageButtonDisabled = toolbarDisabled || !mediaLibraryAvailable;
 
   const toggleFormat = useCallback(
     (format: string, value?: any) => {
@@ -582,6 +663,15 @@ const AdvancedRichTextInput: React.FC<AdvancedRichTextInputProps> = ({
                   <VisuallyHidden>{linkLabel}</VisuallyHidden>
                 </ToolbarButton>
                 <ToolbarButton
+                  onClick={handleImageButtonClick}
+                  disabled={imageButtonDisabled}
+                  className="advanced-richtext__toolbar-button"
+                  aria-label={imageLabel}
+                >
+                  <ImageIcon aria-hidden />
+                  <VisuallyHidden>{imageLabel}</VisuallyHidden>
+                </ToolbarButton>
+                <ToolbarButton
                   onClick={clearFormats}
                   disabled={toolbarDisabled}
                   aria-label={clearLabel}
@@ -643,6 +733,14 @@ const AdvancedRichTextInput: React.FC<AdvancedRichTextInputProps> = ({
           <Field.Hint />
           <Field.Error />
         </Box>
+
+        {MediaLibraryDialogComponent && isMediaLibraryOpen ? (
+          <MediaLibraryDialogComponent
+            allowedTypes={['images']}
+            onClose={handleMediaLibraryClose}
+            onSelectAssets={handleMediaLibrarySelect}
+          />
+        ) : null}
       </>
     </Field.Root>
   );

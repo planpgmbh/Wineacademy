@@ -17,5 +17,6 @@
   "advanced-richtext.field.action.orderedList": "Nummerierte Liste",
   "advanced-richtext.field.action.bulletList": "Aufzählung",
   "advanced-richtext.field.action.link": "Link einfügen",
+  "advanced-richtext.field.action.image": "Bild einfügen",
   "advanced-richtext.field.action.clear": "Formatierung entfernen"
 }
