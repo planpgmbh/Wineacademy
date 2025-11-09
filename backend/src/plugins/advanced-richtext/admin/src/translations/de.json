@@ -18,5 +18,15 @@
   "advanced-richtext.field.action.bulletList": "Aufzählung",
   "advanced-richtext.field.action.link": "Link einfügen",
   "advanced-richtext.field.action.image": "Bild einfügen",
-  "advanced-richtext.field.action.clear": "Formatierung entfernen"
+  "advanced-richtext.field.action.clear": "Formatierung entfernen",
+  "advanced-richtext.field.imageSize.title": "Bildbreite wählen",
+  "advanced-richtext.field.imageSize.description": "Lege fest, wie breit das Bild im Textblock angezeigt wird.",
+  "advanced-richtext.field.imageSize.third": "Ein Drittel",
+  "advanced-richtext.field.imageSize.half": "Halbe Breite",
+  "advanced-richtext.field.imageSize.full": "Volle Breite",
+  "advanced-richtext.field.imageAlignment.title": "Bildausrichtung wählen",
+  "advanced-richtext.field.imageAlignment.description": "Lege fest, ob das Bild links, mittig oder rechts erscheinen soll.",
+  "advanced-richtext.field.imageAlignment.left": "Linksbündig",
+  "advanced-richtext.field.imageAlignment.center": "Zentriert",
+  "advanced-richtext.field.imageAlignment.right": "Rechtsbündig"
 }

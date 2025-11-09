@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styled from 'styled-components';
-import { Box, Button, Field, Flex, SingleSelect, SingleSelectOption, Textarea, VisuallyHidden } from '@strapi/design-system';
+import { Box, Button, Dialog, Field, Flex, Radio, SingleSelect, SingleSelectOption, Textarea, VisuallyHidden } from '@strapi/design-system';
 import { useStrapiApp } from '@strapi/admin/strapi-admin';
 import { useIntl } from 'react-intl';
 import ReactQuill from 'react-quill';
@@ -32,21 +32,49 @@ const LEGACY_HEADING_SIZE_MAP: Record<string, HeadingSizeValue> = {
 const HEADING_LEVEL_VALUES = ['none', '2', '3', '4'] as const;
 type HeadingLevelValue = (typeof HEADING_LEVEL_VALUES)[number];
 
-const HTML_ESCAPE_LOOKUP: Record<string, string> = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-  "'": '&#39;'
-};
+const IMAGE_WIDTH_PRESET_VALUES = ['33', '50', '100'] as const;
+type ImageWidthPreset = (typeof IMAGE_WIDTH_PRESET_VALUES)[number];
+const IMAGE_ALIGNMENT_VALUES = ['left', 'center', 'right'] as const;
+type ImageAlignment = (typeof IMAGE_ALIGNMENT_VALUES)[number];
+const DEFAULT_IMAGE_ALIGNMENT: ImageAlignment = 'left';
 
-const escapeHtml = (value: string) => String(value ?? '').replace(/[&<>"']/g, (char) => HTML_ESCAPE_LOOKUP[char] ?? char);
-
-const buildFullWidthFigureHtml = (src: string, alt: string) => {
-  const safeSrc = escapeHtml(src);
-  const safeAlt = escapeHtml(alt);
-  return `<figure class="advanced-richtext__figure advanced-richtext__figure--full"><img src="${safeSrc}" alt="${safeAlt}" loading="lazy" /></figure><p><br/></p>`;
-};
+if (Quill) {
+  const ImageFormat = Quill.import('formats/image');
+  class AdvancedRichTextImage extends ImageFormat {
+    static create(value: string | { src: string; width?: ImageWidthPreset; alt?: string; alignment?: ImageAlignment }) {
+      const src = typeof value === 'object' ? value.src : value;
+      const node = super.create(src);
+      node.setAttribute('src', src);
+      node.classList.add('advanced-richtext__image');
+      const width = typeof value === 'object' ? value.width : undefined;
+      const alt = typeof value === 'object' ? value.alt : undefined;
+      const alignment = typeof value === 'object' ? value.alignment : undefined;
+      const normalisedWidth = IMAGE_WIDTH_PRESET_VALUES.includes((width as ImageWidthPreset) ?? '100')
+        ? (width as ImageWidthPreset) ?? '100'
+        : '100';
+      const normalisedAlignment = IMAGE_ALIGNMENT_VALUES.includes(
+        (alignment as ImageAlignment) ?? DEFAULT_IMAGE_ALIGNMENT
+      )
+        ? ((alignment as ImageAlignment) ?? DEFAULT_IMAGE_ALIGNMENT)
+        : DEFAULT_IMAGE_ALIGNMENT;
+      node.setAttribute('data-width', normalisedWidth);
+      node.setAttribute('data-align', normalisedAlignment);
+      if (alt) {
+        node.setAttribute('alt', alt);
+      }
+      return node;
+    }
+    static value(node: HTMLElement) {
+      return {
+        src: node.getAttribute('src') ?? '',
+        alt: node.getAttribute('alt') ?? '',
+        width: (node.getAttribute('data-width') as ImageWidthPreset | null) ?? '100',
+        alignment: (node.getAttribute('data-align') as ImageAlignment | null) ?? DEFAULT_IMAGE_ALIGNMENT
+      };
+    }
+  }
+  Quill.register({ 'formats/image': AdvancedRichTextImage }, true);
+}
 
 if (Quill) {
   try {
@@ -166,6 +194,10 @@ const AdvancedRichTextInput: React.FC<AdvancedRichTextInputProps> = ({
   const lastPropValueRef = useRef(safeValue);
   const isVisualMode = mode === 'visual';
   const toolbarDisabled = disabled || !isVisualMode;
+  const [pendingImageAsset, setPendingImageAsset] = useState<MediaLibraryFile | null>(null);
+  const [isImageSizeDialogOpen, setIsImageSizeDialogOpen] = useState(false);
+  const [selectedImageWidth, setSelectedImageWidth] = useState<ImageWidthPreset>('100');
+  const [selectedImageAlignment, setSelectedImageAlignment] = useState<ImageAlignment>(DEFAULT_IMAGE_ALIGNMENT);
   const mediaLibraryComponent = useStrapiApp<React.ComponentType<any> | null>(
     'AdvancedRichTextInput',
     (state) => state.components?.['media-library'] ?? null
@@ -260,6 +292,46 @@ const AdvancedRichTextInput: React.FC<AdvancedRichTextInputProps> = ({
     id: `${pluginId}.field.action.image`,
     defaultMessage: 'Insert image',
   });
+  const imageSizeTitle = formatMessage({
+    id: `${pluginId}.field.imageSize.title`,
+    defaultMessage: 'Bildbreite wählen',
+  });
+  const imageSizeDescription = formatMessage({
+    id: `${pluginId}.field.imageSize.description`,
+    defaultMessage: 'Lege fest, wie breit das Bild im Textblock angezeigt wird.',
+  });
+  const imageSizeThirdLabel = formatMessage({
+    id: `${pluginId}.field.imageSize.third`,
+    defaultMessage: 'Ein Drittel',
+  });
+  const imageSizeHalfLabel = formatMessage({
+    id: `${pluginId}.field.imageSize.half`,
+    defaultMessage: 'Halbe Breite',
+  });
+  const imageSizeFullLabel = formatMessage({
+    id: `${pluginId}.field.imageSize.full`,
+    defaultMessage: 'Volle Breite',
+  });
+  const imageAlignmentTitle = formatMessage({
+    id: `${pluginId}.field.imageAlignment.title`,
+    defaultMessage: 'Bildausrichtung wählen',
+  });
+  const imageAlignmentDescription = formatMessage({
+    id: `${pluginId}.field.imageAlignment.description`,
+    defaultMessage: 'Lege fest, ob das Bild links, mittig oder rechts erscheinen soll.',
+  });
+  const imageAlignmentLeftLabel = formatMessage({
+    id: `${pluginId}.field.imageAlignment.left`,
+    defaultMessage: 'Linksbündig',
+  });
+  const imageAlignmentCenterLabel = formatMessage({
+    id: `${pluginId}.field.imageAlignment.center`,
+    defaultMessage: 'Zentriert',
+  });
+  const imageAlignmentRightLabel = formatMessage({
+    id: `${pluginId}.field.imageAlignment.right`,
+    defaultMessage: 'Rechtsbündig',
+  });
   const clearLabel = formatMessage({
     id: `${pluginId}.field.action.clear`,
     defaultMessage: 'Clear formatting',
@@ -310,11 +382,27 @@ const AdvancedRichTextInput: React.FC<AdvancedRichTextInputProps> = ({
     ],
     [headingSizeXSLabel, headingSizeSLabel, headingSizeMLabel, headingSizeLLabel]
   );
+  const imageSizeOptions = useMemo(
+    () => [
+      { value: '33' as ImageWidthPreset, label: imageSizeThirdLabel },
+      { value: '50' as ImageWidthPreset, label: imageSizeHalfLabel },
+      { value: '100' as ImageWidthPreset, label: imageSizeFullLabel }
+    ],
+    [imageSizeThirdLabel, imageSizeHalfLabel, imageSizeFullLabel]
+  );
+  const imageAlignmentOptions = useMemo(
+    () => [
+      { value: 'left' as ImageAlignment, label: imageAlignmentLeftLabel },
+      { value: 'center' as ImageAlignment, label: imageAlignmentCenterLabel },
+      { value: 'right' as ImageAlignment, label: imageAlignmentRightLabel }
+    ],
+    [imageAlignmentLeftLabel, imageAlignmentCenterLabel, imageAlignmentRightLabel]
+  );
 
   const getEditor = useCallback(() => quillRef.current?.getEditor() ?? null, []);
 
   const insertImageAsset = useCallback(
-    (asset: MediaLibraryFile) => {
+    (asset: MediaLibraryFile, width: ImageWidthPreset, alignment: ImageAlignment) => {
       if (!asset) return;
       const instance = getEditor();
       if (!instance) return;
@@ -324,20 +412,23 @@ const AdvancedRichTextInput: React.FC<AdvancedRichTextInputProps> = ({
       const range = instance.getSelection(true);
       const insertIndex = range ? range.index : instance.getLength();
       const altSource = asset.alternativeText ?? asset.caption ?? asset.name ?? '';
-      const htmlFragment = buildFullWidthFigureHtml(rawSrc, altSource ?? '');
-      instance.clipboard.dangerouslyPasteHTML(insertIndex, htmlFragment, 'user');
+      instance.insertEmbed(
+        insertIndex,
+        'image',
+        {
+          src: rawSrc,
+          alt: altSource,
+          width,
+          alignment,
+        },
+        'user'
+      );
+      instance.insertText(insertIndex + 1, '\n', 'user');
       const nextValue = instance.root?.innerHTML ?? '';
       handleChange(nextValue);
-      const applyCursor = () => {
-        const cursorIndex = Math.min(insertIndex + 2, instance.getLength());
-        instance.setSelection(cursorIndex, 0, 'silent');
-        instance.focus();
-      };
-      if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
-        window.requestAnimationFrame(applyCursor);
-      } else {
-        applyCursor();
-      }
+      const cursorIndex = Math.min(insertIndex + 2, instance.getLength());
+      instance.setSelection(cursorIndex, 0, 'silent');
+      instance.focus();
     },
     [getEditor, handleChange]
   );
@@ -345,12 +436,43 @@ const AdvancedRichTextInput: React.FC<AdvancedRichTextInputProps> = ({
   const handleMediaLibrarySelect = useCallback(
     (selectedAssets: MediaLibraryFile[]) => {
       if (Array.isArray(selectedAssets) && selectedAssets.length > 0) {
-        insertImageAsset(selectedAssets[0]);
+        setPendingImageAsset(selectedAssets[0]);
+        setSelectedImageWidth('100');
+        setSelectedImageAlignment(DEFAULT_IMAGE_ALIGNMENT);
+        setIsImageSizeDialogOpen(true);
+      } else {
+        setPendingImageAsset(null);
+        setIsImageSizeDialogOpen(false);
       }
       handleMediaLibraryClose();
     },
-    [handleMediaLibraryClose, insertImageAsset]
+    [handleMediaLibraryClose]
   );
+
+  const handleImageSizeDialogClose = useCallback(() => {
+    setPendingImageAsset(null);
+    setIsImageSizeDialogOpen(false);
+    setSelectedImageAlignment(DEFAULT_IMAGE_ALIGNMENT);
+  }, []);
+
+  const handleImageWidthChange = useCallback((value: ImageWidthPreset) => {
+    if (IMAGE_WIDTH_PRESET_VALUES.includes(value)) {
+      setSelectedImageWidth(value);
+    }
+  }, []);
+
+  const handleImageAlignmentChange = useCallback((value: ImageAlignment) => {
+    if (IMAGE_ALIGNMENT_VALUES.includes(value)) {
+      setSelectedImageAlignment(value);
+    }
+  }, []);
+
+  const handleConfirmImageInsert = useCallback(() => {
+    if (!pendingImageAsset) return;
+    insertImageAsset(pendingImageAsset, selectedImageWidth, selectedImageAlignment);
+    setPendingImageAsset(null);
+    setIsImageSizeDialogOpen(false);
+  }, [insertImageAsset, pendingImageAsset, selectedImageWidth, selectedImageAlignment]);
 
   const handleImageButtonClick = useCallback(() => {
     if (!mediaLibraryAvailable) {
@@ -740,6 +862,61 @@ const AdvancedRichTextInput: React.FC<AdvancedRichTextInputProps> = ({
             onClose={handleMediaLibraryClose}
             onSelectAssets={handleMediaLibrarySelect}
           />
+        ) : null}
+
+        {isImageSizeDialogOpen && pendingImageAsset ? (
+          <Dialog.Root open={isImageSizeDialogOpen} onOpenChange={(open) => (open ? null : handleImageSizeDialogClose())}>
+            <Dialog.Content aria-label={imageSizeTitle}>
+              <Dialog.Header>{imageSizeTitle}</Dialog.Header>
+              <Dialog.Body gap={4}>
+                <div>
+                  <p>{imageSizeDescription}</p>
+                  <Radio.Group
+                    value={selectedImageWidth}
+                    onValueChange={(value) => handleImageWidthChange(value as ImageWidthPreset)}
+                  >
+                    <Flex direction="column" gap={2}>
+                      {imageSizeOptions.map((option) => (
+                        <Radio.Item key={option.value} value={option.value}>
+                          {option.label}
+                        </Radio.Item>
+                      ))}
+                    </Flex>
+                  </Radio.Group>
+                </div>
+                <div>
+                  <strong>{imageAlignmentTitle}</strong>
+                  <p>{imageAlignmentDescription}</p>
+                  <Radio.Group
+                    value={selectedImageAlignment}
+                    onValueChange={(value) => handleImageAlignmentChange(value as ImageAlignment)}
+                  >
+                    <Flex direction="column" gap={2}>
+                      {imageAlignmentOptions.map((option) => (
+                        <Radio.Item key={option.value} value={option.value}>
+                          {option.label}
+                        </Radio.Item>
+                      ))}
+                    </Flex>
+                  </Radio.Group>
+                </div>
+              </Dialog.Body>
+              <Dialog.Footer justifyContent="flex-end" gap={2}>
+                <Button variant="tertiary" onClick={handleImageSizeDialogClose}>
+                  {formatMessage({
+                    id: 'app.components.Button.cancel',
+                    defaultMessage: 'Cancel',
+                  })}
+                </Button>
+                <Button onClick={handleConfirmImageInsert}>
+                  {formatMessage({
+                    id: 'app.components.Button.confirm',
+                    defaultMessage: 'Confirm',
+                  })}
+                </Button>
+              </Dialog.Footer>
+            </Dialog.Content>
+          </Dialog.Root>
         ) : null}
       </>
     </Field.Root>

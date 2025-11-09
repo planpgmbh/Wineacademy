@@ -18,5 +18,15 @@
   "advanced-richtext.field.action.bulletList": "Bullet list",
   "advanced-richtext.field.action.link": "Insert link",
   "advanced-richtext.field.action.image": "Insert image",
-  "advanced-richtext.field.action.clear": "Clear formatting"
+  "advanced-richtext.field.action.clear": "Clear formatting",
+  "advanced-richtext.field.imageSize.title": "Choose image width",
+  "advanced-richtext.field.imageSize.description": "Select how wide this image should appear within the text block.",
+  "advanced-richtext.field.imageSize.third": "One third width",
+  "advanced-richtext.field.imageSize.half": "Half width",
+  "advanced-richtext.field.imageSize.full": "Full width",
+  "advanced-richtext.field.imageAlignment.title": "Choose alignment",
+  "advanced-richtext.field.imageAlignment.description": "Decide if the image should align to the left, center or right.",
+  "advanced-richtext.field.imageAlignment.left": "Align left",
+  "advanced-richtext.field.imageAlignment.center": "Center",
+  "advanced-richtext.field.imageAlignment.right": "Align right"
 }

@@ -460,4 +460,46 @@ body {
     border-color: transparent;
     border-width: 0;
   }
+
+  .prose :where(img[data-width]),
+  .prose :where(figure img[data-width]) {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    margin: 1.25rem 0;
+  }
+
+  .prose :where(img[data-width='33']),
+  .prose :where(figure img[data-width='33']) {
+    max-width: 33%;
+  }
+
+  .prose :where(img[data-width='50']),
+  .prose :where(figure img[data-width='50']) {
+    max-width: 50%;
+  }
+
+  .prose :where(img[data-width='100']),
+  .prose :where(figure img[data-width='100']) {
+    max-width: 100%;
+  }
+
+  .prose :where(img[data-align='left']),
+  .prose :where(figure[data-align='left'] img) {
+    margin-left: 0;
+    margin-right: auto;
+  }
+
+  .prose :where(img[data-align='center']),
+  .prose :where(figure[data-align='center'] img) {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .prose :where(img[data-align='right']),
+  .prose :where(figure[data-align='right'] img) {
+    margin-left: auto;
+    margin-right: 0;
+  }
 }
