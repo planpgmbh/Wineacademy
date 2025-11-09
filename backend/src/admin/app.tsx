@@ -1,4 +1,7 @@
 export default {
+  config: {
+    locales: ['de'],
+  },
   register(app: any) {
     // Direktlink zu "bezahlt"-Bestellungen im Content-Manager
     app.addMenuLink({
