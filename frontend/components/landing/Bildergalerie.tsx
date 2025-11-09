@@ -52,18 +52,20 @@ export function Bildergalerie({ bilder, rotationSekunden, breite = "full" }: Bil
     );
   }
 
+  const minHeight = isContentWidth ? 420 : 550;
   const sectionClasses = [
     "relative isolate mb-[calc(var(--section-padding-y)*1.5)] overflow-hidden md:mb-[var(--section-padding-y-xl)]",
-    isContentWidth ? "px-6" : "flex min-h-[550px] items-center justify-center"
+    isContentWidth ? "px-6" : "flex items-center justify-center"
   ].join(" ");
 
-  const wrapperClasses = isContentWidth
-    ? "mx-auto min-h-[420px] w-full max-w-5xl overflow-hidden rounded-3xl"
-    : "h-full w-full min-h-[550px]";
+  const wrapperClasses = [
+    isContentWidth ? "mx-auto w-full max-w-4xl overflow-hidden rounded-3xl" : "w-full",
+    "relative isolate flex items-center justify-center"
+  ].join(" ");
 
   return (
     <section className={sectionClasses}>
-      <div className={wrapperClasses}>
+      <div className={wrapperClasses} style={{ height: `${minHeight}px`, minHeight: `${minHeight}px` }}>
         <div className="relative isolate flex h-full w-full items-center justify-center">
           {validSlides.map((slide, index) => (
             <Image
@@ -77,8 +79,6 @@ export function Bildergalerie({ bilder, rotationSekunden, breite = "full" }: Bil
               style={{ opacity: index === activeIndex ? 1 : 0 }}
             />
           ))}
-
-          <div className="absolute inset-0 -z-20 bg-gradient-to-b from-black/40 via-black/35 to-black/60" aria-hidden="true" />
 
           <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2">
             {validSlides.map((_, index) => (
