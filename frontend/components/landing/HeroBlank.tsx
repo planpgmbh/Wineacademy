@@ -38,12 +38,12 @@ export function HeroBlank({ überschrift, überschriftStufe, einleitung }: HeroB
 
   return (
     <section className="relative isolate bg-base-100 mb-[calc(var(--section-padding-y)*1.5)] md:mb-[var(--section-padding-y-xl)]">
-      <div className="mx-auto flex min-h-[360px] max-w-5xl flex-col items-center justify-center gap-6 px-6 py-24 text-center md:py-32">
-        <HeadingTag className={`leading-tight tracking-tight text-base-content ${headingClass}`}>
+      <div className="mx-auto flex max-w-5xl flex-col items-center justify-center gap-0 px-6 pt-10 pb-6 text-center md:gap-0.5 md:pt-16 md:pb-10">
+        <HeadingTag className={`leading-tight tracking-tight text-base-content ${headingClass} mb-5`}>
           {überschrift}
         </HeadingTag>
         {paragraphs.length > 0 ? (
-          <p className="mx-auto max-w-3xl text-lg leading-relaxed text-base-content/80 md:text-xl">
+          <p className="mx-auto max-w-3xl text-lg leading-tight text-base-content/80 md:text-xl [word-spacing:-0.1em]">
             {paragraphs.map((paragraph, index) => (
               <span key={index} className="block">
                 {paragraph}
