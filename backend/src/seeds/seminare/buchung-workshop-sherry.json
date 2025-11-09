@@ -10,8 +10,8 @@
   "aktiv": true,
   "bookingbox": {
     "topline": "Jetzt Anmelden",
-    "headline": "Sichere dir deinen Platz",
-    "body": "Sherry Workshop in Hamburg: Entdecke ungespriteten Sherry, neue Rebsorten & Terroir aus Jerez. Aktuelle Trends & Verkostung bei der Wine Academy Hamburg."
+    "überschrift": "Sichere dir deinen Platz",
+    "beschreibung": "Sherry Workshop in Hamburg: Entdecke ungespriteten Sherry, neue Rebsorten & Terroir aus Jerez. Aktuelle Trends & Verkostung bei der Wine Academy Hamburg."
   },
   "seminarinhalte": [
     {

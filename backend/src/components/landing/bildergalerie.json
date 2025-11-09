@@ -1,0 +1,27 @@
+{
+  "collectionName": "components_landing_bildergalerien",
+  "info": {
+    "displayName": "Bildergalerie",
+    "description": "Bildkarussell für Hero- oder Content-Bereiche."
+  },
+  "attributes": {
+    "rotationSekunden": {
+      "type": "integer",
+      "default": 7,
+      "min": 2,
+      "max": 60
+    },
+    "breite": {
+      "type": "enumeration",
+      "enum": ["full", "content"],
+      "default": "full"
+    },
+    "bilder": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": [
+        "images"
+      ]
+    }
+  }
+}

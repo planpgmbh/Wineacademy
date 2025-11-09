@@ -10,8 +10,8 @@
   "aktiv": true,
   "bookingbox": {
     "topline": "Jetzt Anmelden",
-    "headline": "Sichere dir deinen Platz",
-    "body": "Starte Deine Weinreise mit WSET Level 1 Weine. Ideal für Einsteiger in Einzelhandel, Gastronomie und Weinliebhaber, die mehr lernen und flexibel bleiben wollen."
+    "überschrift": "Sichere dir deinen Platz",
+    "beschreibung": "Starte Deine Weinreise mit WSET Level 1 Weine. Ideal für Einsteiger in Einzelhandel, Gastronomie und Weinliebhaber, die mehr lernen und flexibel bleiben wollen."
   },
   "seminarinhalte": [
     {

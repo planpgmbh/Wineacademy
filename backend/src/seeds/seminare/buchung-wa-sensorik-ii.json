@@ -10,8 +10,8 @@
   "aktiv": true,
   "bookingbox": {
     "topline": "Jetzt Anmelden",
-    "headline": "Sichere dir deinen Platz",
-    "body": "Aufbaukurs zu Sensorik Basic: Kenntnisse und Fertigkeiten in Sensorik und Weinverkostung vertiefen - sich auf professionellem Niveau in der Weinwelt behaupten."
+    "überschrift": "Sichere dir deinen Platz",
+    "beschreibung": "Aufbaukurs zu Sensorik Basic: Kenntnisse und Fertigkeiten in Sensorik und Weinverkostung vertiefen - sich auf professionellem Niveau in der Weinwelt behaupten."
   },
   "seminarinhalte": [
     {

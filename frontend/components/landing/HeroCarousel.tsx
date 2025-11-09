@@ -4,17 +4,17 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import type { JSX } from "react";
 
-type Slide = {
+type Bild = {
   src: string;
   alt: string;
 };
 
 type HeroCarouselProps = {
-  headline: string;
-  headlineLevel: "h1" | "h2" | "h3" | "h4";
-  intro?: string | null;
-  slides: Slide[];
-  rotationIntervalMs?: number;
+  überschrift: string;
+  überschriftStufe: "h1" | "h2" | "h3" | "h4";
+  einleitung?: string | null;
+  bilder: Bild[];
+  rotationSekunden?: number;
 };
 
 const headingStyles: Record<"h1" | "h2" | "h3" | "h4", string> = {
@@ -38,27 +38,27 @@ const clampInterval = (value: number | undefined, fallback: number): number => {
   return Math.min(Math.max(value, 2000), 60000);
 };
 
-export function HeroCarousel({ headline, headlineLevel, intro, slides, rotationIntervalMs }: HeroCarouselProps) {
+export function HeroCarousel({ überschrift, überschriftStufe, einleitung, bilder, rotationSekunden }: HeroCarouselProps) {
   const validSlides = useMemo(
-    () => slides.filter((slide) => typeof slide.src === "string" && slide.src.trim().length > 0),
-    [slides]
+    () => bilder.filter((bild) => typeof bild.src === "string" && bild.src.trim().length > 0),
+    [bilder]
   );
   const slideCount = validSlides.length;
   const [activeIndex, setActiveIndex] = useState(0);
   const paragraphs = useMemo(
     () =>
-      intro
-        ? intro
+      einleitung
+        ? einleitung
             .split(/\n+/)
             .map((paragraph) => paragraph.trim())
             .filter((paragraph) => paragraph.length > 0)
         : [],
-    [intro]
+    [einleitung]
   );
-  const rotationInterval = clampInterval(rotationIntervalMs, 8000);
+  const rotationInterval = clampInterval(rotationSekunden ? rotationSekunden * 1000 : undefined, 8000);
 
-  const HeadingTag = headingTags[headlineLevel];
-  const headingClass = headingStyles[headlineLevel];
+  const HeadingTag = headingTags[überschriftStufe];
+  const headingClass = headingStyles[überschriftStufe];
 
   useEffect(() => {
     if (slideCount <= 1) {
@@ -77,8 +77,8 @@ export function HeroCarousel({ headline, headlineLevel, intro, slides, rotationI
     return (
       <section className="flex min-h-[420px] items-center justify-center bg-base-100 px-6 py-24 text-center mb-[calc(var(--section-padding-y)*1.5)] md:mb-[var(--section-padding-y-xl)]">
         <div className="mx-auto max-w-3xl space-y-6">
-          <HeadingTag className={headingClass}>{headline}</HeadingTag>
-          {intro ? <p className="text-lg text-base-content/80">{intro}</p> : null}
+          <HeadingTag className={headingClass}>{überschrift}</HeadingTag>
+          {einleitung ? <p className="text-lg text-base-content/80">{einleitung}</p> : null}
         </div>
       </section>
     );
@@ -102,7 +102,7 @@ export function HeroCarousel({ headline, headlineLevel, intro, slides, rotationI
 
       <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center gap-6 px-6 py-24 text-center md:py-32">
         <HeadingTag className={`heading-on-dark ${headingClass}`}>
-          {headline}
+          {überschrift}
         </HeadingTag>
         {paragraphs.length > 0 ? (
           <p className="text-lg leading-relaxed text-base-100/90 drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)] md:text-xl">

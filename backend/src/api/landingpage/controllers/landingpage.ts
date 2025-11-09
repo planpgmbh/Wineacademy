@@ -18,7 +18,9 @@ export default factories.createCoreController(CONTENT_UID, ({ strapi }) => ({
           on: {
             "landing.hero": true,
             "landing.hero-carousel": { populate: { bilder: true } },
+            "landing.hero-blank": true,
             "landing.hero-small": { populate: { hintergrundbild: true } },
+            "landing.bildergalerie": { populate: { bilder: true } },
             "landing.text-block": true,
             "landing.card-grid": {
               populate: {
@@ -38,7 +40,6 @@ export default factories.createCoreController(CONTENT_UID, ({ strapi }) => ({
                 }
               }
             },
-            "landing.icon-grid": { populate: { items: true } },
             "landing.seminar-liste": {
               populate: {
                 seminarkategorie: {
@@ -48,7 +49,7 @@ export default factories.createCoreController(CONTENT_UID, ({ strapi }) => ({
             },
             "landing.tabs": {
               populate: {
-                tabs: true
+                reiter: true
               }
             },
             "landing.seminar-finder": {

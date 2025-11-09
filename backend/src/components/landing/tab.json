@@ -6,7 +6,7 @@
   },
   "options": {},
   "attributes": {
-    "headline": {
+    "überschrift": {
       "type": "string",
       "required": true
     },

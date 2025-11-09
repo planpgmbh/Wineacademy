@@ -1,8 +1,8 @@
 {
-  "collectionName": "components_landing_hero_smalls",
+  "collectionName": "components_landing_hero_blanks",
   "info": {
-    "displayName": "Hero (Klein)",
-    "description": "Kompakter Hero-Bereich mit stark weichgezeichnetem Hintergrundbild."
+    "displayName": "Hero (Blank)",
+    "description": "Hero-Sektion nur mit Headline und Einleitungstext."
   },
   "attributes": {
     "überschrift": {
@@ -16,11 +16,6 @@
     },
     "einleitung": {
       "type": "text"
-    },
-    "hintergrundbild": {
-      "type": "media",
-      "allowedTypes": ["images"],
-      "multiple": false
     }
   }
 }

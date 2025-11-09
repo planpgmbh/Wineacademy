@@ -10,8 +10,8 @@
   "aktiv": true,
   "bookingbox": {
     "topline": "Jetzt Anmelden",
-    "headline": "Sichere dir deinen Platz",
-    "body": "Alles über Sake erfahren: Geschichte, Herstellung, Reissorten, Kategorien, Verkostung, Lagerung, Speisekombination. Der spannende Einstieg in die Welt des Sake."
+    "überschrift": "Sichere dir deinen Platz",
+    "beschreibung": "Alles über Sake erfahren: Geschichte, Herstellung, Reissorten, Kategorien, Verkostung, Lagerung, Speisekombination. Der spannende Einstieg in die Welt des Sake."
   },
   "seminarinhalte": [
     {

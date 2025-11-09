@@ -16,8 +16,8 @@ type StrapiVoucherTemplate = {
   name: string;
   beschreibung?: string | null;
   bookingbox_topline?: string | null;
-  bookingbox_headline?: string | null;
-  bookingbox_body?: string | null;
+  bookingbox_überschrift?: string | null;
+  bookingbox_beschreibung?: string | null;
   minBetrag?: number | null;
   maxBetrag?: number | null;
   versandkosten?: number | null;
@@ -45,9 +45,9 @@ export type VoucherDetail = {
   mainImage: { url: string; alt: string | null } | null;
   bookingBox: {
     highlightLabel?: string | null;
-    headline: string;
-    description: string;
-    ctaLabel: string;
+    überschrift: string;
+    beschreibung: string;
+    buttonText: string;
     minAmount?: number | null;
     maxAmount?: number | null;
     defaultAmount: number;
@@ -136,15 +136,15 @@ function createFallbackVoucherDetail(): VoucherDetail {
     mainImage: null,
     bookingBox: {
       highlightLabel: null,
-      headline: "Gutschein anfordern",
-      description: "Wähle einen Wunschbetrag und sichere dir einen Gutschein für unsere Angebote.",
-      ctaLabel: "In den Warenkorb",
+      überschrift: "Gutschein anfordern",
+      beschreibung: "Wähle einen Wunschbetrag und sichere dir einen Gutschein für unsere Angebote.",
+      buttonText: "In den Warenkorb",
       minAmount: null,
       maxAmount: null,
       defaultAmount: 25
     },
-      tabs: [],
-      shippingCost: null
+    tabs: [],
+    shippingCost: null
   };
 }
 
@@ -187,15 +187,15 @@ export async function getVoucherDetail(): Promise<VoucherDetail> {
       mainImage: mainImageUrl ? { url: mainImageUrl, alt: mainImageAlt } : null,
       bookingBox: {
         highlightLabel: payload.bookingbox_topline?.trim() ?? null,
-        headline:
-          payload.bookingbox_headline && payload.bookingbox_headline.trim().length > 0
-            ? payload.bookingbox_headline.trim()
+        überschrift:
+          payload.bookingbox_überschrift && payload.bookingbox_überschrift.trim().length > 0
+            ? payload.bookingbox_überschrift.trim()
             : "Geschenkgutschein sichern",
-        description:
-          payload.bookingbox_body && payload.bookingbox_body.trim().length > 0
-            ? payload.bookingbox_body.trim()
+        beschreibung:
+          payload.bookingbox_beschreibung && payload.bookingbox_beschreibung.trim().length > 0
+            ? payload.bookingbox_beschreibung.trim()
             : "Wähle deinen Wunschbetrag und sichere dir oder deinen Liebsten einen Gutschein für Seminare und Produkte.",
-        ctaLabel: "In den Warenkorb",
+        buttonText: "In den Warenkorb",
         minAmount,
         maxAmount,
         defaultAmount

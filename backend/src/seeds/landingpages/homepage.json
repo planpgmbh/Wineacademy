@@ -4,8 +4,8 @@
   "abschnitte": [
     {
       "__component": "landing.hero",
-      "headline": "Wein neu entdecken",
-      "headlineLevel": "h1",
+      "überschrift": "Wein neu entdecken",
+      "überschriftStufe": "h1",
       "einleitung": "erleben – erfahren – genießen<br/>Weinausbildung nach Maß – individuell und zeitlich flexibel gestaltet",
       "videoUrl": "https://www.wineacademy.de/wp-content/uploads/WineAcademy-Header_final.mp4",
       "posterUrl": null,
@@ -14,20 +14,20 @@
     },
     {
       "__component": "landing.card-grid",
-      "sectionBackground": "neutral",
+      "hintergrundfarbe": "neutral",
       "karten": [
         {
-          "headline": "Weinkurse",
+          "überschrift": "Weinkurse",
           "einleitung": "Fundiertes Wissen von den Grundlagen bis zur Vertiefung.",
           "link": "/kurse/weinkurse"
         },
         {
-          "headline": "Masterclasses",
+          "überschrift": "Masterclasses",
           "einleitung": "Intensive Tagesformate zu Regionen, Stilistiken und Sensorik.",
           "link": "/kurse/masterclasses"
         },
         {
-          "headline": "WSET® Programme",
+          "überschrift": "WSET® Programme",
           "einleitung": "International anerkannte Abschlüsse – Level 1 bis Level 3.",
           "link": "/wset"
         }
@@ -35,36 +35,12 @@
     },
     {
       "__component": "landing.text-block",
-      "headline": "Wine Academy Hamburg – die Weinschule",
-      "headlineLevel": "h2",
-      "sectionBackground": "neutral",
+      "überschrift": "Wine Academy Hamburg – die Weinschule",
+      "überschriftStufe": "h2",
+      "hintergrundfarbe": "neutral",
       "einleitung": "<p>Die Wine Academy Hamburg ist die Adresse für erstklassige Weinausbildung. „Weinausbildung nach Maß – individuell und zeitlich flexibel gestaltet“ bedeutet ein umfangreiches Kursangebot, das sowohl Fachleuten aus der Weinbranche als auch leidenschaftlichen Endverbraucher*innen den Schlüssel zu tiefgreifendem Weinwissen bietet.</p><p>Unsere Weinschule in Hamburg zeichnet sich durch ein vielfältiges Lehrangebot aus, einschließlich akkreditierter Kurse des renommierten Wine and Spirit Education Trust (WSET®), spezialisierter Masterclasses und gezielter Prüfungsvorbereitung – nicht nur für WSET®-Zertifizierungen. Ob eine Karriere mit der Ausbildung zur Sommelière bzw. zum Sommelier vorangetrieben oder einfach das Weinwissen erweitert werden soll, unsere maßgeschneiderten Kurse bieten für alle etwas.</p><p>Neben formalen Ausbildungen lädt die Wine Academy Hamburg zu inspirierenden Weinseminaren, Weintastings und Events ein, bei denen in entspannter Atmosphäre neue Weine entdeckt und der Austausch mit Gleichgesinnten gepflegt wird. Unsere erfahrenen Dozent*innen und Weinexpert*innen teilen ihr umfassendes Wissen und ihre Leidenschaft für Wein in einer unvergesslichen Ausbildungserfahrung auf höchstem Niveau.</p><p>Starte deine Weinausbildung in Hamburg und werde Teil einer lebendigen Community, die deine Liebe zum Wein teilt – flexibel, individuell und auf höchstem Niveau.</p>",
       "buttonLabel": "Unsere Kurse →",
       "buttonLink": "/kurse"
-    },
-    {
-      "__component": "landing.icon-grid",
-      "headline": "Warum Wine Academy?",
-      "headlineLevel": "h2",
-      "sectionBackground": "neutral",
-      "einleitung": "Pluspunkte, die unsere Angebote einzigartig machen.",
-      "items": [
-        {
-          "icon": "globe",
-          "headline": "Flexible Formate",
-          "einleitung": "Online, hybrid oder vor Ort – Lernwege lassen sich individuell gestalten."
-        },
-        {
-          "icon": "certificate",
-          "headline": "Weltweit anerkannt",
-          "einleitung": "Der WSET® ist führender Anbieter internationaler Getränkequalifikationen."
-        },
-        {
-          "icon": "fingerprint",
-          "headline": "Individuell anpassbar",
-          "einleitung": "Kurse und Coachings passen wir an persönliche Ziele und Erfahrungslevel an."
-        }
-      ]
     }
   ],
   "seo": {

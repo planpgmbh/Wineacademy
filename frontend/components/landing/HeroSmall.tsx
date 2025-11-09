@@ -2,10 +2,10 @@ import Image from "next/image";
 import type { JSX } from "react";
 
 type HeroSmallProps = {
-  headline: string;
-  headlineLevel: "h1" | "h2" | "h3" | "h4";
-  intro?: string | null;
-  image?: {
+  überschrift: string;
+  überschriftStufe: "h1" | "h2" | "h3" | "h4";
+  einleitung?: string | null;
+  bild?: {
     src: string;
     alt: string;
   } | null;
@@ -36,18 +36,18 @@ const extractParagraphs = (text?: string | null): string[] => {
     .filter((item) => item.length > 0);
 };
 
-export function HeroSmall({ headline, headlineLevel, intro, image }: HeroSmallProps) {
-  const paragraphs = extractParagraphs(intro);
-  const HeadingTag = headingTags[headlineLevel];
-  const headingClass = headingStyles[headlineLevel];
+export function HeroSmall({ überschrift, überschriftStufe, einleitung, bild }: HeroSmallProps) {
+  const paragraphs = extractParagraphs(einleitung);
+  const HeadingTag = headingTags[überschriftStufe];
+  const headingClass = headingStyles[überschriftStufe];
 
   return (
     <section className="relative isolate overflow-hidden mb-[calc(var(--section-padding-y)*1.5)] md:mb-[var(--section-padding-y-xl)]">
       <div className="min-h-[280px] px-6 py-16 sm:py-20">
         <div className="relative z-10 mx-auto flex max-w-4xl flex-col gap-6 text-center text-base-100">
           <HeadingTag className={`heading-on-dark leading-tight tracking-tight ${headingClass}`}>
-            {headline}
-          </HeadingTag>
+          {überschrift}
+        </HeadingTag>
           {paragraphs.length > 0 ? (
             <p className="mx-auto max-w-2xl text-lg leading-relaxed text-base-100/90 md:text-xl">
               {paragraphs.map((paragraph, index) => (
@@ -62,11 +62,11 @@ export function HeroSmall({ headline, headlineLevel, intro, image }: HeroSmallPr
 
       <div className="absolute inset-0 -z-20 bg-gradient-to-br from-primary/40 via-primary/30 to-primary/50" aria-hidden="true" />
 
-      {image ? (
+      {bild ? (
         <div className="absolute inset-0 -z-30 overflow-hidden">
           <Image
-            src={image.src}
-            alt={image.alt}
+            src={bild.src}
+            alt={bild.alt}
             fill
             sizes="100vw"
             className="h-full w-full scale-110 object-cover blur-3xl opacity-70"

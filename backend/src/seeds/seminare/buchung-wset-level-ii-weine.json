@@ -10,8 +10,8 @@
   "aktiv": true,
   "bookingbox": {
     "topline": "Jetzt Anmelden",
-    "headline": "Sichere dir deinen Platz",
-    "body": "Erkunde mit WSET Level 2 Kurs über 20 Rebsorten + 70 Anbaugebiete. Für Anfänger und Fortgeschrittene in der Weinwelt. Werde ein selbstbewusster Weinverkoster."
+    "überschrift": "Sichere dir deinen Platz",
+    "beschreibung": "Erkunde mit WSET Level 2 Kurs über 20 Rebsorten + 70 Anbaugebiete. Für Anfänger und Fortgeschrittene in der Weinwelt. Werde ein selbstbewusster Weinverkoster."
   },
   "seminarinhalte": [
     {

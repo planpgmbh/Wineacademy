@@ -10,8 +10,8 @@
   "aktiv": true,
   "bookingbox": {
     "topline": "Jetzt Anmelden",
-    "headline": "Sichere dir deinen Platz",
-    "body": "Prüfungsanmeldung für WSET® Level 3 Weine: Theorie & Verkostung. Auch für Wiederholungsprüfungen Theorie & Tasting."
+    "überschrift": "Sichere dir deinen Platz",
+    "beschreibung": "Prüfungsanmeldung für WSET® Level 3 Weine: Theorie & Verkostung. Auch für Wiederholungsprüfungen Theorie & Tasting."
   },
   "seminarinhalte": [
     {

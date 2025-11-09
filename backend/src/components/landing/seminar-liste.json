@@ -5,15 +5,15 @@
     "description": "Liste der nächsten Seminare für eine ausgewählte Kategorie."
   },
   "attributes": {
-    "headline": {
+    "überschrift": {
       "type": "string"
     },
-    "headlineLevel": {
+    "überschriftStufe": {
       "type": "enumeration",
       "enum": ["h2", "h3", "h4"],
       "default": "h2"
     },
-    "sectionBackground": {
+    "hintergrundfarbe": {
       "type": "enumeration",
       "enum": [
         "neutral",
@@ -36,21 +36,21 @@
       "target": "api::kategorie.kategorie",
       "required": true
     },
-    "limit": {
+    "anzahl": {
       "type": "integer",
       "default": 6,
       "min": 1,
       "max": 24
     },
-    "ctaLabel": {
+    "buttonText": {
       "type": "string",
       "default": "Zum Seminar"
     },
-    "mehrButtonLabel": {
+    "mehrButtonText": {
       "type": "string",
       "default": "Mehr laden"
     },
-    "mehrButtonAktiv": {
+    "mehrButtonAnzeigen": {
       "type": "boolean",
       "default": true
     }

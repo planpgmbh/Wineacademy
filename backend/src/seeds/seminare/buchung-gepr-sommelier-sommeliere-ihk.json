@@ -10,8 +10,8 @@
   "aktiv": true,
   "bookingbox": {
     "topline": "Jetzt Anmelden",
-    "headline": "Sichere dir deinen Platz",
-    "body": "Entdecke die vielfältige Welt der Weine und Getränke mit der IHK Weiterbildung zum/r Berufsspezialist/In Sommelier/Sommelière! Werde zum modernen Gastgeber mit praxisnahem und zeitgemäßem Knowhow. Berufsbegleitend und individuell."
+    "überschrift": "Sichere dir deinen Platz",
+    "beschreibung": "Entdecke die vielfältige Welt der Weine und Getränke mit der IHK Weiterbildung zum/r Berufsspezialist/In Sommelier/Sommelière! Werde zum modernen Gastgeber mit praxisnahem und zeitgemäßem Knowhow. Berufsbegleitend und individuell."
   },
   "seminarinhalte": [
     {

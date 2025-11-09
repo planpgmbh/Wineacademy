@@ -44,7 +44,7 @@ export interface BenachrichtigungPlatzhalter extends Struct.ComponentSchema {
 }
 
 export interface GutscheinTab extends Struct.ComponentSchema {
-  collectionName: 'components_gutschein_tabs';
+  collectionName: 'components_gutschein_reiter';
   info: {
     description: 'Inhaltstab für Gutschein-Details';
     displayName: 'Tab';
@@ -56,7 +56,7 @@ export interface GutscheinTab extends Struct.ComponentSchema {
 }
 
 export interface SeminarTab extends Struct.ComponentSchema {
-  collectionName: 'components_seminar_tabs';
+  collectionName: 'components_seminar_reiter';
   info: {
     description: 'Ein Inhaltstab für Seminardetails';
     displayName: 'Tab';
@@ -74,10 +74,10 @@ export interface LandingSeminarFinder extends Struct.ComponentSchema {
     displayName: 'Seminar Finder';
   };
   attributes: {
-    headline: Schema.Attribute.String;
-    headlineLevel: Schema.Attribute.Enumeration<['h2', 'h3', 'h4']> &
+    überschrift: Schema.Attribute.String;
+    überschriftStufe: Schema.Attribute.Enumeration<['h2', 'h3', 'h4']> &
       Schema.Attribute.DefaultTo<'h2'>;
-    sectionBackground: Schema.Attribute.Enumeration<[
+    hintergrundfarbe: Schema.Attribute.Enumeration<[
       'neutral',
       'black',
       'wine-blue',
@@ -100,14 +100,28 @@ export interface LandingHero extends Struct.ComponentSchema {
     displayName: 'Hero (Video)';
   };
   attributes: {
-    headline: Schema.Attribute.String & Schema.Attribute.Required;
-    headlineLevel: Schema.Attribute.Enumeration<['h1', 'h2', 'h3', 'h4']> &
+    überschrift: Schema.Attribute.String & Schema.Attribute.Required;
+    überschriftStufe: Schema.Attribute.Enumeration<['h1', 'h2', 'h3', 'h4']> &
       Schema.Attribute.DefaultTo<'h2'>;
     einleitung: Schema.Attribute.Text;
     videoUrl: Schema.Attribute.String;
     posterUrl: Schema.Attribute.String;
-    buttonLabel: Schema.Attribute.String;
+    buttonText: Schema.Attribute.String;
     buttonLink: Schema.Attribute.String;
+  };
+}
+
+export interface LandingHeroBlank extends Struct.ComponentSchema {
+  collectionName: 'components_landing_hero_blanks';
+  info: {
+    description: 'Hero-Sektion nur mit Headline und Einleitung.';
+    displayName: 'Hero (Blank)';
+  };
+  attributes: {
+    überschrift: Schema.Attribute.String & Schema.Attribute.Required;
+    überschriftStufe: Schema.Attribute.Enumeration<['h1', 'h2', 'h3', 'h4']> &
+      Schema.Attribute.DefaultTo<'h2'>;
+    einleitung: Schema.Attribute.Text;
   };
 }
 
@@ -118,15 +132,33 @@ export interface LandingHeroCarousel extends Struct.ComponentSchema {
     displayName: 'Hero (Bildkarussell)';
   };
   attributes: {
-    headline: Schema.Attribute.String & Schema.Attribute.Required;
-    headlineLevel: Schema.Attribute.Enumeration<['h1', 'h2', 'h3', 'h4']> &
+    überschrift: Schema.Attribute.String & Schema.Attribute.Required;
+    überschriftStufe: Schema.Attribute.Enumeration<['h1', 'h2', 'h3', 'h4']> &
       Schema.Attribute.DefaultTo<'h2'>;
     einleitung: Schema.Attribute.Text;
-    rotationDelaySeconds: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<8> &
+    rotationSekunden: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<8> &
       Schema.Attribute.SetMinMax<{
         max: 60;
         min: 2;
       }, number>;
+    bilder: Schema.Attribute.Media<'images', true>;
+  };
+}
+
+export interface LandingBildergalerie extends Struct.ComponentSchema {
+  collectionName: 'components_landing_bildergalerien';
+  info: {
+    description: 'Bildkarussell für Hero- oder Content-Bereiche.';
+    displayName: 'Bildergalerie';
+  };
+  attributes: {
+    rotationSekunden: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<7> &
+      Schema.Attribute.SetMinMax<{
+        max: 60;
+        min: 2;
+      }, number>;
+    breite: Schema.Attribute.Enumeration<['full', 'content']> &
+      Schema.Attribute.DefaultTo<'full'>;
     bilder: Schema.Attribute.Media<'images', true>;
   };
 }
@@ -138,8 +170,8 @@ export interface LandingHeroSmall extends Struct.ComponentSchema {
     displayName: 'Hero (Klein)';
   };
   attributes: {
-    headline: Schema.Attribute.String & Schema.Attribute.Required;
-    headlineLevel: Schema.Attribute.Enumeration<['h1', 'h2', 'h3', 'h4']> &
+    überschrift: Schema.Attribute.String & Schema.Attribute.Required;
+    überschriftStufe: Schema.Attribute.Enumeration<['h1', 'h2', 'h3', 'h4']> &
       Schema.Attribute.DefaultTo<'h2'>;
     einleitung: Schema.Attribute.Text;
     hintergrundbild: Schema.Attribute.Media<'images'>;
@@ -153,7 +185,7 @@ export interface LandingCard extends Struct.ComponentSchema {
     displayName: 'Karte';
   };
   attributes: {
-    headline: Schema.Attribute.String & Schema.Attribute.Required;
+    überschrift: Schema.Attribute.String & Schema.Attribute.Required;
     einleitung: Schema.Attribute.String;
     link: Schema.Attribute.String;
     textAlignment: Schema.Attribute.Enumeration<['left', 'center', 'right']> &
@@ -166,7 +198,7 @@ export interface LandingCard extends Struct.ComponentSchema {
 }
 
 export interface LandingColumn extends Struct.ComponentSchema {
-  collectionName: 'components_landing_columns_items';
+  collectionName: 'components_landing_columns_einträge';
   info: {
     description: 'Einzelne Spalte innerhalb des Spalten-Layouts.';
     displayName: 'Spalte';
@@ -185,7 +217,7 @@ export interface LandingColumns extends Struct.ComponentSchema {
     displayName: 'Spalten';
   };
   attributes: {
-    sectionBackground: Schema.Attribute.Enumeration<[
+    hintergrundfarbe: Schema.Attribute.Enumeration<[
       'neutral',
       'black',
       'wine-blue',
@@ -214,7 +246,7 @@ export interface LandingCardGrid extends Struct.ComponentSchema {
     displayName: 'Karten-Grid';
   };
   attributes: {
-    sectionBackground: Schema.Attribute.Enumeration<[
+    hintergrundfarbe: Schema.Attribute.Enumeration<[
       'neutral',
       'black',
       'wine-blue',
@@ -229,49 +261,6 @@ export interface LandingCardGrid extends Struct.ComponentSchema {
   };
 }
 
-export interface LandingIconItem extends Struct.ComponentSchema {
-  collectionName: 'components_landing_icon_items';
-  info: {
-    description: 'Eintrag für ein Icon-Grid.';
-    displayName: 'Icon-Element';
-  };
-  attributes: {
-    icon: Schema.Attribute.Enumeration<['award', 'book', 'calendar', 'certificate', 'fingerprint', 'globe', 'sparkles', 'users', 'wine-glass']> &
-      Schema.Attribute.DefaultTo<'wine-glass'>;
-    headline: Schema.Attribute.String & Schema.Attribute.Required;
-    einleitung: Schema.Attribute.Text;
-  };
-}
-
-export interface LandingIconGrid extends Struct.ComponentSchema {
-  collectionName: 'components_landing_icon_grids';
-  info: {
-    description: 'Grid mit drei hervorgehobenen Vorteilen inklusive Icon.';
-    displayName: 'Icon-Grid';
-  };
-  attributes: {
-    headline: Schema.Attribute.String;
-    headlineLevel: Schema.Attribute.Enumeration<['h2', 'h3', 'h4']> &
-      Schema.Attribute.DefaultTo<'h2'>;
-    sectionBackground: Schema.Attribute.Enumeration<[
-      'neutral',
-      'black',
-      'wine-blue',
-      'wine-blue-light',
-      'wine-blue-lighter',
-      'wine-blue-lightest',
-      'wine-blue-dark',
-      'wine-blue-darker',
-      'wine-blue-darkest'
-    ]>;
-    einleitung: Schema.Attribute.Text;
-    items: Schema.Attribute.Component<'landing.icon-item', true> & Schema.Attribute.SetMinMax<{
-      min: 1;
-      max: 6;
-    }, number>;
-  };
-}
-
 export interface LandingSeminarListe extends Struct.ComponentSchema {
   collectionName: 'components_landing_seminar_listen';
   info: {
@@ -279,10 +268,10 @@ export interface LandingSeminarListe extends Struct.ComponentSchema {
     displayName: 'Seminarliste';
   };
   attributes: {
-    headline: Schema.Attribute.String;
-    headlineLevel: Schema.Attribute.Enumeration<['h2', 'h3', 'h4']> &
+    überschrift: Schema.Attribute.String;
+    überschriftStufe: Schema.Attribute.Enumeration<['h2', 'h3', 'h4']> &
       Schema.Attribute.DefaultTo<'h2'>;
-    sectionBackground: Schema.Attribute.Enumeration<[
+    hintergrundfarbe: Schema.Attribute.Enumeration<[
       'neutral',
       'black',
       'wine-blue',
@@ -295,14 +284,14 @@ export interface LandingSeminarListe extends Struct.ComponentSchema {
     ]>;
     einleitung: Schema.Attribute.Text;
     seminarkategorie: Schema.Attribute.Relation<'oneToOne', 'api::kategorie.kategorie'> & Schema.Attribute.Required;
-    limit: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<6> &
+    anzahl: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<6> &
       Schema.Attribute.SetMinMax<{
         max: 24;
         min: 1;
       }, number>;
-    ctaLabel: Schema.Attribute.String & Schema.Attribute.DefaultTo<'Zum Seminar'>;
-    mehrButtonLabel: Schema.Attribute.String & Schema.Attribute.DefaultTo<'Mehr laden'>;
-    mehrButtonAktiv: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    buttonText: Schema.Attribute.String & Schema.Attribute.DefaultTo<'Zum Seminar'>;
+    mehrButtonText: Schema.Attribute.String & Schema.Attribute.DefaultTo<'Mehr laden'>;
+    mehrButtonAnzeigen: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
   };
 }
 
@@ -313,7 +302,7 @@ export interface LandingTextBlock extends Struct.ComponentSchema {
     displayName: 'Textblock';
   };
   attributes: {
-    sectionBackground: Schema.Attribute.Enumeration<[
+    hintergrundfarbe: Schema.Attribute.Enumeration<[
       'neutral',
       'black',
       'wine-blue',
@@ -326,34 +315,34 @@ export interface LandingTextBlock extends Struct.ComponentSchema {
     ]>;
     einleitung: Schema.Attribute.Text &
       Schema.Attribute.CustomField<'plugin::advanced-richtext.advanced-richtext'>;
-    buttonLabel: Schema.Attribute.String;
+    buttonText: Schema.Attribute.String;
     buttonLink: Schema.Attribute.String;
   };
 }
 
 export interface LandingTab extends Struct.ComponentSchema {
-  collectionName: 'components_landing_tabs_items';
+  collectionName: 'components_landing_reiter_einträge';
   info: {
     description: 'Inhaltlicher Tab für Landingpages';
     displayName: 'Tab';
   };
   attributes: {
     inhalt: Schema.Attribute.CustomField<'plugin::advanced-richtext.advanced-richtext'>;
-    headline: Schema.Attribute.String & Schema.Attribute.Required;
+    überschrift: Schema.Attribute.String & Schema.Attribute.Required;
   };
 }
 
 export interface LandingTabs extends Struct.ComponentSchema {
-  collectionName: 'components_landing_tabs_groups';
+  collectionName: 'components_landing_reiter_groups';
   info: {
     description: 'Tab-Gruppe für Landingpages';
     displayName: 'Tabs';
   };
   attributes: {
-    headline: Schema.Attribute.String;
-    headlineLevel: Schema.Attribute.Enumeration<['h2', 'h3', 'h4']> &
+    überschrift: Schema.Attribute.String;
+    überschriftStufe: Schema.Attribute.Enumeration<['h2', 'h3', 'h4']> &
       Schema.Attribute.DefaultTo<'h2'>;
-    sectionBackground: Schema.Attribute.Enumeration<[
+    hintergrundfarbe: Schema.Attribute.Enumeration<[
       'neutral',
       'black',
       'wine-blue',
@@ -364,12 +353,12 @@ export interface LandingTabs extends Struct.ComponentSchema {
       'wine-blue-darker',
       'wine-blue-darkest'
     ]>;
-    tabs: Schema.Attribute.Component<'landing.tab', true> & Schema.Attribute.SetMinMax<{ min: 1 }, number>;
+    reiter: Schema.Attribute.Component<'landing.tab', true> & Schema.Attribute.SetMinMax<{ min: 1 }, number>;
   };
 }
 
 export interface ProduktTab extends Struct.ComponentSchema {
-  collectionName: 'components_produkt_tabs';
+  collectionName: 'components_produkt_reiter';
   info: {
     description: 'Inhaltstab für Produktdetails';
     displayName: 'Tab';
@@ -420,17 +409,17 @@ declare module '@strapi/strapi' {
       'gutschein.tab': GutscheinTab;
       'landing.card': LandingCard;
       'landing.card-grid': LandingCardGrid;
+      'landing.hero-blank': LandingHeroBlank;
       'landing.hero': LandingHero;
       'landing.hero-carousel': LandingHeroCarousel;
+      'landing.bildergalerie': LandingBildergalerie;
       'landing.hero-small': LandingHeroSmall;
       'landing.column': LandingColumn;
       'landing.columns': LandingColumns;
-      'landing.icon-grid': LandingIconGrid;
-      'landing.icon-item': LandingIconItem;
       'landing.seminar-liste': LandingSeminarListe;
       'landing.seminar-finder': LandingSeminarFinder;
       'landing.tab': LandingTab;
-      'landing.tabs': LandingTabs;
+      'landing.reiter': LandingTabs;
       'landing.text-block': LandingTextBlock;
       'produkt.tab': ProduktTab;
       'seminar.tab': SeminarTab;

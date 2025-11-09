@@ -9,8 +9,8 @@
   "aktiv": true,
   "bookingbox": {
     "topline": "Jetzt Anmelden",
-    "headline": "Sichere dir deinen Platz",
-    "body": "Online-Info-Veranstaltung für WSET® Level 3 Weine. Gemeinsam holen wir das Beste aus Deiner Kursvorbereitung. Hol Dir unsere Tips und Tricks zu WSET® Level 3!"
+    "überschrift": "Sichere dir deinen Platz",
+    "beschreibung": "Online-Info-Veranstaltung für WSET® Level 3 Weine. Gemeinsam holen wir das Beste aus Deiner Kursvorbereitung. Hol Dir unsere Tips und Tricks zu WSET® Level 3!"
   },
   "seminarinhalte": [
     {

@@ -7,10 +7,10 @@ import {
   type SectionBackgroundKey
 } from "@/lib/landing";
 
-type Card = {
+type Karte = {
   id: number;
-  headline: string;
-  intro?: string | null;
+  überschrift: string;
+  einleitung?: string | null;
   link?: string | null;
   textAlign: "left" | "center" | "right";
   verticalAlign: "top" | "center" | "bottom";
@@ -22,8 +22,8 @@ type Card = {
 };
 
 type CardGridProps = {
-  cards: Card[];
-  background?: SectionBackgroundKey | null;
+  karten: Karte[];
+  hintergrund?: SectionBackgroundKey | null;
 };
 
 const resolveLinkAttributes = (href: string) => {
@@ -34,27 +34,27 @@ const resolveLinkAttributes = (href: string) => {
   return { href };
 };
 
-export function CardGrid({ cards, background }: CardGridProps) {
-  if (cards.length === 0) {
+export function CardGrid({ karten, hintergrund }: CardGridProps) {
+  if (karten.length === 0) {
     return null;
   }
 
-  const horizontalAlignClasses: Record<Card["textAlign"], string> = {
+  const horizontalAlignClasses: Record<Karte["textAlign"], string> = {
     left: "items-start text-left",
     center: "items-center text-center",
     right: "items-end text-right"
   };
 
-  const verticalAlignClasses: Record<Card["verticalAlign"], string> = {
+  const verticalAlignClasses: Record<Karte["verticalAlign"], string> = {
     top: "justify-start",
     center: "justify-center",
     bottom: "justify-end"
   };
 
-  const resolvedBackground = resolveSectionBackground(background);
+  const resolvedBackground = resolveSectionBackground(hintergrund);
   const style = { backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` };
   const isDarkBackground = isDarkSectionBackground(resolvedBackground);
-  const headingHoverShift: Record<Card["verticalAlign"], string> = {
+  const headingHoverShift: Record<Karte["verticalAlign"], string> = {
     top: "md:group-hover:-translate-y-1",
     center: "md:group-hover:-translate-y-3",
     bottom: "md:group-hover:-translate-y-5"
@@ -68,7 +68,7 @@ export function CardGrid({ cards, background }: CardGridProps) {
         }`}
       >
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {cards.map((card) => {
+          {karten.map((card) => {
             const hasLink = card.link && card.link.trim().length > 0;
             const CardTag = hasLink ? "a" : "div";
             const cardProps = hasLink ? resolveLinkAttributes(card.link!.trim()) : {};
@@ -113,7 +113,7 @@ export function CardGrid({ cards, background }: CardGridProps) {
             ]
               .filter(Boolean)
               .join(" ");
-            const hasDetails = Boolean(card.intro) || hasLink;
+            const hasDetails = Boolean(card.einleitung) || hasLink;
 
             return (
               <CardTag
@@ -135,10 +135,10 @@ export function CardGrid({ cards, background }: CardGridProps) {
                   className={`relative flex min-h-[16rem] flex-col p-6 ${horizontalAlignClasses[card.textAlign]} ${verticalAlignClasses[card.verticalAlign]} ${textColorClass}`}
                   style={card.darkMode ? { textShadow: "0 2px 6px rgba(0, 0, 0, 0.45)" } : undefined}
                 >
-                  <h3 className={headlineClasses}>{card.headline}</h3>
+                  <h3 className={headlineClasses}>{card.überschrift}</h3>
                   {hasDetails ? (
                     <div className={detailContainerClasses}>
-                      {card.intro ? <p className={introClasses}>{card.intro}</p> : null}
+                      {card.einleitung ? <p className={introClasses}>{card.einleitung}</p> : null}
                       {hasLink ? <span className={ctaClasses}>Mehr erfahren →</span> : null}
                     </div>
                   ) : null}

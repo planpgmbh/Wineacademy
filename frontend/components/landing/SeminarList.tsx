@@ -14,17 +14,17 @@ import { useMemo, useState, type JSX } from "react";
 import { SeminarDateBadge } from "@/components/shared/SeminarDateBadge";
 
 type SeminarListProps = {
-  headline?: string | null;
-  headlineLevel: "h2" | "h3" | "h4";
-  intro?: string | null;
+  überschrift?: string | null;
+  überschriftStufe: "h2" | "h3" | "h4";
+  einleitung?: string | null;
   categorySlug: string;
-  ctaLabel: string;
-  loadMoreLabel: string;
-  showLoadMore: boolean;
+  buttonText: string;
+  mehrButtonText: string;
+  mehrButtonAnzeigen: boolean;
   initialItems: UpcomingSeminar[];
   initialError?: string | null;
-  limit: number;
-  background?: SectionBackgroundKey | null;
+  anzahl: number;
+  hintergrund?: SectionBackgroundKey | null;
 };
 
 const formatParagraphs = (text?: string | null): string[] => {
@@ -64,10 +64,10 @@ const formatToplineDate = (value?: string | Date | null): { day: string; month: 
 
 type SeminarListItemProps = {
   seminar: UpcomingSeminar;
-  ctaLabel: string;
+  buttonText: string;
 };
 
-function SeminarListItem({ seminar, ctaLabel }: SeminarListItemProps) {
+function SeminarListItem({ seminar, buttonText }: SeminarListItemProps) {
   const image = formatImageSrc(seminar);
   const seminarHref = `/seminare/${encodeURIComponent(seminar.slug)}`;
   const mobileToplineDate = useMemo(() => formatToplineDate(seminar.nextDateIso), [seminar.nextDateIso]);
@@ -111,7 +111,7 @@ function SeminarListItem({ seminar, ctaLabel }: SeminarListItemProps) {
           ) : null}
         </div>
         <Link className="btn btn-primary min-w-[160px] self-start" href={seminarHref}>
-          {ctaLabel}
+          {buttonText}
         </Link>
       </div>
     </article>
@@ -119,22 +119,22 @@ function SeminarListItem({ seminar, ctaLabel }: SeminarListItemProps) {
 }
 
 export function SeminarList({
-  headline,
-  headlineLevel,
-  intro,
+  überschrift,
+  überschriftStufe,
+  einleitung,
   categorySlug,
-  ctaLabel,
-  loadMoreLabel,
-  showLoadMore,
+  buttonText,
+  mehrButtonText,
+  mehrButtonAnzeigen,
   initialItems,
   initialError = null,
-  limit,
-  background
+  anzahl,
+  hintergrund
 }: SeminarListProps) {
-  const loadLimit = Math.max(1, limit);
+  const loadLimit = Math.max(1, anzahl);
   const [items, setItems] = useState<UpcomingSeminar[]>(() => initialItems);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(showLoadMore && initialItems.length >= loadLimit);
+  const [hasMore, setHasMore] = useState(mehrButtonAnzeigen && initialItems.length >= loadLimit);
   const [error, setError] = useState<string | null>(initialError);
 
   const handleLoadMore = async () => {
@@ -161,19 +161,19 @@ export function SeminarList({
     }
   };
 
-  const paragraphs = formatParagraphs(intro);
-  const trimmedHeadline = headline?.trim() ?? "";
+  const paragraphs = formatParagraphs(einleitung);
+  const trimmedHeadline = überschrift?.trim() ?? "";
   const showHeadline = trimmedHeadline.length > 0;
-  const resolvedBackground = resolveSectionBackground(background ?? null);
+  const resolvedBackground = resolveSectionBackground(hintergrund ?? null);
   const isDarkBackground = isDarkSectionBackground(resolvedBackground);
   const style = useMemo(
     () => ({ backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` }),
     [resolvedBackground]
   );
 
-  const HeadingTag = headlineLevel as keyof JSX.IntrinsicElements;
+  const HeadingTag = überschriftStufe as keyof JSX.IntrinsicElements;
   const headingClass = [
-    headlineLevel === "h2" ? "heading-section" : "",
+    überschriftStufe === "h2" ? "heading-section" : "",
     isDarkBackground ? "heading-on-dark" : ""
   ]
     .filter(Boolean)
@@ -208,7 +208,7 @@ export function SeminarList({
         ) : (
           <div className="flex flex-col gap-10 md:gap-14">
             {items.map((seminar) => (
-              <SeminarListItem key={`${seminar.id}-${seminar.nextDateTimestamp}`} seminar={seminar} ctaLabel={ctaLabel} />
+              <SeminarListItem key={`${seminar.id}-${seminar.nextDateTimestamp}`} seminar={seminar} buttonText={buttonText} />
             ))}
           </div>
         )}
@@ -223,7 +223,7 @@ export function SeminarList({
               onClick={handleLoadMore}
               disabled={isLoading}
             >
-              {isLoading ? "Lädt …" : loadMoreLabel}
+              {isLoading ? "Lädt …" : mehrButtonText}
             </button>
           </div>
         ) : null}

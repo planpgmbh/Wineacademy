@@ -10,8 +10,8 @@
   "aktiv": true,
   "bookingbox": {
     "topline": "Jetzt Anmelden",
-    "headline": "Sichere dir deinen Platz",
-    "body": "Champagner-Seminar in Hamburg: Lerne Herstellung, Terroir & Stilistik. Mit 12 Weinen, Blindverkostung & Zertifikat. Für Profis & Weinliebhaber."
+    "überschrift": "Sichere dir deinen Platz",
+    "beschreibung": "Champagner-Seminar in Hamburg: Lerne Herstellung, Terroir & Stilistik. Mit 12 Weinen, Blindverkostung & Zertifikat. Für Profis & Weinliebhaber."
   },
   "seminarinhalte": [
     {

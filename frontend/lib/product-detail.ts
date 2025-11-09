@@ -23,8 +23,8 @@ type StrapiProductDetail = {
   mwst?: boolean | null;
   gutschein?: boolean | null;
   bookingbox_topline?: string | null;
-  bookingbox_headline?: string | null;
-  bookingbox_body?: string | null;
+  bookingbox_überschrift?: string | null;
+  bookingbox_beschreibung?: string | null;
   hintergrundbild?: StrapiMedia | null;
   bild?: StrapiMedia | null;
   produktinhalte?: StrapiTab[] | null;
@@ -45,9 +45,9 @@ export type ProductHero = {
 
 export type ProductBookingBox = {
   highlightLabel?: string | null;
-  headline: string;
-  description: string;
-  ctaLabel: string;
+  überschrift: string;
+  beschreibung: string;
+  buttonText: string;
 };
 
 export type ProductDetail = {
@@ -197,10 +197,10 @@ function createFallbackProduct(slug: string): ProductDetail {
     mainImage: null,
     bookingBox: {
       highlightLabel: "Demoprodukt",
-      headline: "Derzeit nicht verfügbar",
-      description:
+      überschrift: "Derzeit nicht verfügbar",
+      beschreibung:
         "Dieses Produkt konnte nicht geladen werden. Der Platzhalter demonstriert das Layout der Produktdetailseite.",
-      ctaLabel: "Bald verfügbar"
+      buttonText: "Bald verfügbar"
     },
     tabs: [
       {
@@ -236,13 +236,13 @@ function normaliseProductPayload(payload: StrapiProductDetail): ProductDetail {
         : ["Für dieses Produkt liegen derzeit keine Kurztexte vor."];
 
   const bookingHeadline =
-    payload.bookingbox_headline && payload.bookingbox_headline.trim().length > 0
-      ? payload.bookingbox_headline.trim()
+    payload.bookingbox_überschrift && payload.bookingbox_überschrift.trim().length > 0
+      ? payload.bookingbox_überschrift.trim()
       : "Jetzt bestellen";
 
   const bookingDescription =
-    payload.bookingbox_body && payload.bookingbox_body.trim().length > 0
-      ? payload.bookingbox_body.trim()
+    payload.bookingbox_beschreibung && payload.bookingbox_beschreibung.trim().length > 0
+      ? payload.bookingbox_beschreibung.trim()
       : payload.kurzbeschreibung?.trim() ?? "Dieses Produkt kann direkt über den Shop bestellt werden.";
 
   const tabs = toTabs(payload.produktinhalte);
@@ -268,9 +268,9 @@ function normaliseProductPayload(payload: StrapiProductDetail): ProductDetail {
     mainImage: mainImageUrl ? { url: mainImageUrl, alt: mainImageAlt } : null,
     bookingBox: {
       highlightLabel: payload.bookingbox_topline?.trim() ?? null,
-      headline: bookingHeadline,
-      description: bookingDescription,
-      ctaLabel: "In den Warenkorb"
+      überschrift: bookingHeadline,
+      beschreibung: bookingDescription,
+      buttonText: "In den Warenkorb"
     },
     tabs,
     isVoucher: Boolean(payload.gutschein)

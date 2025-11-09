@@ -17,13 +17,13 @@ const ALL_LOCATIONS = "all";
 
 type SeminarFinderProps = {
   id?: string;
-  headline?: string | null;
-  headlineLevel: "h2" | "h3" | "h4";
+  überschrift?: string | null;
+  überschriftStufe: "h2" | "h3" | "h4";
   categories: SeminarFinderCategory[];
   locations: SeminarFinderLocation[];
   initialCategorySlug?: string | null;
   initialLocationId?: string | null;
-  background?: SectionBackgroundKey | null;
+  hintergrund?: SectionBackgroundKey | null;
   allowedCategorySlugs?: string[] | null;
 };
 
@@ -48,13 +48,13 @@ const headingClasses: Record<"h2" | "h3" | "h4", string> = {
 
 export function SeminarFinder({
   id,
-  headline,
-  headlineLevel,
+  überschrift,
+  überschriftStufe,
   categories,
   locations,
   initialCategorySlug,
   initialLocationId,
-  background,
+  hintergrund,
   allowedCategorySlugs
 }: SeminarFinderProps) {
   const allowedCategorySet = useMemo(() => {
@@ -155,17 +155,17 @@ export function SeminarFinder({
   const categoriesToDisplay =
     hasSeminars || selectedCategory === ALL_CATEGORIES ? categoriesWithSeminars : fallbackCategories;
 
-  const resolvedBackground = resolveSectionBackground(background ?? null);
+  const resolvedBackground = resolveSectionBackground(hintergrund ?? null);
   const isDarkBackground = isDarkSectionBackground(resolvedBackground);
   const style = useMemo(
     () => ({ backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` }),
     [resolvedBackground]
   );
 
-  const showHeadline = typeof headline === "string" && headline.trim().length > 0;
-  const HeadingTag = headingTags[headlineLevel];
+  const showHeadline = typeof überschrift === "string" && überschrift.trim().length > 0;
+  const HeadingTag = headingTags[überschriftStufe];
   const headingClass = [
-    headingClasses[headlineLevel],
+    headingClasses[überschriftStufe],
     isDarkBackground ? "heading-on-dark" : "",
     "!mb-4",
     "md:!mb-6"
@@ -180,7 +180,7 @@ export function SeminarFinder({
         <div className="space-y-10">
           {showHeadline ? (
             <div className="space-y-3">
-              <HeadingTag className={headingClass}>{headline}</HeadingTag>
+              <HeadingTag className={headingClass}>{überschrift}</HeadingTag>
             </div>
           ) : null}
 

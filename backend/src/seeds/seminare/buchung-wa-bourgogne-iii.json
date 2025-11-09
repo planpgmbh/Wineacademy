@@ -10,8 +10,8 @@
   "aktiv": true,
   "bookingbox": {
     "topline": "Jetzt Anmelden",
-    "headline": "Sichere dir deinen Platz",
-    "body": "Geheimtipps jenseits der Klassiker - In diesem Kurs erhaltet Ihr wertvolles Insider-Wissen, um die oft übersehenen, aber dennoch spannenden Appellationen der Bourgogne zu entdecken. Gemeinsam erkunden wir ihre Weine und die feinen Unterschiede in deren Stilistik."
+    "überschrift": "Sichere dir deinen Platz",
+    "beschreibung": "Geheimtipps jenseits der Klassiker - In diesem Kurs erhaltet Ihr wertvolles Insider-Wissen, um die oft übersehenen, aber dennoch spannenden Appellationen der Bourgogne zu entdecken. Gemeinsam erkunden wir ihre Weine und die feinen Unterschiede in deren Stilistik."
   },
   "seminarinhalte": [
     {

@@ -17,7 +17,7 @@ type VoucherBookingCardProps = {
   highlightLabel?: string | null;
   title: string;
   description: string;
-  ctaLabel: string;
+  buttonText: string;
   defaultAmount: number;
   minAmount?: number | null;
   maxAmount?: number | null;
@@ -49,7 +49,7 @@ export function VoucherBookingCard({
   highlightLabel,
   title,
   description,
-  ctaLabel,
+  buttonText,
   defaultAmount,
   minAmount,
   maxAmount,
@@ -158,7 +158,7 @@ export function VoucherBookingCard({
             onClick={handleSubmit}
             disabled={Boolean(validation)}
           >
-            {ctaLabel}
+            {buttonText}
           </button>
         </div>
         {validation ? <p className="text-xs text-error">{validation}</p> : null}

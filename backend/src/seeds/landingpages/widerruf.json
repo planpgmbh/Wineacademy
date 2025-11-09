@@ -4,16 +4,16 @@
   "abschnitte": [
     {
       "__component": "landing.hero-small",
-      "headline": "Widerrufsbelehrung",
-      "headlineLevel": "h1",
+      "überschrift": "Widerrufsbelehrung",
+      "überschriftStufe": "h1",
       "einleitung": "Informationen zu Widerrufsrecht, Fristen und Rückabwicklung für Verbraucherverträge.",
       "hintergrundbild": null
     },
     {
       "__component": "landing.text-block",
-      "headline": "Widerrufsbelehrung",
-      "headlineLevel": "h2",
-      "sectionBackground": "neutral",
+      "überschrift": "Widerrufsbelehrung",
+      "überschriftStufe": "h2",
+      "hintergrundfarbe": "neutral",
       "einleitung": "<h2>Widerrufsbelehrung für digitale Inhalte</h2>\n\n<p>Verbraucher ist jede natürliche Person, die ein Rechtsgeschäft zu Zwecken abschließt, die überwiegend weder ihrer gewerblichen noch ihrer selbständigen beruflichen Tätigkeit zugerechnet werden können.</p>\n\n<h3>Widerrufsrecht</h3>\n<p>Sie haben das Recht, binnen vierzehn Tagen ohne Angabe von Gründen diesen Vertrag zu widerrufen. Die Widerrufsfrist beträgt vierzehn Tage ab dem Tag des Vertragsschlusses.</p>\n<p>Um Ihr Widerrufsrecht auszuüben, müssen Sie uns (FN Wine Academy Hamburg GmbH, Eimsbütteler Chaussee 37, 20259 Hamburg, <a href=\"mailto:post@wineacademy.de\">post@wineacademy.de</a>) mittels einer eindeutigen Erklärung, z.&nbsp;B. per Brief oder E-Mail, über Ihren Entschluss informieren. Sie können dafür das beiliegende Muster-Widerrufsformular verwenden, das jedoch nicht vorgeschrieben ist.</p>\n<p>Zur Wahrung der Widerrufsfrist reicht es aus, dass Sie die Mitteilung über die Ausübung des Widerrufsrechts vor Ablauf der Widerrufsfrist absenden.</p>\n\n<h3>Folgen des Widerrufs</h3>\n<p>Wenn Sie diesen Vertrag widerrufen, erstatten wir Ihnen alle Zahlungen, die wir von Ihnen erhalten haben, einschließlich der Lieferkosten (mit Ausnahme zusätzlicher Kosten, die sich daraus ergeben, dass Sie eine andere Art der Lieferung als die von uns angebotene günstigste Standardlieferung gewählt haben). Die Rückzahlung erfolgt unverzüglich und spätestens binnen vierzehn Tagen ab dem Tag, an dem uns die Mitteilung über Ihren Widerruf zugeht.</p>\n<p>Für die Rückzahlung verwenden wir dasselbe Zahlungsmittel, das Sie bei der ursprünglichen Transaktion eingesetzt haben, es sei denn, mit Ihnen wurde ausdrücklich etwas anderes vereinbart. In keinem Fall berechnen wir Ihnen wegen dieser Rückzahlung Entgelte.</p>\n\n<h3>Muster-Widerrufsformular</h3>\n<p>Wenn Sie den Vertrag widerrufen möchten, füllen Sie bitte das folgende Formular aus und senden Sie es an uns zurück:</p>\n<ol>\n  <li>An: FN Wine Academy Hamburg GmbH, Eimsbütteler Chaussee 37, 20259 Hamburg, <a href=\"mailto:post@wineacademy.de\">post@wineacademy.de</a></li>\n  <li>Hiermit widerrufe(n) ich/wir (*) den von mir/uns (*) abgeschlossenen Vertrag über den Kauf der folgenden Waren (*)/die Erbringung der folgenden Dienstleistung (*)</li>\n  <li>Bestellt am (*)/erhalten am (*):</li>\n  <li>Name des/der Verbraucher(s):</li>\n  <li>Anschrift des/der Verbraucher(s):</li>\n  <li>Unterschrift des/der Verbraucher(s) (nur bei Mitteilung auf Papier)</li>\n  <li>Datum:</li>\n</ol>\n<p><em>(*) Unzutreffendes streichen.</em></p>\n\n<h3>Ausschluss bzw. vorzeitiges Erlöschen des Widerrufsrechts</h3>\n<p>Das Widerrufsrecht besteht nicht bei Verträgen zur Lieferung von digitalen Inhalten, die nicht vorgefertigt sind und für deren Herstellung eine individuelle Auswahl oder Bestimmung durch den Verbraucher maßgeblich ist oder die eindeutig auf die persönlichen Bedürfnisse des Verbrauchers zugeschnitten sind.</p>\n<p>Das Widerrufsrecht erlischt vorzeitig, wenn:</p>\n<ul>\n  <li>wir mit der Ausführung des Vertrages begonnen haben, nachdem Sie uns Ihre ausdrückliche Zustimmung erteilt und gleichzeitig bestätigt haben, dass Sie Ihr Widerrufsrecht mit Beginn der Vertragserfüllung verlieren, und</li>\n  <li>wir Ihnen den Inhalt Ihrer Erklärung innerhalb einer angemessenen Frist nach Vertragsschluss, spätestens jedoch bei Beginn der Ausführung, auf einem dauerhaften Datenträger zur Verfügung gestellt haben.</li>\n</ul>\n<p>Wir weisen darauf hin, dass der Vertragsschluss von der zuvor genannten Zustimmung und Bestätigung abhängig gemacht werden kann.</p>",
       "buttonLabel": null,
       "buttonLink": null

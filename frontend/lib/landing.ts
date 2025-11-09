@@ -44,6 +44,7 @@ const DARK_SECTION_BACKGROUNDS = new Set<SectionBackgroundKey>([
 
 const CARD_TEXT_ALIGNMENTS = new Set<"left" | "center" | "right">(["left", "center", "right"]);
 const CARD_VERTICAL_ALIGNMENTS = new Set<"top" | "center" | "bottom">(["top", "center", "bottom"]);
+const GALLERY_WIDTH_MODES = new Set<"full" | "content">(["full", "content"]);
 
 export function resolveSectionBackground(value?: SectionBackgroundKey | null): SectionBackgroundKey {
   if (value && SECTION_BACKGROUND_KEYS.has(value)) {
@@ -72,48 +73,62 @@ type StrapiCategorySummary = {
 
 type StrapiHeroComponent = {
   __component: "landing.hero";
-  headline: string;
-  headlineLevel?: "h1" | "h2" | "h3" | "h4" | null;
+  überschrift: string;
+  überschriftStufe?: "h1" | "h2" | "h3" | "h4" | null;
   einleitung?: string | null;
   videoUrl?: string | null;
   posterUrl?: string | null;
-  buttonLabel?: string | null;
+  buttonText?: string | null;
   buttonLink?: string | null;
 };
 
 type StrapiHeroCarouselComponent = {
   __component: "landing.hero-carousel";
-  headline: string;
-  headlineLevel?: "h1" | "h2" | "h3" | "h4" | null;
+  überschrift: string;
+  überschriftStufe?: "h1" | "h2" | "h3" | "h4" | null;
   einleitung?: string | null;
-  rotationDelaySeconds?: number | null;
+  rotationSekunden?: number | null;
   bilder?: StrapiUploadFile[] | null;
 };
 
 type StrapiHeroSmallComponent = {
   __component: "landing.hero-small";
-  headline: string;
-  headlineLevel?: "h1" | "h2" | "h3" | "h4" | null;
+  überschrift: string;
+  überschriftStufe?: "h1" | "h2" | "h3" | "h4" | null;
   einleitung?: string | null;
   hintergrundbild?: StrapiUploadFile | null;
 };
 
+type StrapiHeroBlankComponent = {
+  __component: "landing.hero-blank";
+  überschrift: string;
+  überschriftStufe?: "h1" | "h2" | "h3" | "h4" | null;
+  einleitung?: string | null;
+};
+
+type StrapiBildergalerieComponent = {
+  __component: "landing.bildergalerie";
+  rotationSekunden?: number | null;
+  breite?: "full" | "content" | null;
+  bilder?: StrapiUploadFile[] | null;
+};
+
 type StrapiSeminarListComponent = {
   __component: "landing.seminar-liste";
-  headline?: string | null;
-  headlineLevel?: "h2" | "h3" | "h4" | null;
+  überschrift?: string | null;
+  überschriftStufe?: "h2" | "h3" | "h4" | null;
   einleitung?: string | null;
-  sectionBackground?: string | null;
-  limit?: number | null;
-  ctaLabel?: string | null;
-  mehrButtonLabel?: string | null;
-  mehrButtonAktiv?: boolean | null;
+  hintergrundfarbe?: string | null;
+  anzahl?: number | null;
+  buttonText?: string | null;
+  mehrButtonText?: string | null;
+  mehrButtonAnzeigen?: boolean | null;
   seminarkategorie?: StrapiCategorySummary | null;
 };
 
 type StrapiCardComponent = {
   id?: number | null;
-  headline?: string | null;
+  überschrift?: string | null;
   einleitung?: string | null;
   link?: string | null;
   textAlignment?: "left" | "center" | "right" | null;
@@ -124,7 +139,7 @@ type StrapiCardComponent = {
 
 type StrapiCardGridComponent = {
   __component: "landing.card-grid";
-  sectionBackground?: string | null;
+  hintergrundfarbe?: string | null;
   karten?: StrapiCardComponent[] | null;
 };
 
@@ -136,56 +151,40 @@ type StrapiColumnComponent = {
 
 type StrapiColumnsComponent = {
   __component: "landing.columns";
-  sectionBackground?: string | null;
+  hintergrundfarbe?: string | null;
   spalten?: StrapiColumnComponent[] | null;
 };
 
 type StrapiTextBlockComponent = {
   __component: "landing.text-block";
-  sectionBackground?: string | null;
+  hintergrundfarbe?: string | null;
   einleitung?: string | null;
-  buttonLabel?: string | null;
+  buttonText?: string | null;
   buttonLink?: string | null;
   /** Legacy-Felder – werden zu HTML migriert */
   headline?: string | null;
   headlineLevel?: "h2" | "h3" | "h4" | null;
 };
 
-type StrapiIconItemComponent = {
-  id?: number | null;
-  icon?: string | null;
-  headline?: string | null;
-  einleitung?: string | null;
-};
-
-type StrapiIconGridComponent = {
-  __component: "landing.icon-grid";
-  headline?: string | null;
-  headlineLevel?: "h2" | "h3" | "h4" | null;
-  sectionBackground?: string | null;
-  einleitung?: string | null;
-  items?: StrapiIconItemComponent[] | null;
-};
-
 type StrapiTabItemComponent = {
   id?: number | string | null;
-  headline?: string | null;
+  überschrift?: string | null;
   inhalt?: string | null;
 };
 
 type StrapiTabsComponent = {
   __component: "landing.tabs";
-  headline?: string | null;
-  headlineLevel?: "h2" | "h3" | "h4" | null;
-  sectionBackground?: string | null;
-  tabs?: StrapiTabItemComponent[] | null;
+  überschrift?: string | null;
+  überschriftStufe?: "h2" | "h3" | "h4" | null;
+  hintergrundfarbe?: string | null;
+  reiter?: StrapiTabItemComponent[] | null;
 };
 
 type StrapiSeminarFinderComponent = {
   __component: "landing.seminar-finder";
-  headline?: string | null;
-  headlineLevel?: "h2" | "h3" | "h4" | null;
-  sectionBackground?: string | null;
+  überschrift?: string | null;
+  überschriftStufe?: "h2" | "h3" | "h4" | null;
+  hintergrundfarbe?: string | null;
   standardKategorie?: StrapiCategorySummary | null;
   sichtbareFilter?: StrapiCategorySummary[] | null;
 };
@@ -194,11 +193,12 @@ type StrapiLandingComponent =
   | StrapiHeroComponent
   | StrapiHeroCarouselComponent
   | StrapiHeroSmallComponent
+  | StrapiHeroBlankComponent
+  | StrapiBildergalerieComponent
   | StrapiSeminarListComponent
   | StrapiCardGridComponent
   | StrapiColumnsComponent
   | StrapiTextBlockComponent
-  | StrapiIconGridComponent
   | StrapiTabsComponent
   | StrapiSeminarFinderComponent
   | (Record<string, unknown> & { __component?: string });
@@ -316,13 +316,20 @@ const normaliseCardVerticalAlignment = (value: string | null | undefined): "top"
   return "center";
 };
 
+const normaliseGalleryWidthMode = (value: string | null | undefined): "full" | "content" => {
+  if (typeof value === "string" && GALLERY_WIDTH_MODES.has(value as "full" | "content")) {
+    return value as "full" | "content";
+  }
+  return "full";
+};
+
 export type LandingHeroCarouselSection = {
   type: "hero-carousel";
-  headline: string;
-  headlineLevel: "h1" | "h2" | "h3" | "h4";
-  intro?: string | null;
-  rotationIntervalMs: number;
-  slides: {
+  überschrift: string;
+  überschriftStufe: "h1" | "h2" | "h3" | "h4";
+  einleitung?: string | null;
+  rotationSekunden: number;
+  bilder: {
     src: string;
     alt: string;
   }[];
@@ -330,33 +337,50 @@ export type LandingHeroCarouselSection = {
 
 export type LandingHeroSmallSection = {
   type: "hero-small";
-  headline: string;
-  headlineLevel: "h1" | "h2" | "h3" | "h4";
-  intro?: string | null;
-  image?: {
+  überschrift: string;
+  überschriftStufe: "h1" | "h2" | "h3" | "h4";
+  einleitung?: string | null;
+  bild?: {
     src: string;
     alt: string;
   } | null;
 };
 
+export type LandingHeroBlankSection = {
+  type: "hero-blank";
+  überschrift: string;
+  überschriftStufe: "h1" | "h2" | "h3" | "h4";
+  einleitung?: string | null;
+};
+
+export type LandingBildergalerieSection = {
+  type: "bildergalerie";
+  rotationSekunden: number;
+  breite: "full" | "content";
+  bilder: {
+    src: string;
+    alt: string;
+  }[];
+};
+
 export type LandingHeroVideoSection = {
   type: "hero-video";
-  headline: string;
-  headlineLevel: "h1" | "h2" | "h3" | "h4";
-  intro?: string | null;
+  überschrift: string;
+  überschriftStufe: "h1" | "h2" | "h3" | "h4";
+  einleitung?: string | null;
   videoUrl?: string | null;
   posterUrl?: string | null;
-  buttonLabel?: string | null;
+  buttonText?: string | null;
   buttonLink?: string | null;
 };
 
 export type LandingCardGridSection = {
   type: "card-grid";
-  background: SectionBackgroundKey | null;
-  cards: {
+  hintergrund: SectionBackgroundKey | null;
+  karten: {
     id: number;
-    headline: string;
-    intro?: string | null;
+    überschrift: string;
+    einleitung?: string | null;
     link?: string | null;
     textAlign: "left" | "center" | "right";
     verticalAlign: "top" | "center" | "bottom";
@@ -370,11 +394,11 @@ export type LandingCardGridSection = {
 
 export type LandingColumnsSection = {
   type: "columns";
-  background: SectionBackgroundKey | null;
-  columns: {
+  hintergrund: SectionBackgroundKey | null;
+  spalten: {
     id: number;
     html?: string | null;
-    image?: {
+    bild?: {
       src: string;
       alt: string;
     } | null;
@@ -383,36 +407,22 @@ export type LandingColumnsSection = {
 
 export type LandingTextBlockSection = {
   type: "text-block";
-  background: SectionBackgroundKey | null;
+  hintergrund: SectionBackgroundKey | null;
   html?: string | null;
-  buttonLabel?: string | null;
+  buttonText?: string | null;
   buttonLink?: string | null;
-};
-
-export type LandingIconGridSection = {
-  type: "icon-grid";
-  headline?: string | null;
-  headlineLevel: "h2" | "h3" | "h4";
-  intro?: string | null;
-  background: SectionBackgroundKey | null;
-  items: {
-    id: number;
-    icon: string;
-    headline: string;
-    intro?: string | null;
-  }[];
 };
 
 export type LandingSeminarListSection = {
   type: "seminar-list";
-  headline?: string | null;
-  headlineLevel: "h2" | "h3" | "h4";
-  intro?: string | null;
-  background: SectionBackgroundKey | null;
-  limit: number;
-  showLoadMore: boolean;
-  ctaLabel: string;
-  loadMoreLabel: string;
+  überschrift?: string | null;
+  überschriftStufe: "h2" | "h3" | "h4";
+  einleitung?: string | null;
+  hintergrund: SectionBackgroundKey | null;
+  anzahl: number;
+  mehrButtonAnzeigen: boolean;
+  buttonText: string;
+  mehrButtonText: string;
   category: {
     id: number;
     name: string;
@@ -423,21 +433,21 @@ export type LandingSeminarListSection = {
 
 export type LandingTabsSection = {
   type: "tabs";
-  headline?: string | null;
-  headlineLevel: "h2" | "h3" | "h4";
-  background: SectionBackgroundKey | null;
-  tabs: {
+  überschrift?: string | null;
+  überschriftStufe: "h2" | "h3" | "h4";
+  hintergrund: SectionBackgroundKey | null;
+  reiter: {
     id: string;
-    headline: string;
+    überschrift: string;
     contentHtml: string;
   }[];
 };
 
 export type LandingSeminarFinderSection = {
   type: "seminar-finder";
-  headline?: string | null;
-  headlineLevel: "h2" | "h3" | "h4";
-  background: SectionBackgroundKey | null;
+  überschrift?: string | null;
+  überschriftStufe: "h2" | "h3" | "h4";
+  hintergrund: SectionBackgroundKey | null;
   initialCategorySlug?: string | null;
   allowedCategorySlugs: string[] | null;
 };
@@ -452,10 +462,11 @@ export type LandingSection =
   | LandingHeroVideoSection
   | LandingHeroCarouselSection
   | LandingHeroSmallSection
+  | LandingHeroBlankSection
+  | LandingBildergalerieSection
   | LandingCardGridSection
   | LandingColumnsSection
   | LandingTextBlockSection
-  | LandingIconGridSection
   | LandingSeminarListSection
   | LandingTabsSection
   | LandingSeminarFinderSection
@@ -468,10 +479,10 @@ export type LandingPage = {
 };
 
 const transformHeroCarousel = (component: StrapiHeroCarouselComponent): LandingHeroCarouselSection => {
-  const rotationSeconds = typeof component.rotationDelaySeconds === "number" ? component.rotationDelaySeconds : null;
-  const rotationIntervalMs = rotationSeconds && rotationSeconds > 0 ? rotationSeconds * 1000 : 8000;
+  const rotationSeconds = typeof component.rotationSekunden === "number" ? component.rotationSekunden : null;
+  const rotationSekunden = rotationSeconds && rotationSeconds > 0 ? rotationSeconds : 8;
 
-  const slides =
+  const bilder =
     component.bilder
       ?.map((file) => {
         if (!file?.url) {
@@ -490,22 +501,22 @@ const transformHeroCarousel = (component: StrapiHeroCarouselComponent): LandingH
 
   return {
     type: "hero-carousel",
-    headline: normaliseString(component.headline) || "Hero",
-    headlineLevel: normaliseHeroHeadingLevel(component.headlineLevel ?? null),
-    intro: normaliseRichText(component.einleitung ?? null),
-    rotationIntervalMs,
-    slides
+    überschrift: normaliseString(component.überschrift) || "Hero",
+    überschriftStufe: normaliseHeroHeadingLevel(component.überschriftStufe ?? null),
+    einleitung: normaliseRichText(component.einleitung ?? null),
+    rotationSekunden,
+    bilder
   };
 };
 
 const transformHeroSmall = (component: StrapiHeroSmallComponent): LandingHeroSmallSection => {
   const media = component.hintergrundbild ?? null;
-  let image: LandingHeroSmallSection["image"] = null;
+  let bild: LandingHeroSmallSection["bild"] = null;
 
   if (media?.url) {
     const src = mediaUrl(media.url);
     if (src) {
-      image = {
+      bild = {
         src,
         alt: toSlideAlt(media)
       };
@@ -514,22 +525,61 @@ const transformHeroSmall = (component: StrapiHeroSmallComponent): LandingHeroSma
 
   return {
     type: "hero-small",
-    headline: normaliseString(component.headline) || "Hero",
-    headlineLevel: normaliseHeroHeadingLevel(component.headlineLevel ?? null),
-    intro: normaliseRichText(component.einleitung ?? null),
-    image
+    überschrift: normaliseString(component.überschrift) || "Hero",
+    überschriftStufe: normaliseHeroHeadingLevel(component.überschriftStufe ?? null),
+    einleitung: normaliseRichText(component.einleitung ?? null),
+    bild
+  };
+};
+
+const transformHeroBlank = (component: StrapiHeroBlankComponent): LandingHeroBlankSection => {
+  return {
+    type: "hero-blank",
+    überschrift: normaliseString(component.überschrift) || "Hero",
+    überschriftStufe: normaliseHeroHeadingLevel(component.überschriftStufe ?? null),
+    einleitung: normaliseRichText(component.einleitung ?? null)
+  };
+};
+
+const transformBildergalerie = (component: StrapiBildergalerieComponent): LandingBildergalerieSection => {
+  const rotationSeconds = typeof component.rotationSekunden === "number" ? component.rotationSekunden : null;
+  const rotationSekunden = rotationSeconds && rotationSeconds > 0 ? rotationSeconds : 7;
+  const breite = normaliseGalleryWidthMode(component.breite ?? null);
+
+  const bilder =
+    component.bilder
+      ?.map((file) => {
+        if (!file?.url) {
+          return null;
+        }
+        const src = mediaUrl(file.url);
+        if (!src) {
+          return null;
+        }
+        return {
+          src,
+          alt: toSlideAlt(file)
+        };
+      })
+      .filter((slide): slide is { src: string; alt: string } => Boolean(slide)) ?? [];
+
+  return {
+    type: "bildergalerie",
+    rotationSekunden,
+    breite,
+    bilder
   };
 };
 
 const transformHeroVideo = (component: StrapiHeroComponent): LandingHeroVideoSection => {
   return {
     type: "hero-video",
-    headline: normaliseString(component.headline) || "Hero",
-    headlineLevel: normaliseHeroHeadingLevel(component.headlineLevel ?? null),
-    intro: normaliseRichText(component.einleitung ?? null),
+    überschrift: normaliseString(component.überschrift) || "Hero",
+    überschriftStufe: normaliseHeroHeadingLevel(component.überschriftStufe ?? null),
+    einleitung: normaliseRichText(component.einleitung ?? null),
     videoUrl: component.videoUrl ?? null,
     posterUrl: component.posterUrl ?? null,
-    buttonLabel: normaliseOptionalString(component.buttonLabel ?? null),
+    buttonText: normaliseOptionalString(component.buttonText ?? null),
     buttonLink: normaliseOptionalString(component.buttonLink ?? null)
   };
 };
@@ -537,7 +587,7 @@ const transformHeroVideo = (component: StrapiHeroComponent): LandingHeroVideoSec
 const transformSeminarList = (
   component: StrapiSeminarListComponent
 ): LandingSeminarListSection | LandingUnknownSection => {
-  const limit = typeof component.limit === "number" && component.limit > 0 ? component.limit : 6;
+  const anzahl = typeof component.anzahl === "number" && component.anzahl > 0 ? component.anzahl : 6;
   const category = component.seminarkategorie;
 
   if (!category || typeof category.id !== "number" || category.id <= 0) {
@@ -555,14 +605,14 @@ const transformSeminarList = (
 
   return {
     type: "seminar-list",
-    headline: normaliseOptionalString(component.headline ?? null),
-    headlineLevel: normaliseHeadingLevel(component.headlineLevel ?? null),
-    intro: normaliseRichText(component.einleitung ?? null),
-    background: normaliseBackgroundKey(component.sectionBackground ?? null),
-    limit,
-    showLoadMore: component.mehrButtonAktiv !== false,
-    ctaLabel: normaliseString(component.ctaLabel ?? null) || "Zum Seminar",
-    loadMoreLabel: normaliseString(component.mehrButtonLabel ?? null) || "Mehr laden",
+    überschrift: normaliseOptionalString(component.überschrift ?? null),
+    überschriftStufe: normaliseHeadingLevel(component.überschriftStufe ?? null),
+    einleitung: normaliseRichText(component.einleitung ?? null),
+    hintergrund: normaliseBackgroundKey(component.hintergrundfarbe ?? null),
+    anzahl,
+    mehrButtonAnzeigen: component.mehrButtonAnzeigen !== false,
+    buttonText: normaliseString(component.buttonText ?? null) || "Zum Seminar",
+    mehrButtonText: normaliseString(component.mehrButtonText ?? null) || "Mehr laden",
     category: {
       id: category.id,
       name: name.length > 0 ? name : "Kategorie",
@@ -576,8 +626,8 @@ const transformCardGrid = (component: StrapiCardGridComponent): LandingCardGridS
   const cards =
     component.karten
       ?.map((card, index) => {
-        const headline = normaliseString(card?.headline ?? null);
-        if (headline.length === 0) {
+        const überschrift = normaliseString(card?.überschrift ?? null);
+        if (überschrift.length === 0) {
           return null;
         }
 
@@ -595,8 +645,8 @@ const transformCardGrid = (component: StrapiCardGridComponent): LandingCardGridS
 
         return {
           id: typeof card?.id === "number" ? card.id : index,
-          headline,
-          intro: normaliseOptionalString(card?.einleitung ?? null),
+          überschrift,
+          einleitung: normaliseOptionalString(card?.einleitung ?? null),
           link: normaliseOptionalString(card?.link ?? null),
           textAlign: normaliseCardTextAlignment(card?.textAlignment ?? null),
           verticalAlign: normaliseCardVerticalAlignment(card?.verticalAlignment ?? null),
@@ -608,8 +658,8 @@ const transformCardGrid = (component: StrapiCardGridComponent): LandingCardGridS
 
   return {
     type: "card-grid",
-    background: normaliseBackgroundKey(component.sectionBackground ?? null),
-    cards
+    hintergrund: normaliseBackgroundKey(component.hintergrundfarbe ?? null),
+    karten: cards
   };
 };
 
@@ -619,39 +669,39 @@ const transformColumnsSection = (component: StrapiColumnsComponent): LandingColu
       ?.map((column, index) => {
         const html = normaliseRichText(column?.inhalt ?? null);
 
-        let image: { src: string; alt: string } | null = null;
+        let bild: { src: string; alt: string } | null = null;
         const media = column?.bild ?? null;
         if (media?.url) {
           const src = mediaUrl(media.url);
           if (src) {
-            image = {
+            bild = {
               src,
               alt: toSlideAlt(media)
             };
           }
         }
 
-        if (!html && !image) {
+        if (!html && !bild) {
           return null;
         }
 
         return {
           id: typeof column?.id === "number" ? column.id : index,
           html,
-          image
+          bild
         };
       })
       .filter((column): column is NonNullable<typeof column> => Boolean(column)) ?? [];
 
   return {
     type: "columns",
-    background: normaliseBackgroundKey(component.sectionBackground ?? null),
-    columns
+    hintergrund: normaliseBackgroundKey(component.hintergrundfarbe ?? null),
+    spalten: columns
   };
 };
 
 const transformTextBlock = (component: StrapiTextBlockComponent): LandingTextBlockSection => {
-  const background = normaliseBackgroundKey(component.sectionBackground ?? null);
+  const hintergrund = normaliseBackgroundKey(component.hintergrundfarbe ?? null);
   const richText = normaliseRichText(component.einleitung ?? null);
   const rawHeading = normaliseString(component.headline ?? null);
   const isPlaceholderHeading = rawHeading.toLowerCase() === "textblock" || rawHeading.length === 0;
@@ -669,53 +719,26 @@ const transformTextBlock = (component: StrapiTextBlockComponent): LandingTextBlo
 
   return {
     type: "text-block",
-    background,
+    hintergrund,
     html: htmlParts.length > 0 ? htmlParts.join("\n") : null,
-    buttonLabel: normaliseOptionalString(component.buttonLabel ?? null),
+    buttonText: normaliseOptionalString(component.buttonText ?? null),
     buttonLink: normaliseOptionalString(component.buttonLink ?? null)
   };
 };
 
-const transformIconGrid = (component: StrapiIconGridComponent): LandingIconGridSection => {
-  const items =
-    component.items
-      ?.map((item, index) => {
-        const headline = normaliseString(item?.headline ?? null);
-        if (headline.length === 0) {
-          return null;
-        }
-        return {
-          id: typeof item?.id === "number" ? item.id : index,
-          icon: normaliseString(item?.icon ?? null) || "sparkles",
-          headline,
-          intro: normaliseRichText(item?.einleitung ?? null)
-        };
-      })
-      .filter((item): item is NonNullable<typeof item> => Boolean(item)) ?? [];
-
-  return {
-    type: "icon-grid",
-    headline: normaliseOptionalString(component.headline ?? null),
-    headlineLevel: normaliseHeadingLevel(component.headlineLevel ?? null),
-    intro: normaliseRichText(component.einleitung ?? null),
-    background: normaliseBackgroundKey(component.sectionBackground ?? null),
-    items
-  };
-};
-
 const transformTabsSection = (component: StrapiTabsComponent): LandingTabsSection => {
-  const tabs =
-    component.tabs
+  const reiter =
+    component.reiter
       ?.map((tab, index) => {
-        const headline = normaliseString(tab?.headline ?? null);
+        const überschrift = normaliseString(tab?.überschrift ?? null);
         const contentHtml = normaliseRichText(tab?.inhalt ?? null);
-        if (headline.length === 0 || !contentHtml) {
+        if (überschrift.length === 0 || !contentHtml) {
           return null;
         }
         const id = typeof tab?.id === "number" || typeof tab?.id === "string" ? String(tab.id) : `tab-${index + 1}`;
         return {
           id,
-          headline,
+          überschrift,
           contentHtml
         };
       })
@@ -723,10 +746,10 @@ const transformTabsSection = (component: StrapiTabsComponent): LandingTabsSectio
 
   return {
     type: "tabs",
-    headline: normaliseOptionalString(component.headline ?? null),
-    headlineLevel: normaliseHeadingLevel(component.headlineLevel ?? null),
-    background: normaliseBackgroundKey(component.sectionBackground ?? null),
-    tabs
+    überschrift: normaliseOptionalString(component.überschrift ?? null),
+    überschriftStufe: normaliseHeadingLevel(component.überschriftStufe ?? null),
+    hintergrund: normaliseBackgroundKey(component.hintergrundfarbe ?? null),
+    reiter
   };
 };
 
@@ -741,9 +764,9 @@ const transformSeminarFinderSection = (
 
   return {
     type: "seminar-finder",
-    headline: normaliseOptionalString(component.headline ?? null),
-    headlineLevel: normaliseHeadingLevel(component.headlineLevel ?? null),
-    background: normaliseBackgroundKey(component.sectionBackground ?? null),
+    überschrift: normaliseOptionalString(component.überschrift ?? null),
+    überschriftStufe: normaliseHeadingLevel(component.überschriftStufe ?? null),
+    hintergrund: normaliseBackgroundKey(component.hintergrundfarbe ?? null),
     initialCategorySlug: categorySlug,
     allowedCategorySlugs: allowedCategorySlugs.length > 0 ? allowedCategorySlugs : null
   };
@@ -759,6 +782,12 @@ const transformSection = (component: StrapiLandingComponent): LandingSection => 
   if (component.__component === "landing.hero-small") {
     return transformHeroSmall(component as StrapiHeroSmallComponent);
   }
+  if (component.__component === "landing.hero-blank") {
+    return transformHeroBlank(component as StrapiHeroBlankComponent);
+  }
+  if (component.__component === "landing.bildergalerie") {
+    return transformBildergalerie(component as StrapiBildergalerieComponent);
+  }
   if (component.__component === "landing.seminar-liste") {
     return transformSeminarList(component as StrapiSeminarListComponent);
   }
@@ -770,9 +799,6 @@ const transformSection = (component: StrapiLandingComponent): LandingSection => 
   }
   if (component.__component === "landing.text-block") {
     return transformTextBlock(component as StrapiTextBlockComponent);
-  }
-  if (component.__component === "landing.icon-grid") {
-    return transformIconGrid(component as StrapiIconGridComponent);
   }
   if (component.__component === "landing.tabs") {
     return transformTabsSection(component as StrapiTabsComponent);

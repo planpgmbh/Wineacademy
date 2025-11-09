@@ -5,7 +5,7 @@
     "description": "Einfache Karte für Teaser-Abschnitte."
   },
   "attributes": {
-    "headline": {
+    "überschrift": {
       "type": "string",
       "required": true
     },

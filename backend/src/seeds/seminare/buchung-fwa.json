@@ -10,8 +10,8 @@
   "aktiv": true,
   "bookingbox": {
     "topline": "Jetzt Anmelden",
-    "headline": "Sichere dir deinen Platz",
-    "body": "Five Hungarian winemakers offer exclusive insights into their wineries and present their carefully selected wines at Wine Academy Hamburg."
+    "überschrift": "Sichere dir deinen Platz",
+    "beschreibung": "Five Hungarian winemakers offer exclusive insights into their wineries and present their carefully selected wines at Wine Academy Hamburg."
   },
   "seminarinhalte": [
     {

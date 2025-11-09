@@ -10,8 +10,8 @@
   "aktiv": true,
   "bookingbox": {
     "topline": "Jetzt Anmelden",
-    "headline": "Sichere dir deinen Platz",
-    "body": "Die Weinwelt entdecken: Etiketten, Herkunftsbezeichnung, Weinanbau und Weinkeller. Vertiefe Dein Wissen über Weinqualität und Verkostung. Werde zum Weinexperten"
+    "überschrift": "Sichere dir deinen Platz",
+    "beschreibung": "Die Weinwelt entdecken: Etiketten, Herkunftsbezeichnung, Weinanbau und Weinkeller. Vertiefe Dein Wissen über Weinqualität und Verkostung. Werde zum Weinexperten"
   },
   "seminarinhalte": [
     {

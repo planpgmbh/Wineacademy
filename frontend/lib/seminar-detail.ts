@@ -36,8 +36,8 @@ type StrapiSeminarDetail = {
   preis?: string | number | null;
   mwst?: boolean | null;
   bookingbox_topline?: string | null;
-  bookingbox_headline?: string | null;
-  bookingbox_body?: string | null;
+  bookingbox_überschrift?: string | null;
+  bookingbox_beschreibung?: string | null;
   hintergrundbild?: StrapiMedia | null;
   bild?: StrapiMedia | null;
   seminarinhalte?: StrapiTab[] | null;
@@ -69,9 +69,9 @@ export type SeminarDetail = {
   };
   bookingBox: {
     highlightLabel?: string | null;
-    headline: string;
-    description: string;
-    ctaLabel: string;
+    überschrift: string;
+    beschreibung: string;
+    buttonText: string;
   };
   tabs: SeminarContentTab[];
   dates: SeminarDateOption[];
@@ -266,12 +266,12 @@ function normaliseSeminarPayload(payload: StrapiSeminarDetail): SeminarDetail {
 
   const highlightLabel = payload.bookingbox_topline?.trim() ?? undefined;
   const bookingHeadline =
-    payload.bookingbox_headline?.trim() && payload.bookingbox_headline.trim().length > 0
-      ? payload.bookingbox_headline.trim()
+    payload.bookingbox_überschrift?.trim() && payload.bookingbox_überschrift.trim().length > 0
+      ? payload.bookingbox_überschrift.trim()
       : "Sichere dir deinen Platz";
   const bookingDescription =
-    payload.bookingbox_body?.trim() && payload.bookingbox_body.trim().length > 0
-      ? payload.bookingbox_body.trim()
+    payload.bookingbox_beschreibung?.trim() && payload.bookingbox_beschreibung.trim().length > 0
+      ? payload.bookingbox_beschreibung.trim()
       : payload.kurzbeschreibung?.trim() ?? "";
 
   const backgroundImageUrl = mediaUrl(payload.hintergrundbild?.url) ?? mediaUrl(payload.bild?.url);
@@ -290,9 +290,9 @@ function normaliseSeminarPayload(payload: StrapiSeminarDetail): SeminarDetail {
     },
     bookingBox: {
       highlightLabel,
-      headline: bookingHeadline,
-      description: bookingDescription,
-      ctaLabel: "Jetzt anmelden",
+      überschrift: bookingHeadline,
+      beschreibung: bookingDescription,
+      buttonText: "Jetzt anmelden",
     },
     tabs,
     dates,
@@ -341,10 +341,10 @@ function createFallbackSeminar(slug: string): SeminarDetail {
     },
     bookingBox: {
       highlightLabel: "Highlight Batch",
-      headline: "Sichere dir deinen Platz.",
-      description:
+      überschrift: "Sichere dir deinen Platz.",
+      beschreibung:
         "Hier steht die Kurzbeschreibung des Seminars mit allen wichtigen Eckdaten und Vorteilen. Du kannst das Datum auswählen und direkt deinen Platz sichern.",
-      ctaLabel: "Jetzt anmelden",
+      buttonText: "Jetzt anmelden",
     },
     tabs,
     dates: [

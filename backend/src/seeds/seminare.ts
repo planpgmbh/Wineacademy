@@ -19,8 +19,8 @@ type SeminarSeed = {
   aktiv?: boolean;
   bookingbox?: {
     topline?: string | null;
-    headline?: string | null;
-    body?: string | null;
+    überschrift?: string | null;
+    beschreibung?: string | null;
   } | null;
   seminarinhalte?: SeminarTab[] | null;
   seo?: Record<string, unknown> | null;
@@ -75,8 +75,8 @@ async function upsertSeminar(strapi: any, values: SeminarSeed, log: (msg: string
     values.bookingbox && Object.values(values.bookingbox).some((entry) => entry != null && entry !== '')
       ? {
           topline: values.bookingbox.topline ?? null,
-          headline: values.bookingbox.headline ?? null,
-          body: values.bookingbox.body ?? null,
+          überschrift: values.bookingbox.überschrift ?? null,
+          beschreibung: values.bookingbox.beschreibung ?? null,
         }
       : null;
 

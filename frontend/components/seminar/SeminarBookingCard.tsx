@@ -10,7 +10,7 @@ type SeminarBookingCardProps = {
   price: string;
   description: string;
   dates: { id: string; label: string }[];
-  ctaLabel: string;
+  buttonText: string;
   className?: string;
   seminarSlug?: string;
   onSubmit?: (payload: { quantity: number; dateId?: string }) => void;
@@ -22,7 +22,7 @@ export function SeminarBookingCard({
   price,
   description,
   dates,
-  ctaLabel,
+  buttonText,
   className = "",
   seminarSlug,
   onSubmit
@@ -181,7 +181,7 @@ export function SeminarBookingCard({
         </div>
 
         <button type="button" className="btn btn-primary w-full" onClick={handleSubmit}>
-          {ctaLabel}
+          {buttonText}
         </button>
       </div>
     </article>

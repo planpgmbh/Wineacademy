@@ -13,7 +13,7 @@ type ProductBookingMobileProps = {
   title: string;
   price: string;
   description: string;
-  ctaLabel: string;
+  buttonText: string;
   productSlug?: string;
   productTitle?: string;
   priceValue?: number | null;
@@ -29,7 +29,7 @@ export function ProductBookingMobile({
   title,
   price,
   description,
-  ctaLabel,
+  buttonText,
   productSlug,
   productTitle,
   priceValue,
@@ -170,7 +170,7 @@ export function ProductBookingMobile({
               }}
               onClick={handleButtonClick}
             >
-              {ctaLabel}
+              {buttonText}
             </button>
           </div>
         </div>

@@ -5,12 +5,12 @@ import { useMemo } from "react";
 import type { JSX } from "react";
 
 type HeroVideoProps = {
-  headline: string;
-  headlineLevel: "h1" | "h2" | "h3" | "h4";
-  intro?: string | null;
+  überschrift: string;
+  überschriftStufe: "h1" | "h2" | "h3" | "h4";
+  einleitung?: string | null;
   videoUrl?: string | null;
   posterUrl?: string | null;
-  buttonLabel?: string | null;
+  buttonText?: string | null;
   buttonLink?: string | null;
 };
 
@@ -44,11 +44,11 @@ const headingTags: Record<"h1" | "h2" | "h3" | "h4", keyof JSX.IntrinsicElements
   h4: "h4"
 };
 
-export function HeroVideo({ headline, headlineLevel, intro, videoUrl, posterUrl, buttonLabel, buttonLink }: HeroVideoProps) {
-  const paragraphs = useMemo(() => extractParagraphs(intro), [intro]);
-  const showButton = buttonLabel && buttonLabel.trim().length > 0 && buttonLink && buttonLink.trim().length > 0;
-  const HeadingTag = headingTags[headlineLevel];
-  const headingClass = headingStyles[headlineLevel];
+export function HeroVideo({ überschrift, überschriftStufe, einleitung, videoUrl, posterUrl, buttonText, buttonLink }: HeroVideoProps) {
+  const paragraphs = useMemo(() => extractParagraphs(einleitung), [einleitung]);
+  const showButton = buttonText && buttonText.trim().length > 0 && buttonLink && buttonLink.trim().length > 0;
+  const HeadingTag = headingTags[überschriftStufe];
+  const headingClass = headingStyles[überschriftStufe];
 
   return (
     <section className="relative isolate flex min-h-[620px] items-center justify-center overflow-hidden bg-base-200 mb-[calc(var(--section-padding-y)*1.5)] md:mb-[var(--section-padding-y-xl)]">
@@ -70,7 +70,7 @@ export function HeroVideo({ headline, headlineLevel, intro, videoUrl, posterUrl,
 
       <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center gap-6 px-6 py-24 text-center md:gap-8 md:py-32">
         <HeadingTag className={`heading-on-dark ${headingClass}`}>
-          {headline}
+          {überschrift}
         </HeadingTag>
         {paragraphs.length > 0 ? (
           <p className="max-w-2xl text-lg leading-relaxed text-base-100/90 md:text-xl">
@@ -87,7 +87,7 @@ export function HeroVideo({ headline, headlineLevel, intro, videoUrl, posterUrl,
             className="btn btn-primary btn-wide md:btn-lg"
             {...resolveLinkProps(buttonLink.trim())}
           >
-            {buttonLabel.trim()}
+            {buttonText.trim()}
           </Link>
         ) : null}
       </div>

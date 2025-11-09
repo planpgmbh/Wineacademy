@@ -27,11 +27,11 @@ export default async function SeminarDetailPage({ params }: SeminarDetailPagePro
 
   const bookingCardProps = {
     highlightLabel: seminar.bookingBox.highlightLabel ?? undefined,
-    title: seminar.bookingBox.headline,
+    title: seminar.bookingBox.überschrift,
     price: seminar.price,
-    description: seminar.bookingBox.description,
+    description: seminar.bookingBox.beschreibung,
     dates: seminar.dates,
-    ctaLabel: seminar.bookingBox.ctaLabel,
+    buttonText: seminar.bookingBox.buttonText,
     seminarSlug: seminar.slug
   } as const;
 

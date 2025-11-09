@@ -10,8 +10,8 @@
   "aktiv": true,
   "bookingbox": {
     "topline": "Jetzt Anmelden",
-    "headline": "Sichere dir deinen Platz",
-    "body": "Einstieg in die Weinsensorik: Weinaromen, Weinbeschreibung, strukturierte Verkostung und Weinquailtät. Perfekt für Weinliebhaber und angehende Profis!"
+    "überschrift": "Sichere dir deinen Platz",
+    "beschreibung": "Einstieg in die Weinsensorik: Weinaromen, Weinbeschreibung, strukturierte Verkostung und Weinquailtät. Perfekt für Weinliebhaber und angehende Profis!"
   },
   "seminarinhalte": [
     {

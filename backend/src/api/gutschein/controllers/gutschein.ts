@@ -21,7 +21,7 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
         bild: { fields: ['url', 'alternativeText'] },
         hintergrundbild: { fields: ['url', 'alternativeText'] },
         gutscheininhalte: true,
-        bookingbox: { fields: ['topline', 'headline', 'body'] },
+        bookingbox: { fields: ['topline', 'überschrift', 'beschreibung'] },
       },
       pagination: { limit: 1 },
     });
@@ -42,12 +42,14 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
         typeof bookingbox?.topline === 'string' && bookingbox.topline.trim().length > 0
           ? bookingbox.topline.trim()
           : null,
-      bookingbox_headline:
-        typeof bookingbox?.headline === 'string' && bookingbox.headline.trim().length > 0
-          ? bookingbox.headline.trim()
+      bookingbox_überschrift:
+        typeof bookingbox?.überschrift === 'string' && bookingbox.überschrift.trim().length > 0
+          ? bookingbox.überschrift.trim()
           : null,
-      bookingbox_body:
-        typeof bookingbox?.body === 'string' && bookingbox.body.trim().length > 0 ? bookingbox.body.trim() : null,
+      bookingbox_beschreibung:
+        typeof bookingbox?.beschreibung === 'string' && bookingbox.beschreibung.trim().length > 0
+          ? bookingbox.beschreibung.trim()
+          : null,
       gutscheininhalte,
       heroDarkMode: Boolean(template.heroDarkMode),
     };

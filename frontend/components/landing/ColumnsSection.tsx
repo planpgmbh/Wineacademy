@@ -9,18 +9,18 @@ import {
   type SectionBackgroundKey
 } from "@/lib/landing";
 
-type ColumnItem = {
+type SpaltenEintrag = {
   id: number;
   html?: string | null;
-  image?: {
+  bild?: {
     src: string;
     alt: string;
   } | null;
 };
 
 type ColumnsSectionProps = {
-  background?: SectionBackgroundKey | null;
-  columns: ColumnItem[];
+  hintergrund?: SectionBackgroundKey | null;
+  spalten: SpaltenEintrag[];
 };
 
 const normaliseLegacyListMarkup = (value: string): string => {
@@ -60,8 +60,8 @@ const normaliseLegacyListMarkup = (value: string): string => {
     });
 };
 
-export function ColumnsSection({ background, columns }: ColumnsSectionProps) {
-  const items = columns.filter((column) => column.html || column.image);
+export function ColumnsSection({ hintergrund, spalten }: ColumnsSectionProps) {
+  const items = spalten.filter((column) => column.html || column.bild);
   if (items.length === 0) {
     return null;
   }
@@ -74,7 +74,7 @@ export function ColumnsSection({ background, columns }: ColumnsSectionProps) {
         ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2"
         : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3";
 
-  const resolvedBackground = resolveSectionBackground(background ?? null);
+  const resolvedBackground = resolveSectionBackground(hintergrund ?? null);
   const style = { backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` };
   const isDarkBackground = isDarkSectionBackground(resolvedBackground);
 
@@ -96,12 +96,12 @@ export function ColumnsSection({ background, columns }: ColumnsSectionProps) {
                 key={column.id}
                 className={`flex h-full flex-col gap-4 rounded-3xl border p-6 shadow-sm ${cardTone}`}
               >
-                {column.image ? (
+                {column.bild ? (
                   <figure className="overflow-hidden rounded-2xl">
                     <div className="relative aspect-[4/3]">
                       <Image
-                        src={column.image.src}
-                        alt={column.image.alt}
+                        src={column.bild.src}
+                        alt={column.bild.alt}
                         fill
                         sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
                         className="object-cover"

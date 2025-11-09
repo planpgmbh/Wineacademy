@@ -4,16 +4,18 @@ import type { ReactNode } from "react";
 
 import { CardGrid } from "@/components/landing/CardGrid";
 import { ColumnsSection } from "@/components/landing/ColumnsSection";
+import { HeroBlank } from "@/components/landing/HeroBlank";
 import { HeroCarousel } from "@/components/landing/HeroCarousel";
+import { Bildergalerie } from "@/components/landing/Bildergalerie";
 import { HeroSmall } from "@/components/landing/HeroSmall";
 import { HeroVideo } from "@/components/landing/HeroVideo";
-import { IconGrid } from "@/components/landing/IconGrid";
 import { SeminarList } from "@/components/landing/SeminarList";
 import { TabsSection } from "@/components/landing/TabsSection";
 import { TextBlock } from "@/components/landing/TextBlock";
 import { SeminarFinder as LandingSeminarFinder } from "@/components/seminar/SeminarFinder";
 import {
   fetchLandingPage,
+  type LandingHeroBlankSection,
   type LandingHeroCarouselSection,
   type LandingHeroSmallSection,
   type LandingHeroVideoSection,
@@ -60,6 +62,15 @@ function findHeroSmall(sections: LandingSection[]): LandingHeroSmallSection | nu
   return null;
 }
 
+function findHeroBlank(sections: LandingSection[]): LandingHeroBlankSection | null {
+  for (const section of sections) {
+    if (section.type === "hero-blank") {
+      return section;
+    }
+  }
+  return null;
+}
+
 function findHeroVideo(sections: LandingSection[]): LandingHeroVideoSection | null {
   for (const section of sections) {
     if (section.type === "hero-video") {
@@ -77,13 +88,19 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return FALLBACK_METADATA;
   }
 
+  const heroBlank = findHeroBlank(landing.sections);
   const heroVideo = findHeroVideo(landing.sections);
   const heroCarousel = findHeroCarousel(landing.sections);
   const heroSmall = findHeroSmall(landing.sections);
 
   return {
     title: landing.title ?? slug,
-    description: heroVideo?.intro ?? heroCarousel?.intro ?? heroSmall?.intro ?? FALLBACK_METADATA.description
+    description:
+      heroBlank?.einleitung ??
+      heroVideo?.einleitung ??
+      heroCarousel?.einleitung ??
+      heroSmall?.einleitung ??
+      FALLBACK_METADATA.description
   };
 }
 
@@ -113,16 +130,28 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
   for (let index = 0; index < sections.length; index += 1) {
     const section = sections[index];
 
+    if (section.type === "hero-blank") {
+      content.push(
+        <HeroBlank
+          key={`hero-blank-${index}`}
+          überschrift={section.überschrift}
+          überschriftStufe={section.überschriftStufe}
+          einleitung={section.einleitung}
+        />
+      );
+      continue;
+    }
+
     if (section.type === "hero-video") {
       content.push(
         <HeroVideo
           key={`hero-video-${index}`}
-          headline={section.headline}
-          headlineLevel={section.headlineLevel}
-          intro={section.intro}
+          überschrift={section.überschrift}
+          überschriftStufe={section.überschriftStufe}
+          einleitung={section.einleitung}
           videoUrl={section.videoUrl}
           posterUrl={section.posterUrl}
-          buttonLabel={section.buttonLabel}
+          buttonText={section.buttonText}
           buttonLink={section.buttonLink}
         />
       );
@@ -133,11 +162,23 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
       content.push(
         <HeroCarousel
           key={`hero-carousel-${index}`}
-          headline={section.headline}
-          headlineLevel={section.headlineLevel}
-          intro={section.intro}
-          slides={section.slides}
-          rotationIntervalMs={section.rotationIntervalMs}
+          überschrift={section.überschrift}
+          überschriftStufe={section.überschriftStufe}
+          einleitung={section.einleitung}
+          bilder={section.bilder}
+          rotationSekunden={section.rotationSekunden}
+        />
+      );
+      continue;
+    }
+
+    if (section.type === "bildergalerie") {
+      content.push(
+        <Bildergalerie
+          key={`bildergalerie-${index}`}
+          bilder={section.bilder}
+          rotationSekunden={section.rotationSekunden}
+          breite={section.breite}
         />
       );
       continue;
@@ -147,10 +188,10 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
       content.push(
         <HeroSmall
           key={`hero-small-${index}`}
-          headline={section.headline}
-          headlineLevel={section.headlineLevel}
-          intro={section.intro}
-          image={section.image}
+          überschrift={section.überschrift}
+          überschriftStufe={section.überschriftStufe}
+          einleitung={section.einleitung}
+          bild={section.bild}
         />
       );
       continue;
@@ -158,14 +199,14 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
 
     if (section.type === "card-grid") {
       content.push(
-        <CardGrid key={`card-grid-${index}`} cards={section.cards} background={section.background} />
+        <CardGrid key={`card-grid-${index}`} karten={section.karten} hintergrund={section.hintergrund} />
       );
       continue;
     }
 
     if (section.type === "columns") {
       content.push(
-        <ColumnsSection key={`columns-${index}`} background={section.background} columns={section.columns} />
+        <ColumnsSection key={`columns-${index}`} hintergrund={section.hintergrund} spalten={section.spalten} />
       );
       continue;
     }
@@ -174,24 +215,10 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
       content.push(
         <TextBlock
           key={`text-block-${index}`}
-          background={section.background}
+          hintergrund={section.hintergrund}
           html={section.html}
-          buttonLabel={section.buttonLabel}
+          buttonText={section.buttonText}
           buttonLink={section.buttonLink}
-        />
-      );
-      continue;
-    }
-
-    if (section.type === "icon-grid") {
-      content.push(
-        <IconGrid
-          key={`icon-grid-${index}`}
-          headline={section.headline}
-          headlineLevel={section.headlineLevel}
-          intro={section.intro}
-          background={section.background}
-          items={section.items}
         />
       );
       continue;
@@ -219,7 +246,9 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
   }
 
   const hasHero =
+    sections.some((section) => section.type === "hero-blank") ||
     sections.some((section) => section.type === "hero-carousel") ||
+    sections.some((section) => section.type === "bildergalerie") ||
     sections.some((section) => section.type === "hero-video") ||
     sections.some((section) => section.type === "hero-small");
 
@@ -227,11 +256,11 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
     content.unshift(
       <HeroCarousel
         key="hero-fallback"
-        headline={landing.title ?? slug}
-        headlineLevel="h2"
-        intro={null}
-        slides={[]}
-        rotationIntervalMs={8000}
+        überschrift={landing.title ?? slug}
+        überschriftStufe="h2"
+        einleitung={null}
+        bilder={[]}
+        rotationSekunden={8}
       />
     );
   }
@@ -243,10 +272,10 @@ function renderTabsSection(section: LandingTabsSection, index: number) {
   return (
     <TabsSection
       key={`tabs-${index}`}
-      headline={section.headline}
-      headlineLevel={section.headlineLevel}
-      background={section.background}
-      tabs={section.tabs}
+      überschrift={section.überschrift}
+      überschriftStufe={section.überschriftStufe}
+      hintergrund={section.hintergrund}
+      reiter={section.reiter}
     />
   );
 }
@@ -258,7 +287,7 @@ async function renderSeminarList(section: LandingSeminarListSection, index: numb
   try {
     initialItems = await fetchUpcomingSeminars({
       categorySlug: section.category.slug,
-      limit: section.limit,
+      limit: section.anzahl,
       offset: 0
     });
   } catch (error) {
@@ -272,17 +301,17 @@ async function renderSeminarList(section: LandingSeminarListSection, index: numb
   return (
     <SeminarList
       key={`seminar-list-${section.category.slug}-${index}`}
-      headline={section.headline}
-      headlineLevel={section.headlineLevel}
-      intro={section.intro}
-      background={section.background}
+      überschrift={section.überschrift}
+      überschriftStufe={section.überschriftStufe}
+      einleitung={section.einleitung}
+      hintergrund={section.hintergrund}
       categorySlug={section.category.slug}
-      ctaLabel={section.ctaLabel}
-      loadMoreLabel={section.loadMoreLabel}
-      showLoadMore={section.showLoadMore}
+      buttonText={section.buttonText}
+      mehrButtonText={section.mehrButtonText}
+      mehrButtonAnzeigen={section.mehrButtonAnzeigen}
       initialItems={initialItems}
       initialError={initialError}
-      limit={section.limit}
+      anzahl={section.anzahl}
     />
   );
 }
@@ -299,9 +328,9 @@ function renderSeminarFinder(
   return (
     <LandingSeminarFinder
       key={`seminar-finder-${index}`}
-      headline={section.headline}
-      headlineLevel={section.headlineLevel}
-      background={section.background}
+      überschrift={section.überschrift}
+      überschriftStufe={section.überschriftStufe}
+      hintergrund={section.hintergrund}
       categories={data.categories}
       locations={data.locations}
       initialCategorySlug={section.initialCategorySlug}

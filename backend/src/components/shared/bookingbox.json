@@ -9,10 +9,10 @@
     "topline": {
       "type": "string"
     },
-    "headline": {
+    "überschrift": {
       "type": "string"
     },
-    "body": {
+    "beschreibung": {
       "type": "text"
     }
   }

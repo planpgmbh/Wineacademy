@@ -8,9 +8,9 @@ import {
 } from "@/lib/landing";
 
 type TextBlockProps = {
-  background?: SectionBackgroundKey | null;
+  hintergrund?: SectionBackgroundKey | null;
   html?: string | null;
-  buttonLabel?: string | null;
+  buttonText?: string | null;
   buttonLink?: string | null;
 };
 
@@ -59,9 +59,9 @@ const normaliseLegacyListMarkup = (value: string): string => {
     });
 };
 
-export function TextBlock({ background, html, buttonLabel, buttonLink }: TextBlockProps) {
-  const showButton = buttonLabel && buttonLabel.trim().length > 0 && buttonLink && buttonLink.trim().length > 0;
-  const resolvedBackground = resolveSectionBackground(background ?? null);
+export function TextBlock({ hintergrund, html, buttonText, buttonLink }: TextBlockProps) {
+  const showButton = buttonText && buttonText.trim().length > 0 && buttonLink && buttonLink.trim().length > 0;
+  const resolvedBackground = resolveSectionBackground(hintergrund ?? null);
   const style = { backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` };
   const isDarkBackground = isDarkSectionBackground(resolvedBackground);
   const normalisedHtml = typeof html === "string" ? normaliseLegacyListMarkup(html) : html;
@@ -86,7 +86,7 @@ export function TextBlock({ background, html, buttonLabel, buttonLink }: TextBlo
         {showButton ? (
           <div>
             <a className="btn btn-outline btn-primary" {...resolveLinkAttributes(buttonLink.trim())}>
-              {buttonLabel.trim()}
+              {buttonText.trim()}
             </a>
           </div>
         ) : null}

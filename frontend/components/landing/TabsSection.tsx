@@ -11,12 +11,12 @@ import {
 import { ContentTabs } from "@/components/common/ContentTabs";
 
 type TabsSectionProps = {
-  headline?: string | null;
-  headlineLevel: "h2" | "h3" | "h4";
-  background?: SectionBackgroundKey | null;
-  tabs: {
+  überschrift?: string | null;
+  überschriftStufe: "h2" | "h3" | "h4";
+  hintergrund?: SectionBackgroundKey | null;
+  reiter: {
     id: string;
-    headline: string;
+    überschrift: string;
     contentHtml: string;
   }[];
 };
@@ -33,25 +33,25 @@ const headingClasses: Record<"h2" | "h3" | "h4", string> = {
   h4: ""
 };
 
-export function TabsSection({ headline, headlineLevel, background, tabs }: TabsSectionProps) {
+export function TabsSection({ überschrift, überschriftStufe, hintergrund, reiter }: TabsSectionProps) {
   const validTabs = useMemo(
     () =>
-      tabs.filter((tab) => {
-        return tab.headline.trim().length > 0 && tab.contentHtml.trim().length > 0;
+      reiter.filter((tab) => {
+        return tab.überschrift.trim().length > 0 && tab.contentHtml.trim().length > 0;
       }),
-    [tabs]
+    [reiter]
   );
 
   const normalizedTabs = useMemo(
     () =>
       validTabs.map((tab) => ({
         id: tab.id,
-        label: tab.headline,
+        label: tab.überschrift,
         contentHtml: tab.contentHtml
       })),
     [validTabs]
   );
-  const resolvedBackground = resolveSectionBackground(background ?? null);
+  const resolvedBackground = resolveSectionBackground(hintergrund ?? null);
   const style = useMemo(
     () => ({ backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` }),
     [resolvedBackground]
@@ -62,9 +62,9 @@ export function TabsSection({ headline, headlineLevel, background, tabs }: TabsS
     return null;
   }
 
-  const showHeadline = typeof headline === "string" && headline.trim().length > 0;
-  const HeadingTag = headingTags[headlineLevel];
-  const headingClass = [headingClasses[headlineLevel], isDarkBackground ? "heading-on-dark" : ""]
+  const showHeadline = typeof überschrift === "string" && überschrift.trim().length > 0;
+  const HeadingTag = headingTags[überschriftStufe];
+  const headingClass = [headingClasses[überschriftStufe], isDarkBackground ? "heading-on-dark" : ""]
     .filter(Boolean)
     .join(" ")
     .trim();
@@ -79,7 +79,7 @@ export function TabsSection({ headline, headlineLevel, background, tabs }: TabsS
           isDarkBackground ? "text-base-100" : ""
         }`}
       >
-        {showHeadline ? <HeadingTag className={headingClass}>{headline}</HeadingTag> : null}
+        {showHeadline ? <HeadingTag className={headingClass}>{überschrift}</HeadingTag> : null}
 
         <ContentTabs
           tabs={normalizedTabs}

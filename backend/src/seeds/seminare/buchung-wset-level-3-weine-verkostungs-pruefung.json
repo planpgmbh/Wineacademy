@@ -10,8 +10,8 @@
   "aktiv": true,
   "bookingbox": {
     "topline": "Jetzt Anmelden",
-    "headline": "Sichere dir deinen Platz",
-    "body": "Wiederholungs-Prüfungstermin für WSET® Level 3 Weine: Tasting-Prüfung."
+    "überschrift": "Sichere dir deinen Platz",
+    "beschreibung": "Wiederholungs-Prüfungstermin für WSET® Level 3 Weine: Tasting-Prüfung."
   },
   "seminarinhalte": [
     {

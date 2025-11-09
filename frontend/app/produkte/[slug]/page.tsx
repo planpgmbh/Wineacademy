@@ -24,10 +24,10 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
   const bookingCardProps = {
     highlightLabel: product.bookingBox.highlightLabel ?? undefined,
-    title: product.bookingBox.headline,
+    title: product.bookingBox.überschrift,
     price: product.price,
-    description: product.bookingBox.description,
-    ctaLabel: product.bookingBox.ctaLabel,
+    description: product.bookingBox.beschreibung,
+    buttonText: product.bookingBox.buttonText,
     productSlug: product.slug,
     productTitle: product.title,
     priceValue: product.priceValue,

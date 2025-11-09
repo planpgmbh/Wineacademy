@@ -10,8 +10,8 @@
   "aktiv": true,
   "bookingbox": {
     "topline": "Jetzt Anmelden",
-    "headline": "Sichere dir deinen Platz",
-    "body": "Erlebe einen Tag voller Inspiration und Expertise in der faszinierenden Welt der Bourgogne-Weine."
+    "überschrift": "Sichere dir deinen Platz",
+    "beschreibung": "Erlebe einen Tag voller Inspiration und Expertise in der faszinierenden Welt der Bourgogne-Weine."
   },
   "seminarinhalte": [
     {

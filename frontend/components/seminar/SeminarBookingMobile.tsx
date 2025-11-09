@@ -16,7 +16,7 @@ type SeminarBookingMobileProps = {
   price: string;
   description: string;
   dates: { id: string; label: string }[];
-  ctaLabel: string;
+  buttonText: string;
   onSubmit?: (payload: { quantity: number; dateId?: string }) => void;
   seminarSlug?: string;
 };
@@ -27,7 +27,7 @@ export function SeminarBookingMobile({
   price,
   description,
   dates,
-  ctaLabel,
+  buttonText,
   onSubmit,
   seminarSlug
 }: SeminarBookingMobileProps) {
@@ -242,7 +242,7 @@ export function SeminarBookingMobile({
               }}
               onClick={handleButtonClick}
             >
-              {ctaLabel}
+              {buttonText}
             </button>
           </div>
         </div>

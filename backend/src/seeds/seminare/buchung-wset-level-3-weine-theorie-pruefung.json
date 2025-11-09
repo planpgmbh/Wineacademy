@@ -10,8 +10,8 @@
   "aktiv": true,
   "bookingbox": {
     "topline": "Jetzt Anmelden",
-    "headline": "Sichere dir deinen Platz",
-    "body": "Prüfungstermin für WSET® Level 3 Weine: Wiederholungsprüfung für den Theorieteil."
+    "überschrift": "Sichere dir deinen Platz",
+    "beschreibung": "Prüfungstermin für WSET® Level 3 Weine: Wiederholungsprüfung für den Theorieteil."
   },
   "seminarinhalte": [
     {

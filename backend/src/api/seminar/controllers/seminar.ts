@@ -195,7 +195,7 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
           select: ['id', 'name', 'slug'],
         },
         seo: true,
-        bookingbox: { select: ['topline', 'headline', 'body'] },
+        bookingbox: { select: ['topline', 'überschrift', 'beschreibung'] },
       },
       limit: 1,
     });
@@ -236,13 +236,13 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
         typeof bookingboxRaw?.topline === 'string' && bookingboxRaw.topline.trim().length > 0
           ? bookingboxRaw.topline.trim()
           : null,
-      bookingbox_headline:
-        typeof bookingboxRaw?.headline === 'string' && bookingboxRaw.headline.trim().length > 0
-          ? bookingboxRaw.headline.trim()
+      bookingbox_überschrift:
+        typeof bookingboxRaw?.überschrift === 'string' && bookingboxRaw.überschrift.trim().length > 0
+          ? bookingboxRaw.überschrift.trim()
           : null,
-      bookingbox_body:
-        typeof bookingboxRaw?.body === 'string' && bookingboxRaw.body.trim().length > 0
-          ? bookingboxRaw.body.trim()
+      bookingbox_beschreibung:
+        typeof bookingboxRaw?.beschreibung === 'string' && bookingboxRaw.beschreibung.trim().length > 0
+          ? bookingboxRaw.beschreibung.trim()
           : null,
     };
 

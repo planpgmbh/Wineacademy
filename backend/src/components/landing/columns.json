@@ -5,7 +5,7 @@
     "description": "Abschnitt mit bis zu drei individuell befüllbaren Spalten."
   },
   "attributes": {
-    "sectionBackground": {
+    "hintergrundfarbe": {
       "type": "enumeration",
       "enum": [
         "neutral",

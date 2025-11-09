@@ -10,8 +10,8 @@
   "aktiv": true,
   "bookingbox": {
     "topline": "Jetzt Anmelden",
-    "headline": "Sichere dir deinen Platz",
-    "body": "Lerne Weinfehler erkennen & verstehen: Masterclass mit 11 Weinen, Blindverkostung & Zertifikat. Für Sommeliers/Sommelières, WSET-Teilnehmer:innen & Weinprofis."
+    "überschrift": "Sichere dir deinen Platz",
+    "beschreibung": "Lerne Weinfehler erkennen & verstehen: Masterclass mit 11 Weinen, Blindverkostung & Zertifikat. Für Sommeliers/Sommelières, WSET-Teilnehmer:innen & Weinprofis."
   },
   "seminarinhalte": [
     {

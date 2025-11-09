@@ -17,7 +17,7 @@ type VoucherBookingMobileProps = {
   highlightLabel?: string | null;
   title: string;
   description: string;
-  ctaLabel: string;
+  buttonText: string;
   defaultAmount: number;
   minAmount?: number | null;
   maxAmount?: number | null;
@@ -48,7 +48,7 @@ export function VoucherBookingMobile({
   highlightLabel,
   title,
   description,
-  ctaLabel,
+  buttonText,
   defaultAmount,
   minAmount,
   maxAmount,
@@ -203,7 +203,7 @@ export function VoucherBookingMobile({
               }}
               disabled={Boolean(validation)}
             >
-              {ctaLabel}
+              {buttonText}
             </button>
           </div>
         </div>

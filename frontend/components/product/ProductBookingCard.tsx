@@ -12,7 +12,7 @@ type ProductBookingCardProps = {
   title: string;
   price: string;
   description: string;
-  ctaLabel: string;
+  buttonText: string;
   className?: string;
   productSlug?: string;
   productTitle?: string;
@@ -29,7 +29,7 @@ export function ProductBookingCard({
   title,
   price,
   description,
-  ctaLabel,
+  buttonText,
   className = "",
   productSlug,
   productTitle,
@@ -115,7 +115,7 @@ export function ProductBookingCard({
         </div>
 
         <button type="button" className="btn btn-primary w-full" onClick={handleSubmit}>
-          {ctaLabel}
+          {buttonText}
         </button>
       </div>
     </article>

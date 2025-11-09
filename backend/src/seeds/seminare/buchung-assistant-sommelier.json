@@ -10,8 +10,8 @@
   "aktiv": true,
   "bookingbox": {
     "topline": "Jetzt Anmelden",
-    "headline": "Sichere dir deinen Platz",
-    "body": "Erweitere Deine Weinexpertise und lerne professionellen Weinservice mit dem Lehrgang zum Assistant Sommelier inkl. WSET Level 2 in der Wine Academy Hamburg."
+    "überschrift": "Sichere dir deinen Platz",
+    "beschreibung": "Erweitere Deine Weinexpertise und lerne professionellen Weinservice mit dem Lehrgang zum Assistant Sommelier inkl. WSET Level 2 in der Wine Academy Hamburg."
   },
   "seminarinhalte": [
     {

@@ -11,14 +11,14 @@ export default async function VoucherDetailPage() {
 
   const bookingProps = {
     highlightLabel: voucher.bookingBox.highlightLabel ?? undefined,
-    title: voucher.bookingBox.headline,
-    description: voucher.bookingBox.description,
-    ctaLabel: voucher.bookingBox.ctaLabel,
+    title: voucher.bookingBox.überschrift,
+    description: voucher.bookingBox.beschreibung,
+    buttonText: voucher.bookingBox.buttonText,
     defaultAmount: voucher.bookingBox.defaultAmount,
     minAmount: voucher.bookingBox.minAmount ?? null,
     maxAmount: voucher.bookingBox.maxAmount ?? null,
     voucherTitle: voucher.title,
-    voucherDescription: voucher.hero.paragraphs[0] ?? voucher.bookingBox.description,
+    voucherDescription: voucher.hero.paragraphs[0] ?? voucher.bookingBox.beschreibung,
     imageUrl: voucher.mainImage?.url ?? null,
     imageAlt: voucher.mainImage?.alt ?? null,
     shippingCost: voucher.shippingCost ?? null

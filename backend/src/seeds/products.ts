@@ -2,8 +2,8 @@ import { nowIso, slugify } from './helpers';
 
 type BookingboxInput = {
   topline?: string;
-  headline?: string;
-  body?: string;
+  überschrift?: string;
+  beschreibung?: string;
 };
 
 type ProductSeed = {
