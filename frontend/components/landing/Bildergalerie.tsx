@@ -57,9 +57,13 @@ export function Bildergalerie({ bilder, rotationSekunden, breite = "full" }: Bil
     isContentWidth ? "px-6" : "flex min-h-[550px] items-center justify-center"
   ].join(" ");
 
+  const wrapperClasses = isContentWidth
+    ? "mx-auto min-h-[420px] w-full max-w-5xl overflow-hidden rounded-3xl"
+    : "h-full w-full min-h-[550px]";
+
   return (
     <section className={sectionClasses}>
-      <div className={isContentWidth ? "mx-auto min-h-[420px] w-full max-w-5xl overflow-hidden rounded-3xl" : "h-full w-full"}>
+      <div className={wrapperClasses}>
         <div className="relative isolate flex h-full w-full items-center justify-center">
           {validSlides.map((slide, index) => (
             <Image
