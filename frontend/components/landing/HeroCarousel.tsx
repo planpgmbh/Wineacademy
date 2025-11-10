@@ -100,7 +100,7 @@ export function HeroCarousel({ überschrift, überschriftStufe, einleitung, bild
         />
       ))}
 
-      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center gap-6 px-6 py-24 text-center md:py-32">
+      <div className="relative z-10 mx-auto flex w-full max-w-[var(--landing-content-max-width)] flex-col items-center gap-6 px-6 py-24 text-center md:py-32">
         <HeadingTag className={`heading-on-dark ${headingClass}`}>
           {überschrift}
         </HeadingTag>

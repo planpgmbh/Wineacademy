@@ -130,7 +130,7 @@ export function DetailPageHero({
   );
 
   const wrappedContent = useContainer ? (
-    <div className="mx-auto flex w-full max-w-6xl items-center">{content}</div>
+    <div className="mx-auto flex w-full max-w-[var(--detail-content-max-width)] items-center">{content}</div>
   ) : (
     <div className="flex w-full items-center">{content}</div>
   );

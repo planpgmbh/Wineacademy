@@ -38,7 +38,7 @@ export function HeroBlank({ überschrift, überschriftStufe, einleitung }: HeroB
 
   return (
     <section className="relative isolate bg-base-100 mb-[calc(var(--section-padding-y)*1.5)] md:mb-[var(--section-padding-y-xl)]">
-      <div className="mx-auto flex max-w-5xl flex-col items-center justify-center gap-0 px-6 pt-10 pb-6 text-center md:gap-0.5 md:pt-16 md:pb-10">
+      <div className="mx-auto flex max-w-[var(--landing-content-max-width)] flex-col items-center justify-center gap-0 px-6 pt-10 pb-6 text-center md:gap-0.5 md:pt-16 md:pb-10">
         <HeadingTag className={`leading-tight tracking-tight text-base-content ${headingClass} mb-5`}>
           {überschrift}
         </HeadingTag>

@@ -26,7 +26,7 @@ export default async function VoucherDetailPage() {
 
   const DesktopStickyCard = (
     <div className="pointer-events-none hidden md:block fixed inset-x-0 top-1/2 z-40 -translate-y-1/2">
-      <div className="mx-auto flex max-w-6xl justify-end px-6 md:px-8">
+      <div className="mx-auto flex max-w-[var(--detail-content-max-width)] justify-end px-6 md:px-8">
         <div className="pointer-events-auto">
           <VoucherBookingCard {...bookingProps} className="w-full" />
         </div>
@@ -51,7 +51,7 @@ export default async function VoucherDetailPage() {
 
       {voucher.tabs.length > 0 ? (
         <div className="relative">
-          <div className="mx-auto max-w-6xl px-6 md:px-8">
+          <div className="mx-auto max-w-[var(--detail-content-max-width)] px-6 md:px-8">
             <div className="mt-12 space-y-10 md:mt-16 md:pr-[420px]">
               <ProductContentTabs tabs={voucher.tabs} />
             </div>

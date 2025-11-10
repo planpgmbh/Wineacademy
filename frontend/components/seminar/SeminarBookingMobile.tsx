@@ -171,7 +171,7 @@ export function SeminarBookingMobile({
       >
         <div className="bg-base-100 shadow-[0_-12px_30px_rgb(15_23_42/0.18)]">
           <div
-            className="relative mx-auto max-w-6xl p-5"
+            className="relative mx-auto max-w-[var(--detail-content-max-width)] p-5"
             style={{
               paddingBottom: `calc(${safeAreaBottom} + 20px + 45px)`
             }}

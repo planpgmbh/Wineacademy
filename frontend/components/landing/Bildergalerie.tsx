@@ -59,7 +59,7 @@ export function Bildergalerie({ bilder, rotationSekunden, breite = "full" }: Bil
   ].join(" ");
 
   const wrapperClasses = [
-    isContentWidth ? "mx-auto w-full max-w-4xl overflow-hidden rounded-3xl" : "w-full",
+    isContentWidth ? "mx-auto w-full max-w-[var(--landing-content-max-width)] overflow-hidden rounded-3xl" : "w-full",
     "relative isolate flex items-center justify-center"
   ].join(" ");
 

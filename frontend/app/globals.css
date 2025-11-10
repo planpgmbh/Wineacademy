@@ -64,6 +64,8 @@
   --section-padding-y-xl: 3rem;
   --section-padding-y-tight: 1.125rem;
   --section-padding-y-compact: 0.9rem;
+  --landing-content-max-width: 55rem;
+  --detail-content-max-width: 70rem;
 }
 
 body {

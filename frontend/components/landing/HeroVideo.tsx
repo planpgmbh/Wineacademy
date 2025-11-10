@@ -68,7 +68,7 @@ export function HeroVideo({ überschrift, überschriftStufe, einleitung, videoUr
 
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-black/60 via-black/40 to-black/70" aria-hidden="true" />
 
-      <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center gap-6 px-6 py-24 text-center md:gap-8 md:py-32">
+      <div className="relative z-10 mx-auto flex w-full max-w-[var(--landing-content-max-width)] flex-col items-center gap-6 px-6 py-24 text-center md:gap-8 md:py-32">
         <HeadingTag className={`heading-on-dark ${headingClass}`}>
           {überschrift}
         </HeadingTag>

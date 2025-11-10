@@ -78,10 +78,13 @@ export function ColumnsSection({ hintergrund, spalten }: ColumnsSectionProps) {
   const style = { backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` };
   const isDarkBackground = isDarkSectionBackground(resolvedBackground);
 
+  const contentStyle = { maxWidth: "var(--landing-content-max-width)" };
+
   return (
     <section style={style}>
       <div
-        className={`mx-auto w-full max-w-6xl px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)]`}
+        className="mx-auto w-full px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)]"
+        style={contentStyle}
       >
         <div className={`grid gap-6 ${columnLayoutClass}`}>
           {items.map((column) => {

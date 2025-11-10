@@ -3083,7 +3083,7 @@ const renderPaymentStep = () => {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-4xl px-6 py-12 md:px-8">
+      <div className="mx-auto max-w-[var(--landing-content-max-width)] px-6 py-12 md:px-8">
         <div className="space-y-4">
           <div className="h-10 w-2/3 animate-pulse rounded-lg bg-base-300" />
           <div className="h-32 animate-pulse rounded-2xl bg-base-300" />
@@ -3113,7 +3113,7 @@ const renderPaymentStep = () => {
   const currentStepDescription = STEP_DESCRIPTIONS[activeStepId];
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-12 md:px-8">
+    <div className="mx-auto max-w-[var(--landing-content-max-width)] px-6 py-12 md:px-8">
       <h1>{currentStepLabel}</h1>
       {currentStepDescription ? (
         <p className="mt-4 text-lg leading-relaxed text-base-content/90 md:max-w-3xl">{currentStepDescription}</p>

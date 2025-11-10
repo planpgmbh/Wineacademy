@@ -185,7 +185,7 @@ export function SeminarList({
   return (
     <section style={style}>
       <div
-        className={`mx-auto flex w-full max-w-4xl flex-col gap-2 px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)] md:gap-4 ${
+        className={`mx-auto flex w-full max-w-[var(--landing-content-max-width)] flex-col gap-2 px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)] md:gap-4 ${
           isDarkBackground ? "text-base-100" : ""
         }`}
       >

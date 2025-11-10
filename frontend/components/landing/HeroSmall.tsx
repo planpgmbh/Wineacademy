@@ -44,7 +44,7 @@ export function HeroSmall({ überschrift, überschriftStufe, einleitung, bild }:
   return (
     <section className="relative isolate overflow-hidden mb-[calc(var(--section-padding-y)*1.5)] md:mb-[var(--section-padding-y-xl)]">
       <div className="min-h-[280px] px-6 py-16 sm:py-20">
-        <div className="relative z-10 mx-auto flex max-w-4xl flex-col gap-6 text-center text-base-100">
+        <div className="relative z-10 mx-auto flex max-w-[var(--landing-content-max-width)] flex-col gap-6 text-center text-base-100">
           <HeadingTag className={`heading-on-dark leading-tight tracking-tight ${headingClass}`}>
           {überschrift}
         </HeadingTag>
