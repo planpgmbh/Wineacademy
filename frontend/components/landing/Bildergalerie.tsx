@@ -55,18 +55,27 @@ export function Bildergalerie({ bilder, rotationSekunden, breite = "full" }: Bil
   const minHeight = isContentWidth ? 420 : 550;
   const sectionClasses = [
     "relative isolate mb-[calc(var(--section-padding-y)*1.5)] overflow-hidden md:mb-[var(--section-padding-y-xl)]",
-    isContentWidth ? "px-6" : "flex items-center justify-center"
-  ].join(" ");
+    isContentWidth ? "" : "flex items-center justify-center"
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   const wrapperClasses = [
-    isContentWidth ? "mx-auto w-full max-w-[var(--landing-content-max-width)] overflow-hidden rounded-3xl" : "w-full",
+    isContentWidth ? "mx-auto w-full max-w-[var(--landing-content-max-width)] px-6 md:px-8" : "w-full",
     "relative isolate flex items-center justify-center"
   ].join(" ");
 
+  const innerClasses = [
+    "relative isolate flex h-full w-full items-center justify-center",
+    isContentWidth ? "overflow-hidden rounded-3xl" : ""
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <section className={sectionClasses}>
-      <div className={wrapperClasses} style={{ height: `${minHeight}px`, minHeight: `${minHeight}px` }}>
-        <div className="relative isolate flex h-full w-full items-center justify-center">
+      <div className={wrapperClasses}>
+        <div className={innerClasses} style={{ height: `${minHeight}px`, minHeight: `${minHeight}px` }}>
           {validSlides.map((slide, index) => (
             <Image
               key={`${slide.src}-${index}`}
