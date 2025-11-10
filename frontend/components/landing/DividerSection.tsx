@@ -22,7 +22,7 @@ export function DividerSection({ hintergrund }: DividerSectionProps) {
   return (
     <section style={style}>
       <div
-        className="mx-auto flex w-full items-center px-6 py-10 md:px-8 md:py-14"
+        className="mx-auto flex w-full items-center px-6 py-3 md:px-8 md:py-5"
         style={contentStyle}
         aria-hidden="true"
       >

@@ -174,12 +174,13 @@ export function SeminarList({
   const HeadingTag = überschriftStufe as keyof JSX.IntrinsicElements;
   const headingClass = [
     überschriftStufe === "h2" ? "heading-section" : "",
-    isDarkBackground ? "heading-on-dark" : ""
+    isDarkBackground ? "heading-on-dark" : "",
+    "text-center"
   ]
     .filter(Boolean)
     .join(" ")
     .trim();
-  const introTextClass = isDarkBackground ? "text-base-100/85" : "text-base-content/75";
+  const introTextClass = `${isDarkBackground ? "text-base-100/85" : "text-base-content/75"} text-center mx-auto`;
   const emptyStateClass = isDarkBackground ? "text-base-100/80" : "text-base-content/70";
 
   return (

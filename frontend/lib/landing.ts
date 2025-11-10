@@ -265,12 +265,27 @@ const normaliseSlug = (value: string | null | undefined, fallback: string, id: n
   return `item-${id}`;
 };
 
+const RICH_TEXT_IMAGE_SRC_REGEX = /(<img\b[^>]*?\bsrc\s*=\s*)(["'])([^"']+)\2/gi;
+
+const rewriteRichTextMediaSources = (value: string): string => {
+  return value.replace(RICH_TEXT_IMAGE_SRC_REGEX, (match, prefix, quote, src) => {
+    const resolved = mediaUrl(src);
+    if (!resolved || resolved === src) {
+      return match;
+    }
+    return `${prefix}${quote}${resolved}${quote}`;
+  });
+};
+
 const normaliseRichText = (value: string | null | undefined): string | null => {
   if (typeof value !== "string") {
     return null;
   }
   const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
+  if (trimmed.length === 0) {
+    return null;
+  }
+  return rewriteRichTextMediaSources(trimmed);
 };
 
 const escapeHtml = (value: string): string =>
