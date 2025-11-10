@@ -310,6 +310,11 @@ body {
     margin-bottom: 1.1rem;
   }
 
+  .prose > :first-child:is(h2, h3, h4),
+  .prose > :first-child :where(h2, h3, h4) {
+    margin-top: 0;
+  }
+
   .prose :where(p) {
     margin-bottom: 1.1rem;
   }
@@ -471,6 +476,12 @@ body {
     max-width: 100%;
     height: auto;
     margin: 1.25rem 0;
+  }
+
+  .prose > :first-child:where(img[data-width]),
+  .prose > :first-child :where(img[data-width]),
+  .prose > :first-child :where(figure img[data-width]) {
+    margin-top: 0;
   }
 
   .prose :where(img[data-width='33']),
