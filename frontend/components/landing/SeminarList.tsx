@@ -74,7 +74,7 @@ function SeminarListItem({ seminar, buttonText }: SeminarListItemProps) {
 
   return (
     <article className="group grid gap-4 md:grid-cols-[280px_var(--width-seminar-date)_minmax(0,1fr)] md:items-start md:gap-6">
-      <div className="relative col-span-full aspect-[4/3] w-full overflow-hidden bg-base-200 md:col-span-1 md:row-span-full md:h-[170px] md:w-[280px]">
+      <div className="relative col-span-full h-[180px] w-full overflow-hidden bg-base-200 md:col-span-1 md:row-span-full md:h-[170px] md:w-[280px]">
         {image.src ? (
           <Image
             src={image.src}

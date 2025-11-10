@@ -177,15 +177,15 @@ export function SeminarFinder({
   return (
     <section id={id ?? undefined} style={style}>
       <div className="mx-auto max-w-6xl px-6 py-[var(--section-padding-y)] md:px-8 md:py-[var(--section-padding-y-lg)]">
-        <div className="space-y-10">
+        <div className="space-y-0 md:space-y-10">
           {showHeadline ? (
             <div className="space-y-3">
               <HeadingTag className={headingClass}>{überschrift}</HeadingTag>
             </div>
           ) : null}
 
-          <div className="space-y-2 md:space-y-0">
-            <div className="md:hidden">
+          <div className="space-y-5 md:space-y-0">
+            <div className="md:hidden space-y-2">
               <select
                 className="select select-bordered select-sm w-full border-base-300 bg-base-100 text-base-content shadow-sm shadow-base-300/40"
                 value={selectedCategory}
