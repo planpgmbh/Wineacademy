@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { CardGrid } from "@/components/landing/CardGrid";
 import { ColumnsSection } from "@/components/landing/ColumnsSection";
+import { DividerSection } from "@/components/landing/DividerSection";
 import { HeroBlank } from "@/components/landing/HeroBlank";
 import { HeroCarousel } from "@/components/landing/HeroCarousel";
 import { Bildergalerie } from "@/components/landing/Bildergalerie";
@@ -206,8 +207,18 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
 
     if (section.type === "columns") {
       content.push(
-        <ColumnsSection key={`columns-${index}`} hintergrund={section.hintergrund} spalten={section.spalten} />
+        <ColumnsSection
+          key={`columns-${index}`}
+          hintergrund={section.hintergrund}
+          darstellung={section.darstellung}
+          spalten={section.spalten}
+        />
       );
+      continue;
+    }
+
+    if (section.type === "divider") {
+      content.push(<DividerSection key={`divider-${index}`} hintergrund={section.hintergrund} />);
       continue;
     }
 

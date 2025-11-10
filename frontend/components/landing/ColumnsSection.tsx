@@ -20,6 +20,7 @@ type SpaltenEintrag = {
 
 type ColumnsSectionProps = {
   hintergrund?: SectionBackgroundKey | null;
+  darstellung?: "box" | "plain" | null;
   spalten: SpaltenEintrag[];
 };
 
@@ -60,7 +61,7 @@ const normaliseLegacyListMarkup = (value: string): string => {
     });
 };
 
-export function ColumnsSection({ hintergrund, spalten }: ColumnsSectionProps) {
+export function ColumnsSection({ hintergrund, darstellung, spalten }: ColumnsSectionProps) {
   const items = spalten.filter((column) => column.html || column.bild);
   if (items.length === 0) {
     return null;
@@ -74,11 +75,17 @@ export function ColumnsSection({ hintergrund, spalten }: ColumnsSectionProps) {
         ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2"
         : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3";
 
+  const variant = darstellung === "plain" ? "plain" : "box";
   const resolvedBackground = resolveSectionBackground(hintergrund ?? null);
   const style = { backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` };
   const isDarkBackground = isDarkSectionBackground(resolvedBackground);
 
   const contentStyle = { maxWidth: "var(--landing-content-max-width)" };
+  const dividerTone = isDarkBackground ? "divide-white/25" : "divide-neutral-200";
+  const gridClass =
+    variant === "plain"
+      ? `grid ${columnLayoutClass} divide-y md:divide-y-0 md:divide-x ${dividerTone}`
+      : `grid gap-6 ${columnLayoutClass}`;
 
   return (
     <section style={style}>
@@ -86,18 +93,24 @@ export function ColumnsSection({ hintergrund, spalten }: ColumnsSectionProps) {
         className="mx-auto w-full px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)]"
         style={contentStyle}
       >
-        <div className={`grid gap-6 ${columnLayoutClass}`}>
+        <div className={gridClass}>
           {items.map((column) => {
             const cardTone = isDarkBackground
               ? "border-neutral-700 bg-neutral-900 text-base-100"
               : "border-base-200 bg-base-100 text-base-content";
+            const plainTone = isDarkBackground ? "text-base-100" : "text-base-content";
             const normalisedHtml =
               typeof column.html === "string" ? normaliseLegacyListMarkup(column.html) : column.html;
+            const baseArticleClass = "flex h-full flex-col gap-4";
+            const articleClass =
+              variant === "plain"
+                ? `${baseArticleClass} ${plainTone} py-6 md:py-8 md:px-8`
+                : `${baseArticleClass} rounded-3xl border p-6 shadow-sm ${cardTone}`;
 
             return (
               <article
                 key={column.id}
-                className={`flex h-full flex-col gap-4 rounded-3xl border p-6 shadow-sm ${cardTone}`}
+                className={articleClass}
               >
                 {column.bild ? (
                   <figure className="overflow-hidden rounded-2xl">

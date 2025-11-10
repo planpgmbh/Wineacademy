@@ -1,0 +1,24 @@
+{
+  "collectionName": "components_landing_trennlinien",
+  "info": {
+    "displayName": "Trennlinie",
+    "description": "Horizontale Linie mit Logo zur optischen Trennung zwischen Abschnitten."
+  },
+  "attributes": {
+    "hintergrundfarbe": {
+      "type": "enumeration",
+      "enum": [
+        "neutral",
+        "black",
+        "wine-blue",
+        "wine-blue-light",
+        "wine-blue-lighter",
+        "wine-blue-lightest",
+        "wine-blue-dark",
+        "wine-blue-darker",
+        "wine-blue-darkest"
+      ],
+      "default": "neutral"
+    }
+  }
+}

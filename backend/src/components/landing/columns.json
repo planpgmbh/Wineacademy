@@ -5,6 +5,11 @@
     "description": "Abschnitt mit bis zu drei individuell befüllbaren Spalten."
   },
   "attributes": {
+    "darstellung": {
+      "type": "enumeration",
+      "enum": ["box", "plain"],
+      "default": "box"
+    },
     "hintergrundfarbe": {
       "type": "enumeration",
       "enum": [

@@ -11,6 +11,8 @@ export type SectionBackgroundKey =
   | "wine-blue-darker"
   | "wine-blue-darkest";
 
+type ColumnDisplayMode = "box" | "plain";
+
 const SECTION_BACKGROUND_KEYS = new Set<SectionBackgroundKey>([
   "neutral",
   "black",
@@ -45,6 +47,7 @@ const DARK_SECTION_BACKGROUNDS = new Set<SectionBackgroundKey>([
 const CARD_TEXT_ALIGNMENTS = new Set<"left" | "center" | "right">(["left", "center", "right"]);
 const CARD_VERTICAL_ALIGNMENTS = new Set<"top" | "center" | "bottom">(["top", "center", "bottom"]);
 const GALLERY_WIDTH_MODES = new Set<"full" | "content">(["full", "content"]);
+const COLUMN_DISPLAY_MODES = new Set<ColumnDisplayMode>(["box", "plain"]);
 
 export function resolveSectionBackground(value?: SectionBackgroundKey | null): SectionBackgroundKey {
   if (value && SECTION_BACKGROUND_KEYS.has(value)) {
@@ -152,7 +155,13 @@ type StrapiColumnComponent = {
 type StrapiColumnsComponent = {
   __component: "landing.columns";
   hintergrundfarbe?: string | null;
+  darstellung?: ColumnDisplayMode | null;
   spalten?: StrapiColumnComponent[] | null;
+};
+
+type StrapiTrennlinieComponent = {
+  __component: "landing.trennlinie";
+  hintergrundfarbe?: string | null;
 };
 
 type StrapiTextBlockComponent = {
@@ -198,6 +207,7 @@ type StrapiLandingComponent =
   | StrapiSeminarListComponent
   | StrapiCardGridComponent
   | StrapiColumnsComponent
+  | StrapiTrennlinieComponent
   | StrapiTextBlockComponent
   | StrapiTabsComponent
   | StrapiSeminarFinderComponent
@@ -302,6 +312,13 @@ const normaliseBackgroundKey = (value: string | null | undefined): SectionBackgr
   return null;
 };
 
+const normaliseColumnDisplayMode = (value: string | null | undefined): ColumnDisplayMode => {
+  if (typeof value === "string" && COLUMN_DISPLAY_MODES.has(value as ColumnDisplayMode)) {
+    return value as ColumnDisplayMode;
+  }
+  return "box";
+};
+
 const normaliseCardTextAlignment = (value: string | null | undefined): "left" | "center" | "right" => {
   if (typeof value === "string" && CARD_TEXT_ALIGNMENTS.has(value as "left" | "center" | "right")) {
     return value as "left" | "center" | "right";
@@ -395,6 +412,7 @@ export type LandingCardGridSection = {
 export type LandingColumnsSection = {
   type: "columns";
   hintergrund: SectionBackgroundKey | null;
+  darstellung: ColumnDisplayMode;
   spalten: {
     id: number;
     html?: string | null;
@@ -403,6 +421,11 @@ export type LandingColumnsSection = {
       alt: string;
     } | null;
   }[];
+};
+
+export type LandingDividerSection = {
+  type: "divider";
+  hintergrund: SectionBackgroundKey | null;
 };
 
 export type LandingTextBlockSection = {
@@ -466,6 +489,7 @@ export type LandingSection =
   | LandingBildergalerieSection
   | LandingCardGridSection
   | LandingColumnsSection
+  | LandingDividerSection
   | LandingTextBlockSection
   | LandingSeminarListSection
   | LandingTabsSection
@@ -696,7 +720,15 @@ const transformColumnsSection = (component: StrapiColumnsComponent): LandingColu
   return {
     type: "columns",
     hintergrund: normaliseBackgroundKey(component.hintergrundfarbe ?? null),
+    darstellung: normaliseColumnDisplayMode(component.darstellung ?? null),
     spalten: columns
+  };
+};
+
+const transformDividerSection = (component: StrapiTrennlinieComponent): LandingDividerSection => {
+  return {
+    type: "divider",
+    hintergrund: normaliseBackgroundKey(component.hintergrundfarbe ?? null)
   };
 };
 
@@ -796,6 +828,9 @@ const transformSection = (component: StrapiLandingComponent): LandingSection => 
   }
   if (component.__component === "landing.columns") {
     return transformColumnsSection(component as StrapiColumnsComponent);
+  }
+  if (component.__component === "landing.trennlinie") {
+    return transformDividerSection(component as StrapiTrennlinieComponent);
   }
   if (component.__component === "landing.text-block") {
     return transformTextBlock(component as StrapiTextBlockComponent);

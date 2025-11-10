@@ -217,6 +217,8 @@ export interface LandingColumns extends Struct.ComponentSchema {
     displayName: 'Spalten';
   };
   attributes: {
+    darstellung: Schema.Attribute.Enumeration<['box', 'plain']> &
+      Schema.Attribute.DefaultTo<'box'>;
     hintergrundfarbe: Schema.Attribute.Enumeration<[
       'neutral',
       'black',
@@ -236,6 +238,28 @@ export interface LandingColumns extends Struct.ComponentSchema {
         },
         number
       >;
+  };
+}
+
+export interface LandingTrennlinie extends Struct.ComponentSchema {
+  collectionName: 'components_landing_trennlinien';
+  info: {
+    description: 'Horizontale Linie mit Logo zur optischen Trennung zwischen Abschnitten.';
+    displayName: 'Trennlinie';
+  };
+  attributes: {
+    hintergrundfarbe: Schema.Attribute.Enumeration<[
+      'neutral',
+      'black',
+      'wine-blue',
+      'wine-blue-light',
+      'wine-blue-lighter',
+      'wine-blue-lightest',
+      'wine-blue-dark',
+      'wine-blue-darker',
+      'wine-blue-darkest'
+    ]> &
+      Schema.Attribute.DefaultTo<'neutral'>;
   };
 }
 
@@ -416,6 +440,7 @@ declare module '@strapi/strapi' {
       'landing.hero-small': LandingHeroSmall;
       'landing.column': LandingColumn;
       'landing.columns': LandingColumns;
+      'landing.trennlinie': LandingTrennlinie;
       'landing.seminar-liste': LandingSeminarListe;
       'landing.seminar-finder': LandingSeminarFinder;
       'landing.tab': LandingTab;
