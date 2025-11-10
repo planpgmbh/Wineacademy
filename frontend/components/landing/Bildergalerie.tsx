@@ -54,8 +54,9 @@ export function Bildergalerie({ bilder, rotationSekunden, breite = "full" }: Bil
 
   const minHeight = isContentWidth ? 420 : 550;
   const sectionClasses = [
-    "relative isolate mb-[calc(var(--section-padding-y)*1.5)] overflow-hidden md:mb-[var(--section-padding-y-xl)]",
-    isContentWidth ? "" : "flex items-center justify-center"
+    "relative isolate overflow-hidden",
+    isContentWidth ? "py-[var(--section-padding-y)] md:py-[var(--section-padding-y-lg)]" : "",
+    isContentWidth ? "" : "mb-[calc(var(--section-padding-y)*1.5)] md:mb-[var(--section-padding-y-xl)] flex items-center justify-center"
   ]
     .filter(Boolean)
     .join(" ");
