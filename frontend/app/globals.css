@@ -66,6 +66,7 @@
   --section-padding-y-compact: 0.9rem;
   --landing-content-max-width: 55rem;
   --detail-content-max-width: 70rem;
+  --landing-text-max-width: 37.5rem;
 }
 
 body {

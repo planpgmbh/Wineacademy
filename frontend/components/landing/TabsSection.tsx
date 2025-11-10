@@ -70,7 +70,13 @@ export function TabsSection({ überschrift, überschriftStufe, hintergrund, reit
     .trim();
   const inactiveTabClass = isDarkBackground ? "text-base-100/70 hover:text-base-100" : undefined;
   const activeTabClass = isDarkBackground ? "text-base-100" : undefined;
-  const contentClass = isDarkBackground ? "text-base-100/80 [&_a]:text-primary-200" : undefined;
+  const wrapperClass = "mx-auto w-full max-w-[var(--landing-text-max-width)] text-left";
+  const contentClass = [
+    isDarkBackground ? "text-base-100/80 [&_a]:text-primary-200" : "text-base-content/80",
+    "w-full"
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <section style={style}>
@@ -84,10 +90,12 @@ export function TabsSection({ überschrift, überschriftStufe, hintergrund, reit
         <ContentTabs
           tabs={normalizedTabs}
           classNames={{
+            tabListWrapper: wrapperClass,
             tabList: "gap-6",
             tabButton: "px-0",
             activeTabButton: activeTabClass,
             inactiveTabButton: inactiveTabClass,
+            contentWrapper: wrapperClass,
             content: contentClass
           }}
         />

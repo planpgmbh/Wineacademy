@@ -65,17 +65,16 @@ export function TextBlock({ hintergrund, html, buttonText, buttonLink }: TextBlo
   const style = { backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` };
   const isDarkBackground = isDarkSectionBackground(resolvedBackground);
   const normalisedHtml = typeof html === "string" ? normaliseLegacyListMarkup(html) : html;
+  const textWidthClass = "w-full mx-auto text-left max-w-[var(--landing-text-max-width)]";
 
   return (
     <section style={style}>
       <div
-        className={`mx-auto flex w-full max-w-[var(--landing-content-max-width)] flex-col gap-6 px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)] md:gap-8 ${
-          isDarkBackground ? "text-base-100" : "text-base-content"
-        }`}
+        className={`mx-auto flex w-full max-w-[var(--landing-content-max-width)] flex-col gap-6 px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)] md:gap-8`}
       >
         {html ? (
           <div
-            className={`prose prose-lg prose-legal max-w-none ${
+            className={`prose prose-lg prose-legal ${textWidthClass} ${
               isDarkBackground
                 ? "text-base-100/85 prose-headings:text-base-100"
                 : "text-base-content/80 prose-headings:text-base-content"
