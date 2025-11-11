@@ -3222,8 +3222,11 @@ const renderPaymentStep = () => {
 
   const submittingPlaceholder = (
     <div className="flex min-h-[calc(100vh-6rem)] flex-col items-center justify-center px-6 py-12 text-center text-base-content/70 md:px-8">
-      <span className="loading loading-spinner loading-lg mb-4" aria-hidden="true" />
-      <p>Bestellung wird verarbeitet … bitte nicht schließen.</p>
+      <span className="loading loading-spinner loading-lg text-primary" aria-hidden="true" />
+      <h2 className="heading-section mt-6 text-base-content">Bestellung wird verarbeitet</h2>
+      <p className="mt-2 text-base leading-relaxed text-base-content/80">
+        Bitte das Fenster nicht schließen – wir schließen gerade deine Zahlung ab.
+      </p>
     </div>
   );
 

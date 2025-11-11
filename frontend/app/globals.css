@@ -140,26 +140,19 @@ body {
 }
 
 @layer utilities {
-  @keyframes checkout-step-border {
-    0%,
-    100% {
-      border-color: color-mix(in oklab, var(--color-primary) 100%, transparent);
-      box-shadow: inset 0 0 0 0 color-mix(in oklab, var(--color-primary) 60%, transparent);
-    }
-    50% {
-      border-color: color-mix(in oklab, var(--color-primary) 100%, transparent);
-      box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--color-primary) 90%, transparent);
-    }
-  }
-
   .checkout-step-active {
-    animation: checkout-step-border 2s ease-in-out infinite;
+    border-color: var(--color-primary) !important;
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--color-primary) 20%, white) 0%,
+      color-mix(in oklab, var(--color-primary) 35%, white) 100%
+    );
+    color: var(--color-primary);
+    font-weight: 700;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .checkout-step-active {
-      animation: none;
-    }
+  .checkout-step-active span {
+    font-weight: 700;
   }
 
   .heading-section {
