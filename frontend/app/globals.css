@@ -16,8 +16,8 @@
   --color-base-800: oklch(86% 0 0);
   --color-base-900: oklch(84% 0 0);
   --color-base-content: oklch(21% 0.006 285.885);
-  --color-primary: oklch(80% 0.105 251.813);
-  --color-primary-content: oklch(39% 0.09 240.876);
+  --color-primary: #8BB5D7;
+  --color-primary-content: oklch(100% 0 0);
   --section-bg-neutral: var(--color-base-200);
   --section-bg-black: oklch(10% 0 0);
   --section-bg-wine-blue: var(--color-primary);
@@ -172,6 +172,79 @@ body {
     line-height: 1.16;
     text-wrap: balance;
     margin: 0;
+  }
+
+  .badge-location {
+    @apply inline-flex shrink-0 items-center rounded-full border px-2 text-[0.68rem] font-medium tracking-wide transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2;
+    min-height: 22px;
+    width: auto;
+    max-width: max-content;
+  }
+
+  .badge-location-light {
+    border-color: rgba(15, 23, 42, 0.3);
+    color: rgba(15, 23, 42, 0.6);
+  }
+
+  .badge-location-light:hover {
+    background-color: rgba(15, 23, 42, 0.05);
+  }
+
+  .badge-location-light:focus-visible {
+    outline-color: rgba(15, 23, 42, 0.8);
+  }
+
+  .badge-location-dark {
+    border-color: rgba(248, 250, 252, 0.3);
+    color: rgba(248, 250, 252, 0.8);
+  }
+
+  .badge-location-dark:hover {
+    background-color: rgba(248, 250, 252, 0.1);
+  }
+
+  .badge-location-dark:focus-visible {
+    outline-color: rgba(248, 250, 252, 0.8);
+  }
+
+  .badge-location-active-light {
+    border-color: rgba(15, 23, 42, 0.9);
+    color: rgba(15, 23, 42, 0.9);
+    background-color: transparent;
+  }
+
+  .badge-location-active-light:focus-visible {
+    outline-color: rgba(15, 23, 42, 0.9);
+  }
+
+  .badge-location-active-dark {
+    border-color: rgba(248, 250, 252, 0.9);
+    color: rgba(248, 250, 252, 0.95);
+    background-color: transparent;
+  }
+
+  .badge-location-active-dark:focus-visible {
+    outline-color: rgba(248, 250, 252, 0.95);
+  }
+
+  .badge-highlight {
+    @apply inline-flex shrink-0 items-center rounded-full border px-2 text-[0.68rem] font-medium tracking-wide transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2;
+    min-height: 22px;
+    width: auto;
+    max-width: max-content;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-color: rgba(37, 99, 235, 0.4);
+    background-color: rgba(219, 234, 254, 0.85);
+    color: rgba(15, 23, 42, 0.92);
+  }
+
+  .badge-highlight:hover {
+    background-color: rgba(191, 219, 254, 0.95);
+  }
+
+  .badge-highlight:focus-visible {
+    outline-color: rgba(37, 99, 235, 0.85);
   }
 
   .heading-label {
@@ -467,6 +540,16 @@ body {
     box-shadow: none;
     border-color: transparent;
     border-width: 0;
+  }
+
+  .btn.btn-primary,
+  .btn.btn-primary:hover,
+  .btn.btn-primary:focus,
+  .btn.btn-primary:focus-visible,
+  .btn.btn-primary:active {
+    text-shadow:
+      0 1px 2px rgba(5, 10, 20, 0.2),
+      0 0 6px rgba(5, 10, 20, 0.12);
   }
 
   .prose :where(img[data-width]),
