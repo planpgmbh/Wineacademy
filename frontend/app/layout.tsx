@@ -6,6 +6,7 @@ import { CartDrawerProvider } from "@/components/cart/CartDrawerProvider";
 import { Navbar } from "@/components/navigation/Navbar";
 import { SiteFooter } from "@/components/shared/SiteFooter";
 import { getNavigation } from "@/lib/navigation";
+import { PageTransition } from "@/components/animations/PageTransition";
 
 export const metadata: Metadata = {
   title: "Wine Academy Frontend",
@@ -28,7 +29,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     <html lang="de" data-theme="WineAcademy" className={serifBabe.variable}>
       <body className="flex min-h-screen flex-col bg-base-200 text-base-content antialiased">
         <Navbar items={navigationItems} />
-        <div className="flex-1">{children}</div>
+        <div className="flex-1 overflow-hidden">
+          <PageTransition>{children}</PageTransition>
+        </div>
         <SiteFooter />
         <CartDrawerProvider />
       </body>

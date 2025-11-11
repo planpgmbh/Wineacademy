@@ -82,8 +82,21 @@ export function CartItemSeminar({
     controlled: controlled || isSummaryVariant
   });
 
-  const hasDates = Boolean(seminar?.dates?.length);
   const selectedDateId = selection.dateId ?? null;
+  const selectedDate = useMemo(() => {
+    if (!selectedDateId || !seminar?.dates?.length) {
+      return null;
+    }
+    return seminar.dates.find((option) => option.id === String(selectedDateId)) ?? null;
+  }, [selectedDateId, seminar?.dates]);
+
+  const selectedDateLines = useMemo(() => {
+    if (!selectedDate) {
+      return [];
+    }
+    const source = selectedDate.days?.length ? selectedDate.days : selectedDate.label ? [selectedDate.label] : [];
+    return source.map((entry) => entry.trim()).filter((entry) => entry.length > 0);
+  }, [selectedDate]);
   const title = seminar?.title ?? selection.seminarTitle ?? "Seminar";
 
   const totalPriceFormatted = useMemo(() => {
@@ -138,20 +151,12 @@ export function CartItemSeminar({
           </h3>
         </header>
 
-        {hasDates ? (
+        {selectedDateLines.length > 0 ? (
           <div className="space-y-1">
-            <span className="text-xs font-semibold uppercase tracking-wide text-base-content/70">Termine</span>
-            <ul className="space-y-1 text-sm text-base-content/80">
-              {seminar?.dates.map((option) => (
-                <li key={option.id}>
-                  {option.days.length > 0
-                    ? option.days.map((day, idx) => (
-                        <span key={`${option.id}-day-${idx}`} className="block">
-                          {day}
-                        </span>
-                      ))
-                    : option.label}
-                </li>
+            <span className="text-xs font-semibold uppercase tracking-wide text-base-content">Termine:</span>
+            <ul className="space-y-1 text-sm text-base-content">
+              {selectedDateLines.map((line, index) => (
+                <li key={`${selection.id}-selected-${index}`}>{line}</li>
               ))}
             </ul>
           </div>

@@ -182,6 +182,19 @@ type PayPalOptionConfig = {
   fundingSource?: "paypal" | "card";
 };
 
+const EditIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className="h-4 w-4"
+    aria-hidden="true"
+  >
+    <path d="M5.25 17.25v1.5h1.5l8.846-8.846-1.5-1.5L5.25 17.25Zm11.162-9.162.982-.982a.75.75 0 0 0 0-1.06l-1.48-1.48a.75.75 0 0 0-1.06 0l-.983.982 2.541 2.54Z" />
+    <path d="M4.5 4A1.5 1.5 0 0 0 3 5.5v13A1.5 1.5 0 0 0 4.5 20h13a1.5 1.5 0 0 0 1.5-1.5V11a.75.75 0 0 0-1.5 0v7.25H4.5V5.5h7.25a.75.75 0 0 0 0-1.5H4.5Z" />
+  </svg>
+);
+
 const createParticipantErrorState = (): ParticipantErrorState => ({
   firstName: false,
   lastName: false
@@ -351,7 +364,7 @@ function CheckoutProgress({
     const canNavigate = index <= furthestStepIndex;
 
     const circleClasses = [
-      "flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 bg-base-content/5 text-[12px] font-medium transition-colors duration-200",
+      "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 bg-base-content/5 text-[11px] font-medium transition-colors duration-200 sm:h-10 sm:w-10 sm:text-[12px]",
       "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
     ];
 
@@ -370,7 +383,7 @@ function CheckoutProgress({
     }
 
     combinedNodes.push(
-      <div key={`step-${step.id}`} className="flex justify-center">
+      <div key={`step-${step.id}`} className="flex justify-center px-3 md:px-0">
         <button
           type="button"
           className={circleClasses.join(" ")}
@@ -387,7 +400,7 @@ function CheckoutProgress({
 
     if (index < steps.length - 1) {
       combinedNodes.push(
-        <div key={`connector-${step.id}`} className="flex items-center self-center">
+        <div key={`connector-${step.id}`} className="hidden h-full items-center self-center md:flex">
           <div
             className={`h-px w-full rounded-full transition-colors duration-200 ${
               index < progressIndex ? "bg-primary" : "bg-base-content/20"
@@ -400,8 +413,11 @@ function CheckoutProgress({
   });
 
   return (
-    <nav aria-label="Checkout-Fortschritt" className="mt-8">
-      <div className="grid items-center gap-4" style={{ gridTemplateColumns: columnTemplate }}>
+    <nav aria-label="Checkout-Fortschritt" className="mt-6 md:mt-8">
+      <div
+        className="grid items-center gap-2 overflow-x-auto md:gap-4"
+        style={{ gridTemplateColumns: columnTemplate }}
+      >
         {combinedNodes}
       </div>
     </nav>
@@ -2551,10 +2567,15 @@ const renderOverviewStep = () => {
       {hasSeminarSelection ? (
         <div className="py-6 first:pt-0 last:pb-0">
           <div className="rounded-2xl bg-base-100">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-center justify-between gap-2">
               <h3 className="heading-checkout">Teilnehmerdaten</h3>
-              <button type="button" className="btn btn-link btn-sm px-0" onClick={() => goToStep("participants")}>
-                Bearbeiten
+              <button
+                type="button"
+                className="btn btn-ghost btn-xs p-2 text-base-content hover:text-primary"
+                onClick={() => goToStep("participants")}
+                aria-label="Teilnehmerdaten bearbeiten"
+              >
+                <EditIcon />
               </button>
             </div>
             <div className="mt-5 space-y-6 text-sm text-base-content/80">
@@ -2611,10 +2632,15 @@ const renderOverviewStep = () => {
 
       <div className="py-6 first:pt-0 last:pb-0">
         <div className="rounded-2xl bg-base-100">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-center justify-between gap-2">
             <h3 className="heading-checkout">Rechnungsadresse</h3>
-            <button type="button" className="btn btn-link btn-sm px-0" onClick={() => goToStep("billing")}>
-              Bearbeiten
+            <button
+              type="button"
+              className="btn btn-ghost btn-xs p-2 text-base-content hover:text-primary"
+              onClick={() => goToStep("billing")}
+              aria-label="Rechnungsadresse bearbeiten"
+            >
+              <EditIcon />
             </button>
           </div>
           <div className="mt-4 space-y-4 text-sm text-base-content/80">
@@ -3113,11 +3139,24 @@ const renderPaymentStep = () => {
   const currentStepDescription = STEP_DESCRIPTIONS[activeStepId];
 
   return (
-    <div className="mx-auto max-w-[var(--landing-content-max-width)] px-6 py-12 md:px-8">
-      <h1>{currentStepLabel}</h1>
-      {currentStepDescription ? (
-        <p className="mt-4 text-lg leading-relaxed text-base-content/90 md:max-w-3xl">{currentStepDescription}</p>
-      ) : null}
+    <div className="mx-auto max-w-[var(--landing-content-max-width)] px-5 py-8 md:px-8 md:py-12">
+      <div className="space-y-2 md:space-y-3">
+        <h1
+          className="text-3xl font-normal tracking-tight text-base-content md:text-[2.6rem]"
+          style={{ margin: 0 }}
+        >
+          {currentStepLabel}
+        </h1>
+        {currentStepDescription ? (
+          <p
+            className={`text-base leading-relaxed text-base-content/80 md:mt-3 md:block md:max-w-3xl md:text-lg ${
+              activeStepId === "overview" ? "mt-2" : "hidden"
+            }`.trim()}
+          >
+            {currentStepDescription}
+          </p>
+        ) : null}
+      </div>
       {loadError ? (
         <div className="mt-6 rounded-2xl border border-error bg-error/10 p-4 text-error">{loadError}</div>
       ) : null}
