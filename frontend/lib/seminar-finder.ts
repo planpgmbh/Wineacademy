@@ -53,6 +53,9 @@ export type SeminarFinderSeminar = {
   priceLabel: string | null;
   locationIds: string[];
   nextDateIso: string | null;
+  nextDateTimestamp: number | null;
+  primaryLocationId: string | null;
+  locationLabel: string | null;
 };
 
 export type SeminarFinderCategory = {
@@ -208,6 +211,17 @@ const findNextTermDate = (terms: PublicSeminarTerm[] | null | undefined): string
   return upcoming ? upcoming.raw : null;
 };
 
+const toTimestamp = (value: string | null): number | null => {
+  if (!value) {
+    return null;
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed.getTime();
+};
+
 export async function getSeminarFinderData(): Promise<SeminarFinderData> {
   const [categoriesPayload, seminarsPayload] = await Promise.all([
     fetchJson<PublicCategory[]>("/public/kategorien", { cache: "no-store" }),
@@ -256,6 +270,7 @@ export async function getSeminarFinderData(): Promise<SeminarFinderData> {
     const locationIds: string[] = [];
     const uniqueLocationIds = new Set<string>();
     const nextDateIso = findNextTermDate(seminar.termine ?? null);
+    const nextDateTimestamp = toTimestamp(nextDateIso);
 
     (seminar.termine ?? []).forEach((termin) => {
       const locationId = createLocationId(termin.standort ?? null);
@@ -277,6 +292,9 @@ export async function getSeminarFinderData(): Promise<SeminarFinderData> {
       }
     });
 
+    const primaryLocationId = locationIds[0] ?? null;
+    const primaryLocationLabel = primaryLocationId ? locationMap.get(primaryLocationId)?.label ?? null : null;
+
     const seminarEntry: SeminarFinderSeminar = {
       id: seminar.id,
       slug,
@@ -284,7 +302,10 @@ export async function getSeminarFinderData(): Promise<SeminarFinderData> {
       shortDescription,
       priceLabel,
       locationIds,
-      nextDateIso
+      nextDateIso,
+      nextDateTimestamp,
+      primaryLocationId,
+      locationLabel: primaryLocationLabel
     };
 
     const categories = Array.isArray(seminar.kategorien) ? seminar.kategorien : [];
@@ -314,6 +335,22 @@ export async function getSeminarFinderData(): Promise<SeminarFinderData> {
   const categories = orderedSlugs
     .map((slug) => categoryMap.get(slug))
     .filter((category): category is SeminarFinderCategory => Boolean(category));
+
+  const sortSeminars = (items: SeminarFinderSeminar[]) => {
+    items.sort((a, b) => {
+      const aTime = a.nextDateTimestamp ?? Number.POSITIVE_INFINITY;
+      const bTime = b.nextDateTimestamp ?? Number.POSITIVE_INFINITY;
+      if (aTime !== bTime) {
+        return aTime - bTime;
+      }
+      return a.name.localeCompare(b.name, "de");
+    });
+  };
+
+  categories.forEach((category) => {
+    sortSeminars(category.seminars);
+  });
+
   const locations = Array.from(locationMap.values()).sort((a, b) => a.label.localeCompare(b.label, "de"));
 
   return { categories, locations };

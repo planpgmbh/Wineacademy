@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, type JSX } from "react";
+import { useCallback, useMemo, useState, type JSX } from "react";
 
 import type { SeminarFinderCategory, SeminarFinderLocation, SeminarFinderSeminar } from "@/lib/seminar-finder";
 import {
@@ -155,6 +155,17 @@ export function SeminarFinder({
   const categoriesToDisplay =
     hasSeminars || selectedCategory === ALL_CATEGORIES ? categoriesWithSeminars : fallbackCategories;
 
+  const handleLocationBadgeClick = useCallback(
+    (locationId: string) => {
+      const exists = availableLocations.some((location) => location.id === locationId);
+      if (!exists) {
+        return;
+      }
+      setSelectedLocation(locationId);
+    },
+    [availableLocations]
+  );
+
   const resolvedBackground = resolveSectionBackground(hintergrund ?? null);
   const isDarkBackground = isDarkSectionBackground(resolvedBackground);
   const style = useMemo(
@@ -264,7 +275,11 @@ export function SeminarFinder({
                 {seminars.length > 0 ? (
                   <div className="mt-6 space-y-[var(--gap-seminar-columns)] md:mt-8">
                     {seminars.map((seminar) => (
-                      <SeminarFinderCard key={seminar.id} seminar={seminar} />
+                      <SeminarFinderCard
+                        key={seminar.id}
+                        seminar={seminar}
+                        onLocationClick={handleLocationBadgeClick}
+                      />
                     ))}
                   </div>
                 ) : (
@@ -293,24 +308,47 @@ export function SeminarFinder({
 
 type SeminarFinderCardProps = {
   seminar: SeminarFinderSeminar;
+  onLocationClick?: (locationId: string) => void;
 };
 
-function SeminarFinderCard({ seminar }: SeminarFinderCardProps) {
+function SeminarFinderCard({ seminar, onLocationClick }: SeminarFinderCardProps) {
   return (
     <article className="flex flex-col gap-3 rounded-2xl bg-base-100 p-5 md:grid md:grid-cols-[var(--width-seminar-date)_minmax(0,1fr)_auto_auto] md:items-start md:gap-[var(--gap-seminar-columns)] md:px-7 md:py-6">
-      <SeminarFinderCardMobile seminar={seminar} />
-      <SeminarFinderCardDesktop seminar={seminar} />
+      <SeminarFinderCardMobile seminar={seminar} onLocationClick={onLocationClick} />
+      <SeminarFinderCardDesktop seminar={seminar} onLocationClick={onLocationClick} />
     </article>
   );
 }
 
-function SeminarFinderCardMobile({ seminar }: SeminarFinderCardProps) {
+function SeminarFinderCardMobile({ seminar, onLocationClick }: SeminarFinderCardProps) {
+  const locationBadgeClass =
+    "inline-flex h-[22px] w-fit items-center rounded-full border border-base-content/30 px-2 text-[0.68rem] font-medium tracking-wide text-base-content/60 transition-colors duration-150 hover:bg-base-content/5";
+
+  const handleBadgeClick = () => {
+    if (!seminar.primaryLocationId) {
+      return;
+    }
+    onLocationClick?.(seminar.primaryLocationId);
+  };
+
   return (
-    <div className="flex flex-col gap-3 md:hidden">
-      <h4 className="font-sans text-base font-semibold text-base-content [&]:m-0">{seminar.name}</h4>
-      {seminar.shortDescription ? (
-        <p className="text-sm leading-relaxed text-base-content/70">{seminar.shortDescription}</p>
-      ) : null}
+    <div className="flex flex-col gap-2 md:hidden">
+      <div className="flex flex-col gap-[0.35rem]">
+        <h4 className="font-sans text-base font-semibold text-base-content [&]:m-0">{seminar.name}</h4>
+        {seminar.locationLabel ? (
+          <button
+            type="button"
+            onClick={handleBadgeClick}
+            className={locationBadgeClass}
+            aria-label={`Seminare am Standort ${seminar.locationLabel} filtern`}
+          >
+            {seminar.locationLabel}
+          </button>
+        ) : null}
+        {seminar.shortDescription ? (
+          <p className="text-sm leading-relaxed text-base-content/70">{seminar.shortDescription}</p>
+        ) : null}
+      </div>
       <div className="flex w-full items-center justify-between gap-3">
         <span className="font-sans text-xl font-semibold text-base-content">{seminar.priceLabel ?? ""}</span>
         <Link
@@ -324,17 +362,39 @@ function SeminarFinderCardMobile({ seminar }: SeminarFinderCardProps) {
   );
 }
 
-function SeminarFinderCardDesktop({ seminar }: SeminarFinderCardProps) {
+function SeminarFinderCardDesktop({ seminar, onLocationClick }: SeminarFinderCardProps) {
+  const locationBadgeClass =
+    "inline-flex h-[22px] w-fit items-center rounded-full border border-base-content/30 px-2 text-[0.68rem] font-medium tracking-wide text-base-content/60 transition-colors duration-150 hover:bg-base-content/5";
+
+  const handleBadgeClick = () => {
+    if (!seminar.primaryLocationId) {
+      return;
+    }
+    onLocationClick?.(seminar.primaryLocationId);
+  };
+
   return (
     <>
       <div className="hidden md:flex md:col-start-1 md:items-center md:justify-center">
         {seminar.nextDateIso ? <SeminarDateBadge date={seminar.nextDateIso} /> : null}
       </div>
-      <div className="hidden md:flex md:col-start-2 md:flex-col md:gap-3">
-        <h4 className="font-sans text-base font-semibold text-base-content md:text-lg [&]:m-0">{seminar.name}</h4>
-        {seminar.shortDescription ? (
-          <p className="text-sm leading-relaxed text-base-content/70 md:text-base">{seminar.shortDescription}</p>
-        ) : null}
+      <div className="hidden md:flex md:col-start-2 md:flex-col md:gap-2">
+        <div className="flex flex-col gap-[0.35rem]">
+          <h4 className="font-sans text-base font-semibold text-base-content md:text-lg [&]:m-0">{seminar.name}</h4>
+          {seminar.locationLabel ? (
+            <button
+              type="button"
+              onClick={handleBadgeClick}
+              className={locationBadgeClass}
+              aria-label={`Seminare am Standort ${seminar.locationLabel} filtern`}
+            >
+              {seminar.locationLabel}
+            </button>
+          ) : null}
+          {seminar.shortDescription ? (
+            <p className="text-sm leading-relaxed text-base-content/70 md:text-base">{seminar.shortDescription}</p>
+          ) : null}
+        </div>
       </div>
       <div className="hidden md:flex md:col-start-3 md:items-center md:justify-end md:self-center">
         <span className="font-sans text-base font-semibold text-base-content md:text-lg">{seminar.priceLabel ?? ""}</span>
