@@ -65,12 +65,17 @@ const formatToplineDate = (value?: string | Date | null): { day: string; month: 
 type SeminarListItemProps = {
   seminar: UpcomingSeminar;
   buttonText: string;
+  isDarkBackground: boolean;
 };
 
-function SeminarListItem({ seminar, buttonText }: SeminarListItemProps) {
+function SeminarListItem({ seminar, buttonText, isDarkBackground }: SeminarListItemProps) {
   const image = formatImageSrc(seminar);
   const seminarHref = `/seminare/${encodeURIComponent(seminar.slug)}`;
   const mobileToplineDate = useMemo(() => formatToplineDate(seminar.nextDateIso), [seminar.nextDateIso]);
+  const locationLabel = seminar.locationLabel ?? null;
+  const locationBadgeTone = isDarkBackground
+    ? "border-base-100/30 text-base-100/80"
+    : "border-base-content/30 text-base-content/60";
 
   return (
     <article className="group grid gap-4 md:grid-cols-[280px_var(--width-seminar-date)_minmax(0,1fr)] md:items-start md:gap-6">
@@ -95,19 +100,28 @@ function SeminarListItem({ seminar, buttonText }: SeminarListItemProps) {
       </div>
 
       <div className="flex flex-col gap-3 md:col-start-3 md:row-start-1 md:gap-4 md:self-start">
-        <div className="space-y-1">
+        <div className="flex flex-col gap-[0.2rem] md:gap-1">
           {mobileToplineDate ? (
-            <p className="flex items-baseline gap-1.5 text-base font-semibold uppercase leading-tight md:hidden">
+            <p className="mb-0 flex items-baseline gap-1.5 text-base font-semibold uppercase leading-tight md:hidden">
               <span className="text-base-content">{mobileToplineDate.day}</span>
               <span className="text-base-content/30">|</span>
               <span className="font-normal text-base-content/60">{mobileToplineDate.month}</span>
             </p>
           ) : null}
-          <h3 className="heading-card rt-heading-xs font-semibold leading-tight text-balance text-base-content !mt-0 mb-1.5 !text-[1.35rem]">
-            {seminar.title}
-          </h3>
+          <div className="flex flex-col gap-1">
+            <h3 className="heading-card rt-heading-xs font-semibold leading-tight text-balance text-base-content !mt-0 !mb-[0.2rem] !text-[1.35rem] w-fit">
+              {seminar.title}
+            </h3>
+            {locationLabel ? (
+              <span
+                className={`inline-flex h-[22px] w-fit items-center rounded-full border px-2 text-[0.68rem] font-medium tracking-wide ${locationBadgeTone}`}
+              >
+                {locationLabel}
+              </span>
+            ) : null}
+          </div>
           {seminar.shortDescription ? (
-            <p className="text-base text-base-content/80">{seminar.shortDescription}</p>
+            <p className="mt-1 text-base text-base-content/80">{seminar.shortDescription}</p>
           ) : null}
         </div>
         <Link className="btn btn-primary min-w-[160px] self-start" href={seminarHref}>
@@ -209,7 +223,12 @@ export function SeminarList({
         ) : (
           <div className="flex flex-col gap-10 md:gap-14">
             {items.map((seminar) => (
-              <SeminarListItem key={`${seminar.id}-${seminar.nextDateTimestamp}`} seminar={seminar} buttonText={buttonText} />
+              <SeminarListItem
+                key={`${seminar.id}-${seminar.nextDateTimestamp}`}
+                seminar={seminar}
+                buttonText={buttonText}
+                isDarkBackground={isDarkBackground}
+              />
             ))}
           </div>
         )}

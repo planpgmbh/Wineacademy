@@ -1,5 +1,12 @@
 import { fetchJson, mediaUrl } from "./api";
 
+type PublicSeminarLocation = {
+  name?: string | null;
+  typ?: string | null;
+  veranstaltungsort?: string | null;
+  stadt?: string | null;
+};
+
 type PublicSeminarResponse = {
   id: number;
   name?: string | null;
@@ -13,6 +20,7 @@ type PublicSeminarResponse = {
     id?: number | null;
     starttag?: string | null;
     timestamp?: number | null;
+    standort?: PublicSeminarLocation | null;
   } | null;
 };
 
@@ -53,6 +61,36 @@ const isValidTimestamp = (value: unknown): value is number => {
   return typeof value === "number" && Number.isFinite(value);
 };
 
+const formatLocationLabel = (location: PublicSeminarLocation | null | undefined): string | null => {
+  if (!location) {
+    return null;
+  }
+  const name = normaliseString((location as any)?.name ?? null);
+  const venue = normaliseString((location as any)?.veranstaltungsort ?? null);
+  const city = normaliseString((location as any)?.stadt ?? null);
+  const type = normaliseString((location as any)?.typ ?? null);
+
+  if (type.toLowerCase() === "online") {
+    return "Online";
+  }
+  if (venue && city && !venue.toLowerCase().includes(city.toLowerCase())) {
+    return `${venue} · ${city}`;
+  }
+  if (name && city && !name.toLowerCase().includes(city.toLowerCase())) {
+    return `${name} · ${city}`;
+  }
+  if (venue.length > 0) {
+    return venue;
+  }
+  if (name.length > 0) {
+    return name;
+  }
+  if (city.length > 0) {
+    return city;
+  }
+  return null;
+};
+
 export type UpcomingSeminar = {
   id: number;
   slug: string;
@@ -64,6 +102,7 @@ export type UpcomingSeminar = {
   };
   nextDateIso: string;
   nextDateTimestamp: number;
+  locationLabel: string | null;
 };
 
 export type FetchUpcomingSeminarsOptions = {
@@ -113,6 +152,7 @@ export async function fetchUpcomingSeminars({
     const slug = ensureSlug(item.slug, title, item.id);
     const image = formatImage(item.bild ?? null, title);
     const shortDescription = normaliseString(item.kurzbeschreibung ?? null) || null;
+    const locationLabel = formatLocationLabel(item.naechsterTermin?.standort ?? null);
 
     seminars.push({
       id: item.id,
@@ -121,7 +161,8 @@ export async function fetchUpcomingSeminars({
       shortDescription,
       image,
       nextDateIso,
-      nextDateTimestamp: nextTimestamp
+      nextDateTimestamp: nextTimestamp,
+      locationLabel
     });
   });
 

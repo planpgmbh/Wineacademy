@@ -151,7 +151,7 @@ export function ColumnsSection({ hintergrund, darstellung, spalten }: ColumnsSec
               return (
                 <div
                   key={column.id}
-                  className="relative flex h-full flex-col"
+                  className="relative flex h-full flex-col mt-[5px] first:mt-0 md:mt-0"
                 >
                   {index > 0 ? (
                     <span
@@ -168,7 +168,7 @@ export function ColumnsSection({ hintergrund, darstellung, spalten }: ColumnsSec
             return (
               <div
                 key={column.id}
-                className="flex h-full flex-col"
+                className="flex h-full flex-col mt-[5px] first:mt-0 md:mt-0"
               >
                 {columnContent}
               </div>
