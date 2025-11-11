@@ -371,9 +371,9 @@ function CheckoutProgress({
     ];
 
     if (isActive) {
-      circleClasses.push("border-primary bg-primary/10 text-primary", "font-semibold");
+      circleClasses.push("border-primary bg-primary/10 text-primary", "font-bold", "checkout-step-active");
     } else if (isCompleted) {
-      circleClasses.push("border-primary bg-primary/10 text-primary", "font-bold");
+      circleClasses.push("border-primary bg-primary/10 text-primary", "font-semibold");
     } else {
       circleClasses.push("border-base-content/20 text-base-content/50");
     }
@@ -3139,90 +3139,111 @@ const renderPaymentStep = () => {
     );
   }
 
-  if (activeStepId === "confirmation" && submissionState === "success") {
-    return renderConfirmationStep();
-  }
-
   const currentStepLabel =
     activeStepIndex >= 0 && activeStepIndex < steps.length ? steps[activeStepIndex].label : "Checkout";
   const currentStepDescription = STEP_DESCRIPTIONS[activeStepId];
 
-  return (
+  const checkoutFlowContent = (
     <div className="mx-auto max-w-[var(--landing-content-max-width)] px-5 py-8 md:px-8 md:py-12">
-      <CheckoutStepTransition stepKey={activeStepId} onAfterExit={handleStepExit}>
-        <div className="space-y-2 md:space-y-3">
-          <h1
-            className="text-3xl font-normal tracking-tight text-base-content md:text-[2.6rem]"
-            style={{ margin: 0 }}
+      <div className="space-y-2 md:space-y-3">
+        <h1
+          className="text-3xl font-normal tracking-tight text-base-content md:text-[2.6rem]"
+          style={{ margin: 0 }}
+        >
+          {currentStepLabel}
+        </h1>
+        {currentStepDescription ? (
+          <p
+            className={`text-base leading-relaxed text-base-content/80 md:mt-3 md:block md:max-w-3xl md:text-lg ${
+              activeStepId === "overview" ? "mt-2" : "hidden"
+            }`.trim()}
           >
-            {currentStepLabel}
-          </h1>
-          {currentStepDescription ? (
-            <p
-              className={`text-base leading-relaxed text-base-content/80 md:mt-3 md:block md:max-w-3xl md:text-lg ${
-                activeStepId === "overview" ? "mt-2" : "hidden"
-              }`.trim()}
-            >
-              {currentStepDescription}
-            </p>
-          ) : null}
-        </div>
-        {loadError ? (
-          <div className="mt-6 rounded-2xl border border-error bg-error/10 p-4 text-error">{loadError}</div>
+            {currentStepDescription}
+          </p>
         ) : null}
+      </div>
+      {loadError ? (
+        <div className="mt-6 rounded-2xl border border-error bg-error/10 p-4 text-error">{loadError}</div>
+      ) : null}
 
-        <CheckoutProgress
-          steps={steps}
-          activeStepId={activeStepId}
-          activeStepIndex={activeStepIndex}
-          furthestStepIndex={furthestStepIndex}
-          onStepClick={goToStep}
-        />
+      <CheckoutProgress
+        steps={steps}
+        activeStepId={activeStepId}
+        activeStepIndex={activeStepIndex}
+        furthestStepIndex={furthestStepIndex}
+        onStepClick={goToStep}
+      />
 
-        <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
-          <form ref={formRef} className="space-y-8" onSubmit={handlePrimaryAction}>
-            {activeStepId === "participants" && renderParticipantsStep()}
-            {activeStepId === "gutscheine" && renderVoucherStep()}
-            {activeStepId === "billing" && renderBillingStep()}
-            {activeStepId === "overview" && renderOverviewStep()}
-            {activeStepId === "payment" && renderPaymentStep()}
+      <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+        <form ref={formRef} className="space-y-8" onSubmit={handlePrimaryAction}>
+          {activeStepId === "participants" && renderParticipantsStep()}
+          {activeStepId === "gutscheine" && renderVoucherStep()}
+          {activeStepId === "billing" && renderBillingStep()}
+          {activeStepId === "overview" && renderOverviewStep()}
+          {activeStepId === "payment" && renderPaymentStep()}
 
-            {submissionError ? (
-              <div className="rounded-2xl border border-error bg-error/10 p-4 text-sm text-error">{submissionError}</div>
-            ) : null}
-            {stepError ? (
-              <div className="rounded-2xl border border-warning bg-warning/10 p-4 text-sm text-warning">{stepError}</div>
-            ) : null}
+          {submissionError ? (
+            <div className="rounded-2xl border border-error bg-error/10 p-4 text-sm text-error">{submissionError}</div>
+          ) : null}
+          {stepError ? (
+            <div className="rounded-2xl border border-warning bg-warning/10 p-4 text-sm text-warning">{stepError}</div>
+          ) : null}
 
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              {activeStepIndex > 0 ? (
-                <button
-                  type="button"
-                  className="btn md:w-auto ui-border bg-base-200 text-base-content hover:bg-base-300"
-                  onClick={handleBack}
-                >
-                  Zurück
-                </button>
-              ) : (
-                <span />
-              )}
-              {showPrimaryButton ? (
-                <button
-                  type="submit"
-                  className="btn btn-primary md:w-auto"
-                  disabled={submissionState === "submitting"}
-                  aria-disabled={submissionState === "submitting"}
-                >
-                  {primaryActionLabel}
-                </button>
-              ) : (
-                <span />
-              )}
-            </div>
-          </form>
-          {renderSummaryAside()}
-        </div>
-      </CheckoutStepTransition>
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            {activeStepIndex > 0 ? (
+              <button
+                type="button"
+                className="btn md:w-auto ui-border bg-base-200 text-base-content hover:bg-base-300"
+                onClick={handleBack}
+              >
+                Zurück
+              </button>
+            ) : (
+              <span />
+            )}
+            {showPrimaryButton ? (
+              <button
+                type="submit"
+                className="btn btn-primary md:w-auto"
+                disabled={submissionState === "submitting"}
+                aria-disabled={submissionState === "submitting"}
+              >
+                {primaryActionLabel}
+              </button>
+            ) : (
+              <span />
+            )}
+          </div>
+        </form>
+        {renderSummaryAside()}
+      </div>
     </div>
+  );
+
+  const submittingPlaceholder = (
+    <div className="flex min-h-[calc(100vh-6rem)] flex-col items-center justify-center px-6 py-12 text-center text-base-content/70 md:px-8">
+      <span className="loading loading-spinner loading-lg mb-4" aria-hidden="true" />
+      <p>Bestellung wird verarbeitet … bitte nicht schließen.</p>
+    </div>
+  );
+
+  const viewKey =
+    submissionState === "success" && activeStepId === "confirmation"
+      ? "confirmation"
+      : submissionState === "submitting"
+        ? "submitting"
+        : `step-${activeStepId}`;
+
+  const viewContent =
+    viewKey === "confirmation"
+      ? renderConfirmationStep()
+      : viewKey === "submitting"
+        ? submittingPlaceholder
+        : checkoutFlowContent;
+
+  return (
+    <CheckoutStepTransition stepKey={viewKey} onAfterExit={handleStepExit}>
+      {viewContent}
+    </CheckoutStepTransition>
   );
 }
