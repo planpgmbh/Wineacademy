@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 import "./globals.css";
 import { serifBabe } from "./fonts";
 import { CartDrawerProvider } from "@/components/cart/CartDrawerProvider";
+import { PageTransition } from "@/components/animations/PageTransition";
+import { TransitionProvider } from "@/components/animations/TransitionProvider";
 import { Navbar } from "@/components/navigation/Navbar";
 import { SiteFooter } from "@/components/shared/SiteFooter";
 import { getNavigation } from "@/lib/navigation";
-import { PageTransition } from "@/components/animations/PageTransition";
 
 export const metadata: Metadata = {
   title: "Wine Academy Frontend",
@@ -29,10 +31,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     <html lang="de" data-theme="WineAcademy" className={serifBabe.variable}>
       <body className="flex min-h-screen flex-col bg-base-200 text-base-content antialiased">
         <Navbar items={navigationItems} />
-        <div className="flex-1 overflow-hidden">
-          <PageTransition>{children}</PageTransition>
-        </div>
-        <SiteFooter />
+        <Suspense fallback={null}>
+          <TransitionProvider>
+            <PageTransition>
+              <div className="flex-1 overflow-hidden">{children}</div>
+              <SiteFooter />
+            </PageTransition>
+          </TransitionProvider>
+        </Suspense>
         <CartDrawerProvider />
       </body>
     </html>

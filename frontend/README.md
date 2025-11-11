@@ -58,6 +58,13 @@ Alle Datenabrufe laufen über `lib/api.ts`:
 **Output überprüfen:** Der generierte Code muss auf Tailwind v4 + DaisyUI v5 beruhen. Vor dem Einchecken lokal builden (`npm run build`) oder bei Bedarf CSS via `npx @tailwindcss/cli` erzeugen, um sicherzustellen, dass alle benötigten Klassen erzeugt werden.
 **DaisyUI-Varianten dokumentieren:** Neue oder angepasste Komponenten erhalten im PR/Arbeitsprotokoll einen Hinweis auf verwendete DaisyUI-Komponententypen und ggf. aktivierte Themes, damit spätere Anpassungen nachvollziehbar bleiben.
 
+## Seiten-Transitionen
+- `TransitionProvider` (siehe `components/animations`) fängt alle internen Links im Capture-Phase ab und steuert das sequentielle Fade-Out & Fade-In via Motion (`PageTransition`).
+- Standarddauer liegt bei 1 s pro Phase; Anpassungen erfolgen zentral im `PageTransition`.
+- Links können gezielt von der Animation ausgenommen werden, indem `data-transition="false"` gesetzt wird (z. B. für kritische Aktionen).
+- Nutzer:innen mit `prefers-reduced-motion: reduce` erhalten automatisch sofortige Navigation ohne Fade; ebenfalls nützlich beim Debuggen.
+- Für programmatische Navigationsabläufe bitte den Provider respektieren (z. B. vor `router.push` erst `data-transition="false"` auf Buttons setzen, falls ein sofortiger Wechsel nötig ist).
+
 ## Weiterführende Ressourcen
 - Root-README für Gesamtüberblick & Compose-Kommandos.
 - `backend/README.md` für Payload-Details und Public-API-Spezifikation.

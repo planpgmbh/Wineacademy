@@ -1,36 +1,70 @@
 'use client';
 
 import type { ReactNode } from "react";
-import { AnimatePresence, motion } from "motion/react";
-import { usePathname } from "next/navigation";
+import { motion, useAnimationControls } from "motion/react";
+import type { Variants } from "motion/react";
+import { useEffect } from "react";
+import { useTransitionContext } from "./TransitionProvider";
+import { transitionConfig } from "@/lib/config/transitionConfig";
+
+const transitionVariants: Variants = {
+  enter: {
+    opacity: 1,
+    transition: {
+      duration: transitionConfig.duration,
+      ease: transitionConfig.easing
+    }
+  },
+  exit: {
+    opacity: 0,
+    transition: {
+      duration: transitionConfig.duration,
+      ease: transitionConfig.easing
+    }
+  }
+};
 
 type PageTransitionProps = {
   children: ReactNode;
 };
 
-/**
- * Wraps pages with a fade out/in transition triggered on pathname changes.
- */
 export function PageTransition({ children }: PageTransitionProps) {
-  const pathname = usePathname();
+  const controls = useAnimationControls();
+  const {
+    status,
+    transitionsEnabled,
+    handleFadeOutComplete,
+    handleFadeInComplete
+  } = useTransitionContext();
+
+  useEffect(() => {
+    if (!transitionsEnabled) {
+      controls.set("enter");
+      return;
+    }
+    if (status === "fading-out") {
+      controls.start("exit").then(handleFadeOutComplete);
+    } else if (status === "fading-in") {
+      controls.start("enter").then(handleFadeInComplete);
+    } else if (status === "idle") {
+      controls.set("enter");
+    }
+  }, [
+    controls,
+    handleFadeInComplete,
+    handleFadeOutComplete,
+    status,
+    transitionsEnabled
+  ]);
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={pathname}
-        initial={{ opacity: 0 }}
-        animate={{
-          opacity: 1,
-          transition: { duration: 1, ease: "easeInOut" }
-        }}
-        exit={{
-          opacity: 0,
-          transition: { duration: 1, ease: "easeInOut" }
-        }}
-        className="h-full"
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
+    <motion.div
+      className="h-full"
+      initial="enter"
+      animate={controls}
+      variants={transitionVariants}
+    >
+      {children}
+    </motion.div>
   );
 }
