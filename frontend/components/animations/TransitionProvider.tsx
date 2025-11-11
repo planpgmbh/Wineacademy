@@ -11,6 +11,7 @@ import {
   useState
 } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePrefersReducedMotion } from "@/lib/hooks/usePrefersReducedMotion";
 
 type TransitionStatus = "idle" | "fading-out" | "navigating" | "fading-in";
 
@@ -50,25 +51,6 @@ function buildTarget(rawHref: string): TargetRef | null {
   } catch {
     return null;
   }
-}
-
-function usePrefersReducedMotion() {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) return;
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const handleChange = () => setPrefersReducedMotion(mediaQuery.matches);
-    handleChange();
-    if (typeof mediaQuery.addEventListener === "function") {
-      mediaQuery.addEventListener("change", handleChange);
-      return () => mediaQuery.removeEventListener("change", handleChange);
-    }
-    mediaQuery.addListener(handleChange);
-    return () => mediaQuery.removeListener(handleChange);
-  }, []);
-
-  return prefersReducedMotion;
 }
 
 export function TransitionProvider({ children }: { children: ReactNode }) {

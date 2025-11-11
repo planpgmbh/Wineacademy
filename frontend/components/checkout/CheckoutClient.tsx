@@ -37,11 +37,13 @@ import { CheckoutStepCard } from "@/components/checkout/CheckoutStepCard";
 import { CartItemSeminar } from "@/components/cart/CartItemSeminar";
 import { CartItemProduct } from "@/components/cart/CartItemProduct";
 import { CartItemGutschein } from "@/components/cart/CartItemGutschein";
+import { CheckoutStepTransition } from "@/components/checkout/CheckoutStepTransition";
 import {
   clearStoredVoucherSelection,
   prepareProductSelectionPayload,
   updateStoredProductSelection
 } from "@/components/cart/cartActions";
+import { usePrefersReducedMotion } from "@/lib/hooks/usePrefersReducedMotion";
 
 const INVOICE_POLL_INTERVAL_MS = 5000;
 const MAX_INVOICE_POLL_ATTEMPTS = 12;
@@ -845,6 +847,13 @@ export function CheckoutClient() {
     () => steps.findIndex((step) => step.id === activeStepId),
     [steps, activeStepId]
   );
+  const prefersReducedMotion = usePrefersReducedMotion();
+
+  const handleStepExit = useCallback(() => {
+    if (typeof window === "undefined") return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, []);
+
 
   useEffect(() => {
     if (!steps.length) {
@@ -3140,78 +3149,80 @@ const renderPaymentStep = () => {
 
   return (
     <div className="mx-auto max-w-[var(--landing-content-max-width)] px-5 py-8 md:px-8 md:py-12">
-      <div className="space-y-2 md:space-y-3">
-        <h1
-          className="text-3xl font-normal tracking-tight text-base-content md:text-[2.6rem]"
-          style={{ margin: 0 }}
-        >
-          {currentStepLabel}
-        </h1>
-        {currentStepDescription ? (
-          <p
-            className={`text-base leading-relaxed text-base-content/80 md:mt-3 md:block md:max-w-3xl md:text-lg ${
-              activeStepId === "overview" ? "mt-2" : "hidden"
-            }`.trim()}
+      <CheckoutStepTransition stepKey={activeStepId} onAfterExit={handleStepExit}>
+        <div className="space-y-2 md:space-y-3">
+          <h1
+            className="text-3xl font-normal tracking-tight text-base-content md:text-[2.6rem]"
+            style={{ margin: 0 }}
           >
-            {currentStepDescription}
-          </p>
+            {currentStepLabel}
+          </h1>
+          {currentStepDescription ? (
+            <p
+              className={`text-base leading-relaxed text-base-content/80 md:mt-3 md:block md:max-w-3xl md:text-lg ${
+                activeStepId === "overview" ? "mt-2" : "hidden"
+              }`.trim()}
+            >
+              {currentStepDescription}
+            </p>
+          ) : null}
+        </div>
+        {loadError ? (
+          <div className="mt-6 rounded-2xl border border-error bg-error/10 p-4 text-error">{loadError}</div>
         ) : null}
-      </div>
-      {loadError ? (
-        <div className="mt-6 rounded-2xl border border-error bg-error/10 p-4 text-error">{loadError}</div>
-      ) : null}
 
-      <CheckoutProgress
-        steps={steps}
-        activeStepId={activeStepId}
-        activeStepIndex={activeStepIndex}
-        furthestStepIndex={furthestStepIndex}
-        onStepClick={goToStep}
-      />
+        <CheckoutProgress
+          steps={steps}
+          activeStepId={activeStepId}
+          activeStepIndex={activeStepIndex}
+          furthestStepIndex={furthestStepIndex}
+          onStepClick={goToStep}
+        />
 
-      <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
-        <form ref={formRef} className="space-y-8" onSubmit={handlePrimaryAction}>
-          {activeStepId === "participants" && renderParticipantsStep()}
-          {activeStepId === "gutscheine" && renderVoucherStep()}
-          {activeStepId === "billing" && renderBillingStep()}
-          {activeStepId === "overview" && renderOverviewStep()}
-          {activeStepId === "payment" && renderPaymentStep()}
+        <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+          <form ref={formRef} className="space-y-8" onSubmit={handlePrimaryAction}>
+            {activeStepId === "participants" && renderParticipantsStep()}
+            {activeStepId === "gutscheine" && renderVoucherStep()}
+            {activeStepId === "billing" && renderBillingStep()}
+            {activeStepId === "overview" && renderOverviewStep()}
+            {activeStepId === "payment" && renderPaymentStep()}
 
-          {submissionError ? (
-            <div className="rounded-2xl border border-error bg-error/10 p-4 text-sm text-error">{submissionError}</div>
-          ) : null}
-          {stepError ? (
-            <div className="rounded-2xl border border-warning bg-warning/10 p-4 text-sm text-warning">{stepError}</div>
-          ) : null}
+            {submissionError ? (
+              <div className="rounded-2xl border border-error bg-error/10 p-4 text-sm text-error">{submissionError}</div>
+            ) : null}
+            {stepError ? (
+              <div className="rounded-2xl border border-warning bg-warning/10 p-4 text-sm text-warning">{stepError}</div>
+            ) : null}
 
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            {activeStepIndex > 0 ? (
-              <button
-                type="button"
-                className="btn md:w-auto ui-border bg-base-200 text-base-content hover:bg-base-300"
-                onClick={handleBack}
-              >
-                Zurück
-              </button>
-            ) : (
-              <span />
-            )}
-            {showPrimaryButton ? (
-              <button
-                type="submit"
-                className="btn btn-primary md:w-auto"
-                disabled={submissionState === "submitting"}
-                aria-disabled={submissionState === "submitting"}
-              >
-                {primaryActionLabel}
-              </button>
-            ) : (
-              <span />
-            )}
-          </div>
-        </form>
-        {renderSummaryAside()}
-      </div>
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              {activeStepIndex > 0 ? (
+                <button
+                  type="button"
+                  className="btn md:w-auto ui-border bg-base-200 text-base-content hover:bg-base-300"
+                  onClick={handleBack}
+                >
+                  Zurück
+                </button>
+              ) : (
+                <span />
+              )}
+              {showPrimaryButton ? (
+                <button
+                  type="submit"
+                  className="btn btn-primary md:w-auto"
+                  disabled={submissionState === "submitting"}
+                  aria-disabled={submissionState === "submitting"}
+                >
+                  {primaryActionLabel}
+                </button>
+              ) : (
+                <span />
+              )}
+            </div>
+          </form>
+          {renderSummaryAside()}
+        </div>
+      </CheckoutStepTransition>
     </div>
   );
 }
