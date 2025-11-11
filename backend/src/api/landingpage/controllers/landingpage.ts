@@ -36,6 +36,7 @@ export default factories.createCoreController(CONTENT_UID, ({ strapi }) => ({
                 spalten: true
               }
             },
+            "landing.trennlinie": true,
             "landing.seminar-liste": {
               populate: {
                 seminarkategorie: {
