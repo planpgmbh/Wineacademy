@@ -145,9 +145,7 @@ export function VoucherBookingMobile({
               <div className="space-y-6 pb-5">
                 <div className="space-y-2">
                   {highlightLabel ? (
-                    <span className="badge badge-info badge-sm px-3 py-1 text-xs font-semibold uppercase tracking-wide">
-                      {highlightLabel}
-                    </span>
+                    <span className="badge-highlight">{highlightLabel}</span>
                   ) : null}
                   <h2 className="heading-card">{title}</h2>
                   <p className="text-lg font-light text-base-content/80">

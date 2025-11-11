@@ -139,9 +139,7 @@ export function SeminarBookingCard({
     >
       <div className="space-y-2.5">
         {highlightLabel ? (
-          <span className="badge badge-info badge-sm px-3 py-1 text-xs font-semibold uppercase tracking-wide">
-            {highlightLabel}
-          </span>
+          <span className="badge-highlight">{highlightLabel}</span>
         ) : null}
 
         <div className="space-y-1.5">

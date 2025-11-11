@@ -321,8 +321,7 @@ function SeminarFinderCard({ seminar, onLocationClick }: SeminarFinderCardProps)
 }
 
 function SeminarFinderCardMobile({ seminar, onLocationClick }: SeminarFinderCardProps) {
-  const locationBadgeClass =
-    "inline-flex h-[22px] w-fit items-center rounded-full border border-base-content/30 px-2 text-[0.68rem] font-medium tracking-wide text-base-content/60 transition-colors duration-150 hover:bg-base-content/5";
+  const locationBadgeClass = "badge-location badge-location-light";
 
   const handleBadgeClick = () => {
     if (!seminar.primaryLocationId) {
@@ -363,8 +362,7 @@ function SeminarFinderCardMobile({ seminar, onLocationClick }: SeminarFinderCard
 }
 
 function SeminarFinderCardDesktop({ seminar, onLocationClick }: SeminarFinderCardProps) {
-  const locationBadgeClass =
-    "inline-flex h-[22px] w-fit items-center rounded-full border border-base-content/30 px-2 text-[0.68rem] font-medium tracking-wide text-base-content/60 transition-colors duration-150 hover:bg-base-content/5";
+  const locationBadgeClass = "badge-location badge-location-light";
 
   const handleBadgeClick = () => {
     if (!seminar.primaryLocationId) {

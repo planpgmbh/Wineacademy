@@ -1,6 +1,7 @@
 import { fetchJson, mediaUrl } from "./api";
 
 type PublicSeminarLocation = {
+  id?: number | null;
   name?: string | null;
   typ?: string | null;
   veranstaltungsort?: string | null;
@@ -91,6 +92,27 @@ const formatLocationLabel = (location: PublicSeminarLocation | null | undefined)
   return null;
 };
 
+const formatLocationId = (location: PublicSeminarLocation | null | undefined): string | null => {
+  if (!location) {
+    return null;
+  }
+  if (typeof location.id === "number" && location.id > 0) {
+    return String(location.id);
+  }
+  const name = normaliseString(location.name ?? null);
+  const city = normaliseString(location.stadt ?? null);
+  if (name.length > 0 && city.length > 0) {
+    return `${name}-${city}`.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  }
+  if (name.length > 0) {
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  }
+  if (city.length > 0) {
+    return city.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  }
+  return null;
+};
+
 export type UpcomingSeminar = {
   id: number;
   slug: string;
@@ -102,6 +124,7 @@ export type UpcomingSeminar = {
   };
   nextDateIso: string;
   nextDateTimestamp: number;
+  locationId: string | null;
   locationLabel: string | null;
 };
 
@@ -152,6 +175,7 @@ export async function fetchUpcomingSeminars({
     const slug = ensureSlug(item.slug, title, item.id);
     const image = formatImage(item.bild ?? null, title);
     const shortDescription = normaliseString(item.kurzbeschreibung ?? null) || null;
+    const locationId = formatLocationId(item.naechsterTermin?.standort ?? null);
     const locationLabel = formatLocationLabel(item.naechsterTermin?.standort ?? null);
 
     seminars.push({
@@ -162,6 +186,7 @@ export async function fetchUpcomingSeminars({
       image,
       nextDateIso,
       nextDateTimestamp: nextTimestamp,
+      locationId,
       locationLabel
     });
   });

@@ -9,7 +9,7 @@ import {
 } from "@/lib/landing";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState, type JSX } from "react";
+import { useCallback, useMemo, useState, type JSX } from "react";
 
 import { SeminarDateBadge } from "@/components/shared/SeminarDateBadge";
 
@@ -35,6 +35,24 @@ const formatParagraphs = (text?: string | null): string[] => {
     .split(/\n+/)
     .map((paragraph) => paragraph.trim())
     .filter((paragraph) => paragraph.length > 0);
+};
+
+const slugify = (value: string): string =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const deriveLocationKeyFromSeminar = (seminar: Pick<UpcomingSeminar, "locationId" | "locationLabel">): string | null => {
+  if (seminar.locationId) {
+    return seminar.locationId;
+  }
+  if (seminar.locationLabel) {
+    const slug = slugify(seminar.locationLabel);
+    return slug.length > 0 ? slug : null;
+  }
+  return null;
 };
 
 const TOPLINE_DATE_FORMATTER = new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "short" });
@@ -66,16 +84,23 @@ type SeminarListItemProps = {
   seminar: UpcomingSeminar;
   buttonText: string;
   isDarkBackground: boolean;
+  onLocationClick?: (locationKey: string) => void;
 };
 
-function SeminarListItem({ seminar, buttonText, isDarkBackground }: SeminarListItemProps) {
+function SeminarListItem({ seminar, buttonText, isDarkBackground, onLocationClick }: SeminarListItemProps) {
   const image = formatImageSrc(seminar);
   const seminarHref = `/seminare/${encodeURIComponent(seminar.slug)}`;
   const mobileToplineDate = useMemo(() => formatToplineDate(seminar.nextDateIso), [seminar.nextDateIso]);
   const locationLabel = seminar.locationLabel ?? null;
-  const locationBadgeTone = isDarkBackground
-    ? "border-base-100/30 text-base-100/80"
-    : "border-base-content/30 text-base-content/60";
+  const locationKey = deriveLocationKeyFromSeminar(seminar);
+  const locationBadgeClass = isDarkBackground ? "badge-location badge-location-dark" : "badge-location badge-location-light";
+
+  const handleLocationBadgeClick = () => {
+    if (!locationKey) {
+      return;
+    }
+    onLocationClick?.(locationKey);
+  };
 
   return (
     <article className="group grid gap-4 md:grid-cols-[280px_var(--width-seminar-date)_minmax(0,1fr)] md:items-start md:gap-6">
@@ -102,7 +127,7 @@ function SeminarListItem({ seminar, buttonText, isDarkBackground }: SeminarListI
       <div className="flex flex-col gap-3 md:col-start-3 md:row-start-1 md:gap-4 md:self-start">
         <div className="flex flex-col gap-[0.2rem] md:gap-1">
           {mobileToplineDate ? (
-            <p className="mb-0 flex items-baseline gap-1.5 text-base font-semibold uppercase leading-tight md:hidden">
+            <p className="mb-0 flex items-baseline gap-1.25 text-sm font-semibold uppercase leading-tight tracking-wide text-base-content md:hidden">
               <span className="text-base-content">{mobileToplineDate.day}</span>
               <span className="text-base-content/30">|</span>
               <span className="font-normal text-base-content/60">{mobileToplineDate.month}</span>
@@ -112,13 +137,16 @@ function SeminarListItem({ seminar, buttonText, isDarkBackground }: SeminarListI
             <h3 className="heading-card rt-heading-xs font-semibold leading-tight text-balance text-base-content !mt-0 !mb-[0.2rem] !text-[1.35rem] w-fit">
               {seminar.title}
             </h3>
-            {locationLabel ? (
-              <span
-                className={`inline-flex h-[22px] w-fit items-center rounded-full border px-2 text-[0.68rem] font-medium tracking-wide ${locationBadgeTone}`}
-              >
-                {locationLabel}
-              </span>
-            ) : null}
+          {locationLabel ? (
+            <button
+              type="button"
+              onClick={handleLocationBadgeClick}
+              className={locationBadgeClass}
+              aria-label={`Seminare am Standort ${locationLabel} filtern`}
+            >
+              {locationLabel}
+            </button>
+          ) : null}
           </div>
           {seminar.shortDescription ? (
             <p className="mt-1 text-base text-base-content/80">{seminar.shortDescription}</p>
@@ -150,6 +178,7 @@ export function SeminarList({
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(mehrButtonAnzeigen && initialItems.length >= loadLimit);
   const [error, setError] = useState<string | null>(initialError);
+  const [selectedLocationKey, setSelectedLocationKey] = useState<string | null>(null);
 
   const handleLoadMore = async () => {
     if (isLoading || !hasMore) {
@@ -197,41 +226,116 @@ export function SeminarList({
   const introTextClass = `${isDarkBackground ? "text-base-100/85" : "text-base-content/75"} text-center mx-auto`;
   const emptyStateClass = isDarkBackground ? "text-base-100/80" : "text-base-content/70";
 
+  const locationOptions = useMemo(() => {
+    const byKey = new Map<string, string>();
+    items.forEach((seminar) => {
+      if (!seminar.locationLabel) {
+        return;
+      }
+      const key = deriveLocationKeyFromSeminar(seminar);
+      if (!key || byKey.has(key)) {
+        return;
+      }
+      byKey.set(key, seminar.locationLabel);
+    });
+    return Array.from(byKey.entries())
+      .map(([id, label]) => ({ id, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, "de"));
+  }, [items]);
+
+  const hasLocationFilter = locationOptions.length > 0;
+  const filteredItems = useMemo(() => {
+    if (!selectedLocationKey) {
+      return items;
+    }
+    return items.filter((seminar) => deriveLocationKeyFromSeminar(seminar) === selectedLocationKey);
+  }, [items, selectedLocationKey]);
+
+  const handleLocationFilterChange = useCallback((key: string | null) => {
+    if (!key) {
+      setSelectedLocationKey(null);
+      return;
+    }
+    setSelectedLocationKey((current) => (current === key ? null : key));
+  }, []);
+
+  const noItemsMessage = selectedLocationKey
+    ? "Für diesen Standort sind aktuell keine Termine geplant."
+    : "Aktuell sind keine Termine geplant.";
+
+  const hasIntro = paragraphs.length > 0;
+  const listSpacingClass = hasIntro || hasLocationFilter ? "mt-6 md:mt-8" : "mt-4 md:mt-6";
+  const locationPillInactive = isDarkBackground ? "badge-location badge-location-dark" : "badge-location badge-location-light";
+  const locationPillActive = isDarkBackground
+    ? "badge-location badge-location-active-dark"
+    : "badge-location badge-location-active-light";
+  const getLocationPillClass = (active: boolean) => (active ? locationPillActive : locationPillInactive);
+
   return (
     <section style={style}>
       <div
-        className={`mx-auto flex w-full max-w-[var(--landing-content-max-width)] flex-col gap-2 px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)] md:gap-4 ${
+        className={`mx-auto flex w-full max-w-[var(--landing-content-max-width)] flex-col px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)] ${
           isDarkBackground ? "text-base-100" : ""
         }`}
       >
-        {showHeadline ? <HeadingTag className={headingClass}>{trimmedHeadline}</HeadingTag> : null}
+        {showHeadline ? <HeadingTag className={`${headingClass} mb-2 md:mb-3`}>{trimmedHeadline}</HeadingTag> : null}
 
         {paragraphs.length > 0 ? (
-          <div className={`max-w-3xl space-y-4 text-lg leading-relaxed ${introTextClass}`}>
+          <div className={`max-w-3xl space-y-4 text-lg leading-relaxed ${introTextClass} mb-6 md:mb-8`}>
             {paragraphs.map((paragraph, index) => (
               <p key={index}>{paragraph}</p>
             ))}
           </div>
         ) : null}
 
-        {items.length === 0 ? (
-          <div
-            className={`rounded-3xl bg-base-100 px-6 py-10 text-center shadow-sm ring-1 ring-base-300 md:px-10 md:py-12 ${emptyStateClass}`}
-          >
-            Aktuell sind keine Termine geplant.
+        {hasLocationFilter ? (
+          <div className={`mb-6 flex flex-wrap justify-center gap-3 md:gap-4 ${hasIntro ? "mt-0" : "mt-2"}`}>
+            <button
+              type="button"
+              className={getLocationPillClass(selectedLocationKey === null)}
+              aria-pressed={selectedLocationKey === null}
+              onClick={() => handleLocationFilterChange(null)}
+            >
+              Alle Standorte
+            </button>
+            {locationOptions.map((option) => {
+              const active = selectedLocationKey === option.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  className={getLocationPillClass(active)}
+                  aria-pressed={active}
+                  onClick={() => handleLocationFilterChange(option.id)}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
           </div>
-        ) : (
-          <div className="flex flex-col gap-10 md:gap-14">
-            {items.map((seminar) => (
-              <SeminarListItem
-                key={`${seminar.id}-${seminar.nextDateTimestamp}`}
-                seminar={seminar}
-                buttonText={buttonText}
-                isDarkBackground={isDarkBackground}
-              />
-            ))}
-          </div>
-        )}
+        ) : null}
+
+        <div className={listSpacingClass}>
+          {filteredItems.length === 0 ? (
+            <div
+              className={`rounded-3xl bg-base-100 px-6 py-10 text-center shadow-sm ring-1 ring-base-300 md:px-10 md:py-12 ${emptyStateClass}`}
+            >
+              {noItemsMessage}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-10 md:gap-14">
+              {filteredItems.map((seminar) => (
+                <SeminarListItem
+                  key={`${seminar.id}-${seminar.nextDateTimestamp}`}
+                  seminar={seminar}
+                  buttonText={buttonText}
+                  isDarkBackground={isDarkBackground}
+                  onLocationClick={handleLocationFilterChange}
+                />
+              ))}
+            </div>
+          )}
+        </div>
 
         {error ? <p className="text-sm text-error">{error}</p> : null}
 
