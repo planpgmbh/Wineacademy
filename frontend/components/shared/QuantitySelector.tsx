@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, type CSSProperties } from "react";
 
 type QuantitySelectorProps = {
   value: number;
@@ -21,13 +21,13 @@ export function QuantitySelector({
     onChange(value + 1);
   }, [onChange, value]);
 
+  const baseStyle: CSSProperties = { backgroundColor: "transparent" };
+
   return (
-    <div
-      className={`flex items-center gap-0 rounded-full border ui-border bg-base-100 px-2 py-1 text-base-content/80 ${className}`.trim()}
-    >
+    <div className={`flex items-center gap-0 rounded-full border ui-border bg-transparent px-2 py-1 text-base-content/80 backdrop-blur-xl ${className}`.trim()} style={baseStyle}>
       <button
         type="button"
-        className="flex size-8 items-center justify-center rounded-full border ui-border text-lg leading-none transition-colors hover:bg-base-200"
+        className="flex size-8 items-center justify-center rounded-full border ui-border text-lg leading-none bg-white/70 transition-colors hover:bg-white/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-content/40"
         onClick={decrease}
         aria-label="Menge verringern"
       >
@@ -36,7 +36,7 @@ export function QuantitySelector({
       <span className="min-w-[1.5rem] px-[3px] text-center text-sm font-medium">{value}</span>
       <button
         type="button"
-        className="flex size-8 items-center justify-center rounded-full border ui-border text-lg leading-none transition-colors hover:bg-base-200"
+        className="flex size-8 items-center justify-center rounded-full border ui-border text-lg leading-none bg-white/70 transition-colors hover:bg-white/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-content/40"
         onClick={increase}
         aria-label="Menge erhöhen"
       >

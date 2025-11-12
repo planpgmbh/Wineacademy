@@ -135,7 +135,7 @@ export function SeminarBookingCard({
 
   return (
     <article
-      className={`flex w-full flex-col gap-6 rounded-box border ui-border bg-base-100/95 p-4 shadow-xl backdrop-blur-sm md:min-w-[360px] md:max-w-[360px] md:w-[360px] md:p-5 ${className}`.trim()}
+      className={`flex w-full flex-col gap-6 rounded-box border ui-border bg-base-100/65 p-4 shadow-xl backdrop-blur-xl md:min-w-[360px] md:max-w-[360px] md:w-[360px] md:p-5 ${className}`.trim()}
     >
       <div className="space-y-2.5">
         {highlightLabel ? (

@@ -188,6 +188,24 @@ body {
     margin: 0;
   }
 
+  .hero-heading {
+    font-size: clamp(2rem, 1.55rem + 2.5vw, 3.1rem);
+  }
+
+  @media (min-width: 768px) {
+    .hero-heading {
+      font-size: clamp(2.4rem, 1.35rem + 2.6vw, 3.35rem);
+    }
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
   .badge-location {
     @apply inline-flex shrink-0 items-center rounded-full border px-2 text-[0.68rem] font-medium tracking-wide transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2;
     min-height: 22px;
