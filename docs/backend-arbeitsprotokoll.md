@@ -75,7 +75,7 @@ Hinweis: Dieses Protokoll wird nicht mehr fortgeschrieben. Ab sofort dient das C
 - 2025-10-09 – Landingpage-Controller populiert alle Abschnittsvarianten (Hero, Textblock, Karten-, Icon-Grids) für vollständige API-Antworten. – Commit: b948550
 - 2025-10-08 – Landingpage-Modul in Strapi als Dynamic-Zone-Komponenten umgesetzt, Seeds auf Inhalte der alten Homepage übertragen (Renderer-Anbindung siehe Frontend-Protokoll). – Commit: n/a
 - 2025-10-02 – Entwicklungsplan erstellt, bisherige Architektur erfasst und nächste Arbeitsschritte priorisiert. – Commit: n/a
-- 2025-10-02 – SendGrid-E-Mail-Konzept abgestimmt; Template-Struktur und Umsetzungsschritte im Plan ergänzt. – Commit: n/a
+- 2025-10-02 – E-Mail-Konzept mit externem Dienst abgestimmt; Template-Struktur und Umsetzungsschritte im Plan ergänzt. – Commit: n/a
 - 2025-10-02 – SevDesk-API recherchiert und Integrationsschritte (Kontakt-/Rechnungsanlage, PDFs, Status-Rücklauf) in den Plan aufgenommen. – Commit: n/a
 - 2025-10-02 – Rechnungsintegration auf SevDesk umgestellt (ENV & Dokumentation aktualisiert). – Commit: 030507b
 - 2025-10-02 – Storno-Event-Anforderung (E-Mail/Stornobeleg) in Plan und Backend-Doku ergänzt. – Commit: 030507b
@@ -86,10 +86,10 @@ Hinweis: Dieses Protokoll wird nicht mehr fortgeschrieben. Ab sofort dient das C
 - 2025-10-02 – Termin-Relation von "Ort" auf "Standort" im Strapi-Schema, Seeds und Admin-Übersetzungen umgebaut (Frontend-Anpassungen siehe Frontend-Protokoll). – Commit: n/a
 - 2025-10-02 – Veraltete "Ort"-Artefakte im Strapi-Build (dist) entfernt, Backend & Staging-Stack neu gebaut. – Commit: n/a
 - 2025-10-02 – Content-Type „Benachrichtigungen“ im Strapi-Admin umbenannt, Feld-Beschriftungen & Hilfetexte in Deutsch ergänzt; Doku aktualisiert. – Commit: 1b5d199
-- 2025-10-03 – Content-Type „Benachrichtigungen“ (UID, Felder, Platzhalter, SendGrid) und Einstellungen vollständig eingedeutscht; Admin-Endpunkt, Component & Typdefinitionen angepasst. – Commit: 591ac3f
+- 2025-10-03 – Content-Type „Benachrichtigungen“ (UID, Felder, Platzhalter, externer Maildienst) und Einstellungen vollständig eingedeutscht; Admin-Endpunkt, Component & Typdefinitionen angepasst. – Commit: 591ac3f
 - 2025-10-03 – E-Mail-Transport-Toggle (`EMAIL_TRANSPORT_ENABLED`) eingeführt, `.env.staging` ergänzt und Backend-Build erfolgreich ausgeführt. – Commit: n/a
-- 2025-10-03 – SendGrid-Testdaten (Einstellungen + Benachrichtigung) per Script `backend/scripts/seed-sendgrid-test.js` in der Staging-Datenbank angelegt. – Commit: n/a
-- 2025-10-03 – SendGrid-Testversand via `scripts/sendgrid-test-send.js` angestoßen (`403 Forbidden`: Absender `technik@plan-p.de` noch nicht als Sender Identity verifiziert). – Commit: n/a
+- 2025-10-03 – Testdaten für den damaligen externen Maildienst (Einstellungen + Benachrichtigung) per Seed-Script in der Staging-Datenbank angelegt. – Commit: n/a
+- 2025-10-03 – Testversand des externen Maildiensts via Script angestoßen (`403 Forbidden`: Absender `technik@plan-p.de` noch nicht als Sender Identity verifiziert). – Commit: n/a
 - 2025-10-03 – Nach Verifizierung von `technik@plan-p.de` erfolgreicher Testversand (`messageId=_Ir7gYCcSce-RA13xEZiiw`). – Commit: n/a
 - 2025-10-03 – SevDesk-API-Discovery dokumentiert (`docs/sevdesk.md`), offene Punkte & Testplan für Integration erfasst. – Commit: n/a
 - 2025-10-03 – Backend-Service `src/services/sevdesk.ts` angelegt (Token-Auth, Retries, PDF-Download), Readmes aktualisiert und Build erfolgreich durchlaufen. – Commit: n/a
@@ -115,7 +115,7 @@ Hinweis: Dieses Protokoll wird nicht mehr fortgeschrieben. Ab sofort dient das C
 - 2025-10-08 – Platzhalter-Auflösung der Benachrichtigungs-Templates an Content-Type-Daten angepasst (Deep-Merge & Nested Lookup), Strapi-Build erfolgreich geprüft. – Commit: n/a
 - 2025-10-08 – Fallback-Handling der Benachrichtigungs-Platzhalter überarbeitet, damit Testdaten nur ohne Runtime-Daten greifen; Backend neu gebaut und Service neu gestartet. – Commit: n/a
 - 2025-10-08 – Fallbacks für Benachrichtigungs-Platzhalter vollständig entfernt (nur noch Runtime-Daten in E-Mails), Backend mit Force-Recreate neu deployed. – Commit: n/a
-- 2025-10-09 – Obsolete Skripte (`copy-schemas.js`, `seed-sendgrid-test.js`, `sendgrid-test-send.js`) entfernt und SendGrid-Dokumentation bereinigt. – Commit: n/a
+- 2025-10-09 – Obsolete Mail- und Hilfsskripte (`copy-schemas.js`, frühere Seed-/Test-Skripte für den externen Maildienst) entfernt und die Dokumentation dazu bereinigt. – Commit: n/a
 - 2025-10-28 – Staging-Termine bereinigt (`deleteMany`) und via `scripts/create-test-terms.js` neu erzeugt (234 Termine, Zuordnung Seminar/Standort geprüft). – Commit: n/a
 - 2025-10-08 – Rechnungs-/Stornorechnungs-Links in Kunden- und Backoffice-Mails verankert, neue Download-Endpoints für PDF-Belege erstellt und Storno-Benachrichtigungen (Kunde/Backoffice) samt Seeds implementiert. – Commit: n/a
 - 2025-10-08 – Staging-Datenbank neu aufgesetzt (DROP/CREATE), Seeds mit neuen Benachrichtigungen durchgeführt und Backend-Service anschließend mit deaktiviertem SEED_ON_BOOT neu gestartet. – Commit: n/a

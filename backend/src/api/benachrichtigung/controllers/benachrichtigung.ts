@@ -42,7 +42,7 @@ export default factories.createCoreController(CONTENT_UID, ({ strapi }) => ({
       ctx.body = {
         ok: true,
         messageId: result?.messageId ?? null,
-        transport: result?.transport ?? 'sendgrid',
+        transport: result?.transport ?? 'smtp',
       };
       return ctx.body;
     } catch (error: any) {

@@ -20,12 +20,12 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - Zahlungsarten: Rechnung als Default, PayPal via Capture + Webhook-Verifikation (Sandbox-Mode bis Go-Live).
 - Gutscheine: Ein Template in Strapi, Codes werden nach erfolgreicher Bezahlung serverseitig generiert und Bestellungen zugeordnet.
 - Newsletter-Opt-in wird im Kundenstamm (`api::kunde`) persistiert und bei Wiederbestellungen aktualisiert.
-- SendGrid versendet transaktionale E-Mails; redaktionelle Inhalte/Layouts werden in Strapi-Templates gepflegt (Draft/Publish, Testversand möglich).
+- Transaktionale E-Mails laufen über den eigenen SMTP-Mailserver; redaktionelle Inhalte/Layouts werden in Strapi-Templates gepflegt (Draft/Publish, Testversand möglich).
 - Strapi hält zentrale Systemeinstellungen (Absenderadresse, Benachrichtigungs-Empfänger) für Kommunikation und Backoffice-Events vor.
 - Sensible Credentials (API-Keys) liegen in ENV-Dateien; redaktionell pflegbare Werte (Absendernamen, Empfängerlisten) werden als Single-Type "Einstellungen" in Strapi verwaltet.
 - Rechnungsstellung läuft über die SevDesk-API (API-Token), inkl. Kontakte-/Rechnungsanlage und Rückführung der PDFs in das System.
 - Landingpages werden über Strapi-Dynamic-Zones gepflegt; Visual-Editing-Workflow (Vercel Preview → Strapi-Feld) ermöglicht redaktionelles Live-Editing.
-- Externe APIs (z. B. SendGrid, SevDesk) werden vor Implementierung durch Tests/Prototypen verifiziert; Ergebnisse & Anforderungen werden dokumentiert, bevor produktiver Code entsteht.
+- Externe APIs (z. B. SevDesk) werden vor Implementierung durch Tests/Prototypen verifiziert; Ergebnisse & Anforderungen werden dokumentiert, bevor produktiver Code entsteht.
 - Forced-HTTPS-Middleware im Backend stellt korrekte Proxy-Header sicher (secure Cookies für Admin/REST).
 - Seed-Daten (Seminare, Termine, Produkte, Gutscheine) werden über `SEED_ON_BOOT` gesteuert; keine automatischen Resets in Produktion.
 - Tests: Puppeteer-Skript deckt Checkout (Rechnung & PayPal) gegen Staging-Domain ab.
@@ -46,11 +46,10 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - [x] Admin-Testversand & Dokumentation der verfügbaren Platzhalter in Strapi/Admin-Handbuch hinterlegt (`/admin/…/test-send`, Anleitung `docs/admin-benachrichtigungen.md`).
 - [x] Endpoint-Dokumentation (OpenAPI/Markdown) für Partner & Frontend erweitert (`docs/api-public.md`).
 
-3. SendGrid API-Discovery & Dokumentation
-- [x] SendGrid-Spezifikation (Auth, Limits, relevante Endpoints) analysieren und offene Fragen sammeln (siehe `docs/sendgrid.md`).
-- [x] Transaktionale E-Mail über `/mail/send` mit Sandbox/Suppressions testen (mangels API-Key nicht ausgeführt; Ablauf dokumentiert in `docs/sendgrid.md`).
-- [x] Versand mit Template-Data (Dynamic Templates) und Fehlerfall (ungültiger API-Key/Empfänger) verifizieren (Testfälle beschrieben, Ausführung nach API-Key-Hinterlegung nachholen).
-- [x] Ergebnisse als Implementierungsleitfaden in `docs/sendgrid.md` dokumentieren (Workflows, Payload-Mapping, Fehlerszenarien, Free-Plan-Einrichtung).
+3. E-Mail-Versand (SMTP)
+- [x] Externen Maildienst entfernt und Strapi-Mailservice auf SMTP (eigener Mailserver) umgestellt.
+- [ ] Variante bewerten: zentraler Mail-Service (API) vs. Direktversand im Backend für Mehrprojekt-Nutzung.
+- [ ] SMTP-Konfiguration für Staging/Prod abstimmen (Host, Auth, TLS-Anforderungen) und dokumentieren.
 
 4. SevDesk API-Discovery & Dokumentation
 - [x] SevDesk-Spezifikation (Auth, Limits, relevante Endpoints, Datenfelder) analysieren und offene Fragen sammeln.
@@ -75,7 +74,7 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 - [x] Checkout validiert Rechnungs-/Teilnehmerdaten, AGB/Datenschutz und erzeugt Bestellungen.
 - [x] PayPal-Buttons mit SDK-Lazy-Load, Validation-Hooks und Capture-Handling integriert.
 - [ ] Firmen-Validierungen (z. B. USt-Id-Format, Pflichtfelder) und Fehlertexte nachschärfen.
-- [x] SendGrid-Service inkl. ENV (`SENDGRID_API_KEY`, Absenderdaten) und Logging im Backend verdrahten (gemäß `docs/sendgrid.md`, Toggle berücksichtigt).
+- [x] SMTP-Mailservice inkl. ENV (`SMTP_*`, `EMAIL_*`) und Logging im Backend verdrahten (Toggle `EMAIL_TRANSPORT_ENABLED` berücksichtigt).
 - [x] Versand-Toggle (`EMAIL_TRANSPORT_ENABLED`) über ENV eingeführt und dokumentiert (Staging `.env` aktualisiert).
 - [x] Bestellbestätigung nach Checkout mit Template-Renderer auslösen (Kund:innen-Mail).
 - [x] Zahlungsbestätigung & Versand von Rechnung/Gutscheinen nach Zahlungseingang (PayPal-Webhook, Rechnungsverbuchung).

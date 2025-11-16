@@ -26,7 +26,7 @@ Strapi liefert die Inhalte (Seminare, Termine, Produkte, Gutscheine) und wickelt
 - **Gutschein:** Generierte Codes inkl. Betrag/Einsatzstatus (Rabatt-/Wertgutscheine); `versandDetails` bewahrt Empfänger- und Versandinformationen inklusive hinterlegter Versandkosten. Sobald eine Bestellung auf „bezahlt“ wechselt, erzeugt Strapi für alle Gutschein-Positionen automatisch neue Codes. Präsentations-/Bookingbox-Felder sowie `versandkosten` (für postalische Gutscheine) liegen im Single-Type `gutscheineinstellung`.
 - **Kategorie/Kunde:** Klassifizierung der Seminare bzw. CRM-Einträge inkl. Newsletter-Opt-in.
 - **Einstellung:** Single-Type für Kommunikations-Defaults (Absendername/-adresse, Antwort-Adresse, Benachrichtigungsempfänger) mit ENV-Fallback (`EMAIL_FROM`, `EMAIL_REPLY_TO`).
-- **Benachrichtigungen:** Collection-Type für transaktionale E-Mail-Layouts inkl. Platzhalterdokumentation, Testdaten und optionaler SendGrid-Vorlagen-ID.
+- **Benachrichtigungen:** Collection-Type für transaktionale E-Mail-Layouts inkl. Platzhalterdokumentation und Testdaten.
 - **Landingpage:** Collection-Type für frei gestaltbare Seiten (Homepage, Kategorien etc.) mit Dynamic-Zone-Bausteinen (Hero, Karten, Textblock, Icon-Grid).
 
 Namenskonvention: Für Terminstatus `planungsstatus` verwenden und Relationen laut Schema (`schema.json`) pflegen.
@@ -96,16 +96,15 @@ curl -s -X POST http://localhost:1337/api/public/bestellungen \
 ## Benachrichtigungen & Testversand
 - **Content-Type:** `Benachrichtigungen` verwaltet jede Systemmail (z. B. Bestellbestätigung, Zahlungsbestätigung, Backoffice-Info). Pflichtfelder: `Titel`, `Anwendungsfall`, `Betreff`.
 - **Platzhalter:** Über die Component `benachrichtigung.platzhalter` dokumentierst du Schlüssel, Beschreibung und Beispielwerte. `Testdaten (JSON)` ergänzt komplexe Strukturen (z. B. Arrays) und wird mit den Platzhalter-Beispielen zusammengeführt.
-- **Layouts:** Das Feld `layout` (Default/Rechnung/Backoffice) bestimmt das HTML-Grundgerüst, `bodyHtml`/`bodyText` verwenden Platzhalter wie `{{kunde.vorname}}`. Optional kann eine `sendgridVorlagenId` gesetzt werden, dann werden `dynamicTemplateData` an SendGrid übergeben.
-- **Admin-Testversand:** `POST /admin/benachrichtigungen/:id/test-send` (authentifizierte Admin-Session) löst einen Einzelversand via SendGrid aus. Payload:
+- **Layouts:** Das Feld `layout` (Default/Rechnung/Backoffice) bestimmt das HTML-Grundgerüst, `bodyHtml`/`bodyText` verwenden Platzhalter wie `{{kunde.vorname}}`.
+- **Admin-Testversand:** `POST /admin/benachrichtigungen/:id/test-send` (authentifizierte Admin-Session) löst einen Einzelversand über den konfigurierten SMTP-Server aus. Payload:
   ```json
   { "email": "ziel@example.com", "platzhalter": { "bestellung.bestellnummer": "WA-20251001" } }
   ```
-  Übergebene Platzhalter überschreiben `Testdaten (JSON)` und Beispielwerte. Antwort enthält `messageId` des SendGrid-Transports.
-- **Service:** Implementiert in `src/api/benachrichtigung/services/benachrichtigung.ts`, Versand via `src/services/notification-email.ts` (SendGrid API). Einstellungen/Absender stammen aus `src/services/settings.ts` + Strapi-Single-Type "Einstellungen".
+  Übergebene Platzhalter überschreiben `Testdaten (JSON)` und Beispielwerte. Antwort enthält `messageId` des SMTP-Transports.
+- **Service:** Implementiert in `src/api/benachrichtigung/services/benachrichtigung.ts`, Versand via `src/services/notification-email.ts` (SMTP über lokalen Mailserver). Einstellungen/Absender stammen aus `src/services/settings.ts` + Strapi-Single-Type "Einstellungen".
 - **Transport-Toggle:** `EMAIL_TRANSPORT_ENABLED=false` deaktiviert den Versand (Strapi loggt die unterdrückte Mail und liefert `202` zurück); ideal für lokale/Preview-Umgebungen.
-- **Seed-Script:** `node scripts/seed-sendgrid-test.js` (innerhalb des Containers) hinterlegt Absenderdaten & eine Testbenachrichtigung für den SendGrid-Testversand.
-- **Testversand-Skript:** `node scripts/sendgrid-test-send.js` löst den internen `testSend`-Service aus (`SENDGRID_TEST_RECIPIENT` oder Default `philipp@plan-p.de`).
+- **SMTP-ENV:** `SMTP_HOST`, optional `SMTP_PORT` (Default 587), `SMTP_USER`/`SMTP_PASS` für Auth, `SMTP_SECURE` (Default `false`, Port 465 → `true`), `SMTP_REQUIRE_TLS` (Default `false`), `SMTP_ALLOW_SELF_SIGNED` (Default `false`). Absender/Reply-To wie bisher über `EMAIL_FROM`/`EMAIL_REPLY_TO` oder den Single-Type.
 
 ## Entwicklung & Qualitätssicherung
 - **Tests:** E2E-Checkout über `node tests/checkout-puppeteer.js` (setzt laufenden Staging-Stack und PayPal-Sandbox-Zugangsdaten voraus).

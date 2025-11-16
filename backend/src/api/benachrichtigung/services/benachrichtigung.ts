@@ -21,7 +21,6 @@ interface TemplateEntity {
   bodyText?: string | null;
   platzhalter?: PlatzhalterDefinition[] | null;
   testPayload?: Record<string, unknown> | null;
-  sendgridVorlagenId?: string | null;
   aktiv?: boolean | null;
 }
 
@@ -217,16 +216,6 @@ async function dispatchTemplate(
   platzhalterDaten: Record<string, unknown>,
   categories?: string[]
 ) {
-  if (template.sendgridVorlagenId) {
-    const response = await sendEmail(strapi, {
-      to: recipient,
-      templateId: template.sendgridVorlagenId,
-      dynamicTemplateData: platzhalterDaten,
-      categories,
-    });
-    return { messageId: response.messageId ?? undefined, transport: 'sendgrid' as const };
-  }
-
   const subject = renderTemplateString(template.betreff || template.name || 'Benachrichtigung', platzhalterDaten);
   const vorschauzeile = renderTemplateString(template.vorschauzeile ?? '', platzhalterDaten) || undefined;
   const rawHtml = renderTemplateString(template.bodyHtml ?? '', platzhalterDaten);
@@ -241,7 +230,7 @@ async function dispatchTemplate(
     categories,
   });
 
-  return { messageId: response.messageId ?? undefined, transport: 'sendgrid' as const };
+  return { messageId: response.messageId ?? undefined, transport: 'smtp' as const };
 }
 
 export default factories.createCoreService(CONTENT_UID, ({ strapi }) => ({

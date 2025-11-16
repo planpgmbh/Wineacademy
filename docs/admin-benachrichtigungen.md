@@ -9,7 +9,6 @@ Dieser Leitfaden beschreibt, wie transaktionale E-Mails in Strapi verwaltet und 
 - **Vorschauzeile:** Der kurze Text hinter dem Betreff hilft, im Posteingang zusätzliche Infos zu zeigen.
 - **Platzhalter-Dokumentation:** Über die Component `Platzhalter` pflegst du Schlüssel, Beschreibung und Beispielwerte; Beispiele landen automatisch im Testversand.
 - **Testdaten:** Im Feld `Testdaten (JSON)` kannst du verschachtelte Objekte oder Arrays hinterlegen (z. B. `{ "kundin": { "vorname": "Anna" } }`). Die Daten werden mit den Platzhalter-Beispielen zusammengeführt; Request-Daten haben Priorität.
-- **SendGrid-Vorlage:** Mit `SendGrid-Vorlagen-ID` wird stattdessen das dynamische SendGrid-Template genutzt, Strapi-Inhalte dienen dann nur zur Dokumentation.
 
 ### Empfohlene Platzhalter je Anwendungsfall
 | Anwendungsfall | Zweck | Empfohlene Platzhalter |
@@ -24,7 +23,7 @@ Dieser Leitfaden beschreibt, wie transaktionale E-Mails in Strapi verwaltet und 
 ## Admin-Testversand
 
 ### Voraussetzungen
-1. **SendGrid-API-Key** (`SENDGRID_API_KEY`) und Absender-Einstellungen (`EMAIL_FROM`, optional `EMAIL_REPLY_TO`) müssen gesetzt sein.
+1. SMTP-Parameter (`SMTP_HOST`, optional `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_SECURE`) sowie Absender-Einstellungen (`EMAIL_FROM`, optional `EMAIL_REPLY_TO`) müssen gesetzt sein.
 2. Strapi-Admin-Nutzer*in mit Berechtigung „Benachrichtigungen“.
 
 ### Endpoint
@@ -47,7 +46,7 @@ Authorization: Bearer <Admin-Token>
 
 - `email` ist Pflicht und bestimmt die Empfängeradresse.
 - `platzhalter` überschreiben Beispielwerte (Component `Platzhalter`) und `Testdaten (JSON)`.
-- Antwort enthält `{ "ok": true, "messageId": "<SendGrid-ID>", "transport": "sendgrid" }`.
+- Antwort enthält `{ "ok": true, "messageId": "<SMTP-ID>", "transport": "smtp" }`.
 
 ### Durchführung im Browser
 1. Im Strapi-Admin eine API-Token mit Zugriff auf den Collection-Type erzeugen (`Einstellungen → API Tokens → Create new` → Scope: `Benachrichtigungen` & `Custom` → Route `POST /admin/benachrichtigungen/:id/test-send`).
@@ -55,7 +54,7 @@ Authorization: Bearer <Admin-Token>
 3. Mit einem Tool wie Hoppscotch, Thunder Client oder `curl` den Request absetzen.
 
 ### Fehlerbehebung
-- **Fehlender API-Key:** Rückmeldung `SENDGRID_API_KEY ist nicht gesetzt` → `.env` prüfen und Strapi neu starten.
+- **SMTP nicht konfiguriert:** Rückmeldung `SMTP_HOST ist nicht gesetzt` → `.env` prüfen und Strapi neu starten.
 - **Absender nicht konfiguriert:** Stelle sicher, dass im Single-Type `Einstellungen` eine Absenderadresse gepflegt ist oder `EMAIL_FROM` gesetzt wurde.
 - **Platzhalter unbekannt:** Nicht gepflegte Platzhalter werden als leere Zeichenkette ersetzt; im Zweifel die Component `Platzhalter` ergänzen.
 

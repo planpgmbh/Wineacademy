@@ -541,7 +541,6 @@ export interface ApiBenachrichtigungBenachrichtigung
       Schema.Attribute.DefaultTo<'default'>;
     name: Schema.Attribute.String & Schema.Attribute.Required;
     platzhalter: Schema.Attribute.Component<'benachrichtigung.platzhalter', true>;
-    sendgridVorlagenId: Schema.Attribute.String;
     testPayload: Schema.Attribute.JSON;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
