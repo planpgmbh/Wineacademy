@@ -1,3 +1,8 @@
+Backend-Arbeitsprotokoll (Archiv)
+=================================
+
+Hinweis: Dieses Protokoll wird nicht mehr fortgeschrieben. Ab sofort dient das Commit-Log als zentrale Quelle für Ziele, Versuche (inkl. Fehlversuche), Probleme, Lösungen/Erkenntnisse sowie Tests. Die folgenden Einträge bleiben als Historie erhalten.
+
 - 2025-11-11 – Primary-Buttons erhielten den Hex-Ton `#8BB5D7` und einen sehr dezenten Textschatten, damit die weiße Schrift auf allen Hintergründen besser lesbar bleibt. Tests: `npm run lint` (Frontend). – Commit: 434f1bf
 - 2025-11-10 – Landing-Spalten erneut erweitert: Neues Feld „Darstellung“ (Box/Plain) steht im Strapi-Formular noch vor der Hintergrundfarbe, `landing.ts` normalisiert die Auswahl und `ColumnsSection` rendert Box- bzw. Plain-Layout (Plain: transparente Spalten, graue Divider, großzügiges Padding). Tests: `npm run build` (Backend), `npm run lint` (Frontend). – Commit: n/a
 - 2025-11-10 – Landing-Komponente „Trennlinie“ ergänzt: Strapi-Component `landing.trennlinie` (inkl. Hintergrundfarbe) steht in der Landing-Dynamic-Zone zur Verfügung; `landing.ts` liefert einen neuen Section-Typ `divider` und das Frontend rendert eine horizontale Linie (Linie–Logo–Linie) mit 30×30 px Wine-Academy-Logo für visuelle Abstände. Tests: `npm run build` (Backend), `npm run lint` (Frontend), `docker compose -f docker-compose-staging.yml up -d --build`. – Commit: n/a

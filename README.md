@@ -14,6 +14,8 @@ Diese Codebasis liefert die Wine Academy Hamburg Website: ein Strapi-Backend fü
 3. **Staging nutzen:** Alle Container-Kommandos mit `docker compose -f docker-compose-staging.yml ...` ausführen.
    - **Nur bei `.environment = staging`:** Nach jeder Änderung am Frontend oder Backend sofort `docker compose -f docker-compose-staging.yml up -d --build` ausführen, damit die Staging-Container den aktuellen Stand ausliefern.
 4. **Tests ausführen:** Nach Änderungen eigenständig die relevanten Tests/Checks laufen lassen (z. B. Puppeteer, Linting) und Ergebnisse protokollieren.
+5. **Commit-Log als Protokoll:** Commits sind die zentrale Dokumentation. Titel kurz auf Deutsch, Body ausführlich mit Ziel/Vorhaben, Versuchen (inkl. Fehlversuchen und Fehlermeldungen), finaler Lösung/Erkenntnis, Tests/Checks und offenen Punkten.
+6. **Push direkt nach Commit:** Nach jedem Commit sofort `git push origin staging` ausführen.
 
 ## Verzeichnisstruktur
 - `backend/` – Strapi-Projekt inklusive Content-Types, Controller für Public API und Seed-Logik (`backend/README.md`).
@@ -40,7 +42,7 @@ node tests/checkout-puppeteer.js
 - `frontend/README.md` – API-Basen, Komponentenstruktur, Checkout-/PayPal-Integration, Frontend-ENV-Variablen.
 - `docs/server-infrastructure.md` – Traefik-Routing, Netzwerke, Deploy-Abläufe, Backup-Hinweise.
 - `docs/entwicklungsplan.md` – Roadmap, Entscheidungen, offene Arbeitspakete.
-- `docs/backend-arbeitsprotokoll.md` – Laufende Backend-Aufgaben, Schritte und Commit-IDs.
+- `docs/backend-arbeitsprotokoll.md` – Historisches Archiv; aktuelle Schritte/Erkenntnisse stehen im Commit-Log.
 - `AGENTS.md` – Arbeitsprinzipien, Kommunikation und Tooling-Konventionen.
 
 Für Details zum Datenmodell, API-Requests oder Frontend-Flows bitte die jeweiligen Teilprojekt-Readmes heranziehen, um Redundanzen zu vermeiden.

@@ -5,13 +5,13 @@ Diese Regeln gelten sowohl auf dem Server (Staging/Live) als auch lokal. Zu Begi
 - **README einlesen:** Lies zu Beginn jeder Session `README.md` und berücksichtige alle dortigen Informationen.
 - **Bereichsspezifische Readmes:** Bei Backend-Arbeiten vor dem Plan `backend/README.md`, bei Frontend-Arbeiten `frontend/README.md` querlesen und relevante Hinweise einplanen.
 - **Sprache:** Antworte immer auf Deutsch.
-- **Planung vor Umsetzung:** Vor jeder größeren Änderung einen kurzen Plan (2–5 Schritte) formulieren und Freigabe abwarten.
+- **Planung vor Umsetzung:** Vor jeder größeren Änderung einen kurzen Plan (2–5 Schritte) formulieren, im Plan-Tool erfassen und nach jedem Schritt aktualisieren; Freigabe abwarten.
+- **Kleine CSS-Änderungen:** Minimal-invasive Style-Fixes (z. B. Abstände/Farben) direkt umsetzen und kurz notieren; keine ausgefeilte Erklärung oder Vorab-Freigabe nötig.
 - **Modell-Empfehlung:** Direkt nach dem Plan (und nach jedem Plan-Update) kurz begründen, ob Codex Low, Medium oder High am besten passt.
 - **Teste:** Nach Implementierungen die relevanten Tests/Linting ausführen und Ergebnisse nennen.
-- **Arbeitsprotokolle:** Backend-Fortschritt im Bereichslog (`docs/backend-arbeitsprotokoll.md`) dokumentieren und den Entwicklungsplan aktuell halten; Frontend-Anpassungen bei Bedarf direkt in den betreffenden Docs festhalten.
-- **Commits:** Nur auf ausdrückliche Anweisung committen/pushen (z. B. Befehl „commit“). Danach `git push origin staging` und Commit-ID im jeweiligen Arbeitsprotokoll vermerken.
+- **Commit-Protokoll (Backend & Frontend):** Commit-Log ist die zentrale Dokumentation. Jeder Commit enthält einen kurzen deutschen Titel und einen aussagekräftigen Body mit: Ziel/Vorhaben, Versuchen incl. Fehlversuchen, ggf. Fehlermeldungen/Logs, finaler Lösung oder Erkenntnis, Tests/Checks, offene Punkte. Keine neuen Einträge mehr in `docs/backend-arbeitsprotokoll.md` (nur Historie).
+- **Commits:** Nur auf ausdrückliche Anweisung committen. Direkt nach jedem Commit sofort `git push origin staging`; Commit-Body wie oben beschrieben formulieren.
 - **Datenbank Reset:** Wenn „dbreset“ o. ä. gefordert wird, Datenbank löschen und Seeds neu einspielen.
-- **Commit-Nachricht:** Auf Deutsch, kurz und beschreibend.
 - **Server-Infrastruktur:** Für Compose-/Traefik-/Hosting-Fragen `docs/server-infrastructure.md` heranziehen.
 - **Liveserver:** Arbeitest du direkt auf dem Server, jede Änderung besonders vorsichtig durchführen und unnötige Eingriffe vermeiden.
 - **Lokale Entwicklung:** `.env.local` eigenständig pflegen, niemals Secrets einchecken. Wenn du lokale Frontend-Tests gegen Staging ausführst, löst du reale Staging-Prozesse (SevDesk, SendGrid, PayPal) aus und räumst Testdaten anschließend auf.
