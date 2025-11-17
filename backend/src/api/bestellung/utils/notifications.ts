@@ -231,12 +231,23 @@ export async function sendOrderNotifications(strapi: any, context: OrderNotifica
     return;
   }
 
-  const orderEmail = context.order?.email ? String(context.order.email).trim() : '';
-  if (orderEmail) {
+  const isBusiness = (context.order?.rechnungstyp || '').toLowerCase() === 'firma' || !!context.order?.rechnungsEmail;
+  const recipients = Array.from(
+    new Set(
+      [
+        context.order?.email,
+        ...(isBusiness && context.order?.rechnungsEmail ? [context.order.rechnungsEmail] : []),
+      ]
+        .filter(Boolean)
+        .map((value) => String(value).trim())
+    )
+  );
+
+  if (recipients.length > 0) {
     try {
       await notificationService.send({
         anwendungsfall: 'bestellbestaetigung',
-        recipients: [orderEmail],
+        recipients,
         platzhalter: buildCustomerPlatzhalter(context),
         categories: ['bestellung', 'kunde'],
       });
@@ -277,12 +288,23 @@ async function sendStornoNotifications(strapi: any, context: OrderNotificationCo
     return;
   }
 
-  const orderEmail = context.order?.email ? String(context.order.email).trim() : '';
-  if (orderEmail) {
+  const isBusiness = (context.order?.rechnungstyp || '').toLowerCase() === 'firma' || !!context.order?.rechnungsEmail;
+  const customerRecipients = Array.from(
+    new Set(
+      [
+        context.order?.email,
+        ...(isBusiness && context.order?.rechnungsEmail ? [context.order.rechnungsEmail] : []),
+      ]
+        .filter(Boolean)
+        .map((value) => String(value).trim())
+    )
+  );
+
+  if (customerRecipients.length > 0) {
     try {
       await notificationService.send({
         anwendungsfall: 'storno_bestaetigung',
-        recipients: [orderEmail],
+        recipients: customerRecipients,
         platzhalter: buildStornoCustomerPlatzhalter(context),
         categories: ['bestellung', 'storno', 'kunde'],
       });

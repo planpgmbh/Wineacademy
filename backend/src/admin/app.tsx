@@ -10,6 +10,7 @@ export default {
       intlLabel: { id: 'menu.bestellungen.bezahlt', defaultMessage: 'Bestellungen – bezahlt' },
       permissions: [],
     });
+
   },
   bootstrap() {},
   async registerTrads({ locales }: { locales: string[] }) {

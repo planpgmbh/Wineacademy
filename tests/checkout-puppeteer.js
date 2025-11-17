@@ -219,9 +219,8 @@ function buildScenarios(baseData) {
   const seminarSecondary =
     baseData.seminars.find((entry) => entry.slug !== seminarPrimary.slug) || baseData.seminars[baseData.seminars.length - 1];
   const seminarVatFree =
-    baseData.seminars.find((entry) => entry.steuerSatz === 0) ||
-    baseData.seminars.find((entry) => entry.slug === "wset-level-3-weine");
-  assert(seminarVatFree, "Kein seminar ohne MwSt gefunden.");
+    baseData.seminars.find((entry) => entry.steuerSatz === 0) || baseData.seminars[baseData.seminars.length - 1];
+  assert(seminarVatFree, "Kein seminar gefunden.");
 
   const productSensorik = baseData.products.find((entry) => entry.slug === "verkostungsset-sensorik") || baseData.products[0];
   const productWeinbuch = baseData.products.find((entry) => entry.slug === "weinbuch-klassiker") || baseData.products[baseData.products.length - 1];

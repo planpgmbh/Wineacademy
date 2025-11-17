@@ -1,6 +1,7 @@
 import { factories } from '@strapi/strapi';
 import type { UID } from '@strapi/types';
 import { sendEmail } from '../../../services/notification-email';
+import { getSystemSettings } from '../../../services/settings';
 
 interface PlatzhalterDefinition {
   id?: number;
@@ -184,17 +185,82 @@ function renderTemplateString(value: string | null | undefined, platzhalter: Rec
 }
 
 function applyLayout(layout: TemplateEntity['layout'], html: string, vorschauzeile?: string | null) {
+  const brandPrimary = '#8BB5D7';
+  const brandText = '#0f172a';
+  const brandMuted = '#4b5563';
+  const brandBg = '#f7f7f4';
+  const logoUrl = process.env.EMAIL_LOGO_URL || 'https://wineacademy.plan-p.de/icons/WineAcademy.png';
+
   const normalisedHtml = html || '';
-  const safeVorschauzeile = vorschauzeile ? `<span style="display:none!important;opacity:0;color:transparent;height:0;width:0;">${vorschauzeile}</span>` : '';
+  const safeVorschauzeile = vorschauzeile
+    ? `<span style="display:none!important;opacity:0;color:transparent;height:0;width:0;">${vorschauzeile}</span>`
+    : '';
+
+  const baseStyles = `
+    body { margin:0; padding:0; background:${brandBg}; color:${brandText}; font-family:"Helvetica Neue", Arial, sans-serif; }
+    h1, h2, h3 { font-family: Georgia, "Times New Roman", serif; font-weight:300; color:${brandText}; margin:0 0 16px; }
+    h1 { font-size:32px; line-height:1.15; }
+    h2 { font-size:26px; line-height:1.2; }
+    h3 { font-size:22px; line-height:1.25; }
+    p, li, td { font-size:16px; line-height:1.6; color:${brandText}; }
+    a { color:${brandPrimary}; text-decoration:underline; }
+    small { color:${brandMuted}; }
+  `;
+
+  const header = `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0; padding:0; background:${brandBg};">
+      <tr>
+        <td align="center" style="padding:28px 18px 16px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" width="640" style="max-width:640px;">
+            <tr>
+              <td style="padding:12px 0; text-align:left;">
+                <a href="https://wineacademy.plan-p.de" style="text-decoration:none; color:${brandText}; font-weight:600; font-size:15px;">
+                  <img src="${logoUrl}" alt="Wine Academy" width="180" style="max-width:180px; height:auto; display:block; margin:0 0 8px;" />
+                </a>
+              </td>
+              <td style="text-align:right; font-size:13px; color:${brandMuted}; font-family:'Helvetica Neue', Arial, sans-serif;">
+                ${vorschauzeile ? vorschauzeile : ''}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  `;
+
+  const containerStart = `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${brandBg}; margin:0; padding:0;">
+      <tr>
+        <td align="center" style="padding:0 18px 32px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" width="640" style="max-width:640px; background:#ffffff; border-radius:14px; border:1px solid #e5e7eb; box-shadow:0 10px 35px rgba(0,0,0,0.06); overflow:hidden;">
+            <tr>
+              <td style="padding:28px 26px 16px;">
+  `;
+
+  const containerEnd = `
+              </td>
+            </tr>
+          </table>
+          <table role="presentation" cellpadding="0" cellspacing="0" width="640" style="max-width:640px; margin-top:18px;">
+            <tr>
+              <td style="text-align:left; font-size:12px; color:${brandMuted}; font-family:'Helvetica Neue', Arial, sans-serif;">
+                Wine Academy Hamburg · Schlossweg 10 · 22607 Hamburg
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  `;
 
   switch (layout) {
     case 'rechnung':
-      return `<!doctype html><html><head><meta charset="utf-8"><title>Rechnung</title></head><body style="font-family:Arial,Helvetica,sans-serif;background-color:#f6f6f6;margin:0;padding:24px;">${safeVorschauzeile}<div style="background:#ffffff;border-radius:12px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,0.08);">${normalisedHtml}</div><p style="color:#6b7280;font-size:12px;margin-top:24px;">Wine Academy Hamburg · Schlossweg 10 · 22607 Hamburg</p></body></html>`;
+      return `<!doctype html><html><head><meta charset="utf-8"><title>Rechnung</title><style>${baseStyles}</style></head><body>${safeVorschauzeile}${header}${containerStart}${normalisedHtml}${containerEnd}</body></html>`;
     case 'backoffice':
-      return `<!doctype html><html><head><meta charset="utf-8"><title>Backoffice</title></head><body style="font-family:Arial,Helvetica,sans-serif;background-color:#1f2937;color:#f9fafb;margin:0;padding:32px;">${safeVorschauzeile}<div style="background:#111827;border-radius:12px;padding:24px;">${normalisedHtml}</div></body></html>`;
+      return `<!doctype html><html><head><meta charset="utf-8"><title>Backoffice</title><style>${baseStyles}</style></head><body>${safeVorschauzeile}${header}${containerStart}${normalisedHtml}${containerEnd}</body></html>`;
     case 'default':
     default:
-      return `<!doctype html><html><head><meta charset="utf-8"><title>Wine Academy</title></head><body style="font-family:Arial,Helvetica,sans-serif;background-color:#f8f5f0;margin:0;padding:24px;">${safeVorschauzeile}<div style="background:#ffffff;border-radius:12px;padding:32px;box-shadow:0 1px 10px rgba(18,18,18,0.08);">${normalisedHtml}</div><p style="color:#9ca3af;font-size:12px;margin-top:24px;">Wine Academy Hamburg</p></body></html>`;
+      return `<!doctype html><html><head><meta charset="utf-8"><title>Wine Academy</title><style>${baseStyles}</style></head><body>${safeVorschauzeile}${header}${containerStart}${normalisedHtml}${containerEnd}</body></html>`;
   }
 }
 
@@ -262,6 +328,7 @@ export default factories.createCoreService(CONTENT_UID, ({ strapi }) => ({
     const platzhalterDaten = compilePlatzhalterPayload(template, platzhalter, { enableFallbacks: false });
     const results: Array<{ recipient: string; messageId?: string; error?: string }> = [];
 
+    const settings = await getSystemSettings(strapi);
     for (const recipient of uniqueRecipients) {
       try {
         const response = await dispatchTemplate(strapi, template, recipient, platzhalterDaten, categories);
@@ -272,6 +339,20 @@ export default factories.createCoreService(CONTENT_UID, ({ strapi }) => ({
           anwendungsfall,
           recipient,
           error: details,
+          stack: error?.stack,
+          transportError: {
+            code: error?.code,
+            response: error?.response,
+            responseCode: error?.responseCode,
+            command: error?.command,
+            rejected: error?.rejected,
+            envelope: error?.envelope,
+          },
+          emailDebug: {
+            from: settings?.fromEmail,
+            replyTo: settings?.antwortEmail,
+            categories,
+          },
         });
         results.push({ recipient, error: error?.message ?? String(error) });
       }
