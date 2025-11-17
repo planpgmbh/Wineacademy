@@ -2943,9 +2943,6 @@ const renderPaymentStep = () => {
           {confirmationMessage ? (
             <p className="mt-2 text-sm text-base-content/70">{confirmationMessage}</p>
           ) : null}
-          <p className="mt-2 text-sm text-base-content/60">
-            Die Bestätigung bleibt auch bei einem erneuten Aufruf dieser Seite verfügbar.
-          </p>
           {invoiceLink ? (
             <div className="mt-6 flex justify-center">
               <a href={invoiceLink} className="btn btn-primary" target="_blank" rel="noreferrer">
@@ -2998,11 +2995,8 @@ const renderPaymentStep = () => {
             </dl>
           ) : null}
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <button type="button" className="btn btn-primary" onClick={() => router.push("/")}>
+            <button type="button" className="btn btn-outline" onClick={() => router.push("/")}>
               Zurück zur Startseite
-            </button>
-            <button type="button" className="btn btn-outline" onClick={() => router.push("/konto/bestellungen")}>
-              Meine Bestellungen ansehen
             </button>
           </div>
         </div>

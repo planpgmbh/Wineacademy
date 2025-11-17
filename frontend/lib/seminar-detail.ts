@@ -184,15 +184,15 @@ function formatDateLabel(termin: StrapiTermin): string | null {
   }
 
   const dateLabel = new Intl.DateTimeFormat("de-DE", {
-    weekday: "short",
-    day: "numeric",
-    month: "long",
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
   }).format(date);
 
   const locationRaw = termin.standort?.stadt ?? termin.standort?.name ?? "";
   const location = locationRaw.trim();
 
-  return location.length > 0 ? `${dateLabel} · ${location}` : dateLabel;
+  return location.length > 0 ? `${dateLabel} | ${location}` : dateLabel;
 }
 
 function mapDateOptions(termine: StrapiSeminarDetail["termine"]): SeminarDateOption[] {

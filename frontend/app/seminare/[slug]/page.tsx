@@ -36,8 +36,8 @@ export default async function SeminarDetailPage({ params }: SeminarDetailPagePro
   } as const;
 
   const DesktopStickyBookingCard = (
-    <div className="pointer-events-none hidden md:block fixed inset-x-0 top-1/2 z-40 -translate-y-1/2">
-      <div className="mx-auto flex max-w-[var(--detail-content-max-width)] justify-end px-6 md:px-8">
+    <div className="pointer-events-none hidden md:block fixed inset-0 z-40">
+      <div className="mx-auto flex h-full max-w-[var(--detail-content-max-width)] items-center justify-end px-6 md:px-8">
         <div className="pointer-events-auto">
           <SeminarBookingCard {...bookingCardProps} className="w-full" />
         </div>
