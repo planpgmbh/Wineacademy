@@ -260,7 +260,7 @@ function applyLayout(layout: TemplateEntity['layout'], html: string, vorschauzei
       return `<!doctype html><html><head><meta charset="utf-8"><title>Backoffice</title><style>${baseStyles}</style></head><body>${safeVorschauzeile}${header}${containerStart}${normalisedHtml}${containerEnd}</body></html>`;
     case 'default':
     default:
-      return `<!doctype html><html><head><meta charset="utf-8"><title>Wine Academy</title><style>${baseStyles}</style></head><body>${safeVorschauzeile}${header}${containerStart}${normalisedHtml}${containerEnd}</body></html>`;
+      return `<!doctype html><html><head><meta charset="utf-8"><title>Wine Academy</title></head><body style="margin:0;padding:0;background:#ffffff;font-family:Arial,Helvetica,sans-serif;">${safeVorschauzeile}${normalisedHtml}</body></html>`;
   }
 }
 

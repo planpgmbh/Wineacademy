@@ -39,6 +39,115 @@ const escapeHtml = (input: unknown): string =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 
+const formatDateLabel = (input: string | Date): string => {
+  const date = input instanceof Date ? input : new Date(input);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+  return date.toLocaleDateString('de-DE', {
+    weekday: 'long',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+};
+
+const formatTime = (input?: string | null): string => {
+  if (!input) return '';
+  const parts = input.split(':');
+  if (parts.length >= 2) {
+    return `${parts[0]}:${parts[1]}`;
+  }
+  return input;
+};
+
+const buildTermineHtml = (order: any) => {
+  const publicBase =
+    process.env.EMAIL_LOGO_URL ||
+    process.env.PUBLIC_URL ||
+    process.env.FRONTEND_BASE_URL ||
+    '';
+  const logoUrl = publicBase
+    ? `${publicBase.replace(/\/$/, '')}/icons/WineAcademy.png`
+    : '/icons/WineAcademy.png';
+
+  const buchungen = Array.isArray(order?.buchungen) ? order.buchungen : [];
+  const termineMap = new Map<number, any>();
+
+  for (const buchung of buchungen) {
+    const termin = buchung?.termin;
+    if (!termin?.id) continue;
+    if (!termineMap.has(termin.id)) {
+      termineMap.set(termin.id, termin);
+    }
+  }
+
+  if (termineMap.size === 0) {
+    return { html: '', text: '', logoUrl };
+  }
+
+  const divider = '<hr style="border:0;border-top:1px solid #d7d9dd;margin:24px 0;" />';
+
+  const blocks: string[] = [];
+  const textBlocks: string[] = [];
+
+  Array.from(termineMap.values()).forEach((termin, index, arr) => {
+    const seminarName = termin?.seminar?.name || 'Seminartermin';
+    const tage = Array.isArray(termin?.tageMitUhrzeit) ? termin.tageMitUhrzeit : [];
+
+    const tageHtml = tage
+      .map((tag: any) => {
+        const datum = formatDateLabel(tag?.datum);
+        const start = formatTime(tag?.startzeit);
+        const ende = formatTime(tag?.endzeit);
+        const timePart = start && ende ? `${start} – ${ende}` : start || ende || '';
+        return `<p style="margin:4px 0;font-size:18px;line-height:1.4;color:#111110;">${datum}${timePart ? ` ${timePart}` : ''}</p>`;
+      })
+      .join('');
+
+    const tageText = tage
+      .map((tag: any) => {
+        const datum = formatDateLabel(tag?.datum);
+        const start = formatTime(tag?.startzeit);
+        const ende = formatTime(tag?.endzeit);
+        const timePart = start && ende ? `${start} – ${ende}` : start || ende || '';
+        return `${datum}${timePart ? ` ${timePart}` : ''}`;
+      })
+      .join('\n');
+
+    const standort = termin?.standort;
+    const ortLines = [standort?.strasse, [standort?.plz, standort?.stadt].filter(Boolean).join(' ') || undefined]
+      .filter(Boolean)
+      .map((line) => `<p style="margin:4px 0;font-size:18px;line-height:1.4;color:#111110;">${escapeHtml(line as string)}</p>`)
+      .join('');
+
+    const ortText = [[standort?.strasse, standort?.plz, standort?.stadt].filter(Boolean).join(' ')]
+      .filter(Boolean)
+      .join('\n');
+
+    blocks.push(
+      `<div style="margin:0 0 8px 0;">
+        <h3 style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:21px;line-height:1.2;font-weight:600;letter-spacing:-0.01em;margin:0 0 10px 0;color:#111110;">${escapeHtml(
+        seminarName
+      )}</h3>
+        ${tageHtml}
+        <p style="margin:10px 0 2px 0;font-weight:700;font-size:18px;color:#111110;">${escapeHtml(
+          standort?.name || 'Standort'
+        )}</p>
+        ${ortLines}
+      </div>`
+    );
+
+    textBlocks.push([seminarName, tageText, ortText].filter(Boolean).join('\n'));
+
+    if (index < arr.length - 1) {
+      blocks.push(divider);
+    }
+  });
+
+  return { html: blocks.join(''), text: textBlocks.join('\n\n'), logoUrl };
+};
+
 export type PositionSummary = {
   titel: string;
   beschreibung?: string;
@@ -65,26 +174,28 @@ export const summarisePositionsForMail = (positions: any[]): PositionSummary[] =
 
 const buildPositionsTableHtml = (positions: PositionSummary[]): string => {
   if (!positions.length) {
-    return '<p>Keine Positionen vorhanden.</p>';
+    return '<p style="font-size:18px;margin:0 0 16px 0;">Keine Positionen vorhanden.</p>';
   }
 
   const rows = positions
     .map(
       (position) =>
         `<tr>` +
-        `<td style="padding:6px 0;">${escapeHtml(position.titel)}</td>` +
-        `<td style="padding:6px 0;text-align:right;">${escapeHtml(position.menge)}</td>` +
-        `<td style="padding:6px 0;text-align:right;">${escapeHtml(formatCurrency(position.summeBrutto))}</td>` +
+        `<td style="padding:9px 0;font-size:18px;color:#111110;">${escapeHtml(position.titel)}</td>` +
+        `<td style="padding:9px 0;font-size:18px;color:#111110;text-align:right;">${escapeHtml(position.menge)}</td>` +
+        `<td style="padding:9px 0;font-size:18px;color:#111110;text-align:right;">${escapeHtml(
+          formatCurrency(position.summeBrutto)
+        )}</td>` +
         `</tr>`
     )
     .join('');
 
-  return `<table style="width:100%;border-collapse:collapse;">
+  return `<table style="width:100%;border-collapse:collapse;margin-top:16px;margin-bottom:24px;">
     <thead>
       <tr>
-        <th style="text-align:left;border-bottom:1px solid #e5e7eb;padding:6px 0;">Position</th>
-        <th style="text-align:right;border-bottom:1px solid #e5e7eb;padding:6px 0;">Menge</th>
-        <th style="text-align:right;border-bottom:1px solid #e5e7eb;padding:6px 0;">Summe</th>
+        <th style="text-align:left;padding:6px 0;font-size:18px;color:#111110;font-weight:700;">Position</th>
+        <th style="text-align:right;padding:6px 0;font-size:18px;color:#111110;font-weight:700;">Menge</th>
+        <th style="text-align:right;padding:6px 0;font-size:18px;color:#111110;font-weight:700;">Summe</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>
@@ -126,6 +237,7 @@ const buildCustomerPlatzhalter = (context: OrderNotificationContext) => {
   const { order, positions, totals } = context;
   const orderIdentifier = order.bestellnummer || order.documentId || String(order.id);
   const invoiceLink = resolveInvoiceDownloadUrl(order, 'invoice');
+  const termine = buildTermineHtml(order);
 
   return {
     kunde: {
@@ -141,9 +253,13 @@ const buildCustomerPlatzhalter = (context: OrderNotificationContext) => {
       zahlungsmethode: order.zahlungsmethode,
       positionen: positions,
       positionenTableHtml: buildPositionsTableHtml(positions),
+      positionenText: buildPositionsListText(positions),
+      termineHtml: termine.html,
+      termineText: termine.text,
     },
     links: {
       ...(invoiceLink ? { rechnung: invoiceLink } : {}),
+      ...(termine.logoUrl ? { logo: termine.logoUrl } : {}),
     },
   };
 };
@@ -342,6 +458,17 @@ export const getOrderNotificationFetchOptions = (): Record<string, unknown> => (
   populate: {
     positionen: true,
     gutscheine: { fields: ['code', 'betrag'] },
+    buchungen: {
+      populate: {
+        termin: {
+          populate: {
+            tageMitUhrzeit: true,
+            seminar: true,
+            standort: true,
+          },
+        },
+      },
+    },
   },
   fields: ['*'] as any,
 });

@@ -71,23 +71,55 @@ export async function seedNotifications(strapi: any, log: (msg: string) => void)
       beschreibung: 'Kundenmail direkt nach Checkout.',
       betreff: 'Wir haben deine Bestellung {{bestellung.bestellnummer}} erhalten',
       vorschauzeile: 'Danke für deine Buchung bei der Wine Academy.',
-      bodyHtml: `<h1>Hallo {{kunde.vorname}},</h1>
-  <p>wir haben deine Bestellung {{bestellung.bestellnummer}} erhalten. Danke für dein Vertrauen in die Wine Academy Hamburg.</p>
-  <p><strong>Bestellübersicht</strong></p>
-  {{bestellung.positionenTableHtml}}
-  <p><strong>Summe brutto:</strong> {{bestellung.summeBrutto}}</p>
-  <p>Deine Rechnung kannst du hier herunterladen: <a href="{{links.rechnung}}">Rechnung herunterladen</a>.</p>
-  <p>Viele Grüße<br/>Wine Academy Hamburg</p>`,
+      bodyHtml: `<div style="background:#f5f7fa;padding:32px 0;">
+  <div style="max-width:680px;margin:0 auto;padding:16px;">
+    <div style="background:#ffffff;border:1px solid #d7d9dd;border-radius:34px;padding:48px;">
+      <img style="display:block;width:140px;height:auto;margin:0 0 36px 0;" src="{{links.logo}}" alt="Wine Academy Hamburg" />
+      <h1 style="font-family:'SerifbabeAlpha',Georgia,serif;font-size:54px;line-height:1.08;font-weight:300;letter-spacing:-0.01em;margin:0 0 18px 0;color:#111110;">Deine Bestellung</h1>
+      <hr style="border:0;border-top:1px solid #d7d9dd;margin:24px 0;" />
+      <p style="font-weight:700;color:#111110;margin:0 0 6px 0;font-size:18px;line-height:1.5;">Hallo {{kunde.vorname}},</p>
+      <p style="font-size:18px;color:#111110;line-height:1.5;margin:0 0 10px 0;">wir haben deine Bestellung {{bestellung.bestellnummer}} erhalten. Danke für dein Vertrauen in die Wine Academy Hamburg.</p>
+      <hr style="border:0;border-top:1px solid #d7d9dd;margin:24px 0;" />
+      <h2 style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:28px;line-height:1.15;font-weight:600;letter-spacing:-0.01em;margin:0 0 12px 0;color:#111110;">Bestellübersicht</h2>
+      {{bestellung.positionenTableHtml}}
+      <hr style="border:0;border-top:1px solid #d7d9dd;margin:24px 0;" />
+      <div style="display:flex;justify-content:space-between;align-items:baseline;font-weight:700;font-size:18px;margin:20px 0 6px 0;color:#111110;">
+        <span>Gesamtbetrag</span>
+        <span>{{bestellung.summeBrutto}}</span>
+      </div>
+      <hr style="border:0;border-top:1px solid #d7d9dd;margin:24px 0;" />
+      <a href="{{links.rechnung}}" style="display:inline-block;background:#8bb5d7;color:#ffffff;text-decoration:none;padding:16px 22px;border-radius:8px;font-weight:700;font-size:18px;margin:16px 0 16px;border:1px solid rgba(0,0,0,0.1);">Rechnung herunterladen</a>
+      <hr style="border:0;border-top:1px solid #d7d9dd;margin:24px 0;" />
+      <h2 style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:28px;line-height:1.15;font-weight:600;letter-spacing:-0.01em;margin:0 0 12px 0;color:#111110;">Termine</h2>
+      {{bestellung.termineHtml}}
+      <hr style="border:0;border-top:1px solid #d7d9dd;margin:24px 0;" />
+      <div style="margin-top:24px;">
+        <img src="{{links.logo}}" alt="Wine Academy Hamburg" style="width:58px;height:auto;display:block;margin-bottom:10px;" />
+        <div style="font-size:13px;line-height:1.6;color:#111110;">
+          <div style="font-weight:700;margin-bottom:4px;">Wineacademy</div>
+          Eimsbütteler Chaussee 37<br/>
+          20259 Hamburg<br/>
+          Tel.: 040-88 12 80 27<br/>
+          post@wineacademy.de
+        </div>
+      </div>
+    </div>
+  </div>
+</div>`,
       bodyText: `Hallo {{kunde.vorname}},
 
-  wir haben deine Bestellung {{bestellung.bestellnummer}} erhalten.
+wir haben deine Bestellung {{bestellung.bestellnummer}} erhalten. Danke für dein Vertrauen in die Wine Academy Hamburg.
 
-  Summe brutto: {{bestellung.summeBrutto}}
+Bestellübersicht:
+{{bestellung.positionenText}}
 
-  Rechnung: {{links.rechnung}}
+Gesamtbetrag: {{bestellung.summeBrutto}}
+Rechnung: {{links.rechnung}}
 
-  Viele Grüße
-  Wine Academy Hamburg`,
+{{bestellung.termineText}}
+
+Viele Grüße
+Wine Academy Hamburg`,
       platzhalter: [
         { schluessel: 'kunde.vorname', beispiel: 'Max' },
         { schluessel: 'bestellung.bestellnummer', beispiel: 'WA-20251001' },
