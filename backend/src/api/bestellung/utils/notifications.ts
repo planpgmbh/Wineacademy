@@ -1,9 +1,5 @@
 import { getNotificationRecipients } from '../../../services/settings';
-import {
-  resolveInvoiceDownloadUrl,
-  resolveAdminOrderLink,
-  resolveOrderIdentifier,
-} from './order-links';
+import { resolveInvoiceDownloadUrl, resolveAdminOrderLink, resolveOrderIdentifier, resolvePreviewUrl } from './order-links';
 
 const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
@@ -72,27 +68,45 @@ const buildTermineHtml = (order: any) => {
     : '/icons/WineAcademy.png';
 
   const buchungen = Array.isArray(order?.buchungen) ? order.buchungen : [];
+  const positionen = Array.isArray(order?.positionen) ? order.positionen : [];
   const termineMap = new Map<number, any>();
 
-  for (const buchung of buchungen) {
-    const termin = buchung?.termin;
-    if (!termin?.id) continue;
-    if (!termineMap.has(termin.id)) {
-      termineMap.set(termin.id, termin);
+  const addTermin = (termin: any, snapshot?: any) => {
+    if (termin?.id) {
+      if (!termineMap.has(termin.id)) {
+        termineMap.set(termin.id, termin);
+      }
+      return;
     }
+    if (snapshot?.terminId && !termineMap.has(snapshot.terminId)) {
+      termineMap.set(snapshot.terminId, {
+        id: snapshot.terminId,
+        seminar: { name: snapshot.seminarName },
+        tageMitUhrzeit: snapshot.tage,
+        standort: snapshot.standort,
+      });
+    }
+  };
+
+  for (const buchung of buchungen) {
+    addTermin(buchung?.termin, (buchung as any)?.terminSnapshot);
+  }
+
+  for (const position of positionen) {
+    addTermin((position as any)?.termin, (position as any)?.terminSnapshot);
   }
 
   if (termineMap.size === 0) {
     return { html: '', text: '', logoUrl };
   }
 
-  const divider = '<hr style="border:0;border-top:1px solid #d7d9dd;margin:24px 0;" />';
+  const divider = '<hr style="border:0;border-top:1px solid #e2e3e5;margin:20px 0;" />';
 
   const blocks: string[] = [];
   const textBlocks: string[] = [];
 
   Array.from(termineMap.values()).forEach((termin, index, arr) => {
-    const seminarName = termin?.seminar?.name || 'Seminartermin';
+    const seminarName = termin?.seminar?.name || 'Seminartermine';
     const tage = Array.isArray(termin?.tageMitUhrzeit) ? termin.tageMitUhrzeit : [];
 
     const tageHtml = tage
@@ -101,7 +115,9 @@ const buildTermineHtml = (order: any) => {
         const start = formatTime(tag?.startzeit);
         const ende = formatTime(tag?.endzeit);
         const timePart = start && ende ? `${start} – ${ende}` : start || ende || '';
-        return `<p style="margin:4px 0;font-size:18px;line-height:1.4;color:#111110;">${datum}${timePart ? ` ${timePart}` : ''}</p>`;
+        return `<p style="margin:0 0 2px 0;font-size:16px;line-height:1.5;color:#111110;">${datum}${
+          timePart ? ` ${timePart}` : ''
+        }</p>`;
       })
       .join('');
 
@@ -118,7 +134,12 @@ const buildTermineHtml = (order: any) => {
     const standort = termin?.standort;
     const ortLines = [standort?.strasse, [standort?.plz, standort?.stadt].filter(Boolean).join(' ') || undefined]
       .filter(Boolean)
-      .map((line) => `<p style="margin:4px 0;font-size:18px;line-height:1.4;color:#111110;">${escapeHtml(line as string)}</p>`)
+      .map(
+        (line) =>
+          `<p style="margin:0 0 2px 0;font-size:16px;line-height:1.5;color:#111110;">${escapeHtml(
+            line as string
+          )}</p>`
+      )
       .join('');
 
     const ortText = [[standort?.strasse, standort?.plz, standort?.stadt].filter(Boolean).join(' ')]
@@ -126,19 +147,21 @@ const buildTermineHtml = (order: any) => {
       .join('\n');
 
     blocks.push(
-      `<div style="margin:0 0 8px 0;">
-        <h3 style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:21px;line-height:1.2;font-weight:600;letter-spacing:-0.01em;margin:0 0 10px 0;color:#111110;">${escapeHtml(
-        seminarName
-      )}</h3>
-        ${tageHtml}
-        <p style="margin:10px 0 2px 0;font-weight:700;font-size:18px;color:#111110;">${escapeHtml(
+      `<div style="margin:0 0 16px 0;">
+        <p style="margin:0 0 6px 0;font-size:18px;line-height:1.4;font-weight:700;color:#111110;">${escapeHtml(
+          seminarName
+        )}</p>
+        <p style="margin:15px 0 4px 0;font-size:16px;line-height:1.4;font-weight:700;color:#111110;">Wann:</p>
+        <div style="margin:0 0 8px 0;">${tageHtml}</div>
+        <p style="margin:15px 0 4px 0;font-weight:700;font-size:16px;color:#111110;">Wo:</p>
+        <p style="margin:0 0 2px 0;font-size:16px;line-height:1.5;color:#111110;">${escapeHtml(
           standort?.name || 'Standort'
         )}</p>
         ${ortLines}
       </div>`
     );
 
-    textBlocks.push([seminarName, tageText, ortText].filter(Boolean).join('\n'));
+    textBlocks.push([seminarName, `Wann:\n${tageText}`, `Wo:\n${ortText}`].filter(Boolean).join('\n'));
 
     if (index < arr.length - 1) {
       blocks.push(divider);
@@ -159,11 +182,19 @@ export type PositionSummary = {
 
 export const summarisePositionsForMail = (positions: any[]): PositionSummary[] =>
   (positions || []).map((position) => {
+    const snapshotName = (position as any)?.terminSnapshot?.seminarName;
+    const seminarTitel =
+      snapshotName ||
+      (position as any)?.termin?.seminar?.name ||
+      (position as any)?.produkt?.name ||
+      position?.titel ||
+      position?.name;
+    const titleWithoutDate = String(seminarTitel ?? 'Position');
     const menge = Math.max(1, Number(position?.menge ?? 1)) || 1;
     const summeBrutto = Number(position?.summeBrutto ?? position?.einzelpreisBrutto ?? 0);
     const summeNetto = Number(position?.summeNetto ?? position?.einzelpreisNetto ?? 0);
     return {
-      titel: String(position?.titel ?? position?.name ?? 'Position'),
+      titel: titleWithoutDate,
       beschreibung: position?.beschreibung ? String(position.beschreibung) : undefined,
       typ: position?.typ ? String(position.typ) : undefined,
       menge,
@@ -181,21 +212,23 @@ const buildPositionsTableHtml = (positions: PositionSummary[]): string => {
     .map(
       (position) =>
         `<tr>` +
-        `<td style="padding:9px 0;font-size:18px;color:#111110;">${escapeHtml(position.titel)}</td>` +
-        `<td style="padding:9px 0;font-size:18px;color:#111110;text-align:right;">${escapeHtml(position.menge)}</td>` +
-        `<td style="padding:9px 0;font-size:18px;color:#111110;text-align:right;">${escapeHtml(
+        `<td style="padding:10px 0;font-size:16px;color:#111110;border:0;">${escapeHtml(position.titel)}</td>` +
+        `<td style="padding:10px 0;font-size:16px;color:#111110;text-align:center;border:0;">${escapeHtml(
+          position.menge
+        )}</td>` +
+        `<td style="padding:10px 0;font-size:16px;color:#111110;text-align:right;border:0;">${escapeHtml(
           formatCurrency(position.summeBrutto)
         )}</td>` +
         `</tr>`
     )
     .join('');
 
-  return `<table style="width:100%;border-collapse:collapse;margin-top:16px;margin-bottom:24px;">
+  return `<table style="width:100%;border-collapse:collapse;border-spacing:0;margin-top:6px;margin-bottom:10px;">
     <thead>
       <tr>
-        <th style="text-align:left;padding:6px 0;font-size:18px;color:#111110;font-weight:700;">Position</th>
-        <th style="text-align:right;padding:6px 0;font-size:18px;color:#111110;font-weight:700;">Menge</th>
-        <th style="text-align:right;padding:6px 0;font-size:18px;color:#111110;font-weight:700;">Summe</th>
+        <th style="text-align:left;padding:10px 0;font-size:16px;color:#111110;font-weight:700;border:0;">Position</th>
+        <th style="text-align:center;padding:10px 0;font-size:16px;color:#111110;font-weight:700;border:0;">Menge</th>
+        <th style="text-align:right;padding:10px 0;font-size:16px;color:#111110;font-weight:700;border:0;">Summe</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>
@@ -219,7 +252,7 @@ const buildPositionsListText = (positions: PositionSummary[]): string => {
     .join('\n');
 };
 
-type NotificationTotals = {
+export type NotificationTotals = {
   brutto: number;
   netto: number;
   steuer: number;
@@ -233,10 +266,11 @@ export interface OrderNotificationContext {
   totals: NotificationTotals;
 }
 
-const buildCustomerPlatzhalter = (context: OrderNotificationContext) => {
+export const buildCustomerPlatzhalter = (context: OrderNotificationContext) => {
   const { order, positions, totals } = context;
   const orderIdentifier = order.bestellnummer || order.documentId || String(order.id);
   const invoiceLink = resolveInvoiceDownloadUrl(order, 'invoice');
+  const previewLink = resolvePreviewUrl(order);
   const termine = buildTermineHtml(order);
 
   return {
@@ -259,6 +293,7 @@ const buildCustomerPlatzhalter = (context: OrderNotificationContext) => {
     },
     links: {
       ...(invoiceLink ? { rechnung: invoiceLink } : {}),
+      ...(previewLink ? { preview: previewLink } : {}),
       ...(termine.logoUrl ? { logo: termine.logoUrl } : {}),
     },
   };
@@ -456,20 +491,20 @@ async function sendStornoNotifications(strapi: any, context: OrderNotificationCo
 
 export const getOrderNotificationFetchOptions = (): Record<string, unknown> => ({
   populate: {
-    positionen: true,
-    gutscheine: { fields: ['code', 'betrag'] },
+    positionen: {
+      populate: {
+        termin: { populate: '*' },
+        produkt: { populate: '*' },
+      },
+    },
+    gutscheine: true,
     buchungen: {
       populate: {
-        termin: {
-          populate: {
-            tageMitUhrzeit: true,
-            seminar: true,
-            standort: true,
-          },
-        },
+        termin: { populate: '*' },
       },
     },
   },
+  publicationState: 'preview',
   fields: ['*'] as any,
 });
 

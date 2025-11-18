@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 
-type TokenVariant = 'invoice' | 'storno';
+type TokenVariant = 'invoice' | 'storno' | 'preview';
 
 const DEFAULT_TOKEN_TTL_SECONDS = numberFromEnv(
   process.env.ORDER_DOWNLOAD_TOKEN_TTL_SECONDS,

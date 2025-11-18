@@ -75,6 +75,18 @@ export const resolveInvoiceDownloadUrl = (order: any, variant: 'invoice' | 'stor
   return `${path}${separator}token=${encodeURIComponent(token)}`;
 };
 
+export const resolvePreviewUrl = (order: any): string | null => {
+  const apiBase = resolveApiBaseUrl();
+  if (!apiBase) return null;
+  const identifier = resolveOrderIdentifier(order);
+  if (!identifier) return null;
+  const token = createDownloadToken(identifier, 'preview');
+  if (!token) return null;
+  const path = `${apiBase}/public/bestellungen/${encodeURIComponent(identifier)}/email-preview`;
+  const separator = path.includes('?') ? '&' : '?';
+  return `${path}${separator}token=${encodeURIComponent(token)}`;
+};
+
 // Liefert den Link, mit dem das Backoffice die Bestellung direkt im Admin öffnen kann.
 export const resolveAdminOrderLink = (order: any): string | null => {
   const adminBase = resolveAdminBaseUrl();

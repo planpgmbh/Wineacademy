@@ -26,6 +26,10 @@
     "summeBrutto": { "type": "decimal" },
     "summeSteuer": { "type": "decimal" },
     "versandkosten": { "type": "decimal" },
+    "terminSnapshot": {
+      "type": "json",
+      "description": "Termindaten-Snapshot (Seminar, Standort, Tage) für Benachrichtigungen"
+    },
     "gutscheinDetails": {
       "type": "component",
       "component": "bestellung.gutschein-details"

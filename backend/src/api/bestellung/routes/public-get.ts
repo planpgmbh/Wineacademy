@@ -18,5 +18,11 @@ export default {
       handler: 'bestellung.publicDownloadStorno',
       config: { auth: false },
     },
+    {
+      method: 'GET',
+      path: '/public/bestellungen/:id/email-preview',
+      handler: 'bestellung.publicEmailPreview',
+      config: { auth: false },
+    },
   ],
 };

@@ -14,6 +14,8 @@ import {
   summarisePositionsForMail,
   sendOrderNotifications,
   getOrderNotificationFetchOptions,
+  buildCustomerPlatzhalter,
+  NotificationTotals,
 } from '../utils/notifications';
 import { normaliseShippingValue, roundCurrency } from '../../../utils/shipping';
 
@@ -198,6 +200,51 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
     }
   },
 
+  async publicEmailPreview(ctx) {
+    const identifier = ctx.params?.id;
+    if (!identifier) {
+      return ctx.badRequest('Ungültige Bestellung.');
+    }
+    const tokenParam = ctx.query?.token;
+    const token = Array.isArray(tokenParam) ? tokenParam[0] : tokenParam;
+    if (!verifyDownloadToken(String(identifier), 'preview', token)) {
+      return ctx.forbidden('Vorschau-Link ist ungültig oder abgelaufen.');
+    }
+
+    const orderFetchOptions: any = getOrderNotificationFetchOptions();
+    const order = await findOrderByIdentifier(strapi, identifier, orderFetchOptions);
+    if (!order) {
+      return ctx.notFound('Bestellung nicht gefunden.');
+    }
+
+    const positionsSource = Array.isArray((order as any)?.positionen) ? (order as any).positionen : [];
+    const positions = summarisePositionsForMail(positionsSource);
+    const totals: NotificationTotals = {
+      brutto: Number(order.zuZahlenBrutto ?? order.summePositionenBrutto ?? 0),
+      netto: Number(order.zuZahlenNetto ?? order.summePositionenNetto ?? 0),
+      steuer: Number(order.zuZahlenSteuer ?? order.summeSteuer ?? 0),
+      gutschein: Number(order.gutscheinBetrag ?? 0),
+      versandkosten: Number(order.versandkosten ?? 0),
+    };
+
+    const platzhalter = buildCustomerPlatzhalter({ order, positions, totals });
+    const templates = await strapi.entityService.findMany('api::benachrichtigung.benachrichtigung', {
+      filters: { anwendungsfall: 'bestellbestaetigung' } as any,
+      populate: { platzhalter: true } as any,
+      limit: 1,
+    });
+    const template = Array.isArray(templates) ? templates[0] : templates;
+    if (!template) {
+      return ctx.notFound('Benachrichtigungsvorlage nicht gefunden.');
+    }
+    const rendered = await strapi.service('api::benachrichtigung.benachrichtigung').render({
+      template,
+      platzhalter,
+    } as any);
+    ctx.type = 'text/html';
+    ctx.body = rendered?.html ?? '';
+  },
+
   async publicGet(ctx) {
     const id = Number(ctx.params?.id);
     if (!Number.isFinite(id)) return ctx.badRequest('Ungültige ID');
@@ -272,17 +319,17 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
       });
     };
 
-    const loadTermin = async (id: number) => {
-      return strapi.db.query('api::termin.termin').findOne({
-        where: { id },
-        select: ['id', 'planungsstatus', 'publishedAt', 'starttag'],
-        populate: {
-          seminar: { select: ['id', 'name', 'mwst', 'preis'] },
-          tageMitUhrzeit: { select: ['datum', 'startzeit', 'endzeit'] },
-          standort: { select: ['name', 'typ', 'veranstaltungsort', 'stadt'] },
-        },
-      });
-    };
+  const loadTermin = async (id: number) => {
+    return strapi.db.query('api::termin.termin').findOne({
+      where: { id },
+      select: ['id', 'planungsstatus', 'publishedAt', 'starttag'],
+      populate: {
+        seminar: { select: ['id', 'name', 'mwst', 'preis'] },
+        tageMitUhrzeit: { select: ['datum', 'startzeit', 'endzeit'] },
+        standort: { select: ['name', 'typ', 'veranstaltungsort', 'strasse', 'plz', 'stadt'] },
+      },
+    });
+  };
 
     const gutscheinHelper = new GutscheinHelper(strapi);
     const ensureGutscheinDetails = (details: any, shippingCost?: number) => {
@@ -411,11 +458,29 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         const summeBrutto = round2(brutto * menge);
         const summeNetto = round2(netto * menge);
         const summeSteuer = round2(summeBrutto - summeNetto);
+        const terminSnapshot = {
+          terminId: termin.id,
+          seminarName: termin.seminar?.name,
+          standort: {
+            name: termin.standort?.name,
+            strasse: termin.standort?.strasse,
+            plz: termin.standort?.plz,
+            stadt: termin.standort?.stadt,
+          },
+          tage: Array.isArray(termin.tageMitUhrzeit)
+            ? termin.tageMitUhrzeit.map((t: any) => ({
+                datum: t?.datum,
+                startzeit: t?.startzeit,
+                endzeit: t?.endzeit,
+              }))
+            : [],
+        };
         const position = {
           typ: 'seminar',
           titel,
           beschreibung: raw.beschreibung || termin?.standort?.name,
           termin: termin.id,
+          terminSnapshot,
           menge,
           steuerSatz,
           einzelpreisBrutto: brutto,

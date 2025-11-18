@@ -300,6 +300,16 @@ async function dispatchTemplate(
 }
 
 export default factories.createCoreService(CONTENT_UID, ({ strapi }) => ({
+  async render(options: { template: TemplateEntity; platzhalter?: Record<string, unknown> }) {
+    const { template, platzhalter } = options;
+    const platzhalterDaten = compilePlatzhalterPayload(template, platzhalter, { enableFallbacks: false });
+    const subject = renderTemplateString(template.betreff || template.name || 'Benachrichtigung', platzhalterDaten);
+    const vorschauzeile = renderTemplateString(template.vorschauzeile ?? '', platzhalterDaten) || undefined;
+    const rawHtml = renderTemplateString(template.bodyHtml ?? '', platzhalterDaten);
+    const html = applyLayout(template.layout, rawHtml, vorschauzeile);
+    const text = template.bodyText ? renderTemplateString(template.bodyText, platzhalterDaten) : toPlainText(rawHtml);
+    return { subject, html, text };
+  },
   async send(options: SendOptions) {
     const { anwendungsfall, recipients, platzhalter, categories } = options;
     const uniqueRecipients = Array.from(new Set((recipients || []).map((email) => email?.trim()).filter(Boolean)));
