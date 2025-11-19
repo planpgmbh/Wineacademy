@@ -171,6 +171,51 @@ const buildTermineHtml = (order: any) => {
   return { html: blocks.join(''), text: textBlocks.join('\n\n'), logoUrl };
 };
 
+const buildTeilnehmerHtml = (order: any) => {
+  const buchungen = Array.isArray(order?.buchungen) ? order.buchungen : [];
+  if (!buchungen.length) return '';
+  const items = buchungen
+    .map((b: any) => {
+      const terminLabel = b?.termin?.seminar?.name
+        ? `${b.termin.seminar.name}${b?.termin?.starttag ? ` (${formatDateLabel(b.termin.starttag)})` : ''}`
+        : b?.termin?.starttag
+        ? formatDateLabel(b.termin.starttag)
+        : '';
+      const zeilen: string[] = [
+        `<p style="margin:0 0 2px 0;font-size:16px;line-height:1.5;color:#111110;"><strong>${escapeHtml(
+          `${b?.vorname || ''} ${b?.nachname || ''}`.trim() || 'Teilnehmer'
+        )}</strong></p>`,
+      ];
+      if (b?.email) {
+        zeilen.push(
+          `<p style="margin:0 0 2px 0;font-size:16px;line-height:1.5;color:#111110;">${escapeHtml(b.email)}</p>`
+        );
+      }
+      if (terminLabel) {
+        zeilen.push(
+          `<p style="margin:0 0 8px 0;font-size:16px;line-height:1.5;color:#111110;">${escapeHtml(terminLabel)}</p>`
+        );
+      }
+      return zeilen.join('');
+    })
+    .join('<hr style="border:0;border-top:1px solid #e2e3e5;margin:12px 0;" />');
+  return items;
+};
+
+const buildTeilnehmerText = (order: any) => {
+  const buchungen = Array.isArray(order?.buchungen) ? order.buchungen : [];
+  if (!buchungen.length) return '';
+  return buchungen
+    .map((b: any) => {
+      const name = `${b?.vorname || ''} ${b?.nachname || ''}`.trim() || 'Teilnehmer';
+      const email = b?.email ? `, E-Mail: ${b.email}` : '';
+      const termin = b?.termin?.starttag ? `, Termin: ${formatDateLabel(b.termin.starttag)}` : '';
+      const seminar = b?.termin?.seminar?.name ? `, Seminar: ${b.termin.seminar.name}` : '';
+      return `${name}${email}${seminar}${termin}`;
+    })
+    .join('\n');
+};
+
 export type PositionSummary = {
   titel: string;
   beschreibung?: string;
@@ -303,6 +348,14 @@ const buildBackofficePlatzhalter = (context: OrderNotificationContext) => {
   const { order, positions, totals } = context;
   const orderIdentifier = order.bestellnummer || order.documentId || String(order.id);
   const invoiceLink = resolveInvoiceDownloadUrl(order, 'invoice');
+  const publicBase =
+    process.env.EMAIL_LOGO_URL ||
+    process.env.PUBLIC_URL ||
+    process.env.FRONTEND_BASE_URL ||
+    '';
+  const logoUrl = publicBase ? `${publicBase.replace(/\/$/, '')}/icons/WineAcademy.png` : '/icons/WineAcademy.png';
+  const teilnehmerHtml = buildTeilnehmerHtml(order);
+  const teilnehmerText = buildTeilnehmerText(order);
 
   return {
     bestellung: {
@@ -332,9 +385,12 @@ const buildBackofficePlatzhalter = (context: OrderNotificationContext) => {
       positionenTableHtml: buildPositionsTableHtml(positions),
       positionenText: buildPositionsListText(positions),
       notizen: order.notizen || '',
+      teilnehmerHtml,
+      teilnehmerText,
     },
     links: {
       ...(invoiceLink ? { rechnung: invoiceLink } : {}),
+      ...(logoUrl ? { logo: logoUrl } : {}),
     },
   };
 };
