@@ -250,7 +250,7 @@ const buildTeilnehmerText = (order: any) => {
     .join('\n');
 };
 
-const buildVouchersHtml = (order: any) => {
+export const buildVouchersHtml = (order: any) => {
   const vouchers = Array.isArray(order?.gutscheine) ? order.gutscheine : [];
   if (!vouchers.length) {
     return { html: '', text: '' };
@@ -258,7 +258,7 @@ const buildVouchersHtml = (order: any) => {
   const htmlItems = vouchers
     .map((voucher: any) => {
       const code = escapeHtml(voucher?.code ?? 'GUTSCHEIN');
-      return `<div style="border:2px solid #d7d9dd;border-radius:18px;padding:14px 18px;font-weight:700;font-size:20px;letter-spacing:0.08em;margin:0 0 14px 0;text-align:center;color:#111110;">${code}</div>`;
+      return `<div style="border:2px solid #d7d9dd;border-radius:18px;padding:14px 18px;font-weight:700;font-size:20px;letter-spacing:0.08em;margin:0 auto 14px;text-align:center;color:#111110;display:block;width:100%;max-width:360px;box-sizing:border-box;">${code}</div>`;
     })
     .join('');
   const textItems = vouchers
@@ -346,7 +346,7 @@ const buildPositionsTableHtml = (
 
   const rows = rowEntries.join('');
 
-  return `<table style="width:100%;border-collapse:collapse;border-spacing:0;margin-top:6px;margin-bottom:10px;">
+  return `<table data-wa-table="true" style="width:100%;border-collapse:collapse;border-spacing:0;margin-top:6px;margin-bottom:10px;">
     <thead>
       <tr>
         <th style="text-align:left;padding:10px 0;font-size:16px;color:#111110;font-weight:700;border:0;">Position</th>
@@ -393,11 +393,14 @@ export interface OrderNotificationContext {
   totals: NotificationTotals;
 }
 
-export const buildCustomerPlatzhalter = (context: OrderNotificationContext) => {
+export const buildCustomerPlatzhalter = (
+  context: OrderNotificationContext,
+  options?: { previewTemplate?: string }
+) => {
   const { order, positions, totals } = context;
   const orderIdentifier = order.bestellnummer || order.documentId || String(order.id);
   const invoiceLink = resolveInvoiceDownloadUrl(order, 'invoice');
-  const previewLink = resolvePreviewUrl(order);
+  const previewLink = resolvePreviewUrl(order, options?.previewTemplate);
   const termine = buildTermineHtml(order);
   const voucherAmount = totals.gutschein > 0 ? totals.gutschein : 0;
 
@@ -479,8 +482,8 @@ const buildBackofficePlatzhalter = (context: OrderNotificationContext) => {
   };
 };
 
-const buildStornoCustomerPlatzhalter = (context: OrderNotificationContext) => {
-  const base = buildCustomerPlatzhalter(context);
+export const buildStornoCustomerPlatzhalter = (context: OrderNotificationContext) => {
+  const base = buildCustomerPlatzhalter(context, { previewTemplate: 'storno_bestaetigung' });
   const stornoLink = resolveInvoiceDownloadUrl(context.order, 'storno');
   const invoiceLink = resolveInvoiceDownloadUrl(context.order, 'invoice');
   const stornoDatum = context.order?.updatedAt ? toISODate(context.order.updatedAt) : toISODate();
@@ -515,13 +518,14 @@ const buildStornoBackofficePlatzhalter = (context: OrderNotificationContext) => 
   };
 };
 
-const buildVoucherPlatzhalter = (
+export const buildVoucherPlatzhalter = (
   context: OrderNotificationContext,
-  voucherList: { html: string; text: string }
+  voucherList: { html: string; text: string },
+  options?: { previewTemplate?: string }
 ) => {
   const orderIdentifier = context.order.bestellnummer || context.order.documentId || String(context.order.id);
   const invoiceLink = resolveInvoiceDownloadUrl(context.order, 'invoice');
-  const previewLink = resolvePreviewUrl(context.order);
+  const previewLink = resolvePreviewUrl(context.order, options?.previewTemplate);
   const publicBase =
     process.env.EMAIL_LOGO_URL ||
     process.env.PUBLIC_URL ||
@@ -554,6 +558,34 @@ const buildVoucherPlatzhalter = (
   };
 };
 
+export const buildPaymentConfirmationPlatzhalter = (order: any, totals: NotificationTotals) => {
+  const paymentDateSource = order?.zahlungsdatum || order?.updatedAt || order?.createdAt || new Date();
+  const paymentDate = formatDateLabel(paymentDateSource);
+  const invoiceLink = resolveInvoiceDownloadUrl(order, 'invoice');
+  const previewLink = resolvePreviewUrl(order, 'zahlungsbestaetigung');
+  const { html: vouchersHtml } = buildVouchersHtml(order);
+  const termineInfo = buildTermineHtml(order);
+
+  return {
+    kunde: {
+      vorname: order.vorname || '',
+      nachname: order.nachname || '',
+      email: order.email || '',
+    },
+    bestellung: {
+      bestellnummer: order.bestellnummer || order.documentId || String(order.id),
+      zahlungsbetrag: formatCurrency(totals.brutto),
+      zahlungsdatum: paymentDate,
+    },
+    gutscheineHtml: vouchersHtml,
+    links: {
+      ...(invoiceLink ? { rechnung: invoiceLink } : {}),
+      ...(previewLink ? { preview: previewLink } : {}),
+      ...(termineInfo.logoUrl ? { logo: termineInfo.logoUrl } : {}),
+    },
+  };
+};
+
 export async function sendOrderNotifications(strapi: any, context: OrderNotificationContext) {
   const notificationService = strapi.service('api::benachrichtigung.benachrichtigung');
   if (!notificationService?.send) {
@@ -578,7 +610,7 @@ export async function sendOrderNotifications(strapi: any, context: OrderNotifica
       await notificationService.send({
         anwendungsfall: 'bestellbestaetigung',
         recipients,
-        platzhalter: buildCustomerPlatzhalter(context),
+        platzhalter: buildCustomerPlatzhalter(context, { previewTemplate: 'bestellbestaetigung' }),
         categories: ['bestellung', 'kunde'],
       });
     } catch (error: any) {
@@ -643,7 +675,7 @@ export async function sendVoucherMail(strapi: any, context: OrderNotificationCon
     await notificationService.send({
       anwendungsfall: 'rechnung_gutschein',
       recipients,
-      platzhalter: buildVoucherPlatzhalter(context, voucherList),
+      platzhalter: buildVoucherPlatzhalter(context, voucherList, { previewTemplate: 'rechnung_gutschein' }),
       categories: ['bestellung', 'gutschein', 'kunde'],
     });
   } catch (error: any) {
@@ -839,34 +871,11 @@ export async function sendPaymentConfirmationForOrder(strapi: any, orderId: numb
       gutschein: toNumberOrZero(order.gutscheinBetrag),
       versandkosten: toNumberOrZero(order.versandkosten),
     };
-    const paymentDateSource = order?.zahlungsdatum || order?.updatedAt || order?.createdAt || new Date();
-    const paymentDate = formatDateLabel(paymentDateSource);
-    const invoiceLink = resolveInvoiceDownloadUrl(order, 'invoice');
-    const previewLink = resolvePreviewUrl(order);
-    const { html: vouchersHtml } = buildVouchersHtml(order);
-    const termineInfo = buildTermineHtml(order);
-
+    const platzhalter = buildPaymentConfirmationPlatzhalter(order, totals);
     await notificationService.send({
       anwendungsfall: 'zahlungsbestaetigung',
       recipients,
-      platzhalter: {
-        kunde: {
-          vorname: order.vorname || '',
-          nachname: order.nachname || '',
-          email: order.email || '',
-        },
-        bestellung: {
-          bestellnummer: order.bestellnummer || order.documentId || String(order.id),
-          zahlungsbetrag: formatCurrency(totals.brutto),
-          zahlungsdatum: paymentDate,
-        },
-        gutscheineHtml: vouchersHtml,
-        links: {
-          ...(invoiceLink ? { rechnung: invoiceLink } : {}),
-          ...(previewLink ? { preview: previewLink } : {}),
-          ...(termineInfo.logoUrl ? { logo: termineInfo.logoUrl } : {}),
-        },
-      },
+      platzhalter,
       categories: ['bestellung', 'zahlung', 'kunde'],
     });
   } catch (error: any) {

@@ -75,7 +75,7 @@ export const resolveInvoiceDownloadUrl = (order: any, variant: 'invoice' | 'stor
   return `${path}${separator}token=${encodeURIComponent(token)}`;
 };
 
-export const resolvePreviewUrl = (order: any): string | null => {
+export const resolvePreviewUrl = (order: any, templateKey?: string): string | null => {
   const apiBase = resolveApiBaseUrl();
   if (!apiBase) return null;
   const identifier = resolveOrderIdentifier(order);
@@ -83,8 +83,12 @@ export const resolvePreviewUrl = (order: any): string | null => {
   const token = createDownloadToken(identifier, 'preview');
   if (!token) return null;
   const path = `${apiBase}/public/bestellungen/${encodeURIComponent(identifier)}/email-preview`;
-  const separator = path.includes('?') ? '&' : '?';
-  return `${path}${separator}token=${encodeURIComponent(token)}`;
+  const params = new URLSearchParams();
+  params.set('token', token);
+  if (templateKey) {
+    params.set('template', templateKey);
+  }
+  return `${path}?${params.toString()}`;
 };
 
 // Liefert den Link, mit dem das Backoffice die Bestellung direkt im Admin öffnen kann.

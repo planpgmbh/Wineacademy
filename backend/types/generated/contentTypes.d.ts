@@ -523,7 +523,9 @@ export interface ApiBenachrichtigungBenachrichtigung
         'bestellbestaetigung',
         'zahlungsbestaetigung',
         'rechnung_gutschein',
-        'backoffice_benachrichtigung'
+        'backoffice_benachrichtigung',
+        'storno_bestaetigung',
+        'storno_backoffice'
       ]
     > &
       Schema.Attribute.Required &
@@ -536,9 +538,9 @@ export interface ApiBenachrichtigungBenachrichtigung
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     layout: Schema.Attribute.Enumeration<
-      ['default', 'rechnung', 'backoffice']
+      ['kunde', 'backoffice']
     > &
-      Schema.Attribute.DefaultTo<'default'>;
+      Schema.Attribute.DefaultTo<'kunde'>;
     name: Schema.Attribute.String & Schema.Attribute.Required;
     platzhalter: Schema.Attribute.Component<'benachrichtigung.platzhalter', true>;
     testPayload: Schema.Attribute.JSON;

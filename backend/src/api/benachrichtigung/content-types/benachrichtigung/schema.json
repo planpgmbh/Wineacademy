@@ -48,11 +48,10 @@
     "layout": {
       "type": "enumeration",
       "enum": [
-        "default",
-        "rechnung",
+        "kunde",
         "backoffice"
       ],
-      "default": "default",
+      "default": "kunde",
       "pluginOptions": {
         "content-manager": {
           "displayName": "Layout"
@@ -97,6 +96,16 @@
       "pluginOptions": {
         "content-manager": {
           "displayName": "Text-Inhalt"
+        }
+      }
+    },
+    "platzhalter": {
+      "type": "component",
+      "repeatable": true,
+      "component": "benachrichtigung.platzhalter",
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Platzhalter"
         }
       }
     }

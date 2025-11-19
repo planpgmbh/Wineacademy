@@ -16,7 +16,12 @@ import {
   sendVoucherMailForOrder,
   getOrderNotificationFetchOptions,
   buildCustomerPlatzhalter,
+  buildStornoCustomerPlatzhalter,
+  buildVoucherPlatzhalter,
+  buildPaymentConfirmationPlatzhalter,
+  buildVouchersHtml,
   NotificationTotals,
+  OrderNotificationContext,
 } from '../utils/notifications';
 import { normaliseShippingValue, roundCurrency } from '../../../utils/shipping';
 import { createGutscheineForPaidOrder } from '../utils/gutschein-erzeugung';
@@ -229,9 +234,40 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
       versandkosten: Number(order.versandkosten ?? 0),
     };
 
-    const platzhalter = buildCustomerPlatzhalter({ order, positions, totals });
+    const allowedTemplates = new Set([
+      'bestellbestaetigung',
+      'zahlungsbestaetigung',
+      'rechnung_gutschein',
+      'storno_bestaetigung',
+    ]);
+    const requestedTemplateRaw =
+      typeof ctx.query?.template === 'string' ? ctx.query.template : undefined;
+    const templateKey = requestedTemplateRaw && allowedTemplates.has(requestedTemplateRaw)
+      ? requestedTemplateRaw
+      : 'bestellbestaetigung';
+    const context: OrderNotificationContext = { order, positions, totals };
+
+    let platzhalter: any;
+    switch (templateKey) {
+      case 'storno_bestaetigung':
+        platzhalter = buildStornoCustomerPlatzhalter(context);
+        break;
+      case 'rechnung_gutschein': {
+        const voucherList = buildVouchersHtml(order);
+        platzhalter = buildVoucherPlatzhalter(context, voucherList, { previewTemplate: templateKey });
+        break;
+      }
+      case 'zahlungsbestaetigung':
+        platzhalter = buildPaymentConfirmationPlatzhalter(order, totals);
+        break;
+      case 'bestellbestaetigung':
+      default:
+        platzhalter = buildCustomerPlatzhalter(context, { previewTemplate: templateKey });
+        break;
+    }
+
     const templates = await strapi.entityService.findMany('api::benachrichtigung.benachrichtigung', {
-      filters: { anwendungsfall: 'bestellbestaetigung' } as any,
+      filters: { anwendungsfall: templateKey } as any,
       populate: { platzhalter: true } as any,
       limit: 1,
     });

@@ -14,7 +14,7 @@ interface TemplateEntity {
   id: number;
   name?: string;
   anwendungsfall?: string;
-  layout?: 'default' | 'rechnung' | 'backoffice';
+  layout?: 'kunde' | 'backoffice';
   beschreibung?: string | null;
   betreff?: string | null;
   vorschauzeile?: string | null;
@@ -184,7 +184,11 @@ function renderTemplateString(value: string | null | undefined, platzhalter: Rec
   });
 }
 
-function applyLayout(layout: TemplateEntity['layout'], html: string, vorschauzeile?: string | null) {
+function applyLayout(
+  layout: TemplateEntity['layout'] | undefined,
+  html: string,
+  options?: { vorschauzeile?: string | null; previewLink?: string | null }
+) {
   const brandPrimary = '#8BB5D7';
   const brandText = '#0f172a';
   const brandMuted = '#4b5563';
@@ -192,9 +196,13 @@ function applyLayout(layout: TemplateEntity['layout'], html: string, vorschauzei
   const logoUrl = process.env.EMAIL_LOGO_URL || 'https://wineacademy.plan-p.de/icons/WineAcademy.png';
 
   const normalisedHtml = html || '';
-  const safeVorschauzeile = vorschauzeile
-    ? `<span style="display:none!important;opacity:0;color:transparent;height:0;width:0;">${vorschauzeile}</span>`
+  const vorschauzeileText = options?.vorschauzeile || '';
+  const safeVorschauzeile = vorschauzeileText
+    ? `<span style="display:none!important;opacity:0;color:transparent;height:0;width:0;">${vorschauzeileText}</span>`
     : '';
+
+  const previewLink =
+    typeof options?.previewLink === 'string' && options.previewLink ? options.previewLink : null;
 
   const baseStyles = `
     body { margin:0; padding:0; background:${brandBg}; color:${brandText}; font-family:"Helvetica Neue", Arial, sans-serif; }
@@ -205,63 +213,75 @@ function applyLayout(layout: TemplateEntity['layout'], html: string, vorschauzei
     p, li, td { font-size:16px; line-height:1.6; color:${brandText}; }
     a { color:${brandPrimary}; text-decoration:underline; }
     small { color:${brandMuted}; }
+    table[data-wa-table="true"] { width:100%; border-collapse:collapse; border-spacing:0; }
+    @media screen and (max-width:520px) {
+      table[data-wa-table="true"] thead { display:none !important; }
+      table[data-wa-table="true"] tr { display:block; border-bottom:1px solid #e5e7eb; padding:6px 0; }
+      table[data-wa-table="true"] td { display:block !important; text-align:left !important; width:100% !important; padding:6px 0 !important; }
+    }
   `;
 
-  const header = `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0; padding:0; background:${brandBg};">
+  const cardStart = `<div style="background:#ffffff;border:1px solid #d7d9dd;border-radius:32px;padding:32px 24px 34px;box-shadow:0 16px 40px rgba(0,0,0,0.06);text-align:left;">
+    <img style="display:block;width:146px;height:auto;margin:0 0 30px 0;" src="${logoUrl}" alt="Wine Academy Hamburg" />`;
+  const cardEnd = `</div>`;
+
+  const kundenFooter = `
+    <hr style="border:0;border-top:1px solid #e2e3e5;margin:24px 0 18px;" />
+    <div style="margin-top:8px;">
+      <img src="${logoUrl}" alt="Wine Academy Hamburg" style="width:54px;height:auto;display:block;margin-bottom:10px;" />
+      <div style="font-size:13px;line-height:1.6;color:${brandText};">
+        <div style="font-weight:700;margin-bottom:4px;">Wineacademy</div>
+        Eimsbütteler Chaussee 37<br/>
+        20259 Hamburg<br/>
+        Tel.: 040-88 12 80 27<br/>
+        post@wineacademy.de
+      </div>
+    </div>
+  `;
+
+  const kundenPreview =
+    previewLink && previewLink.length
+      ? `<div style="text-align:center;font-size:12px;line-height:1.6;color:${brandMuted};margin:14px 0 0 0;">
+        Wird diese E-Mail nicht korrekt angezeigt?
+        <a href="${previewLink}" style="color:#7a9ec1;text-decoration:underline;">Hier öffnen</a>.
+      </div>`
+      : '';
+
+  const kundenWrapper = `<!doctype html><html><head><meta charset="utf-8"><title>Wine Academy</title><style>${baseStyles}</style></head><body>${safeVorschauzeile}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0; padding:24px 0; background:${brandBg};">
       <tr>
-        <td align="center" style="padding:28px 18px 16px;">
-          <table role="presentation" cellpadding="0" cellspacing="0" width="640" style="max-width:640px;">
-            <tr>
-              <td style="padding:12px 0; text-align:left;">
-                <a href="https://wineacademy.plan-p.de" style="text-decoration:none; color:${brandText}; font-weight:600; font-size:15px;">
-                  <img src="${logoUrl}" alt="Wine Academy" width="180" style="max-width:180px; height:auto; display:block; margin:0 0 8px;" />
-                </a>
-              </td>
-              <td style="text-align:right; font-size:13px; color:${brandMuted}; font-family:'Helvetica Neue', Arial, sans-serif;">
-                ${vorschauzeile ? vorschauzeile : ''}
-              </td>
-            </tr>
-          </table>
+        <td align="center" style="padding:0 18px;">
+          <div style="max-width:680px;width:100%;padding:16px 14px;margin:0 auto;">
+            ${cardStart}
+              ${normalisedHtml}
+              ${kundenFooter}
+            ${cardEnd}
+            ${kundenPreview}
+          </div>
         </td>
       </tr>
     </table>
-  `;
+  </body></html>`;
 
-  const containerStart = `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${brandBg}; margin:0; padding:0;">
+  const backofficeWrapper = `<!doctype html><html><head><meta charset="utf-8"><title>Wine Academy</title><style>${baseStyles}</style></head><body>${safeVorschauzeile}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0; padding:24px 0; background:${brandBg};">
       <tr>
-        <td align="center" style="padding:0 18px 32px;">
-          <table role="presentation" cellpadding="0" cellspacing="0" width="640" style="max-width:640px; background:#ffffff; border-radius:14px; border:1px solid #e5e7eb; box-shadow:0 10px 35px rgba(0,0,0,0.06); overflow:hidden;">
-            <tr>
-              <td style="padding:28px 26px 16px;">
-  `;
-
-  const containerEnd = `
-              </td>
-            </tr>
-          </table>
-          <table role="presentation" cellpadding="0" cellspacing="0" width="640" style="max-width:640px; margin-top:18px;">
-            <tr>
-              <td style="text-align:left; font-size:12px; color:${brandMuted}; font-family:'Helvetica Neue', Arial, sans-serif;">
-                Wine Academy Hamburg · Schlossweg 10 · 22607 Hamburg
-              </td>
-            </tr>
-          </table>
+        <td align="center" style="padding:0 18px;">
+          <div style="max-width:680px;width:100%;padding:16px 14px;margin:0 auto;">
+            ${cardStart}
+              ${normalisedHtml}
+            ${cardEnd}
+          </div>
         </td>
       </tr>
     </table>
-  `;
+  </body></html>`;
 
-  switch (layout) {
-    case 'rechnung':
-      return `<!doctype html><html><head><meta charset="utf-8"><title>Rechnung</title><style>${baseStyles}</style></head><body>${safeVorschauzeile}${header}${containerStart}${normalisedHtml}${containerEnd}</body></html>`;
-    case 'backoffice':
-      return `<!doctype html><html><head><meta charset="utf-8"><title>Backoffice</title><style>${baseStyles}</style></head><body>${safeVorschauzeile}${header}${containerStart}${normalisedHtml}${containerEnd}</body></html>`;
-    case 'default':
-    default:
-      return `<!doctype html><html><head><meta charset="utf-8"><title>Wine Academy</title></head><body style="margin:0;padding:0;background:#ffffff;font-family:Arial,Helvetica,sans-serif;">${safeVorschauzeile}${normalisedHtml}</body></html>`;
+  const resolvedLayout = layout || 'kunde';
+  if (resolvedLayout === 'backoffice') {
+    return backofficeWrapper;
   }
+  return kundenWrapper;
 }
 
 function toPlainText(html: string) {
@@ -285,7 +305,9 @@ async function dispatchTemplate(
   const subject = renderTemplateString(template.betreff || template.name || 'Benachrichtigung', platzhalterDaten);
   const vorschauzeile = renderTemplateString(template.vorschauzeile ?? '', platzhalterDaten) || undefined;
   const rawHtml = renderTemplateString(template.bodyHtml ?? '', platzhalterDaten);
-  const html = applyLayout(template.layout, rawHtml, vorschauzeile);
+  const previewLinkValue = resolvePlatzhalterValue(platzhalterDaten, 'links.preview');
+  const previewLink = typeof previewLinkValue === 'string' && previewLinkValue ? previewLinkValue : null;
+  const html = applyLayout(template.layout, rawHtml, { vorschauzeile, previewLink });
   const text = template.bodyText ? renderTemplateString(template.bodyText, platzhalterDaten) : toPlainText(rawHtml);
 
   const response = await sendEmail(strapi, {
@@ -306,7 +328,9 @@ export default factories.createCoreService(CONTENT_UID, ({ strapi }) => ({
     const subject = renderTemplateString(template.betreff || template.name || 'Benachrichtigung', platzhalterDaten);
     const vorschauzeile = renderTemplateString(template.vorschauzeile ?? '', platzhalterDaten) || undefined;
     const rawHtml = renderTemplateString(template.bodyHtml ?? '', platzhalterDaten);
-    const html = applyLayout(template.layout, rawHtml, vorschauzeile);
+    const previewLinkValue = resolvePlatzhalterValue(platzhalterDaten, 'links.preview');
+    const previewLink = typeof previewLinkValue === 'string' && previewLinkValue ? previewLinkValue : null;
+    const html = applyLayout(template.layout, rawHtml, { vorschauzeile, previewLink });
     const text = template.bodyText ? renderTemplateString(template.bodyText, platzhalterDaten) : toPlainText(rawHtml);
     return { subject, html, text };
   },
