@@ -6,7 +6,7 @@ import {
   SevDeskError,
   findDocumentForInvoice,
 } from '../../../../services/sevdesk';
-import { sendStornoNotificationsForOrder } from '../../utils/notifications';
+import { sendPaymentConfirmationForOrder, sendStornoNotificationsForOrder } from '../../utils/notifications';
 import { createGutscheineForPaidOrder } from '../../utils/gutschein-erzeugung';
 
 const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
@@ -258,6 +258,10 @@ export default {
           error: error instanceof Error ? error.message : error,
         });
       });
+      const method = String(event.result?.zahlungsmethode || '').toLowerCase();
+      if (method === 'rechnung') {
+        await sendPaymentConfirmationForOrder(strapi, bestellungId);
+      }
     }
   },
 };

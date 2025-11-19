@@ -216,6 +216,33 @@ const buildTeilnehmerText = (order: any) => {
     .join('\n');
 };
 
+const buildVouchersHtml = (order: any) => {
+  const vouchers = Array.isArray(order?.gutscheine) ? order.gutscheine : [];
+  if (!vouchers.length) {
+    return { html: '', text: '' };
+  }
+  const htmlItems = vouchers
+    .map((voucher: any) => {
+      const code = escapeHtml(voucher?.code ?? 'Gutschein');
+      const amount = formatCurrency(voucher?.betrag);
+      return `<li style="margin:0 0 4px 0;font-size:16px;line-height:1.5;color:#111110;">${code}${
+        amount ? ` (${amount})` : ''
+      }</li>`;
+    })
+    .join('');
+  const textItems = vouchers
+    .map((voucher: any) => {
+      const code = voucher?.code ? String(voucher.code) : 'Gutschein';
+      const amount = formatCurrency(voucher?.betrag);
+      return `${code}${amount ? ` (${amount})` : ''}`;
+    })
+    .join('\n');
+  return {
+    html: `<ul style="padding-left:20px;margin:0 0 12px 0;">${htmlItems}</ul>`,
+    text: textItems,
+  };
+};
+
 export type PositionSummary = {
   titel: string;
   beschreibung?: string;
@@ -593,6 +620,86 @@ export async function sendStornoNotificationsForOrder(strapi: any, orderId: numb
     });
   } catch (error: any) {
     strapi.log.error('[bestellung.storno] Benachrichtigung konnte nicht erzeugt werden.', {
+      orderId,
+      error: error?.message ?? error,
+    });
+  }
+}
+
+export async function sendPaymentConfirmationForOrder(strapi: any, orderId: number): Promise<void> {
+  if (!orderId) {
+    return;
+  }
+  try {
+    const fetchOptions: any = getOrderNotificationFetchOptions();
+    const order = await strapi.entityService.findOne('api::bestellung.bestellung', orderId, fetchOptions);
+    if (!order) {
+      return;
+    }
+    const paymentMethod = String(order?.zahlungsmethode || '').toLowerCase();
+    if (paymentMethod !== 'rechnung') {
+      return;
+    }
+    const notificationService = strapi.service('api::benachrichtigung.benachrichtigung');
+    if (!notificationService?.send) {
+      strapi.log.warn('[zahlungsbestaetigung] Benachrichtigung kann nicht gesendet werden (Service send fehlt).');
+      return;
+    }
+    const recipients = Array.from(
+      new Set(
+        [
+          order?.email,
+          ...(order?.rechnungsEmail ? [order.rechnungsEmail] : []),
+        ]
+          .filter(Boolean)
+          .map((value) => String(value).trim())
+      )
+    );
+    if (!recipients.length) {
+      return;
+    }
+
+    const positionsSource = Array.isArray((order as any)?.positionen) ? (order as any).positionen : [];
+    const positions = summarisePositionsForMail(positionsSource);
+    const totals: NotificationTotals = {
+      brutto: toNumberOrZero(order.zuZahlenBrutto ?? order.summePositionenBrutto),
+      netto: toNumberOrZero(order.zuZahlenNetto ?? order.summePositionenNetto),
+      steuer: toNumberOrZero(order.zuZahlenSteuer ?? order.summeSteuer),
+      gutschein: toNumberOrZero(order.gutscheinBetrag),
+      versandkosten: toNumberOrZero(order.versandkosten),
+    };
+    const paymentDateSource = order?.zahlungsdatum || order?.updatedAt || order?.createdAt || new Date();
+    const paymentDate = formatDateLabel(paymentDateSource);
+    const invoiceLink = resolveInvoiceDownloadUrl(order, 'invoice');
+    const previewLink = resolvePreviewUrl(order);
+    const { html: vouchersHtml } = buildVouchersHtml(order);
+    const termineInfo = buildTermineHtml(order);
+
+    await notificationService.send({
+      anwendungsfall: 'zahlungsbestaetigung',
+      recipients,
+      platzhalter: {
+        kunde: {
+          vorname: order.vorname || '',
+          nachname: order.nachname || '',
+          email: order.email || '',
+        },
+        bestellung: {
+          bestellnummer: order.bestellnummer || order.documentId || String(order.id),
+          zahlungsbetrag: formatCurrency(totals.brutto),
+          zahlungsdatum: paymentDate,
+        },
+        gutscheineHtml: vouchersHtml,
+        links: {
+          ...(invoiceLink ? { rechnung: invoiceLink } : {}),
+          ...(previewLink ? { preview: previewLink } : {}),
+          ...(termineInfo.logoUrl ? { logo: termineInfo.logoUrl } : {}),
+        },
+      },
+      categories: ['bestellung', 'zahlung', 'kunde'],
+    });
+  } catch (error: any) {
+    strapi.log.error('[zahlungsbestaetigung] Benachrichtigung konnte nicht gesendet werden.', {
       orderId,
       error: error?.message ?? error,
     });
