@@ -5,8 +5,13 @@ import {
   isSevDeskSyncEnabled,
   SevDeskError,
   findDocumentForInvoice,
+  findCancellationInvoice,
 } from '../../../../services/sevdesk';
-import { sendPaymentConfirmationForOrder, sendStornoNotificationsForOrder } from '../../utils/notifications';
+import {
+  sendPaymentConfirmationForOrder,
+  sendStornoNotificationsForOrder,
+  sendVoucherMailForOrder,
+} from '../../utils/notifications';
 import { createGutscheineForPaidOrder } from '../../utils/gutschein-erzeugung';
 
 const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
@@ -89,7 +94,18 @@ async function handleSevDeskStorno(bestellungId: number) {
       return;
     }
 
-    const cancelResponse: any = await cancelInvoice(strapi, order.sevdeskInvoiceId);
+    let cancelResponse: any;
+    const existingCancellation = await findCancellationInvoice(strapi, order.sevdeskInvoiceId);
+    if (existingCancellation?.id) {
+      cancelResponse = existingCancellation;
+      strapi?.log?.info?.('[Bestellung lifecycles] Storno bereits vorhanden, cancelInvoice wird übersprungen.', {
+        bestellungId,
+        invoiceId: order.sevdeskInvoiceId,
+        cancellationInvoiceId: existingCancellation.id,
+      });
+    } else {
+      cancelResponse = await cancelInvoice(strapi, order.sevdeskInvoiceId);
+    }
 
     if (strapi?.log?.info) {
       const responseMeta = {
@@ -262,6 +278,7 @@ export default {
       if (method === 'rechnung') {
         await sendPaymentConfirmationForOrder(strapi, bestellungId);
       }
+      await sendVoucherMailForOrder(strapi, bestellungId);
     }
   },
 };

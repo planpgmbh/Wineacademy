@@ -54,6 +54,7 @@ type ExistingGutschein = {
 type BestellungEntity = {
   id: number;
   bestellstatus: string;
+  bestellnummer?: string | null;
   positionen: BestellungPosition[];
   gutscheine?: ExistingGutschein[];
 };
@@ -145,7 +146,7 @@ function normaliseGutscheinDetails(
 
 async function loadOrder(strapi: StrapiInstance, id: number): Promise<BestellungEntity | null> {
   const entity = await strapi.entityService.findOne('api::bestellung.bestellung', id, {
-    fields: ['id', 'bestellstatus'],
+    fields: ['id', 'bestellstatus', 'bestellnummer'],
     populate: {
       positionen: true,
       gutscheine: {
@@ -270,10 +271,15 @@ export async function createGutscheineForPaidOrder(strapi: StrapiInstance, beste
 
   let remaining = requiredVoucherCount - existingCodes.size;
   const voucherSettings = await loadVoucherSettings(strapi);
+  const bestellnummerName =
+    typeof order.bestellnummer === 'string' && order.bestellnummer.trim().length > 0
+      ? order.bestellnummer.trim()
+      : null;
   const defaultVoucherName =
-    typeof voucherSettings?.name === 'string' && voucherSettings.name.trim().length > 0
+    bestellnummerName ||
+    (typeof voucherSettings?.name === 'string' && voucherSettings.name.trim().length > 0
       ? voucherSettings.name.trim()
-      : 'Geschenkgutschein';
+      : 'Geschenkgutschein');
 
   for (const position of voucherPositions) {
     const quantity = Math.max(1, Number(position.menge ?? 1));

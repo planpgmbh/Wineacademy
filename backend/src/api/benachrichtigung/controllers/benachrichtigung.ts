@@ -21,9 +21,7 @@ export default factories.createCoreController(CONTENT_UID, ({ strapi }) => ({
       return ctx.badRequest('Empfängeradresse (email) ist erforderlich');
     }
 
-    const template = await strapi.entityService.findOne(CONTENT_UID as any, id, {
-      populate: { platzhalter: true },
-    });
+    const template = await strapi.entityService.findOne(CONTENT_UID as any, id);
 
     if (!template) {
       return ctx.notFound('Benachrichtigung nicht gefunden');

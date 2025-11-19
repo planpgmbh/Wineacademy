@@ -5,6 +5,9 @@ export default ({ env }) => ({
   url: env('PUBLIC_URL'),
   // Hinter einem Reverse Proxy (Traefik) korrekte Protokoll/Host-Erkennung aktivieren
   proxy: true,
+  cron: {
+    enabled: env.bool('CRON_ENABLED', true),
+  },
   app: {
     keys: env.array('APP_KEYS'),
   },

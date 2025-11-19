@@ -722,6 +722,17 @@ export async function cancelInvoice(
   }, clientOptions);
 }
 
+export async function fetchInvoice(
+  strapi: StrapiLike,
+  invoiceId: number | string,
+  clientOptions?: SevDeskClientOptions
+) {
+  return sevDeskRequest(strapi, {
+    method: 'GET',
+    path: `/Invoice/${invoiceId}`,
+  }, clientOptions);
+}
+
 export interface InvoiceWithDocument {
   objects?: Array<{ document?: { id: number | string; filename?: string } }>;
   object?: { document?: { id: number | string; filename?: string } };
@@ -826,6 +837,39 @@ export async function findDocumentForInvoice(
   return {
     id: entry.id,
     filename: entry.filename || entry.documentNumber || entry.name,
+  };
+}
+
+interface SevDeskListResponse<T> {
+  objects?: Array<T>;
+}
+
+export async function findCancellationInvoice(
+  strapi: StrapiLike,
+  invoiceId: number | string,
+  clientOptions?: SevDeskClientOptions
+): Promise<{ id: number | string; invoiceNumber?: string } | null> {
+  const response = await sevDeskRequest<SevDeskListResponse<any>>(
+    strapi,
+    {
+      method: 'GET',
+      path: '/Invoice',
+      query: {
+        'origin[objectName]': 'Invoice',
+        'origin[id]': invoiceId,
+        invoiceType: 'SR',
+        limit: 1,
+      },
+    },
+    clientOptions
+  );
+  const invoice = Array.isArray(response?.objects) && response.objects.length ? response.objects[0] : null;
+  if (!invoice?.id) {
+    return null;
+  }
+  return {
+    id: invoice.id,
+    invoiceNumber: invoice.invoiceNumber,
   };
 }
 

@@ -467,7 +467,9 @@ export async function syncSevDeskOrder(strapi: any, input: SevDeskSyncInput): Pr
   }
 
   const orderStatus = String(bestellung.bestellstatus || '').toLowerCase();
-  if (orderStatus === 'bezahlt') {
+  const shouldBookPayment =
+    orderStatus === 'bezahlt' || (paymentMethod === 'paypal' && Boolean(bestellung.zahlungsreferenz));
+  if (shouldBookPayment) {
     try {
       await markInvoicePaid(strapi, invoiceId, Number(input.dueTotals?.brutto ?? 0), bestellung.updatedAt);
     } catch (bookErr) {

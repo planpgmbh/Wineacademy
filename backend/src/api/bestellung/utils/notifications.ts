@@ -176,10 +176,15 @@ const buildTeilnehmerHtml = (order: any) => {
   if (!buchungen.length) return '';
   const items = buchungen
     .map((b: any) => {
-      const terminLabel = b?.termin?.seminar?.name
-        ? `${b.termin.seminar.name}${b?.termin?.starttag ? ` (${formatDateLabel(b.termin.starttag)})` : ''}`
-        : b?.termin?.starttag
-        ? formatDateLabel(b.termin.starttag)
+      const seminarName =
+        b?.termin?.seminar?.name ||
+        b?.terminSnapshot?.seminarName ||
+        (b?.termin?.titel ? String(b.termin.titel) : '');
+      const startDate = b?.termin?.starttag || b?.terminSnapshot?.starttag;
+      const terminLabel = seminarName
+        ? `${seminarName}${startDate ? ` (${formatDateLabel(startDate)})` : ''}`
+        : startDate
+        ? formatDateLabel(startDate)
         : '';
       const zeilen: string[] = [
         `<p style="margin:0 0 2px 0;font-size:16px;line-height:1.5;color:#111110;"><strong>${escapeHtml(
@@ -191,9 +196,30 @@ const buildTeilnehmerHtml = (order: any) => {
           `<p style="margin:0 0 2px 0;font-size:16px;line-height:1.5;color:#111110;">${escapeHtml(b.email)}</p>`
         );
       }
+      if (b?.wsetCandidateNumber) {
+        zeilen.push(
+          `<p style="margin:0 0 2px 0;font-size:15px;line-height:1.5;color:#5c5f63;">WSET Candidate Number: ${escapeHtml(
+            b.wsetCandidateNumber
+          )}</p>`
+        );
+      }
       if (terminLabel) {
         zeilen.push(
           `<p style="margin:0 0 8px 0;font-size:16px;line-height:1.5;color:#111110;">${escapeHtml(terminLabel)}</p>`
+        );
+      }
+      if (b?.besondereBeduerfnisse) {
+        zeilen.push(
+          `<p style="margin:0 0 4px 0;font-size:15px;line-height:1.5;color:#5c5f63;">Besondere Bedürfnisse: ${escapeHtml(
+            b.besondereBeduerfnisse
+          )}</p>`
+        );
+      }
+      if (b?.anmerkungen) {
+        zeilen.push(
+          `<p style="margin:0 0 4px 0;font-size:15px;line-height:1.5;color:#5c5f63;">Anmerkungen: ${escapeHtml(
+            b.anmerkungen
+          )}</p>`
         );
       }
       return zeilen.join('');
@@ -209,9 +235,17 @@ const buildTeilnehmerText = (order: any) => {
     .map((b: any) => {
       const name = `${b?.vorname || ''} ${b?.nachname || ''}`.trim() || 'Teilnehmer';
       const email = b?.email ? `, E-Mail: ${b.email}` : '';
-      const termin = b?.termin?.starttag ? `, Termin: ${formatDateLabel(b.termin.starttag)}` : '';
-      const seminar = b?.termin?.seminar?.name ? `, Seminar: ${b.termin.seminar.name}` : '';
-      return `${name}${email}${seminar}${termin}`;
+      const startDate = b?.termin?.starttag || b?.terminSnapshot?.starttag;
+      const termin = startDate ? `, Termin: ${formatDateLabel(startDate)}` : '';
+      const seminarName =
+        b?.termin?.seminar?.name ||
+        b?.terminSnapshot?.seminarName ||
+        (b?.termin?.titel ? String(b.termin.titel) : '');
+      const seminar = seminarName ? `, Seminar: ${seminarName}` : '';
+      const wset = b?.wsetCandidateNumber ? `, WSET Candidate Number: ${b.wsetCandidateNumber}` : '';
+      const needs = b?.besondereBeduerfnisse ? `, Besondere Bedürfnisse: ${b.besondereBeduerfnisse}` : '';
+      const notes = b?.anmerkungen ? `, Anmerkungen: ${b.anmerkungen}` : '';
+      return `${name}${email}${seminar}${termin}${wset}${needs}${notes}`;
     })
     .join('\n');
 };
@@ -223,24 +257,25 @@ const buildVouchersHtml = (order: any) => {
   }
   const htmlItems = vouchers
     .map((voucher: any) => {
-      const code = escapeHtml(voucher?.code ?? 'Gutschein');
-      const amount = formatCurrency(voucher?.betrag);
-      return `<li style="margin:0 0 4px 0;font-size:16px;line-height:1.5;color:#111110;">${code}${
-        amount ? ` (${amount})` : ''
-      }</li>`;
+      const code = escapeHtml(voucher?.code ?? 'GUTSCHEIN');
+      return `<div style="border:2px solid #d7d9dd;border-radius:18px;padding:14px 18px;font-weight:700;font-size:20px;letter-spacing:0.08em;margin:0 0 14px 0;text-align:center;color:#111110;">${code}</div>`;
     })
     .join('');
   const textItems = vouchers
-    .map((voucher: any) => {
-      const code = voucher?.code ? String(voucher.code) : 'Gutschein';
-      const amount = formatCurrency(voucher?.betrag);
-      return `${code}${amount ? ` (${amount})` : ''}`;
-    })
+    .map((voucher: any) => (voucher?.code ? String(voucher.code) : 'GUTSCHEIN'))
     .join('\n');
   return {
-    html: `<ul style="padding-left:20px;margin:0 0 12px 0;">${htmlItems}</ul>`,
+    html: `<div style="margin:18px 0 6px;">${htmlItems}</div>`,
     text: textItems,
   };
+};
+
+const hasVoucherPositions = (positions: PositionSummary[]): boolean =>
+  positions.some((position) => (position.typ || '').toLowerCase() === 'gutschein');
+
+const shouldSendVoucherMail = (order: any, positions: PositionSummary[]): boolean => {
+  const hasVoucherCodes = Array.isArray(order?.gutscheine) && order.gutscheine.length > 0;
+  return hasVoucherCodes || hasVoucherPositions(positions);
 };
 
 export type PositionSummary = {
@@ -275,25 +310,41 @@ export const summarisePositionsForMail = (positions: any[]): PositionSummary[] =
     };
   });
 
-const buildPositionsTableHtml = (positions: PositionSummary[]): string => {
+const buildPositionsTableHtml = (
+  positions: PositionSummary[],
+  options?: { voucherAmount?: number }
+): string => {
   if (!positions.length) {
     return '<p style="font-size:18px;margin:0 0 16px 0;">Keine Positionen vorhanden.</p>';
   }
 
-  const rows = positions
-    .map(
-      (position) =>
-        `<tr>` +
-        `<td style="padding:10px 0;font-size:16px;color:#111110;border:0;">${escapeHtml(position.titel)}</td>` +
-        `<td style="padding:10px 0;font-size:16px;color:#111110;text-align:center;border:0;">${escapeHtml(
-          position.menge
-        )}</td>` +
-        `<td style="padding:10px 0;font-size:16px;color:#111110;text-align:right;border:0;">${escapeHtml(
-          formatCurrency(position.summeBrutto)
+  const rowEntries = positions.map(
+    (position) =>
+      `<tr>` +
+      `<td style="padding:10px 0;font-size:16px;color:#111110;border:0;">${escapeHtml(position.titel)}</td>` +
+      `<td style="padding:10px 0;font-size:16px;color:#111110;text-align:center;border:0;">${escapeHtml(
+        position.menge
+      )}</td>` +
+      `<td style="padding:10px 0;font-size:16px;color:#111110;text-align:right;border:0;">${escapeHtml(
+        formatCurrency(position.summeBrutto)
+      )}</td>` +
+      `</tr>`
+  );
+
+  if (options?.voucherAmount && options.voucherAmount > 0) {
+    const formattedVoucher = formatCurrency(options.voucherAmount);
+    rowEntries.push(
+      `<tr>` +
+        `<td style="padding:10px 0;font-size:16px;color:#111110;border:0;">Gutschein</td>` +
+        `<td style="padding:10px 0;font-size:16px;color:#111110;text-align:center;border:0;">–</td>` +
+        `<td style="padding:10px 0;font-size:16px;color:#c0392b;text-align:right;border:0;">-${escapeHtml(
+          formattedVoucher
         )}</td>` +
         `</tr>`
-    )
-    .join('');
+    );
+  }
+
+  const rows = rowEntries.join('');
 
   return `<table style="width:100%;border-collapse:collapse;border-spacing:0;margin-top:6px;margin-bottom:10px;">
     <thead>
@@ -307,21 +358,25 @@ const buildPositionsTableHtml = (positions: PositionSummary[]): string => {
   </table>`;
 };
 
-const buildPositionsListText = (positions: PositionSummary[]): string => {
+const buildPositionsListText = (positions: PositionSummary[], options?: { voucherAmount?: number }): string => {
   if (!positions.length) {
     return 'Keine Positionen vorhanden.';
   }
-  return positions
-    .map((position) => {
-      const parts: string[] = [position.titel];
-      if (position.beschreibung) {
-        parts.push(String(position.beschreibung));
-      }
-      parts.push(`Menge: ${position.menge}`);
-      parts.push(`Summe: ${formatCurrency(position.summeBrutto)}`);
-      return parts.join(' · ');
-    })
-    .join('\n');
+  const lines = positions.map((position) => {
+    const parts: string[] = [position.titel];
+    if (position.beschreibung) {
+      parts.push(String(position.beschreibung));
+    }
+    parts.push(`Menge: ${position.menge}`);
+    parts.push(`Summe: ${formatCurrency(position.summeBrutto)}`);
+    return parts.join(' · ');
+  });
+
+  if (options?.voucherAmount && options.voucherAmount > 0) {
+    lines.push(`Gutschein: -${formatCurrency(options.voucherAmount)}`);
+  }
+
+  return lines.join('\n');
 };
 
 export type NotificationTotals = {
@@ -344,6 +399,7 @@ export const buildCustomerPlatzhalter = (context: OrderNotificationContext) => {
   const invoiceLink = resolveInvoiceDownloadUrl(order, 'invoice');
   const previewLink = resolvePreviewUrl(order);
   const termine = buildTermineHtml(order);
+  const voucherAmount = totals.gutschein > 0 ? totals.gutschein : 0;
 
   return {
     kunde: {
@@ -358,8 +414,9 @@ export const buildCustomerPlatzhalter = (context: OrderNotificationContext) => {
       zahlungsstatus: order.bestellstatus,
       zahlungsmethode: order.zahlungsmethode,
       positionen: positions,
-      positionenTableHtml: buildPositionsTableHtml(positions),
-      positionenText: buildPositionsListText(positions),
+      positionenTableHtml: buildPositionsTableHtml(positions, { voucherAmount }),
+      positionenText: buildPositionsListText(positions, { voucherAmount }),
+      gutscheinBetrag: voucherAmount ? formatCurrency(voucherAmount) : '',
       termineHtml: termine.html,
       termineText: termine.text,
     },
@@ -458,6 +515,45 @@ const buildStornoBackofficePlatzhalter = (context: OrderNotificationContext) => 
   };
 };
 
+const buildVoucherPlatzhalter = (
+  context: OrderNotificationContext,
+  voucherList: { html: string; text: string }
+) => {
+  const orderIdentifier = context.order.bestellnummer || context.order.documentId || String(context.order.id);
+  const invoiceLink = resolveInvoiceDownloadUrl(context.order, 'invoice');
+  const previewLink = resolvePreviewUrl(context.order);
+  const publicBase =
+    process.env.EMAIL_LOGO_URL ||
+    process.env.PUBLIC_URL ||
+    process.env.FRONTEND_BASE_URL ||
+    '';
+  const logoUrl = publicBase ? `${publicBase.replace(/\/$/, '')}/icons/WineAcademy.png` : '/icons/WineAcademy.png';
+
+  return {
+    kunde: {
+      vorname: context.order.vorname || '',
+      nachname: context.order.nachname || '',
+      email: context.order.email || '',
+    },
+    bestellung: {
+      bestellnummer: orderIdentifier,
+      summeBrutto: formatCurrency(
+        context.totals.brutto ?? context.order.zuZahlenBrutto ?? context.order.summePositionenBrutto
+      ),
+    },
+    anhang: {
+      rechnungUrl: invoiceLink,
+      gutscheineHtml: voucherList.html,
+      gutscheineText: voucherList.text,
+    },
+    links: {
+      ...(invoiceLink ? { rechnung: invoiceLink } : {}),
+      ...(previewLink ? { preview: previewLink } : {}),
+      ...(logoUrl ? { logo: logoUrl } : {}),
+    },
+  };
+};
+
 export async function sendOrderNotifications(strapi: any, context: OrderNotificationContext) {
   const notificationService = strapi.service('api::benachrichtigung.benachrichtigung');
   if (!notificationService?.send) {
@@ -510,6 +606,81 @@ export async function sendOrderNotifications(strapi: any, context: OrderNotifica
   } catch (error: any) {
     strapi.log.error('[publicCreate Bestellung] Backoffice-Benachrichtigung fehlgeschlagen.', {
       bestellungId: context.order?.id,
+      error: error?.message ?? error,
+    });
+  }
+}
+
+export async function sendVoucherMail(strapi: any, context: OrderNotificationContext): Promise<void> {
+  if (String(context.order?.bestellstatus || '').toLowerCase() !== 'bezahlt') {
+    return;
+  }
+  if (!shouldSendVoucherMail(context.order, context.positions)) {
+    return;
+  }
+  const voucherList = buildVouchersHtml(context.order);
+  if (!voucherList.html && !voucherList.text) {
+    return;
+  }
+  const notificationService = strapi.service('api::benachrichtigung.benachrichtigung');
+  if (!notificationService?.send) {
+    strapi.log.warn('[gutschein-mail] Versand nicht möglich (Service send fehlt).');
+    return;
+  }
+
+  const recipients = Array.from(
+    new Set(
+      [context.order?.email, context.order?.rechnungsEmail]
+        .filter(Boolean)
+        .map((value) => String(value).trim())
+    )
+  );
+  if (!recipients.length) {
+    return;
+  }
+
+  try {
+    await notificationService.send({
+      anwendungsfall: 'rechnung_gutschein',
+      recipients,
+      platzhalter: buildVoucherPlatzhalter(context, voucherList),
+      categories: ['bestellung', 'gutschein', 'kunde'],
+    });
+  } catch (error: any) {
+    strapi.log.error('[gutschein-mail] Versand fehlgeschlagen.', {
+      bestellungId: context.order?.id,
+      error: error?.message ?? error,
+    });
+  }
+}
+
+export async function sendVoucherMailForOrder(strapi: any, orderId: number): Promise<void> {
+  if (!orderId) {
+    return;
+  }
+  try {
+    const fetchOptions: any = getOrderNotificationFetchOptions();
+    const order = await strapi.entityService.findOne('api::bestellung.bestellung', orderId, fetchOptions);
+    if (!order) {
+      return;
+    }
+    const positionsSource = Array.isArray(order?.positionen) ? order.positionen : [];
+    const positions = summarisePositionsForMail(positionsSource);
+    const totals: NotificationTotals = {
+      brutto: toNumberOrZero(order.zuZahlenBrutto ?? order.summePositionenBrutto),
+      netto: toNumberOrZero(order.zuZahlenNetto ?? order.summePositionenNetto),
+      steuer: toNumberOrZero(order.zuZahlenSteuer ?? order.summeSteuer),
+      gutschein: toNumberOrZero(order.gutscheinBetrag),
+      versandkosten: toNumberOrZero(order.versandkosten),
+    };
+    await sendVoucherMail(strapi, {
+      order,
+      positions,
+      totals,
+    });
+  } catch (error: any) {
+    strapi.log.error('[gutschein-mail] Benachrichtigung konnte nicht erzeugt werden.', {
+      orderId,
       error: error?.message ?? error,
     });
   }

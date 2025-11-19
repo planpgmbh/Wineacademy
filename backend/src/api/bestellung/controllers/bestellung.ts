@@ -13,11 +13,13 @@ import { verifyDownloadToken } from '../utils/download-token';
 import {
   summarisePositionsForMail,
   sendOrderNotifications,
+  sendVoucherMailForOrder,
   getOrderNotificationFetchOptions,
   buildCustomerPlatzhalter,
   NotificationTotals,
 } from '../utils/notifications';
 import { normaliseShippingValue, roundCurrency } from '../../../utils/shipping';
+import { createGutscheineForPaidOrder } from '../utils/gutschein-erzeugung';
 
 type PositionInput = {
   typ?: 'seminar' | 'produkt' | 'gutschein';
@@ -692,12 +694,13 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
 
     const zahlungsmethode = body.zahlungsmethode === 'paypal' ? 'paypal' : (body.zahlungsmethode === 'rechnung' ? 'rechnung' : body.zahlungsmethode || 'rechnung');
     let zahlungsreferenz: string | undefined = body.zahlungsreferenz ? String(body.zahlungsreferenz) : undefined;
-    const bestellstatus: 'offen' | 'bezahlt' | 'storniert' = 'offen';
+    let bestellstatus: 'offen' | 'bezahlt' | 'storniert' = 'offen';
 
     try {
       if (zahlungsmethode === 'paypal' && body.paypalCaptureId) {
         const captureId = await verifyPayPalCapture(String(body.paypalCaptureId), expectedTotal);
         zahlungsreferenz = captureId;
+        bestellstatus = 'bezahlt';
       }
 
       const { summeGutschein } = gutscheinTotals;
@@ -776,6 +779,19 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
       const full = await strapi.entityService.findOne('api::bestellung.bestellung', bestellungId, orderFetchOptions);
 
       let orderSnapshot = full as any;
+      let shouldReloadSnapshot = false;
+
+      if (bestellstatus === 'bezahlt') {
+        try {
+          await createGutscheineForPaidOrder(strapi, bestellungId);
+          shouldReloadSnapshot = true;
+        } catch (voucherCreateErr: any) {
+          strapi.log.error('[publicCreate Bestellung] Gutscheinerzeugung sofort nach PayPal fehlgeschlagen.', {
+            bestellungId,
+            error: voucherCreateErr?.message ?? voucherCreateErr,
+          });
+        }
+      }
 
       try {
                 await syncSevDeskOrder(strapi, {
@@ -785,12 +801,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
           dueTotals: { brutto: dueBrutto, netto: dueNetto, steuer: dueSteuer },
           gutscheinBetrag: summeGutschein,
         });
-        const refreshed = await strapi.entityService.findOne(
-          'api::bestellung.bestellung',
-          bestellungId,
-          orderFetchOptions
-        );
-        orderSnapshot = refreshed as any;
+        shouldReloadSnapshot = true;
       } catch (sevdeskErr) {
         const meta: Record<string, unknown> = {
           bestellungId,
@@ -804,6 +815,24 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         strapi.log.error(
           `[publicCreate Bestellung] SevDesk-Synchronisation fehlgeschlagen ${JSON.stringify(meta)}`
         );
+      }
+
+      if (shouldReloadSnapshot) {
+        try {
+          const refreshed = await strapi.entityService.findOne(
+            'api::bestellung.bestellung',
+            bestellungId,
+            orderFetchOptions
+          );
+          if (refreshed) {
+            orderSnapshot = refreshed as any;
+          }
+        } catch (reloadErr: any) {
+          strapi.log.warn('[publicCreate Bestellung] Bestellung konnte nach Updates nicht neu geladen werden.', {
+            bestellungId,
+            error: reloadErr?.message ?? reloadErr,
+          });
+        }
       }
 
       const positionsForNotifications = Array.isArray(orderSnapshot?.positionen) && orderSnapshot.positionen.length
@@ -826,6 +855,10 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
           bestellungId,
           error: notificationErr?.message ?? notificationErr,
         });
+      }
+
+      if (bestellstatus === 'bezahlt') {
+        await sendVoucherMailForOrder(strapi, bestellungId);
       }
 
       const gutscheine = Array.isArray(orderSnapshot?.gutscheine) ? orderSnapshot.gutscheine : [];

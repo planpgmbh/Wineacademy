@@ -319,7 +319,6 @@ export default factories.createCoreService(CONTENT_UID, ({ strapi }) => ({
 
     const templates = await strapi.entityService.findMany(CONTENT_UID, {
       filters: { anwendungsfall } as any,
-      populate: { platzhalter: true } as any,
       limit: 1,
     });
 
