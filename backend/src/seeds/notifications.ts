@@ -1,11 +1,5 @@
 import { nowIso } from './helpers';
 
-type Platzhalter = {
-  schluessel: string;
-  beschreibung?: string;
-  beispiel?: string;
-};
-
 type NotificationSeed = {
   name: string;
   anwendungsfall:
@@ -21,8 +15,6 @@ type NotificationSeed = {
   vorschauzeile?: string;
   bodyHtml?: string;
   bodyText?: string;
-  platzhalter?: Platzhalter[];
-  testPayload?: Record<string, unknown>;
 };
 
 async function upsertBenachrichtigung(strapi: any, values: NotificationSeed) {
@@ -41,18 +33,7 @@ async function upsertBenachrichtigung(strapi: any, values: NotificationSeed) {
     bodyText: values.bodyText ?? undefined,
     aktiv: true,
     publishedAt: nowIso(),
-    platzhalter: Array.isArray(values.platzhalter)
-      ? values.platzhalter.map((entry) => ({
-          schluessel: entry.schluessel,
-          beschreibung: entry.beschreibung ?? undefined,
-          beispiel: entry.beispiel ?? undefined,
-        }))
-      : [],
   };
-
-  if (values.testPayload) {
-    data.testPayload = values.testPayload;
-  }
 
   if (existing) {
     await strapi.entityService.update('api::benachrichtigung.benachrichtigung', existing.id, { data });
@@ -125,36 +106,6 @@ Rechnung: {{links.rechnung}}
 
 Viele Grüße
 Wine Academy Hamburg`,
-      platzhalter: [
-        { schluessel: 'kunde.vorname', beispiel: 'Max' },
-        { schluessel: 'bestellung.bestellnummer', beispiel: 'WA-20251001' },
-        { schluessel: 'bestellung.summeBrutto', beispiel: '1.270,00 €' },
-        {
-          schluessel: 'bestellung.positionenTableHtml',
-          beschreibung: 'HTML-Tabelle mit allen Positionen inklusive Mengen und Summen.',
-          beispiel:
-            '<table><tr><td>Sensorik Essentials</td><td>2</td><td>530,00 €</td></tr><tr><td>WSET Level 2</td><td>1</td><td>950,00 €</td></tr></table>',
-        },
-        {
-          schluessel: 'links.rechnung',
-          beschreibung: 'Direktlink zum PDF der Rechnung.',
-          beispiel: 'https://wineacademy.plan-p.de/api/public/bestellungen/WA-20251001/rechnung',
-        },
-      ],
-      testPayload: {
-        kunde: { vorname: 'Max', nachname: 'Beispiel' },
-        bestellung: {
-          bestellnummer: 'WA-20251001',
-          summeBrutto: '1.270,00 €',
-          zahlungsmethode: 'Rechnung',
-          zahlungsstatus: 'offen',
-          positionenTableHtml:
-            '<table><thead><tr><th>Position</th><th>Menge</th><th>Summe</th></tr></thead><tbody><tr><td>Sensorik Essentials</td><td>2</td><td>530,00 €</td></tr><tr><td>WSET Level 2</td><td>1</td><td>950,00 €</td></tr></tbody></table>',
-        },
-        links: {
-          rechnung: 'https://wineacademy.plan-p.de/api/public/bestellungen/WA-20251001/rechnung',
-        },
-      },
     },
   ];
 

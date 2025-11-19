@@ -13,6 +13,25 @@
       "type": "string",
       "unique": true
     },
+    "bestellstatus": {
+      "type": "enumeration",
+      "enum": [
+        "offen",
+        "bezahlt",
+        "storniert"
+      ],
+      "default": "offen"
+    },
+    "zahlungsmethode": {
+      "type": "enumeration",
+      "enum": [
+        "rechnung",
+        "paypal",
+        "karte",
+        "ueberweisung",
+        "sonstiges"
+      ]
+    },
     "rechnungstyp": {
       "type": "enumeration",
       "enum": [
@@ -92,25 +111,6 @@
     },
     "gutscheinCode": {
       "type": "string"
-    },
-    "bestellstatus": {
-      "type": "enumeration",
-      "enum": [
-        "offen",
-        "bezahlt",
-        "storniert"
-      ],
-      "default": "offen"
-    },
-    "zahlungsmethode": {
-      "type": "enumeration",
-      "enum": [
-        "rechnung",
-        "paypal",
-        "karte",
-        "ueberweisung",
-        "sonstiges"
-      ]
     },
     "zahlungsreferenz": {
       "type": "string"

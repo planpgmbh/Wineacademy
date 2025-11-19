@@ -9,6 +9,15 @@
     "draftAndPublish": false
   },
   "attributes": {
+    "aktiv": {
+      "type": "boolean",
+      "default": true,
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Aktiv"
+        }
+      }
+    },
     "name": {
       "type": "string",
       "required": true,
@@ -88,33 +97,6 @@
       "pluginOptions": {
         "content-manager": {
           "displayName": "Text-Inhalt"
-        }
-      }
-    },
-    "platzhalter": {
-      "type": "component",
-      "repeatable": true,
-      "component": "benachrichtigung.platzhalter",
-      "pluginOptions": {
-        "content-manager": {
-          "displayName": "Platzhalter"
-        }
-      }
-    },
-    "testPayload": {
-      "type": "json",
-      "pluginOptions": {
-        "content-manager": {
-          "displayName": "Testdaten (JSON)"
-        }
-      }
-    },
-    "aktiv": {
-      "type": "boolean",
-      "default": true,
-      "pluginOptions": {
-        "content-manager": {
-          "displayName": "Aktiv"
         }
       }
     }
