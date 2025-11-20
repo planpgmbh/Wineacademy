@@ -285,7 +285,7 @@ export function SeminarProductCards({
 
         {error ? <p className={`text-center text-sm ${errorClass}`}>{error}</p> : null}
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:[grid-template-columns:repeat(auto-fit,minmax(260px,1fr))] lg:[grid-template-columns:repeat(auto-fit,minmax(280px,1fr))]">
           {contentItems.map((item) =>
             modus === "produkte" ? (
               <ProductCard key={`product-${item.id}`} product={item as ProductCardItem} buttonText={buttonText} />
