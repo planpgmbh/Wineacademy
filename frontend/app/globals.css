@@ -165,10 +165,7 @@ body {
 
   .btn-more-outline:hover:not(:disabled),
   .btn-more-outline:focus-visible {
-    color: var(--color-primary-content);
-    border-color: color-mix(in oklab, var(--color-primary) 75%, transparent);
-    background-color: color-mix(in oklab, var(--color-primary) 22%, white);
-    filter: brightness(1.02);
+    @apply btn-primary;
   }
 
   .heading-section {

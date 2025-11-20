@@ -103,7 +103,7 @@ function SeminarListItem({ seminar, buttonText, isDarkBackground, onLocationClic
   };
 
   return (
-    <article className="group grid gap-4 rounded-2xl bg-base-100 p-0 shadow-sm ring-1 ring-base-300/70 transition hover:shadow-md md:grid-cols-[280px_var(--width-seminar-date)_minmax(0,1fr)] md:items-start md:gap-6 md:rounded-none md:bg-transparent md:p-0 md:shadow-none md:ring-0">
+    <article className="group grid gap-6 rounded-2xl bg-base-100 p-0 shadow-sm ring-1 ring-base-300/70 transition hover:shadow-md md:grid-cols-[280px_var(--width-seminar-date)_minmax(0,1fr)] md:items-start md:gap-6 md:rounded-none md:bg-transparent md:p-0 md:shadow-none md:ring-0 md:hover:shadow-none">
       <div className="relative col-span-full h-[180px] w-full overflow-hidden rounded-t-2xl bg-base-200 md:col-span-1 md:row-span-full md:h-[170px] md:w-[280px] md:rounded-2xl md:shadow-md">
         {image.src ? (
           <Image
@@ -124,7 +124,7 @@ function SeminarListItem({ seminar, buttonText, isDarkBackground, onLocationClic
         <SeminarDateBadge date={seminar.nextDateIso} />
       </div>
 
-      <div className="flex flex-col gap-3 px-4 pb-4 md:col-start-3 md:row-start-1 md:gap-4 md:self-start md:px-0 md:pb-0">
+      <div className="flex flex-col gap-3 px-6 pb-6 md:col-start-3 md:row-start-1 md:gap-4 md:self-start md:px-0 md:pb-0">
         <div className="flex flex-col gap-[0.2rem] md:gap-1">
           {mobileToplineDate ? (
             <p className="mb-0 flex items-baseline gap-1.25 text-sm font-semibold uppercase leading-tight tracking-wide text-base-content md:hidden">
