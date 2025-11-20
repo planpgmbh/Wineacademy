@@ -51,25 +51,22 @@ export const notificationSeedData: NotificationSeed[] = [
       beschreibung: 'Kundenmail direkt nach Checkout.',
       betreff: 'Wir haben deine Bestellung {{bestellung.bestellnummer}} erhalten',
       vorschauzeile: 'Danke für deine Buchung bei der Wine Academy.',
-      bodyHtml: `<h1 style="font-family:'SerifbabeAlpha',Georgia,serif;font-size:32px;line-height:1.1;font-weight:300;letter-spacing:-0.01em;margin:0 0 18px 0;color:#1c1b1a;">Deine Bestellung</h1>
+      bodyHtml: `<h1 style="margin:0 0 18px 0;">Deine Bestellung</h1>
 <hr style="border:0;border-top:1px solid #e2e3e5;margin:18px 0 22px;" />
-<p style="font-weight:700;color:#111110;margin:0 0 6px 0;font-size:17px;line-height:1.5;">Hallo {{kunde.vorname}},</p>
-<p style="font-size:16px;color:#111110;line-height:1.55;margin:0 0 14px 0;">wir haben deine Bestellung {{bestellung.bestellnummer}} erhalten. Danke für dein Vertrauen in die Wine Academy Hamburg.</p>
+<p style="font-weight:700;margin:0 0 6px 0;">Hallo {{kunde.vorname}},</p>
+<p style="margin:0 0 14px 0;">wir haben deine Bestellung {{bestellung.bestellnummer}} erhalten. Danke für dein Vertrauen in die Wine Academy Hamburg.</p>
 
 <hr style="border:0;border-top:1px solid #e2e3e5;margin:18px 0 18px;" />
-<h2 style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:22px;line-height:1.25;font-weight:700;letter-spacing:-0.01em;margin:0 0 12px 0;color:#111110;">Bestellübersicht</h2>
+<h2 style="margin:0 0 12px 0;">Bestellübersicht</h2>
 <div style="margin:0 0 10px 0;">{{bestellung.positionenTableHtml}}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:12px 0 12px 0;color:#111110;font-weight:700;font-size:17px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:12px 0 12px 0;font-weight:700;">
   <tr>
     <td style="padding:12px 0;border-top:1px solid #e2e3e5;border-bottom:1px solid #e2e3e5;text-align:left;">Gesamtbetrag</td>
     <td style="padding:12px 0;border-top:1px solid #e2e3e5;border-bottom:1px solid #e2e3e5;text-align:right;white-space:nowrap;">{{bestellung.summeBrutto}}</td>
   </tr>
 </table>
-<a href="{{links.rechnung}}" style="display:inline-block;width:100%;max-width:320px;text-align:center;background:#8bb5d7;color:#ffffff;text-decoration:none;padding:14px 18px;border-radius:10px;font-weight:700;font-size:16px;margin:12px auto 10px;border:1px solid rgba(0,0,0,0.08);box-sizing:border-box;">Rechnung herunterladen</a>
-<hr style="border:0;border-top:1px solid #e2e3e5;margin:18px 0 22px;" />
-
-<h2 style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:22px;line-height:1.25;font-weight:700;letter-spacing:-0.01em;margin:0 0 12px 0;color:#111110;">Termine</h2>
-{{bestellung.termineHtml}}`,
+<a class="wa-btn wa-btn-primary" href="{{links.rechnung}}" style="display:inline-block;width:100%;max-width:320px;text-align:center;background:#8bb5d7;color:#ffffff;text-decoration:none;padding:14px 18px;border-radius:10px;font-weight:700;margin:16px auto 11px;border:1px solid rgba(0,0,0,0.08);box-sizing:border-box;">Rechnung herunterladen</a>
+{{bestellung.termineSectionHtml}}`,
       bodyText: `Hallo {{kunde.vorname}},
 
 wir haben deine Bestellung {{bestellung.bestellnummer}} erhalten. Danke für dein Vertrauen in die Wine Academy Hamburg.
@@ -92,11 +89,12 @@ Wine Academy Hamburg`,
       beschreibung: 'Bestätigt Zahlungseingang und liefert ggf. Gutscheincodes.',
       betreff: 'Zahlung für {{bestellung.bestellnummer}} ist eingegangen',
       vorschauzeile: 'Wir haben deine Zahlung erhalten und schalten alle Leistungen frei.',
-      bodyHtml: `<h1 style="font-family:'SerifbabeAlpha',Georgia,serif;font-size:32px;line-height:1.1;font-weight:300;letter-spacing:-0.01em;margin:0 0 18px 0;color:#1c1b1a;">Zahlungsbestätigung</h1>
-<p style="font-size:16px;color:#111110;line-height:1.55;margin:0 0 12px 0;">Hallo {{kunde.vorname}},</p>
-<p style="font-size:16px;color:#111110;line-height:1.55;margin:0 0 12px 0;">wir haben deine Zahlung über {{bestellung.zahlungsbetrag}} zu Bestellung {{bestellung.bestellnummer}} am {{bestellung.zahlungsdatum}} erhalten.</p>
+      bodyHtml: `<h1 style="margin:0 0 18px 0;">Zahlungsbestätigung</h1>
+<hr style="border:0;border-top:1px solid #e2e3e5;margin:18px 0 18px;" />
+<p style="margin:0 0 12px 0;">Hallo {{kunde.vorname}},</p>
+<p style="margin:0 0 12px 0;">wir haben deine Zahlung über {{bestellung.zahlungsbetrag}} zu Bestellung {{bestellung.bestellnummer}} am {{bestellung.zahlungsdatum}} erhalten.</p>
 {{gutscheineHtml}}
-<a href="{{links.rechnung}}" style="display:inline-block;width:100%;max-width:320px;text-align:center;background:#8bb5d7;color:#ffffff;text-decoration:none;padding:14px 18px;border-radius:10px;font-weight:700;font-size:16px;margin:12px auto 20px;border:1px solid rgba(0,0,0,0.08);box-sizing:border-box;">Rechnung herunterladen</a>`,
+<a class="wa-btn wa-btn-primary" href="{{links.rechnung}}" style="display:inline-block;width:100%;max-width:320px;text-align:center;background:#8bb5d7;color:#ffffff;text-decoration:none;padding:14px 18px;border-radius:10px;font-weight:700;margin:16px auto 11px;border:1px solid rgba(0,0,0,0.08);box-sizing:border-box;">Rechnung herunterladen</a>`,
       bodyText: `Hallo {{kunde.vorname}},
 
 wir haben deine Zahlung für Bestellung {{bestellung.bestellnummer}} am {{bestellung.zahlungsdatum}} erhalten. Betrag: {{bestellung.zahlungsbetrag}}.
@@ -113,14 +111,14 @@ Wine Academy Hamburg`,
       beschreibung: 'Versandmail für Geschenkgutscheine inklusive Gutschein-Code.',
       betreff: 'Dein Geschenkgutschein {{bestellung.bestellnummer}}',
       vorschauzeile: 'Hier ist dein Geschenkgutschein.',
-      bodyHtml: `<h1 style="font-family:'SerifbabeAlpha',Georgia,serif;font-size:32px;line-height:1.1;font-weight:300;letter-spacing:-0.01em;margin:0 0 18px 0;color:#1c1b1a;">Geschenkgutschein</h1>
+      bodyHtml: `<h1 style="margin:0 0 18px 0;">Geschenkgutschein</h1>
 <hr style="border:0;border-top:1px solid #e2e3e5;margin:18px 0 20px;" />
-<p style="font-weight:700;color:#111110;margin:0 0 6px 0;font-size:17px;line-height:1.5;">Hallo {{kunde.vorname}},</p>
-<p style="font-size:16px;color:#111110;line-height:1.55;margin:0 0 12px 0;">wir haben deine Bestellung {{bestellung.bestellnummer}} erhalten. Danke für dein Vertrauen in die Wine Academy Hamburg.</p>
-<p style="font-size:16px;color:#111110;line-height:1.55;margin:0 0 18px 0;">Hier ist dein Geschenkgutschein im Wert von {{bestellung.summeBrutto}}.</p>
+<p style="font-weight:700;margin:0 0 6px 0;">Hallo {{kunde.vorname}},</p>
+<p style="margin:0 0 12px 0;">wir haben deine Bestellung {{bestellung.bestellnummer}} erhalten. Danke für dein Vertrauen in die Wine Academy Hamburg.</p>
+<p style="margin:0 0 18px 0;">Hier ist dein Geschenkgutschein im Wert von {{bestellung.summeBrutto}}.</p>
 {{anhang.gutscheineHtml}}
-<p style="font-size:16px;color:#111110;line-height:1.55;margin:0 0 6px 0;">Viel Freude beim Verschenken!</p>
-<p style="font-size:16px;color:#111110;line-height:1.55;margin:0;">Herzliche Grüße<br/>Wine Academy Hamburg</p>`,
+<p style="margin:0 0 6px 0;">Viel Freude beim Verschenken!</p>
+<p style="margin:0;">Herzliche Grüße<br/>Wine Academy Hamburg</p>`,
       bodyText: `Hallo {{kunde.vorname}},
 
 wir haben deine Bestellung {{bestellung.bestellnummer}} erhalten. Danke für dein Vertrauen in die Wine Academy Hamburg.
@@ -138,30 +136,30 @@ Wine Academy Hamburg`,
       beschreibung: 'Interne Info, sobald eine Bestellung eingeht.',
       betreff: 'Neue Bestellung {{bestellung.bestellnummer}}',
       vorschauzeile: 'Neue Bestellung wartet auf Prüfung.',
-      bodyHtml: `<h1 style="font-family:'SerifbabeAlpha',Georgia,serif;font-size:32px;line-height:1.1;font-weight:300;letter-spacing:-0.01em;margin:0 0 18px 0;color:#1c1b1a;">Neue Bestellung {{bestellung.bestellnummer}}</h1>
+      bodyHtml: `<h1 style="margin:0 0 18px 0;">Neue Bestellung {{bestellung.bestellnummer}}</h1>
 <hr style="border:0;border-top:1px solid #e2e3e5;margin:18px 0 18px;" />
 
-<p style="margin:0 0 8px 0;font-size:16px;line-height:1.5;color:#111110;"><strong>Status:</strong> {{bestellung.status}}</p>
-<p style="margin:0 0 8px 0;font-size:16px;line-height:1.5;color:#111110;"><strong>Zahlungsmethode:</strong> {{bestellung.zahlungsmethode}}</p>
-<p style="margin:0 0 8px 0;font-size:16px;line-height:1.5;color:#111110;"><strong>Rechnungstyp:</strong> {{bestellung.rechnungstyp}}</p>
+<p style="margin:0 0 8px 0;"><strong>Status:</strong> {{bestellung.status}}</p>
+<p style="margin:0 0 8px 0;"><strong>Zahlungsmethode:</strong> {{bestellung.zahlungsmethode}}</p>
+<p style="margin:0 0 8px 0;"><strong>Rechnungstyp:</strong> {{bestellung.rechnungstyp}}</p>
 <hr style="border:0;border-top:1px solid #e2e3e5;margin:16px 0 16px;" />
 
-<p style="margin:0 0 8px 0;font-size:16px;line-height:1.5;color:#111110;"><strong>Bestellung</strong></p>
+<p style="margin:0 0 8px 0;"><strong>Bestellung</strong></p>
 <div style="margin:0 0 12px 0;">{{bestellung.positionenTableHtml}}</div>
 <hr style="border:0;border-top:1px solid #e2e3e5;margin:16px 0 16px;" />
 
-<p style="margin:0 0 12px 0;font-size:16px;line-height:1.5;color:#111110;"><strong>Summen</strong><br/>Brutto: {{bestellung.summeBrutto}}<br/>Netto: {{bestellung.summeNetto}}<br/>Steuer: {{bestellung.summeSteuer}}<br/>Gutschein: {{bestellung.gutscheinBetrag}}</p>
+<p style="margin:0 0 12px 0;"><strong>Summen</strong><br/>Brutto: {{bestellung.summeBrutto}}<br/>Netto: {{bestellung.summeNetto}}<br/>Steuer: {{bestellung.summeSteuer}}<br/>Gutschein: {{bestellung.gutscheinBetrag}}</p>
 <hr style="border:0;border-top:1px solid #e2e3e5;margin:16px 0 16px;" />
 
-<p style="margin:0 0 10px 0;font-size:16px;line-height:1.5;color:#111110;"><strong>Kunde</strong><br/>{{bestellung.kunde.vorname}} {{bestellung.kunde.nachname}}<br/>E-Mail: {{bestellung.kunde.email}}<br/>Telefon: {{bestellung.kunde.telefon}}</p>
-<p style="margin:0 0 12px 0;font-size:16px;line-height:1.5;color:#111110;"><strong>Rechnungsadresse</strong><br/>{{bestellung.adresse.strasse}}<br/>{{bestellung.adresse.plz}} {{bestellung.adresse.stadt}} ({{bestellung.adresse.land}})<br/>Rechnungs-E-Mail: {{bestellung.adresse.rechnungsEmail}}<br/>USt-ID: {{bestellung.adresse.ustId}}</p>
+<p style="margin:0 0 10px 0;"><strong>Kunde</strong><br/>{{bestellung.kunde.vorname}} {{bestellung.kunde.nachname}}<br/>E-Mail: {{bestellung.kunde.email}}<br/>Telefon: {{bestellung.kunde.telefon}}</p>
+<p style="margin:0 0 12px 0;"><strong>Rechnungsadresse</strong><br/>{{bestellung.adresse.strasse}}<br/>{{bestellung.adresse.plz}} {{bestellung.adresse.stadt}} ({{bestellung.adresse.land}})<br/>Rechnungs-E-Mail: {{bestellung.adresse.rechnungsEmail}}<br/>USt-ID: {{bestellung.adresse.ustId}}</p>
 <hr style="border:0;border-top:1px solid #e2e3e5;margin:16px 0 12px;" />
 
-<p style="margin:0 0 8px 0;font-size:16px;line-height:1.5;color:#111110;"><strong>Teilnehmer</strong></p>
+<p style="margin:0 0 8px 0;"><strong>Teilnehmer</strong></p>
 <div style="margin:0 0 12px 0;">{{bestellung.teilnehmerHtml}}</div>
 
 <hr style="border:0;border-top:1px solid #e2e3e5;margin:18px 0 10px;" />
-<a href="{{links.rechnung}}" style="display:inline-block;width:100%;max-width:320px;text-align:center;background:#8bb5d7;color:#ffffff;text-decoration:none;padding:14px 18px;border-radius:10px;font-weight:700;font-size:16px;margin:12px auto 0;border:1px solid rgba(0,0,0,0.08);box-sizing:border-box;">Rechnung herunterladen</a>`,
+<a class="wa-btn wa-btn-primary" href="{{links.rechnung}}" style="display:inline-block;width:100%;max-width:320px;text-align:center;background:#8bb5d7;color:#ffffff;text-decoration:none;padding:14px 18px;border-radius:10px;font-weight:700;margin:16px auto 11px;border:1px solid rgba(0,0,0,0.08);box-sizing:border-box;">Rechnung herunterladen</a>`,
       bodyText: `Neue Bestellung {{bestellung.bestellnummer}}
 Status: {{bestellung.status}}
 Zahlungsmethode: {{bestellung.zahlungsmethode}}
@@ -194,18 +192,19 @@ Notizen: {{bestellung.notizen}}`,
       beschreibung: 'Kundenbenachrichtigung bei erfolgreicher Stornierung.',
       betreff: 'Bestellung {{bestellung.bestellnummer}} wurde storniert',
       vorschauzeile: 'Wir haben deine Stornierung bestätigt.',
-      bodyHtml: `<h1 style="font-family:'SerifbabeAlpha',Georgia,serif;font-size:32px;line-height:1.1;font-weight:300;letter-spacing:-0.01em;margin:0 0 18px 0;color:#1c1b1a;">Stornobestätigung</h1>
-<p style="font-size:16px;color:#111110;line-height:1.55;margin:0 0 12px 0;">Hallo {{kunde.vorname}},</p>
-<p style="font-size:16px;color:#111110;line-height:1.55;margin:0 0 12px 0;">wir bestätigen die Stornierung deiner Bestellung {{bestellung.bestellnummer}} am {{stornierung.datum}}.</p>
-<p style="font-size:16px;color:#111110;line-height:1.5;margin:0 0 12px 0;">Bei Fragen melde dich gerne jederzeit.</p>
-<p style="font-size:16px;color:#111110;line-height:1.5;margin:0 0 18px 0;">Viele Grüße<br/>Wine Academy Hamburg</p>
+      bodyHtml: `<h1 style="margin:0 0 18px 0;">Stornobestätigung</h1>
+<hr style="border:0;border-top:1px solid #e2e3e5;margin:18px 0 18px;" />
+<p style="margin:0 0 12px 0;">Hallo {{kunde.vorname}},</p>
+<p style="margin:0 0 12px 0;">wir bestätigen die Stornierung deiner Bestellung {{bestellung.bestellnummer}} am {{stornierung.datum}}.</p>
+<p style="margin:0 0 12px 0;">Bei Fragen melde dich gerne jederzeit.</p>
+<p style="margin:0 0 18px 0;">Viele Grüße<br/>Wine Academy Hamburg</p>
 
 <hr style="border:0;border-top:1px solid #e2e3e5;margin:16px 0 18px;" />
-<h2 style="font-size:18px;font-weight:600;color:#111110;margin:0 0 12px 0;">Bestellübersicht</h2>
+<h2 style="margin:0 0 12px 0;">Bestellübersicht</h2>
 <div style="margin:0 0 12px 0;">{{bestellung.positionenTableHtml}}</div>
-<p style="font-size:16px;color:#111110;line-height:1.5;margin:0 0 8px 0;"><strong>Summe brutto:</strong> {{bestellung.summeBrutto}}</p>
+<p style="margin:0 0 8px 0;"><strong>Summe brutto:</strong> {{bestellung.summeBrutto}}</p>
 <hr style="border:0;border-top:1px solid #e2e3e5;margin:16px 0 12px;" />
-<a href="{{links.stornoRechnung}}" style="display:inline-block;width:100%;max-width:320px;text-align:center;background:#8bb5d7;color:#ffffff;text-decoration:none;padding:14px 18px;border-radius:10px;font-weight:700;font-size:16px;margin:12px auto 20px;border:1px solid rgba(0,0,0,0.08);box-sizing:border-box;">Stornorechnung herunterladen</a>`,
+<a class="wa-btn wa-btn-primary" href="{{links.stornoRechnung}}" style="display:inline-block;width:100%;max-width:320px;text-align:center;background:#8bb5d7;color:#ffffff;text-decoration:none;padding:14px 18px;border-radius:10px;font-weight:700;margin:16px auto 11px;border:1px solid rgba(0,0,0,0.08);box-sizing:border-box;">Stornorechnung herunterladen</a>`,
       bodyText: `Hallo {{kunde.vorname}},
 
 wir bestätigen die Stornierung deiner Bestellung {{bestellung.bestellnummer}} am {{stornierung.datum}}.
@@ -223,31 +222,31 @@ Wine Academy Hamburg`,
       beschreibung: 'Interne Info zum Statuswechsel auf storniert.',
       betreff: 'Bestellung {{bestellung.bestellnummer}} wurde storniert',
       vorschauzeile: 'Storno ist eingegangen.',
-      bodyHtml: `<h1 style="font-family:'SerifbabeAlpha',Georgia,serif;font-size:32px;line-height:1.1;font-weight:300;letter-spacing:-0.01em;margin:0 0 18px 0;color:#1c1b1a;">Bestellung {{bestellung.bestellnummer}} storniert</h1>
+      bodyHtml: `<h1 style="margin:0 0 18px 0;">Bestellung {{bestellung.bestellnummer}} storniert</h1>
 <hr style="border:0;border-top:1px solid #e2e3e5;margin:18px 0 18px;" />
 
-<p style="margin:0 0 8px 0;font-size:16px;line-height:1.5;color:#111110;"><strong>Status:</strong> {{bestellung.status}}</p>
-<p style="margin:0 0 8px 0;font-size:16px;line-height:1.5;color:#111110;"><strong>Stornodatum:</strong> {{stornierung.datum}}</p>
-<p style="margin:0 0 8px 0;font-size:16px;line-height:1.5;color:#111110;"><strong>Zahlungsmethode:</strong> {{bestellung.zahlungsmethode}}</p>
+<p style="margin:0 0 8px 0;"><strong>Status:</strong> {{bestellung.status}}</p>
+<p style="margin:0 0 8px 0;"><strong>Stornodatum:</strong> {{stornierung.datum}}</p>
+<p style="margin:0 0 8px 0;"><strong>Zahlungsmethode:</strong> {{bestellung.zahlungsmethode}}</p>
 <hr style="border:0;border-top:1px solid #e2e3e5;margin:16px 0 16px;" />
 
-<p style="margin:0 0 12px 0;font-size:16px;line-height:1.5;color:#111110;"><strong>Summen</strong><br/>Brutto: {{bestellung.summeBrutto}}<br/>Netto: {{bestellung.summeNetto}}<br/>Steuer: {{bestellung.summeSteuer}}<br/>Gutschein: {{bestellung.gutscheinBetrag}}</p>
+<p style="margin:0 0 12px 0;"><strong>Summen</strong><br/>Brutto: {{bestellung.summeBrutto}}<br/>Netto: {{bestellung.summeNetto}}<br/>Steuer: {{bestellung.summeSteuer}}<br/>Gutschein: {{bestellung.gutscheinBetrag}}</p>
 <hr style="border:0;border-top:1px solid #e2e3e5;margin:16px 0 16px;" />
 
-<p style="margin:0 0 10px 0;font-size:16px;line-height:1.5;color:#111110;"><strong>Kunde</strong><br/>{{bestellung.kunde.vorname}} {{bestellung.kunde.nachname}}<br/>E-Mail: {{bestellung.kunde.email}}<br/>Telefon: {{bestellung.kunde.telefon}}</p>
-<p style="margin:0 0 12px 0;font-size:16px;line-height:1.5;color:#111110;"><strong>Rechnungsadresse</strong><br/>{{bestellung.adresse.strasse}}<br/>{{bestellung.adresse.plz}} {{bestellung.adresse.stadt}} ({{bestellung.adresse.land}})<br/>Rechnungs-E-Mail: {{bestellung.adresse.rechnungsEmail}}<br/>USt-ID: {{bestellung.adresse.ustId}}</p>
+<p style="margin:0 0 10px 0;"><strong>Kunde</strong><br/>{{bestellung.kunde.vorname}} {{bestellung.kunde.nachname}}<br/>E-Mail: {{bestellung.kunde.email}}<br/>Telefon: {{bestellung.kunde.telefon}}</p>
+<p style="margin:0 0 12px 0;"><strong>Rechnungsadresse</strong><br/>{{bestellung.adresse.strasse}}<br/>{{bestellung.adresse.plz}} {{bestellung.adresse.stadt}} ({{bestellung.adresse.land}})<br/>Rechnungs-E-Mail: {{bestellung.adresse.rechnungsEmail}}<br/>USt-ID: {{bestellung.adresse.ustId}}</p>
 <hr style="border:0;border-top:1px solid #e2e3e5;margin:16px 0 12px;" />
 
-<p style="margin:0 0 8px 0;font-size:16px;line-height:1.5;color:#111110;"><strong>Bestellung</strong></p>
+<p style="margin:0 0 8px 0;"><strong>Bestellung</strong></p>
 <div style="margin:0 0 12px 0;">{{bestellung.positionenTableHtml}}</div>
 
 <hr style="border:0;border-top:1px solid #e2e3e5;margin:16px 0 12px;" />
-<p style="margin:0 0 8px 0;font-size:16px;line-height:1.5;color:#111110;"><strong>Teilnehmer</strong></p>
+<p style="margin:0 0 8px 0;"><strong>Teilnehmer</strong></p>
 <div style="margin:0 0 12px 0;">{{bestellung.teilnehmerHtml}}</div>
 
 <hr style="border:0;border-top:1px solid #e2e3e5;margin:16px 0 12px;" />
-<a href="{{links.stornoRechnung}}" style="display:inline-block;width:100%;max-width:320px;text-align:center;background:#8bb5d7;color:#ffffff;text-decoration:none;padding:14px 18px;border-radius:10px;font-weight:700;font-size:16px;margin:12px auto 8px;border:1px solid rgba(0,0,0,0.08);box-sizing:border-box;">Stornorechnung herunterladen</a>
-<a href="{{links.rechnung}}" style="display:inline-block;width:100%;max-width:320px;text-align:center;background:#e2e3e5;color:#111110;text-decoration:none;padding:14px 18px;border-radius:10px;font-weight:700;font-size:16px;margin:0 auto 10px;border:1px solid rgba(0,0,0,0.12);box-sizing:border-box;">Alte Rechnungen herunterladen</a>`,
+<a class="wa-btn wa-btn-primary" href="{{links.stornoRechnung}}" style="display:inline-block;width:100%;max-width:320px;text-align:center;background:#8bb5d7;color:#ffffff;text-decoration:none;padding:14px 18px;border-radius:10px;font-weight:700;margin:16px auto 11px;border:1px solid rgba(0,0,0,0.08);box-sizing:border-box;">Stornorechnung herunterladen</a>
+<a class="wa-btn wa-btn-secondary" href="{{links.rechnung}}" style="display:inline-block;width:100%;max-width:320px;text-align:center;background:#e2e3e5;color:#111110;text-decoration:none;padding:14px 18px;border-radius:10px;font-weight:700;margin:16px auto 11px;border:1px solid rgba(0,0,0,0.12);box-sizing:border-box;">Alte Rechnungen herunterladen</a>`,
       bodyText: `Storno {{bestellung.bestellnummer}}
 Status: {{bestellung.status}}
 Stornodatum: {{stornierung.datum}}

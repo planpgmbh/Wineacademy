@@ -206,22 +206,33 @@ function applyLayout(
 
   const baseStyles = `
     body { margin:0; padding:0; background:${brandBg}; color:${brandText}; font-family:"Helvetica Neue", Arial, sans-serif; }
-    h1, h2, h3 { font-family: Georgia, "Times New Roman", serif; font-weight:300; color:${brandText}; margin:0 0 16px; }
-    h1 { font-size:32px; line-height:1.15; }
-    h2 { font-size:26px; line-height:1.2; }
-    h3 { font-size:22px; line-height:1.25; }
-    p, li, td { font-size:16px; line-height:1.6; color:${brandText}; }
+    h1 { font-family: Georgia, "Times New Roman", serif; font-weight:300; color:${brandText}; margin:0 0 16px; font-size:45px; line-height:1.12; }
+    h2 { font-family:"Helvetica Neue", Arial, sans-serif; font-weight:700; color:${brandText}; margin:0 0 16px; font-size:24px; line-height:1.22; }
+    h3 { font-family:"Helvetica Neue", Arial, sans-serif; font-weight:700; color:${brandText}; margin:0 0 16px; font-size:19px; line-height:1.25; }
+    p, li, td { font-size:17px; line-height:1.65; color:${brandText}; margin:0 0 10px; }
     a { color:${brandPrimary}; text-decoration:underline; }
     small { color:${brandMuted}; }
+    .wa-btn { display:inline-block; width:100%; max-width:320px; text-align:center; text-decoration:none; padding:14px 18px; border-radius:10px; font-weight:700; box-sizing:border-box; margin:16px auto 11px; }
+    .wa-btn-primary { background:${brandPrimary}; color:#ffffff; border:1px solid rgba(0,0,0,0.08); }
+    .wa-btn-secondary { background:#e2e3e5; color:${brandText}; border:1px solid rgba(0,0,0,0.12); }
+    .wa-preview { text-align:center; font-size:12px; line-height:1.6; color:${brandMuted}; margin:14px 0 0 0; padding:12px 0; background:transparent; }
     table[data-wa-table="true"] { width:100%; border-collapse:collapse; border-spacing:0; }
     @media screen and (max-width:520px) {
-      table[data-wa-table="true"] thead { display:none !important; }
-      table[data-wa-table="true"] tr { display:block; border-bottom:1px solid #e5e7eb; padding:6px 0; }
-      table[data-wa-table="true"] td { display:block !important; text-align:left !important; width:100% !important; padding:6px 0 !important; }
+      body, .wa-layout { background:#ffffff !important; }
+      h1 { font-size:28px; line-height:1.2; }
+      h2 { font-size:19px; line-height:1.3; }
+      h3 { font-size:16px; line-height:1.35; }
+      p, li, td { font-size:15px; line-height:1.6; }
+      .wa-layout { padding:0 !important; }
+      .wa-cell { padding:0 !important; }
+      .wa-inner { padding:0 !important; margin:0 !important; }
+      .wa-card { box-sizing:border-box; border:0 !important; border-radius:0 !important; box-shadow:none !important; padding:0 15px 15px !important; width:100% !important; }
+      .wa-btn, .wa-btn-primary, .wa-btn-secondary { max-width:100% !important; width:100% !important; }
+      .wa-preview { text-align:left !important; border-top:1px solid #e2e3e5; margin:14px 15px 0 15px; padding:12px 0; }
     }
   `;
 
-  const cardStart = `<div style="background:#ffffff;border:1px solid #d7d9dd;border-radius:32px;padding:32px 24px 34px;box-shadow:0 16px 40px rgba(0,0,0,0.06);text-align:left;">
+  const cardStart = `<div class="wa-card" style="background:#ffffff;border:1px solid #d7d9dd;border-radius:32px;padding:32px 48px 34px;box-shadow:0 16px 40px rgba(0,0,0,0.06);text-align:left;">
     <img style="display:block;width:146px;height:auto;margin:0 0 30px 0;" src="${logoUrl}" alt="Wine Academy Hamburg" />`;
   const cardEnd = `</div>`;
 
@@ -241,17 +252,17 @@ function applyLayout(
 
   const kundenPreview =
     previewLink && previewLink.length
-      ? `<div style="text-align:center;font-size:12px;line-height:1.6;color:${brandMuted};margin:14px 0 0 0;">
+      ? `<div class="wa-preview">
         Wird diese E-Mail nicht korrekt angezeigt?
         <a href="${previewLink}" style="color:#7a9ec1;text-decoration:underline;">Hier öffnen</a>.
       </div>`
       : '';
 
   const kundenWrapper = `<!doctype html><html><head><meta charset="utf-8"><title>Wine Academy</title><style>${baseStyles}</style></head><body>${safeVorschauzeile}
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0; padding:24px 0; background:${brandBg};">
+    <table class="wa-layout" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0; padding:32px 0; background:${brandBg};">
       <tr>
-        <td align="center" style="padding:0 18px;">
-          <div style="max-width:680px;width:100%;padding:16px 14px;margin:0 auto;">
+        <td class="wa-cell" align="center" style="padding:0 20px;">
+          <div class="wa-inner" style="max-width:680px;width:100%;padding:18px 16px;margin:0 auto;">
             ${cardStart}
               ${normalisedHtml}
               ${kundenFooter}
@@ -264,10 +275,10 @@ function applyLayout(
   </body></html>`;
 
   const backofficeWrapper = `<!doctype html><html><head><meta charset="utf-8"><title>Wine Academy</title><style>${baseStyles}</style></head><body>${safeVorschauzeile}
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0; padding:24px 0; background:${brandBg};">
+    <table class="wa-layout" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0; padding:32px 0; background:${brandBg};">
       <tr>
-        <td align="center" style="padding:0 18px;">
-          <div style="max-width:680px;width:100%;padding:16px 14px;margin:0 auto;">
+        <td class="wa-cell" align="center" style="padding:0 20px;">
+          <div class="wa-inner" style="max-width:680px;width:100%;padding:18px 16px;margin:0 auto;">
             ${cardStart}
               ${normalisedHtml}
             ${cardEnd}

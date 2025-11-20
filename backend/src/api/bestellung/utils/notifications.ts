@@ -97,7 +97,7 @@ const buildTermineHtml = (order: any) => {
   }
 
   if (termineMap.size === 0) {
-    return { html: '', text: '', logoUrl };
+    return { html: '', text: '', logoUrl, hasEntries: false };
   }
 
   const divider = '<hr style="border:0;border-top:1px solid #e2e3e5;margin:20px 0;" />';
@@ -148,9 +148,7 @@ const buildTermineHtml = (order: any) => {
 
     blocks.push(
       `<div style="margin:0 0 16px 0;">
-        <p style="margin:0 0 6px 0;font-size:18px;line-height:1.4;font-weight:700;color:#111110;">${escapeHtml(
-          seminarName
-        )}</p>
+        <h3 style="margin:0 0 6px 0;">${escapeHtml(seminarName)}</h3>
         <p style="margin:15px 0 4px 0;font-size:16px;line-height:1.4;font-weight:700;color:#111110;">Wann:</p>
         <div style="margin:0 0 8px 0;">${tageHtml}</div>
         <p style="margin:15px 0 4px 0;font-weight:700;font-size:16px;color:#111110;">Wo:</p>
@@ -168,7 +166,7 @@ const buildTermineHtml = (order: any) => {
     }
   });
 
-  return { html: blocks.join(''), text: textBlocks.join('\n\n'), logoUrl };
+  return { html: blocks.join(''), text: textBlocks.join('\n\n'), logoUrl, hasEntries: true };
 };
 
 const buildTeilnehmerHtml = (order: any) => {
@@ -258,7 +256,7 @@ export const buildVouchersHtml = (order: any) => {
   const htmlItems = vouchers
     .map((voucher: any) => {
       const code = escapeHtml(voucher?.code ?? 'GUTSCHEIN');
-      return `<div style="border:2px solid #d7d9dd;border-radius:18px;padding:14px 18px;font-weight:700;font-size:20px;letter-spacing:0.08em;margin:0 auto 14px;text-align:center;color:#111110;display:block;width:100%;max-width:360px;box-sizing:border-box;">${code}</div>`;
+      return `<div style="border:2px solid #d7d9dd;border-radius:18px;padding:14px 18px;font-weight:700;font-size:20px;letter-spacing:0.08em;margin:0 0 14px 0;text-align:center;color:#111110;display:block;width:100%;max-width:360px;box-sizing:border-box;">${code}</div>`;
     })
     .join('');
   const textItems = vouchers
@@ -422,6 +420,11 @@ export const buildCustomerPlatzhalter = (
       gutscheinBetrag: voucherAmount ? formatCurrency(voucherAmount) : '',
       termineHtml: termine.html,
       termineText: termine.text,
+      termineSectionHtml: termine.hasEntries
+        ? `<hr style="border:0;border-top:1px solid #e2e3e5;margin:18px 0 22px;" />
+<h2 style="margin:0 0 12px 0;">Termine</h2>
+${termine.html}`
+        : '',
     },
     links: {
       ...(invoiceLink ? { rechnung: invoiceLink } : {}),
