@@ -103,8 +103,8 @@ function SeminarListItem({ seminar, buttonText, isDarkBackground, onLocationClic
   };
 
   return (
-    <article className="group grid gap-4 md:grid-cols-[280px_var(--width-seminar-date)_minmax(0,1fr)] md:items-start md:gap-6">
-      <div className="relative col-span-full h-[180px] w-full overflow-hidden bg-base-200 md:col-span-1 md:row-span-full md:h-[170px] md:w-[280px]">
+    <article className="group grid gap-4 rounded-2xl bg-base-100 p-0 shadow-sm ring-1 ring-base-300/70 transition hover:shadow-md md:grid-cols-[280px_var(--width-seminar-date)_minmax(0,1fr)] md:items-start md:gap-6 md:rounded-none md:bg-transparent md:p-0 md:shadow-none md:ring-0">
+      <div className="relative col-span-full h-[180px] w-full overflow-hidden rounded-t-2xl bg-base-200 md:col-span-1 md:row-span-full md:h-[170px] md:w-[280px] md:rounded-2xl md:shadow-md">
         {image.src ? (
           <Image
             src={image.src}
@@ -124,7 +124,7 @@ function SeminarListItem({ seminar, buttonText, isDarkBackground, onLocationClic
         <SeminarDateBadge date={seminar.nextDateIso} />
       </div>
 
-      <div className="flex flex-col gap-3 md:col-start-3 md:row-start-1 md:gap-4 md:self-start">
+      <div className="flex flex-col gap-3 px-4 pb-4 md:col-start-3 md:row-start-1 md:gap-4 md:self-start md:px-0 md:pb-0">
         <div className="flex flex-col gap-[0.2rem] md:gap-1">
           {mobileToplineDate ? (
             <p className="mb-0 flex items-baseline gap-1.25 text-sm font-semibold uppercase leading-tight tracking-wide text-base-content md:hidden">
@@ -152,7 +152,7 @@ function SeminarListItem({ seminar, buttonText, isDarkBackground, onLocationClic
             <p className="mt-1 text-base text-base-content/80">{seminar.shortDescription}</p>
           ) : null}
         </div>
-        <Link className="btn btn-primary min-w-[160px] self-start" href={seminarHref}>
+        <Link className="btn btn-primary min-w-[160px] self-start md:self-start" href={seminarHref}>
           {buttonText}
         </Link>
       </div>
@@ -343,7 +343,7 @@ export function SeminarList({
           <div className="mt-10 flex justify-center md:mt-12">
             <button
               type="button"
-              className="btn btn-primary min-w-[200px] transition-colors duration-200 hover:brightness-105 focus-visible:outline-primary"
+              className="btn-more-outline min-w-[200px]"
               onClick={handleLoadMore}
               disabled={isLoading}
             >

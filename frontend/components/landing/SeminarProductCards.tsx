@@ -304,7 +304,7 @@ export function SeminarProductCards({
           <div className="flex justify-center">
             <button
               type="button"
-              className={`btn btn-outline ${isLoading ? "loading" : ""}`}
+              className={`btn-more-outline ${isLoading ? "loading" : ""}`}
               disabled={isLoading}
               onClick={handleLoadMore}
             >
