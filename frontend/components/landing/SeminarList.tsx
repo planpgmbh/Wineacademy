@@ -340,10 +340,10 @@ export function SeminarList({
         {error ? <p className="text-sm text-error">{error}</p> : null}
 
         {hasMore ? (
-          <div className="flex justify-center">
+          <div className="mt-10 flex justify-center md:mt-12">
             <button
               type="button"
-              className="btn btn-outline min-w-[200px]"
+              className="btn btn-secondary min-w-[200px]"
               onClick={handleLoadMore}
               disabled={isLoading}
             >
