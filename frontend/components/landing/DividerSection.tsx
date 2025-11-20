@@ -1,26 +1,26 @@
 import Image from "next/image";
 
 import {
-  resolveSectionBackground,
-  SECTION_BACKGROUND_CSS_VAR,
   isDarkSectionBackground,
   type SectionBackgroundKey
 } from "@/lib/landing";
 
 type DividerSectionProps = {
   hintergrund?: SectionBackgroundKey | null;
+  breite?: "normal" | "weit" | null;
 };
 
-export function DividerSection({ hintergrund }: DividerSectionProps) {
-  const resolvedBackground = resolveSectionBackground(hintergrund ?? null);
+export function DividerSection({ hintergrund, breite }: DividerSectionProps) {
+  const resolvedBackground = hintergrund ?? "neutral";
   const isDarkBackground = isDarkSectionBackground(resolvedBackground);
-  const style = { backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` };
 
   const lineClass = isDarkBackground ? "bg-base-100/30" : "bg-base-content/20";
-  const contentStyle = { maxWidth: "var(--landing-content-max-width)" };
+  const maxWidth =
+    breite === "weit" ? "var(--detail-content-max-width)" : "var(--landing-content-max-width)";
+  const contentStyle = { maxWidth };
 
   return (
-    <section style={style}>
+    <section>
       <div
         className="mx-auto flex w-full items-center px-6 py-3 md:px-8 md:py-5"
         style={contentStyle}

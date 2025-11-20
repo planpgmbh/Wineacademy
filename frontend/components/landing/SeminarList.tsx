@@ -343,7 +343,7 @@ export function SeminarList({
           <div className="mt-10 flex justify-center md:mt-12">
             <button
               type="button"
-              className="btn btn-secondary min-w-[200px]"
+              className="btn btn-primary min-w-[200px] transition-colors duration-200 hover:brightness-105 focus-visible:outline-primary"
               onClick={handleLoadMore}
               disabled={isLoading}
             >

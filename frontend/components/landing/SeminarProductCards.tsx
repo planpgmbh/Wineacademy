@@ -120,7 +120,7 @@ function SeminarCard({ seminar, buttonText }: SeminarCardProps) {
             <p className="text-base text-base-content/75">{truncatedDescription}</p>
           ) : null}
           <div className="card-actions mt-auto pt-1">
-            <span className="btn btn-primary pointer-events-none">{buttonText}</span>
+            <span className="btn btn-primary pointer-events-none transition-colors duration-200 hover:brightness-105">{buttonText}</span>
           </div>
         </div>
       </article>
@@ -166,7 +166,7 @@ function ProductCard({ product, buttonText }: ProductCardProps) {
           <h3 className={titleClass}>{product.name}</h3>
           {truncatedDescription ? <p className="text-base text-base-content/75">{truncatedDescription}</p> : null}
           <div className="card-actions mt-auto pt-1">
-            <span className="btn btn-primary pointer-events-none">{buttonText}</span>
+            <span className="btn btn-primary pointer-events-none transition-colors duration-200 hover:brightness-105">{buttonText}</span>
           </div>
         </div>
       </article>

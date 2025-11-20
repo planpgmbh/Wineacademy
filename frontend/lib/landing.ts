@@ -161,7 +161,7 @@ type StrapiColumnsComponent = {
 
 type StrapiTrennlinieComponent = {
   __component: "landing.trennlinie";
-  hintergrundfarbe?: string | null;
+  breite?: "normal" | "weit" | null;
 };
 
 type StrapiTextBlockComponent = {
@@ -198,6 +198,29 @@ type StrapiSeminarFinderComponent = {
   sichtbareFilter?: StrapiCategorySummary[] | null;
 };
 
+type StrapiProductSummary = {
+  id?: number | null;
+  name?: string | null;
+  slug?: string | null;
+  kurzbeschreibung?: string | null;
+  bild?: StrapiUploadFile | null;
+};
+
+type StrapiSeminarProductCardsComponent = {
+  __component: "landing.seminar-produkt-karten";
+  überschrift?: string | null;
+  überschriftStufe?: "h2" | "h3" | "h4" | null;
+  hintergrundfarbe?: string | null;
+  einleitung?: string | null;
+  modus?: "seminare" | "produkte" | null;
+  seminarkategorie?: StrapiCategorySummary | null;
+  produkte?: StrapiProductSummary[] | null;
+  anzahl?: number | null;
+  buttonText?: string | null;
+  mehrButtonText?: string | null;
+  mehrButtonAnzeigen?: boolean | null;
+};
+
 type StrapiLandingComponent =
   | StrapiHeroComponent
   | StrapiHeroCarouselComponent
@@ -211,6 +234,7 @@ type StrapiLandingComponent =
   | StrapiTextBlockComponent
   | StrapiTabsComponent
   | StrapiSeminarFinderComponent
+  | StrapiSeminarProductCardsComponent
   | (Record<string, unknown> & { __component?: string });
 
 type StrapiLandingResponse = {
@@ -441,6 +465,7 @@ export type LandingColumnsSection = {
 export type LandingDividerSection = {
   type: "divider";
   hintergrund: SectionBackgroundKey | null;
+  breite: "normal" | "weit";
 };
 
 export type LandingTextBlockSection = {
@@ -467,6 +492,30 @@ export type LandingSeminarListSection = {
     slug: string;
     shortDescription?: string | null;
   };
+};
+
+export type LandingSeminarProductCardsSection = {
+  type: "seminar-product-cards";
+  überschrift?: string | null;
+  überschriftStufe: "h2" | "h3" | "h4";
+  einleitung?: string | null;
+  hintergrund: SectionBackgroundKey | null;
+  modus: "seminare" | "produkte";
+  categorySlug?: string | null;
+  produkte: {
+    id: number;
+    name: string;
+    slug: string;
+    shortDescription?: string | null;
+    image: {
+      src: string;
+      alt: string;
+    } | null;
+  }[];
+  anzahl: number;
+  buttonText: string;
+  mehrButtonText: string;
+  mehrButtonAnzeigen: boolean;
 };
 
 export type LandingTabsSection = {
@@ -507,6 +556,7 @@ export type LandingSection =
   | LandingDividerSection
   | LandingTextBlockSection
   | LandingSeminarListSection
+  | LandingSeminarProductCardsSection
   | LandingTabsSection
   | LandingSeminarFinderSection
   | LandingUnknownSection;
@@ -661,6 +711,85 @@ const transformSeminarList = (
   };
 };
 
+const formatProductImage = (media?: StrapiUploadFile | null): { src: string; alt: string } | null => {
+  if (!media?.url) {
+    return null;
+  }
+  const src = mediaUrl(media.url);
+  if (!src) {
+    return null;
+  }
+  return {
+    src,
+    alt: toSlideAlt(media)
+  };
+};
+
+const transformSeminarProductCards = (
+  component: StrapiSeminarProductCardsComponent
+): LandingSeminarProductCardsSection | LandingUnknownSection => {
+  const modus = component.modus === "produkte" ? "produkte" : "seminare";
+  const anzahl = typeof component.anzahl === "number" && component.anzahl > 0 ? component.anzahl : 6;
+  const headingLevel = normaliseHeadingLevel(component.überschriftStufe ?? null);
+  const buttonText = normaliseString(component.buttonText ?? null) || "Mehr erfahren";
+  const mehrButtonText = normaliseString(component.mehrButtonText ?? null) || "Mehr laden";
+  const mehrButtonAnzeigen = component.mehrButtonAnzeigen !== false;
+
+  const categorySlug =
+    component.seminarkategorie?.slug && component.seminarkategorie.slug.length > 0
+      ? component.seminarkategorie.slug
+      : null;
+
+  if (modus === "seminare" && !categorySlug) {
+    return {
+      type: "unknown",
+      component: component.__component,
+      data: {
+        reason: "missing-category"
+      }
+    };
+  }
+
+  const produkte =
+    component.produkte
+      ?.map((product) => {
+        const id = typeof product?.id === "number" ? product.id : null;
+        const name = normaliseString(product?.name ?? null);
+        if (!id || name.length === 0) {
+          return null;
+        }
+
+        const slug = normaliseSlug(product?.slug, name, id);
+        if (slug.length === 0) {
+          return null;
+        }
+
+        return {
+          id,
+          name,
+          slug,
+          shortDescription: normaliseOptionalString(product?.kurzbeschreibung ?? null),
+          image: formatProductImage(product?.bild ?? null)
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => Boolean(item)) ?? [];
+
+  return {
+    type: "seminar-product-cards",
+    überschrift: normaliseOptionalString(component.überschrift ?? null),
+    überschriftStufe: headingLevel,
+    einleitung: normaliseRichText(component.einleitung ?? null),
+    hintergrund: normaliseBackgroundKey(component.hintergrundfarbe ?? null),
+    modus,
+    categorySlug,
+    produkte,
+    anzahl,
+    buttonText,
+    mehrButtonText,
+    mehrButtonAnzeigen
+  };
+};
+
 const transformCardGrid = (component: StrapiCardGridComponent): LandingCardGridSection => {
   const cards =
     component.karten
@@ -743,7 +872,8 @@ const transformColumnsSection = (component: StrapiColumnsComponent): LandingColu
 const transformDividerSection = (component: StrapiTrennlinieComponent): LandingDividerSection => {
   return {
     type: "divider",
-    hintergrund: normaliseBackgroundKey(component.hintergrundfarbe ?? null)
+    hintergrund: "neutral",
+    breite: component.breite === "weit" ? "weit" : "normal"
   };
 };
 
@@ -837,6 +967,9 @@ const transformSection = (component: StrapiLandingComponent): LandingSection => 
   }
   if (component.__component === "landing.seminar-liste") {
     return transformSeminarList(component as StrapiSeminarListComponent);
+  }
+  if (component.__component === "landing.seminar-produkt-karten") {
+    return transformSeminarProductCards(component as StrapiSeminarProductCardsComponent);
   }
   if (component.__component === "landing.card-grid") {
     return transformCardGrid(component as StrapiCardGridComponent);

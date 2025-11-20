@@ -248,18 +248,9 @@ export interface LandingTrennlinie extends Struct.ComponentSchema {
     displayName: 'Trennlinie';
   };
   attributes: {
-    hintergrundfarbe: Schema.Attribute.Enumeration<[
-      'neutral',
-      'black',
-      'wine-blue',
-      'wine-blue-light',
-      'wine-blue-lighter',
-      'wine-blue-lightest',
-      'wine-blue-dark',
-      'wine-blue-darker',
-      'wine-blue-darkest'
-    ]> &
-      Schema.Attribute.DefaultTo<'neutral'>;
+    breite: Schema.Attribute.Enumeration<['normal', 'weit']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'normal'>;
   };
 }
 
@@ -314,6 +305,45 @@ export interface LandingSeminarListe extends Struct.ComponentSchema {
         min: 1;
       }, number>;
     buttonText: Schema.Attribute.String & Schema.Attribute.DefaultTo<'Zum Seminar'>;
+    mehrButtonText: Schema.Attribute.String & Schema.Attribute.DefaultTo<'Mehr laden'>;
+    mehrButtonAnzeigen: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+  };
+}
+
+export interface LandingSeminarProduktKarten extends Struct.ComponentSchema {
+  collectionName: 'components_landing_seminar_produkt_karten';
+  info: {
+    description: 'Raster für Seminare oder Produkte mit Lade-Button.';
+    displayName: 'Seminar/Produkt-Karten';
+  };
+  attributes: {
+    überschrift: Schema.Attribute.String;
+    überschriftStufe: Schema.Attribute.Enumeration<['h2', 'h3', 'h4']> &
+      Schema.Attribute.DefaultTo<'h2'>;
+    hintergrundfarbe: Schema.Attribute.Enumeration<[
+      'neutral',
+      'black',
+      'wine-blue',
+      'wine-blue-light',
+      'wine-blue-lighter',
+      'wine-blue-lightest',
+      'wine-blue-dark',
+      'wine-blue-darker',
+      'wine-blue-darkest'
+    ]>;
+    einleitung: Schema.Attribute.Text;
+    modus: Schema.Attribute.Enumeration<['seminare', 'produkte']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'seminare'>;
+    seminarkategorie: Schema.Attribute.Relation<'oneToOne', 'api::kategorie.kategorie'>;
+    produkte: Schema.Attribute.Relation<'oneToMany', 'api::produkt.produkt'>;
+    anzahl: Schema.Attribute.Integer &
+      Schema.Attribute.DefaultTo<6> &
+      Schema.Attribute.SetMinMax<{
+        max: 24;
+        min: 1;
+      }, number>;
+    buttonText: Schema.Attribute.String & Schema.Attribute.DefaultTo<'Mehr erfahren'>;
     mehrButtonText: Schema.Attribute.String & Schema.Attribute.DefaultTo<'Mehr laden'>;
     mehrButtonAnzeigen: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
   };
@@ -442,6 +472,7 @@ declare module '@strapi/strapi' {
       'landing.columns': LandingColumns;
       'landing.trennlinie': LandingTrennlinie;
       'landing.seminar-liste': LandingSeminarListe;
+      'landing.seminar-produkt-karten': LandingSeminarProduktKarten;
       'landing.seminar-finder': LandingSeminarFinder;
       'landing.tab': LandingTab;
       'landing.reiter': LandingTabs;

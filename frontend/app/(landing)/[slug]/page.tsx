@@ -11,6 +11,7 @@ import { Bildergalerie } from "@/components/landing/Bildergalerie";
 import { HeroSmall } from "@/components/landing/HeroSmall";
 import { HeroVideo } from "@/components/landing/HeroVideo";
 import { SeminarList } from "@/components/landing/SeminarList";
+import { SeminarProductCards } from "@/components/landing/SeminarProductCards";
 import { TabsSection } from "@/components/landing/TabsSection";
 import { TextBlock } from "@/components/landing/TextBlock";
 import { SeminarFinder as LandingSeminarFinder } from "@/components/seminar/SeminarFinder";
@@ -24,6 +25,7 @@ import {
   type LandingSection,
   type LandingSeminarFinderSection,
   type LandingSeminarListSection,
+  type LandingSeminarProductCardsSection,
   type LandingTabsSection
 } from "@/lib/landing";
 import { getSeminarFinderData } from "@/lib/seminar-finder";
@@ -218,7 +220,9 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
     }
 
     if (section.type === "divider") {
-      content.push(<DividerSection key={`divider-${index}`} hintergrund={section.hintergrund} />);
+      content.push(
+        <DividerSection key={`divider-${index}`} hintergrund={section.hintergrund} breite={section.breite} />
+      );
       continue;
     }
 
@@ -242,6 +246,11 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
 
     if (section.type === "seminar-list") {
       content.push(await renderSeminarList(section, index));
+      continue;
+    }
+
+    if (section.type === "seminar-product-cards") {
+      content.push(await renderSeminarProductCards(section, index));
       continue;
     }
 
@@ -323,6 +332,43 @@ async function renderSeminarList(section: LandingSeminarListSection, index: numb
       initialItems={initialItems}
       initialError={initialError}
       anzahl={section.anzahl}
+    />
+  );
+}
+
+async function renderSeminarProductCards(section: LandingSeminarProductCardsSection, index: number) {
+  let initialItems = [] as Awaited<ReturnType<typeof fetchUpcomingSeminars>>;
+  let initialError: string | null = null;
+
+  if (section.modus === "seminare" && section.categorySlug) {
+    try {
+      initialItems = await fetchUpcomingSeminars({
+        categorySlug: section.categorySlug,
+        limit: section.anzahl,
+        offset: 0
+      });
+    } catch (error) {
+      console.error(`[landing] Seminarliste konnte nicht geladen werden (Kategorie ${section.categorySlug}):`, error);
+      initialError = "Seminare konnten nicht geladen werden.";
+    }
+  }
+
+  return (
+    <SeminarProductCards
+      key={`seminar-product-cards-${index}`}
+      überschrift={section.überschrift}
+      überschriftStufe={section.überschriftStufe}
+      einleitung={section.einleitung}
+      hintergrund={section.hintergrund}
+      modus={section.modus}
+      categorySlug={section.categorySlug ?? undefined}
+      produkte={section.produkte}
+      anzahl={section.anzahl}
+      buttonText={section.buttonText}
+      mehrButtonText={section.mehrButtonText}
+      mehrButtonAnzeigen={section.mehrButtonAnzeigen}
+      initialSeminars={initialItems}
+      initialError={initialError}
     />
   );
 }

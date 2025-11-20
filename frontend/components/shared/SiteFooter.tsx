@@ -22,7 +22,7 @@ function renderKontakt(section: FooterSection) {
     return null;
   }
   return (
-    <p className="text-sm leading-relaxed text-primary-content/80 whitespace-pre-line">
+    <p className="text-sm leading-relaxed text-secondary-content/80 whitespace-pre-line">
       {section.text}
     </p>
   );
@@ -38,7 +38,7 @@ function renderLinks(section: FooterSection) {
         if (!link.href) {
           return (
             <li key={`${section.title}-${link.label}`}>
-              <span className="text-sm text-primary-content/70">{link.label}</span>
+              <span className="text-sm text-secondary-content/70">{link.label}</span>
             </li>
           );
         }
@@ -51,7 +51,7 @@ function renderLinks(section: FooterSection) {
               href={link.href}
               target={link.target === "_blank" ? "_blank" : undefined}
               rel={rel}
-              className="link-hover text-sm text-primary-content transition-colors hover:text-primary-content"
+              className="link-hover text-sm text-secondary-content transition-colors hover:text-secondary-content"
             >
               {link.label}
             </Link>
@@ -134,7 +134,7 @@ export async function SiteFooter() {
   const regularSections = sections.filter((section) => section.type !== "logos");
 
   return (
-    <footer className="mt-12 border-t border-primary/40 bg-primary text-primary-content md:mt-20">
+    <footer className="mt-12 border-t border-secondary/40 bg-secondary text-secondary-content md:mt-20">
       <div className="mx-auto max-w-screen-xl px-6 py-14 md:px-10 lg:px-12">
         <div className="footer grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
           {regularSections.map((section, index) => {
@@ -146,9 +146,9 @@ export async function SiteFooter() {
             return (
               <div
                 key={`${section.title}-${index}`}
-                className="flex flex-col gap-4 text-primary-content/90"
+                className="flex flex-col gap-4 text-secondary-content/90"
               >
-                <span className="footer-title text-sm uppercase tracking-widest text-primary-content">
+                <span className="footer-title text-sm uppercase tracking-widest text-secondary-content">
                   {section.title}
                 </span>
                 {content}
@@ -159,7 +159,7 @@ export async function SiteFooter() {
           {logoSection ? (
             <div className="sm:col-span-2 lg:col-span-2 xl:col-span-1 xl:ml-auto xl:justify-self-end">
               <div className="flex flex-col gap-4 text-right">
-                <span className="footer-title text-sm uppercase tracking-widest text-primary-content">
+                <span className="footer-title text-sm uppercase tracking-widest text-secondary-content">
                   {logoSection.title}
                 </span>
                 {renderLogos(logoSection)}

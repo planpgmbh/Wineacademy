@@ -1,0 +1,68 @@
+{
+  "collectionName": "components_landing_seminar_produkt_karten",
+  "info": {
+    "displayName": "Seminar/Produkt-Karten",
+    "description": "Raster für Seminare oder Produkte mit Lade-Button."
+  },
+  "attributes": {
+    "überschrift": {
+      "type": "string"
+    },
+    "überschriftStufe": {
+      "type": "enumeration",
+      "enum": ["h2", "h3", "h4"],
+      "default": "h2"
+    },
+    "hintergrundfarbe": {
+      "type": "enumeration",
+      "enum": [
+        "neutral",
+        "black",
+        "wine-blue",
+        "wine-blue-light",
+        "wine-blue-lighter",
+        "wine-blue-lightest",
+        "wine-blue-dark",
+        "wine-blue-darker",
+        "wine-blue-darkest"
+      ]
+    },
+    "einleitung": {
+      "type": "text"
+    },
+    "modus": {
+      "type": "enumeration",
+      "enum": ["seminare", "produkte"],
+      "default": "seminare",
+      "required": true
+    },
+    "seminarkategorie": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::kategorie.kategorie"
+    },
+    "produkte": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::produkt.produkt"
+    },
+    "anzahl": {
+      "type": "integer",
+      "default": 6,
+      "min": 1,
+      "max": 24
+    },
+    "buttonText": {
+      "type": "string",
+      "default": "Mehr erfahren"
+    },
+    "mehrButtonText": {
+      "type": "string",
+      "default": "Mehr laden"
+    },
+    "mehrButtonAnzeigen": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}
