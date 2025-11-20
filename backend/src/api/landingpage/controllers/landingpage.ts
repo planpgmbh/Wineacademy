@@ -58,6 +58,19 @@ export default factories.createCoreController(CONTENT_UID, ({ strapi }) => ({
                   fields: ["id", "name", "slug"]
                 }
               }
+            },
+            "landing.seminar-produkt-karten": {
+              populate: {
+                seminarkategorie: {
+                  fields: ["id", "name", "slug", "kurzbeschreibung"]
+                },
+                produkte: {
+                  fields: ["id", "name", "slug", "kurzbeschreibung"],
+                  populate: {
+                    bild: true
+                  }
+                }
+              }
             }
           },
         },
