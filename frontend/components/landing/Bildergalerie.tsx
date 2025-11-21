@@ -84,7 +84,7 @@ export function Bildergalerie({ bilder, rotationSekunden, breite = "full" }: Bil
               alt={slide.alt}
               fill
               sizes="100vw"
-              priority={index === 0}
+              loading="lazy"
               className="absolute inset-0 -z-30 h-full w-full object-cover opacity-0 transition-opacity duration-[1400ms] ease-in-out"
               style={{ opacity: index === activeIndex ? 1 : 0 }}
             />

@@ -104,8 +104,8 @@ export interface LandingHero extends Struct.ComponentSchema {
     überschriftStufe: Schema.Attribute.Enumeration<['h1', 'h2', 'h3', 'h4']> &
       Schema.Attribute.DefaultTo<'h2'>;
     einleitung: Schema.Attribute.Text;
-    videoUrl: Schema.Attribute.String;
-    posterUrl: Schema.Attribute.String;
+    heroVideo: Schema.Attribute.Media<'videos'>;
+    heroPosterBild: Schema.Attribute.Media<'images'>;
     buttonText: Schema.Attribute.String;
     buttonLink: Schema.Attribute.String;
   };

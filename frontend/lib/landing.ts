@@ -79,8 +79,8 @@ type StrapiHeroComponent = {
   überschrift: string;
   überschriftStufe?: "h1" | "h2" | "h3" | "h4" | null;
   einleitung?: string | null;
-  videoUrl?: string | null;
-  posterUrl?: string | null;
+  heroVideo?: StrapiUploadFile | null;
+  heroPosterBild?: StrapiUploadFile | null;
   buttonText?: string | null;
   buttonLink?: string | null;
 };
@@ -660,14 +660,25 @@ const transformBildergalerie = (component: StrapiBildergalerieComponent): Landin
   };
 };
 
+const formatMediaUrl = (file?: StrapiUploadFile | null): string | null => {
+  if (!file?.url) {
+    return null;
+  }
+  const resolved = mediaUrl(file.url);
+  return resolved ?? file.url;
+};
+
 const transformHeroVideo = (component: StrapiHeroComponent): LandingHeroVideoSection => {
+  const videoUrl = formatMediaUrl(component.heroVideo ?? null);
+  const posterUrl = formatMediaUrl(component.heroPosterBild ?? null);
+
   return {
     type: "hero-video",
     überschrift: normaliseString(component.überschrift) || "Hero",
     überschriftStufe: normaliseHeroHeadingLevel(component.überschriftStufe ?? null),
     einleitung: normaliseRichText(component.einleitung ?? null),
-    videoUrl: component.videoUrl ?? null,
-    posterUrl: component.posterUrl ?? null,
+    videoUrl,
+    posterUrl,
     buttonText: normaliseOptionalString(component.buttonText ?? null),
     buttonLink: normaliseOptionalString(component.buttonLink ?? null)
   };

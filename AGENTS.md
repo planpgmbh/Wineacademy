@@ -15,7 +15,7 @@ Diese Regeln gelten sowohl auf dem Server (Staging/Live) als auch lokal. Zu Begi
 - **Server-Infrastruktur:** Für Compose-/Traefik-/Hosting-Fragen `docs/server-infrastructure.md` heranziehen.
 - **Liveserver:** Arbeitest du direkt auf dem Server, jede Änderung besonders vorsichtig durchführen und unnötige Eingriffe vermeiden.
 - **Lokale Entwicklung:** `.env.local` eigenständig pflegen, niemals Secrets einchecken. Wenn du lokale Frontend-Tests gegen Staging ausführst, löst du reale Staging-Prozesse (SevDesk, Mailversand, PayPal) aus und räumst Testdaten anschließend auf.
-- **Benachrichtige mich per Telegramm:** Immer wenn du etwas abgeschlossen hast oder auf Feedback wartest, sende sofort eine Telegram-Nachricht. Der Token liegt als `TELEGRAMMBOT` in `frontend/.env.local`, zum Beispiel:
+- **Benachrichtige mich per Telegramm:** Immer wenn du etwas abgeschlossen hast oder auf Feedback wartest, sende sofort eine Telegram-Nachricht. Der Token liegt als `TELEGRAMMBOT` in `frontend/.env.local` oder `.env.staging`, zum Beispiel:
 
   ```bash
   TELEGRAM_TOKEN=$(awk -F= '/^TELEGRAMMBOT=/{print $2}' frontend/.env.local)

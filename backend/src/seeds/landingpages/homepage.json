@@ -7,9 +7,9 @@
       "überschrift": "Wein neu entdecken",
       "überschriftStufe": "h1",
       "einleitung": "erleben – erfahren – genießen<br/>Weinausbildung nach Maß – individuell und zeitlich flexibel gestaltet",
-      "videoUrl": "https://www.wineacademy.de/wp-content/uploads/WineAcademy-Header_final.mp4",
-      "posterUrl": null,
-      "buttonLabel": "Kurse entdecken",
+      "heroVideo": null,
+      "heroPosterBild": null,
+      "buttonText": "Kurse entdecken",
       "buttonLink": "/kurse"
     },
     {

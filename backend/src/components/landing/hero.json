@@ -17,11 +17,15 @@
     "einleitung": {
       "type": "text"
     },
-    "videoUrl": {
-      "type": "string"
+    "heroVideo": {
+      "type": "media",
+      "allowedTypes": ["videos"],
+      "multiple": false
     },
-    "posterUrl": {
-      "type": "string"
+    "heroPosterBild": {
+      "type": "media",
+      "allowedTypes": ["images"],
+      "multiple": false
     },
     "buttonText": {
       "type": "string"

@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { JSX } from "react";
 
 type HeroVideoProps = {
@@ -44,23 +45,71 @@ const headingTags: Record<"h1" | "h2" | "h3" | "h4", keyof JSX.IntrinsicElements
   h4: "h4"
 };
 
+const DESKTOP_MIN_WIDTH = 1024;
+
 export function HeroVideo({ überschrift, überschriftStufe, einleitung, videoUrl, posterUrl, buttonText, buttonLink }: HeroVideoProps) {
+  const [canPlayVideo, setCanPlayVideo] = useState(false);
   const paragraphs = useMemo(() => extractParagraphs(einleitung), [einleitung]);
   const showButton = buttonText && buttonText.trim().length > 0 && buttonLink && buttonLink.trim().length > 0;
   const HeadingTag = headingTags[überschriftStufe];
   const headingClass = headingStyles[überschriftStufe];
 
+  useEffect(() => {
+    if (!videoUrl) {
+      setCanPlayVideo(false);
+      return;
+    }
+
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updatePlaybackIntent = () => {
+      const viewportWideEnough = window.innerWidth >= DESKTOP_MIN_WIDTH;
+      setCanPlayVideo(viewportWideEnough && !mediaQuery.matches);
+    };
+
+    updatePlaybackIntent();
+
+    window.addEventListener("resize", updatePlaybackIntent);
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", updatePlaybackIntent);
+    } else if (typeof mediaQuery.addListener === "function") {
+      mediaQuery.addListener(updatePlaybackIntent);
+    }
+
+    return () => {
+      window.removeEventListener("resize", updatePlaybackIntent);
+      if (typeof mediaQuery.removeEventListener === "function") {
+        mediaQuery.removeEventListener("change", updatePlaybackIntent);
+      } else if (typeof mediaQuery.removeListener === "function") {
+        mediaQuery.removeListener(updatePlaybackIntent);
+      }
+    };
+  }, [videoUrl]);
+
+  const shouldRenderVideo = canPlayVideo && Boolean(videoUrl);
+  const hasPosterImage = typeof posterUrl === "string" && posterUrl.trim().length > 0;
+
   return (
     <section className="relative isolate flex min-h-[620px] items-center justify-center overflow-hidden bg-base-200 mb-[calc(var(--section-padding-y)*1.5)] md:mb-[var(--section-padding-y-xl)]">
-      {videoUrl ? (
+      {shouldRenderVideo ? (
         <video
           className="absolute inset-0 -z-20 h-full w-full object-cover"
-          src={videoUrl}
+          src={videoUrl ?? undefined}
           poster={posterUrl ?? undefined}
+          preload="metadata"
           autoPlay
           muted
           loop
           playsInline
+        />
+      ) : hasPosterImage ? (
+        <Image
+          src={posterUrl}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="absolute inset-0 -z-20 h-full w-full object-cover"
+          aria-hidden="true"
         />
       ) : (
         <div className="absolute inset-0 -z-20 bg-gradient-to-br from-primary/40 via-primary/20 to-primary/50" />
@@ -84,7 +133,7 @@ export function HeroVideo({ überschrift, überschriftStufe, einleitung, videoUr
 
         {showButton ? (
           <Link
-            className="btn btn-primary btn-wide md:btn-lg"
+            className="inline-flex min-w-[180px] items-center justify-center gap-2 rounded-full border border-white/75 px-6 py-3 text-base font-semibold text-white transition hover:border-white hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white md:px-8 md:py-3.5"
             {...resolveLinkProps(buttonLink.trim())}
           >
             {buttonText.trim()}

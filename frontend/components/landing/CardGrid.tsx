@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   resolveSectionBackground,
   SECTION_BACKGROUND_CSS_VAR,
@@ -123,16 +124,20 @@ export function CardGrid({ karten, hintergrund }: CardGridProps) {
               >
                 {hasBackgroundImage ? (
                   <>
-                    <span
+                    <Image
+                      src={card.backgroundImage!.src}
+                      alt=""
+                      fill
+                      sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                      className="absolute inset-0 z-0 object-cover transition duration-300 ease-out group-hover:scale-105"
+                      loading="lazy"
                       aria-hidden="true"
-                      className="absolute inset-0 bg-cover bg-center transition duration-300 ease-out group-hover:scale-105"
-                      style={{ backgroundImage: `url(${card.backgroundImage?.src})` }}
                     />
-                    <span aria-hidden="true" className={`absolute inset-0 ${overlayTintClass}`} />
+                    <span aria-hidden="true" className={`absolute inset-0 z-10 ${overlayTintClass}`} />
                   </>
                 ) : null}
                 <div
-                  className={`relative flex min-h-[16rem] flex-col p-6 ${horizontalAlignClasses[card.textAlign]} ${verticalAlignClasses[card.verticalAlign]} ${textColorClass}`}
+                  className={`relative z-20 flex min-h-[16rem] flex-col p-6 ${horizontalAlignClasses[card.textAlign]} ${verticalAlignClasses[card.verticalAlign]} ${textColorClass}`}
                   style={card.darkMode ? { textShadow: "0 2px 6px rgba(0, 0, 0, 0.45)" } : undefined}
                 >
                   <h3 className={headlineClasses}>{card.überschrift}</h3>

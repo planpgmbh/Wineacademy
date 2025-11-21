@@ -16,7 +16,12 @@ export default factories.createCoreController(CONTENT_UID, ({ strapi }) => ({
       populate: {
         abschnitte: {
           on: {
-            "landing.hero": true,
+            "landing.hero": {
+              populate: {
+                heroVideo: true,
+                heroPosterBild: true,
+              },
+            },
             "landing.hero-carousel": { populate: { bilder: true } },
             "landing.hero-blank": true,
             "landing.hero-small": { populate: { hintergrundbild: true } },
