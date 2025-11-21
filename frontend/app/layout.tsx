@@ -11,7 +11,7 @@ import { SiteFooter } from "@/components/shared/SiteFooter";
 import { getNavigation } from "@/lib/navigation";
 
 export const metadata: Metadata = {
-  title: "Wine Academy Frontend",
+  title: "Wine Academy",
   description: "Frischer Next.js-Start mit Tailwind CSS und DaisyUI.",
   icons: {
     icon: [
