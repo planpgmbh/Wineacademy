@@ -93,6 +93,8 @@ export function DetailPageHero({
 
   const breadcrumbColor = preferDarkMode ? "text-base-100" : "text-base-content/80";
   const paragraphColor = preferDarkMode ? "text-base-100" : "text-base-content/90";
+  const mobileCategoryBreadcrumb =
+    breadcrumbs.length >= 3 ? breadcrumbs[breadcrumbs.length - 2] : null;
 
   const content = (
     <div className={`relative w-full px-6 py-16 md:px-8 md:py-20 ${contentClassName}`.trim()}>
@@ -111,6 +113,12 @@ export function DetailPageHero({
             </ul>
           </nav>
 
+          {mobileCategoryBreadcrumb ? (
+            <div className={`md:hidden text-xs font-medium uppercase tracking-wide mb-2 ${breadcrumbColor}`}>
+              {mobileCategoryBreadcrumb}
+            </div>
+          ) : null}
+
           {resolvedMediaUrl ? (
             <div className="relative h-[260px] w-full overflow-hidden rounded-3xl bg-base-200">
               <Image
@@ -127,7 +135,7 @@ export function DetailPageHero({
             {title}
           </h1>
 
-          <div className={`space-y-4 text-lg leading-relaxed ${paragraphColor}`}>
+          <div className={`space-y-4 text-base leading-relaxed md:text-lg ${paragraphColor}`}>
             {paragraphs.map((paragraph, index) => (
               <p key={index}>{paragraph}</p>
             ))}

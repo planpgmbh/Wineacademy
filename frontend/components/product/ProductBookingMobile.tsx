@@ -114,13 +114,14 @@ export function ProductBookingMobile({
   return (
     <div className="md:hidden">
       <div
-        className={`fixed inset-x-0 bottom-0 z-40 transform transition-transform duration-300 ${
+        data-open={isOpen}
+        className={`booking-sheet fixed inset-x-0 bottom-0 z-50 transform transition-transform duration-300 ${
           shouldShowSheet ? "translate-y-0" : "translate-y-full"
         }`}
       >
-        <div className="bg-base-100 shadow-[0_-12px_30px_rgb(15_23_42/0.18)]">
+        <div className="booking-sheet-panel mx-auto max-w-[var(--detail-content-max-width)] p-5">
           <div
-            className="relative mx-auto max-w-[var(--detail-content-max-width)] p-5"
+            className="relative"
             style={{
               paddingBottom: `calc(${safeAreaBottom} + 20px + 45px)`
             }}
@@ -162,7 +163,7 @@ export function ProductBookingMobile({
 
             <button
               type="button"
-              className="btn btn-primary absolute left-5 right-5 h-[40px]"
+              className="booking-sheet-cta btn btn-primary absolute left-5 right-5 h-[40px]"
               style={{
                 bottom: `calc(${safeAreaBottom} + 20px)`
               }}
