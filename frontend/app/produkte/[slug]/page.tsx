@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ProductBookingCard } from "@/components/product/ProductBookingCard";
 import { ProductBookingMobile } from "@/components/product/ProductBookingMobile";
 import { ProductContentTabs } from "@/components/product/ProductContentTabs";
+import { DesktopBookingOverlay } from "@/components/shared/DesktopBookingOverlay";
 import { DetailPageHero } from "@/components/shared/DetailPageHero";
 import { getProductDetail } from "@/lib/product-detail";
 
@@ -37,19 +38,11 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
     isVoucher: product.isVoucher
   } as const;
 
-  const DesktopStickyBookingCard = (
-    <div className="pointer-events-none hidden md:block fixed inset-x-0 top-1/2 z-40 -translate-y-1/2">
-      <div className="mx-auto flex max-w-[var(--detail-content-max-width)] justify-end px-6 md:px-8">
-        <div className="pointer-events-auto">
-          <ProductBookingCard {...bookingCardProps} className="w-full" />
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <>
-      {DesktopStickyBookingCard}
+      <DesktopBookingOverlay footerId="site-footer">
+        <ProductBookingCard {...bookingCardProps} className="w-full" />
+      </DesktopBookingOverlay>
 
       <DetailPageHero
         title={product.hero.title}

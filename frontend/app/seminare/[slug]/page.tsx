@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { DesktopBookingOverlay } from "@/components/shared/DesktopBookingOverlay";
 import { SeminarBookingCard } from "@/components/seminar/SeminarBookingCard";
 import { SeminarBookingMobile } from "@/components/seminar/SeminarBookingMobile";
 import { SeminarContentTabs } from "@/components/seminar/SeminarContentTabs";
@@ -35,37 +36,31 @@ export default async function SeminarDetailPage({ params }: SeminarDetailPagePro
     seminarSlug: seminar.slug
   } as const;
 
-  const DesktopStickyBookingCard = (
-    <div className="pointer-events-none hidden md:block fixed inset-0 z-40">
-      <div className="mx-auto flex h-full max-w-[var(--detail-content-max-width)] items-center justify-end px-6 md:px-8">
-        <div className="pointer-events-auto">
-          <SeminarBookingCard {...bookingCardProps} className="w-full" />
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <>
-      {DesktopStickyBookingCard}
+      <DesktopBookingOverlay footerId="site-footer">
+        <SeminarBookingCard {...bookingCardProps} className="w-full" />
+      </DesktopBookingOverlay>
 
-      <DetailPageHero
-        title={seminar.hero.title}
-        paragraphs={seminar.hero.paragraphs}
-        breadcrumbs={breadcrumbs}
-        backgroundImageUrl={seminar.hero.backgroundImageUrl}
-        backgroundImageAlt={seminar.hero.backgroundImageAlt ?? undefined}
-      />
+      <div className="relative">
+        <DetailPageHero
+          title={seminar.hero.title}
+          paragraphs={seminar.hero.paragraphs}
+          breadcrumbs={breadcrumbs}
+          backgroundImageUrl={seminar.hero.backgroundImageUrl}
+          backgroundImageAlt={seminar.hero.backgroundImageAlt ?? undefined}
+        />
 
-      {seminar.tabs.length > 0 ? (
-        <div className="relative">
-          <div className="mx-auto max-w-[var(--detail-content-max-width)] px-6 md:px-8">
-            <div className="mt-12 space-y-10 md:mt-16 md:pr-[420px]">
-              <SeminarContentTabs tabs={seminar.tabs} />
+        {seminar.tabs.length > 0 ? (
+          <div className="relative">
+            <div className="mx-auto max-w-[var(--detail-content-max-width)] px-6 md:px-8">
+              <div className="mt-12 space-y-10 md:mt-16 md:pr-[420px]">
+                <SeminarContentTabs tabs={seminar.tabs} />
+              </div>
             </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
 
       <SeminarBookingMobile {...bookingCardProps} />
     </>

@@ -1,7 +1,8 @@
 import { DetailPageHero } from "@/components/shared/DetailPageHero";
+import { DesktopBookingOverlay } from "@/components/shared/DesktopBookingOverlay";
+import { ProductContentTabs } from "@/components/product/ProductContentTabs";
 import { VoucherBookingCard } from "@/components/voucher/VoucherBookingCard";
 import { VoucherBookingMobile } from "@/components/voucher/VoucherBookingMobile";
-import { ProductContentTabs } from "@/components/product/ProductContentTabs";
 import { getVoucherDetail } from "@/lib/voucher-detail";
 
 export default async function VoucherDetailPage() {
@@ -24,19 +25,11 @@ export default async function VoucherDetailPage() {
     shippingCost: voucher.shippingCost ?? null
   } as const;
 
-  const DesktopStickyCard = (
-    <div className="pointer-events-none hidden md:block fixed inset-x-0 top-1/2 z-40 -translate-y-1/2">
-      <div className="mx-auto flex max-w-[var(--detail-content-max-width)] justify-end px-6 md:px-8">
-        <div className="pointer-events-auto">
-          <VoucherBookingCard {...bookingProps} className="w-full" />
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <>
-      {DesktopStickyCard}
+      <DesktopBookingOverlay footerId="site-footer">
+        <VoucherBookingCard {...bookingProps} className="w-full" />
+      </DesktopBookingOverlay>
 
       <DetailPageHero
         title={voucher.hero.title}
