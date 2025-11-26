@@ -124,7 +124,7 @@ export function ProductBookingMobile({
             {isOpen ? (
               <button
                 type="button"
-                className="btn btn-ghost btn-sm absolute right-5 top-5"
+                className="btn btn-ghost btn-sm booking-sheet-close absolute"
                 aria-label="Sheet schließen"
                 onClick={() => setIsOpen(false)}
               >

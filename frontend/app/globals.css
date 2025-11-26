@@ -60,6 +60,11 @@
     @apply relative bg-base-100 shadow-[0_-12px_30px_rgba(15,23,42,0.18)];
   }
 
+  .booking-sheet-close {
+    top: 0;
+    right: 0;
+  }
+
   .booking-sheet-cta {
     transition:
       transform 200ms ease,
