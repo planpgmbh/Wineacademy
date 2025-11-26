@@ -20,7 +20,7 @@ export default async function SeminarDetailPage({ params }: SeminarDetailPagePro
     notFound();
   }
 
-  const breadcrumbs = [
+  const breadcrumbs: { label: string; href?: string }[] = [
     { label: "Seminare", href: "/seminare" }
   ];
 

@@ -8,7 +8,7 @@ import { getVoucherDetail } from "@/lib/voucher-detail";
 export default async function VoucherDetailPage() {
   const voucher = await getVoucherDetail();
 
-  const breadcrumbs = [
+  const breadcrumbs: { label: string; href?: string }[] = [
     { label: "Gutscheine", href: "/gutscheine" },
     { label: voucher.title }
   ];

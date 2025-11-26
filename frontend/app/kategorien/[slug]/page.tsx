@@ -38,7 +38,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
   const seminarFinderData = await getSeminarFinderData();
 
-  const breadcrumbs = [
+  const breadcrumbs: { label: string; href?: string }[] = [
     { label: "Seminare", href: "/seminare" },
     { label: category.title }
   ];

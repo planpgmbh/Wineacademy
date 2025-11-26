@@ -21,7 +21,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
     notFound();
   }
 
-  const breadcrumbs = [
+  const breadcrumbs: { label: string; href?: string }[] = [
     { label: "Produkte", href: "/produkte" },
     { label: product.title }
   ];
