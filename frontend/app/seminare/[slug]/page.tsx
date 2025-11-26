@@ -20,11 +20,21 @@ export default async function SeminarDetailPage({ params }: SeminarDetailPagePro
     notFound();
   }
 
-  const breadcrumbs = ["Seminare"];
-  if (seminar.primaryCategoryName) {
-    breadcrumbs.push(seminar.primaryCategoryName);
+  const breadcrumbs = [
+    { label: "Seminare", href: "/seminare" }
+  ];
+
+  const primaryCategory = seminar.categories[0];
+  if (primaryCategory) {
+    breadcrumbs.push({
+      label: primaryCategory.name,
+      href: primaryCategory.slug ? `/kategorien/${primaryCategory.slug}` : undefined
+    });
+  } else if (seminar.primaryCategoryName) {
+    breadcrumbs.push({ label: seminar.primaryCategoryName });
   }
-  breadcrumbs.push(seminar.title);
+
+  breadcrumbs.push({ label: seminar.title });
 
   const bookingCardProps = {
     highlightLabel: seminar.bookingBox.highlightLabel ?? undefined,

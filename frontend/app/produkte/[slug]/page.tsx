@@ -21,7 +21,10 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
     notFound();
   }
 
-  const breadcrumbs = ["Produkte", product.title];
+  const breadcrumbs = [
+    { label: "Produkte", href: "/produkte" },
+    { label: product.title }
+  ];
 
   const bookingCardProps = {
     highlightLabel: product.bookingBox.highlightLabel ?? undefined,

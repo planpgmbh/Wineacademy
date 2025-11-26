@@ -8,7 +8,10 @@ import { getVoucherDetail } from "@/lib/voucher-detail";
 export default async function VoucherDetailPage() {
   const voucher = await getVoucherDetail();
 
-  const breadcrumbs = ["Gutscheine", voucher.title];
+  const breadcrumbs = [
+    { label: "Gutscheine", href: "/gutscheine" },
+    { label: voucher.title }
+  ];
 
   const bookingProps = {
     highlightLabel: voucher.bookingBox.highlightLabel ?? undefined,

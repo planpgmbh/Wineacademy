@@ -170,13 +170,8 @@ export function SeminarBookingMobile({
           shouldShowSheet ? "translate-y-0" : "translate-y-full"
         }`}
       >
-        <div className="booking-sheet-panel mx-auto max-w-[var(--detail-content-max-width)] p-5">
-          <div
-            className="relative"
-            style={{
-              paddingBottom: `calc(${safeAreaBottom} + 20px + 45px)`
-            }}
-          >
+        <div className="booking-sheet-panel mx-auto max-w-[var(--detail-content-max-width)] space-y-4 p-5">
+          <div className="relative">
             {isOpen ? (
               <button
                 type="button"
@@ -232,13 +227,12 @@ export function SeminarBookingMobile({
                 </div>
               </div>
             </div>
+          </div>
 
+          <div className="flex items-center justify-center pb-[calc(env(safe-area-inset-bottom,0)+12px)]">
             <button
               type="button"
-              className="booking-sheet-cta btn btn-primary absolute left-5 right-5 h-[40px]"
-              style={{
-                bottom: `calc(${safeAreaBottom} + 20px)`
-              }}
+              className="booking-sheet-cta btn btn-primary w-full max-w-sm h-[52px] text-base mb-2"
               onClick={handleButtonClick}
             >
               {buttonText}

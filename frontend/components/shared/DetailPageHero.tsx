@@ -1,13 +1,19 @@
 import Image from "next/image";
+import Link from "next/link";
 import type { CSSProperties } from "react";
 
 const GRAIN_TEXTURE_DATA_URL =
   "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPSc2NCcgaGVpZ2h0PSc2NCc+CiAgPGZpbHRlciBpZD0nbic+CiAgICA8ZmVUdXJidWxlbmNlIHR5cGU9J2ZyYWN0YWxOb2lzZScgYmFzZUZyZXF1ZW5jeT0nMC45JyBudW1PY3RhdmVzPSczJy8+CiAgPC9maWx0ZXI+CiAgPHJlY3Qgd2lkdGg9JzY0JyBoZWlnaHQ9JzY0JyBmaWx0ZXI9J3VybCgjbiknIG9wYWNpdHk9JzAuMTgnLz4KPC9zdmc+Cg==";
 
+type BreadcrumbItem = {
+  label: string;
+  href?: string;
+};
+
 type DetailPageHeroProps = {
   title: string;
   paragraphs: string[];
-  breadcrumbs: string[];
+  breadcrumbs: BreadcrumbItem[];
   contentClassName?: string;
   useContainer?: boolean;
   withSidebarPlaceholder?: boolean;
@@ -105,17 +111,25 @@ export function DetailPageHero({
             aria-label="Breadcrumb"
           >
             <ul>
-              {breadcrumbs.map((item, index) => (
-                <li key={item} aria-current={index === breadcrumbs.length - 1 ? "page" : undefined}>
-                  {item}
-                </li>
-              ))}
+              {breadcrumbs.map((item, index) => {
+                const isCurrent = index === breadcrumbs.length - 1;
+                const key = `${item.label}-${index}`;
+                return (
+                  <li key={key} aria-current={isCurrent ? "page" : undefined}>
+                    {!isCurrent && item.href ? <Link href={item.href}>{item.label}</Link> : item.label}
+                  </li>
+                );
+              })}
             </ul>
           </nav>
 
           {mobileCategoryBreadcrumb ? (
             <div className={`md:hidden text-xs font-medium uppercase tracking-wide mb-2 ${breadcrumbColor}`}>
-              {mobileCategoryBreadcrumb}
+              {mobileCategoryBreadcrumb.href ? (
+                <Link href={mobileCategoryBreadcrumb.href}>{mobileCategoryBreadcrumb.label}</Link>
+              ) : (
+                mobileCategoryBreadcrumb.label
+              )}
             </div>
           ) : null}
 
