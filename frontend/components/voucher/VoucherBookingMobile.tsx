@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 
+import { MobileBookingSheet } from "@/components/shared/MobileBookingSheet";
 import { triggerVoucherFlow } from "./voucherBookingUtils";
 
 const EURO_FORMATTER = new Intl.NumberFormat("de-DE", {
@@ -58,8 +59,6 @@ export function VoucherBookingMobile({
   imageAlt,
   shippingCost
 }: VoucherBookingMobileProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [showCTA, setShowCTA] = useState(false);
   const [inputValue, setInputValue] = useState(() => String(defaultAmount));
 
   const amount = useMemo(() => parseAmount(inputValue), [inputValue]);
@@ -81,19 +80,9 @@ export function VoucherBookingMobile({
     return null;
   }, [amount, minAmount, maxAmount]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowCTA(window.scrollY > 160);
-    };
-
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const handleSubmit = () => {
+  const handleConfirm = () => {
     if (validation || amount == null) {
-      return;
+      return false;
     }
 
     triggerVoucherFlow({
@@ -106,101 +95,51 @@ export function VoucherBookingMobile({
       maxAmount: maxAmount ?? undefined,
       shippingCost: shippingCost ?? undefined
     });
-    setIsOpen(false);
+    return true;
   };
 
-  const safeAreaBottom = "env(safe-area-inset-bottom, 0)";
-  const shouldShowSheet = isOpen || showCTA;
-
   return (
-    <div className="md:hidden">
-      <div
-        data-open={isOpen}
-        className={`booking-sheet fixed inset-x-0 bottom-0 z-50 transform transition-transform duration-300 ${
-          shouldShowSheet ? "translate-y-0" : "translate-y-full"
-        }`}
-      >
-        <div className="booking-sheet-panel mx-auto max-w-[var(--detail-content-max-width)] space-y-4 p-5">
-          <div className="relative">
-            {isOpen ? (
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm booking-sheet-close absolute"
-                aria-label="Sheet schließen"
-                onClick={() => setIsOpen(false)}
-              >
-                ✕
-              </button>
-            ) : null}
+    <MobileBookingSheet ctaLabel={buttonText} onConfirm={handleConfirm} ctaDisabled={Boolean(validation)}>
+      <div className="space-y-2">
+        {highlightLabel ? (
+          <span className="badge-highlight">{highlightLabel}</span>
+        ) : null}
+        <h2 className="heading-card">{title}</h2>
+        <p className="text-lg font-light text-base-content/80">
+          {amount != null ? EURO_FORMATTER.format(amount) : "–"}
+        </p>
+      </div>
 
-            <div
-              className={`overflow-hidden transition-[max-height,opacity] duration-300 ${
-                isOpen ? "max-h-[80vh] opacity-100" : "max-h-0 opacity-0"
-              }`}
-            >
-              <div className="space-y-6 pb-5">
-                <div className="space-y-2">
-                  {highlightLabel ? (
-                    <span className="badge-highlight">{highlightLabel}</span>
-                  ) : null}
-                  <h2 className="heading-card">{title}</h2>
-                  <p className="text-lg font-light text-base-content/80">
-                    {amount != null ? EURO_FORMATTER.format(amount) : "–"}
-                  </p>
-                </div>
+      <p className="text-sm leading-relaxed text-base-content/80">{description}</p>
 
-                <p className="text-sm leading-relaxed text-base-content/80">{description}</p>
-
-                <div className="space-y-3">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="relative min-w-[80px] flex-shrink-0">
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        className="input input-bordered pl-8 pr-3"
-                        style={amountInputStyle}
-                        value={inputValue}
-                        onChange={(event) => setInputValue(sanitiseAmountInput(event.target.value))}
-                        onBlur={() => {
-                          if (amount != null) {
-                            setInputValue(String(amount));
-                          }
-                        }}
-                        aria-label="Gutscheinbetrag"
-                        placeholder="Betrag"
-                      />
-                      <span
-                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base-content/60 z-10"
-                        aria-hidden="true"
-                      >
-                        €
-                      </span>
-                    </div>
-                  </div>
-                  {validation ? <p className="text-xs text-error">{validation}</p> : null}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-center pb-[calc(env(safe-area-inset-bottom,0)+12px)]">
-            <button
-              type="button"
-              className="booking-sheet-cta btn btn-primary w-full max-w-sm h-[52px] text-base mb-2"
-              onClick={() => {
-                if (!isOpen) {
-                  setIsOpen(true);
-                } else {
-                  handleSubmit();
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative min-w-[80px] flex-shrink-0">
+            <input
+              type="text"
+              inputMode="decimal"
+              className="input input-bordered pl-8 pr-3"
+              style={amountInputStyle}
+              value={inputValue}
+              onChange={(event) => setInputValue(sanitiseAmountInput(event.target.value))}
+              onBlur={() => {
+                if (amount != null) {
+                  setInputValue(String(amount));
                 }
               }}
-              disabled={Boolean(validation)}
+              aria-label="Gutscheinbetrag"
+              placeholder="Betrag"
+            />
+            <span
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base-content/60 z-10"
+              aria-hidden="true"
             >
-              {buttonText}
-            </button>
+              €
+            </span>
           </div>
         </div>
+        {validation ? <p className="text-xs text-error">{validation}</p> : null}
       </div>
-    </div>
+    </MobileBookingSheet>
   );
 }

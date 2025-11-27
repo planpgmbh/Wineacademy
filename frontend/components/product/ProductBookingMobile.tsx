@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { QuantitySelector } from "@/components/shared/QuantitySelector";
+import { MobileBookingSheet } from "@/components/shared/MobileBookingSheet";
 import {
   PRODUCT_SELECTION_STORAGE_KEY,
   triggerProductBooking
@@ -39,19 +40,7 @@ export function ProductBookingMobile({
   isVoucher,
   onSubmit
 }: ProductBookingMobileProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [showCTA, setShowCTA] = useState(false);
   const [quantity, setQuantity] = useState(1);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowCTA(window.scrollY > 160);
-    };
-
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined" || !productSlug) {
@@ -81,18 +70,10 @@ export function ProductBookingMobile({
     }
   }, [productSlug]);
 
-  const safeAreaBottom = "env(safe-area-inset-bottom, 0)";
-
-  const handleButtonClick = () => {
-    if (!isOpen) {
-      setIsOpen(true);
-      return;
-    }
-
+  const handleConfirm = () => {
     if (onSubmit) {
       onSubmit({ quantity });
-      setIsOpen(false);
-      return;
+      return true;
     }
 
     triggerProductBooking({
@@ -106,68 +87,26 @@ export function ProductBookingMobile({
       isVoucher
     });
 
-    setIsOpen(false);
+    return true;
   };
 
-  const shouldShowSheet = isOpen || showCTA;
-
   return (
-    <div className="md:hidden">
-      <div
-        data-open={isOpen}
-        className={`booking-sheet fixed inset-x-0 bottom-0 z-50 transform transition-transform duration-300 ${
-          shouldShowSheet ? "translate-y-0" : "translate-y-full"
-        }`}
-      >
-        <div className="booking-sheet-panel mx-auto max-w-[var(--detail-content-max-width)] space-y-4 p-5">
-          <div className="relative">
-            {isOpen ? (
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm booking-sheet-close absolute"
-                aria-label="Sheet schließen"
-                onClick={() => setIsOpen(false)}
-              >
-                ✕
-              </button>
-            ) : null}
+    <MobileBookingSheet ctaLabel={buttonText} onConfirm={handleConfirm}>
+      <div className="space-y-2">
+        {highlightLabel ? (
+          <span className="badge-highlight">{highlightLabel}</span>
+        ) : null}
+        <h2 className="heading-card">{title}</h2>
+        <p className="text-lg font-light text-base-content/80">{price}</p>
+      </div>
 
-            <div
-              className={`overflow-hidden transition-[max-height,opacity] duration-300 ${
-                isOpen ? "max-h-[80vh] opacity-100" : "max-h-0 opacity-0"
-              }`}
-            >
-              <div className="space-y-6 pb-5">
-                <div className="space-y-2">
-                  {highlightLabel ? (
-                    <span className="badge-highlight">{highlightLabel}</span>
-                  ) : null}
-                  <h2 className="heading-card">{title}</h2>
-                  <p className="text-lg font-light text-base-content/80">{price}</p>
-                </div>
+      <p className="text-sm leading-relaxed text-base-content/80">{description}</p>
 
-                <p className="text-sm leading-relaxed text-base-content/80">{description}</p>
-
-                <div className="space-y-3">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <QuantitySelector value={quantity} onChange={setQuantity} />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-center pb-[calc(env(safe-area-inset-bottom,0)+12px)]">
-            <button
-              type="button"
-              className="booking-sheet-cta btn btn-primary w-full max-w-sm h-[52px] text-base mb-2"
-              onClick={handleButtonClick}
-            >
-              {buttonText}
-            </button>
-          </div>
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <QuantitySelector value={quantity} onChange={setQuantity} />
         </div>
       </div>
-    </div>
+    </MobileBookingSheet>
   );
 }

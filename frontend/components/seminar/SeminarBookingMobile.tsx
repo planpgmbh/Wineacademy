@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from "react";
 
 import { QuantitySelector } from "@/components/shared/QuantitySelector";
+import { MobileBookingSheet } from "@/components/shared/MobileBookingSheet";
 import {
   BOOKING_SELECTION_STORAGE_KEY,
   readBookingSelections,
@@ -31,8 +32,6 @@ export function SeminarBookingMobile({
   onSubmit,
   seminarSlug
 }: SeminarBookingMobileProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [showCTA, setShowCTA] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [selectedDate, setSelectedDate] = useState<string | undefined>(undefined);
   const [dateError, setDateError] = useState<string | null>(null);
@@ -40,16 +39,6 @@ export function SeminarBookingMobile({
   const hasDates = dates.length > 0;
   const placeholderValue = "";
   const datesKey = useMemo(() => dates.map((date) => date.id).join("|"), [dates]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowCTA(window.scrollY > 160);
-    };
-
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const syncSelection = useCallback(
     (preferredDate?: string) => {
@@ -120,8 +109,6 @@ export function SeminarBookingMobile({
     };
   }, [datesKey, syncSelection, seminarSlug]);
 
-  const safeAreaBottom = "env(safe-area-inset-bottom, 0)";
-
   const handleDateChange = useCallback(
     (event: ChangeEvent<HTMLSelectElement>) => {
       const value = event.target.value === placeholderValue ? undefined : event.target.value;
@@ -134,21 +121,16 @@ export function SeminarBookingMobile({
     [placeholderValue, syncSelection]
   );
 
-  const handleButtonClick = () => {
-    if (!isOpen) {
-      setIsOpen(true);
-      return;
-    }
-
+  const handleConfirm = () => {
     if (hasDates && !selectedDate) {
       setDateError("Bitte wähle einen Termin aus.");
-      return;
+      return false;
     }
 
     const payload = { quantity, dateId: selectedDate };
     if (onSubmit) {
       onSubmit(payload);
-      return;
+      return true;
     }
     triggerBookingFlow({
       quantity,
@@ -157,89 +139,47 @@ export function SeminarBookingMobile({
       seminarTitle: title,
     });
 
-    setIsOpen(false);
+    return true;
   };
 
-  const shouldShowSheet = isOpen || showCTA;
-
   return (
-    <div className="md:hidden">
-      <div
-        data-open={isOpen}
-        className={`booking-sheet fixed inset-x-0 bottom-0 z-50 transform transition-transform duration-300 ${
-          shouldShowSheet ? "translate-y-0" : "translate-y-full"
-        }`}
-      >
-        <div className="booking-sheet-panel mx-auto max-w-[var(--detail-content-max-width)] space-y-4 p-5">
-          <div className="relative">
-            {isOpen ? (
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm booking-sheet-close absolute"
-                aria-label="Sheet schließen"
-                onClick={() => setIsOpen(false)}
-              >
-                ✕
-              </button>
-            ) : null}
+    <MobileBookingSheet ctaLabel={buttonText} onConfirm={handleConfirm}>
+      <div className="space-y-2">
+        {highlightLabel ? (
+          <span className="badge-highlight">{highlightLabel}</span>
+        ) : null}
+        <h2 className="heading-card">{title}</h2>
+        <p className="text-lg font-light text-base-content/80">{price}</p>
+      </div>
 
-            <div
-              className={`overflow-hidden transition-[max-height,opacity] duration-300 ${
-                isOpen ? "max-h-[80vh] opacity-100" : "max-h-0 opacity-0"
-              }`}
+      <p className="text-sm leading-relaxed text-base-content/80">{description}</p>
+
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <QuantitySelector value={quantity} onChange={setQuantity} />
+
+          <label className="form-control min-w-[200px] flex-1">
+            <span className="sr-only">Termin auswählen</span>
+            <select
+              className="select select-bordered w-full"
+              value={selectedDate ?? placeholderValue}
+              disabled={!hasDates}
+              aria-invalid={Boolean(dateError)}
+              onChange={handleDateChange}
             >
-              <div className="space-y-6 pb-5">
-                <div className="space-y-2">
-                  {highlightLabel ? (
-                    <span className="badge-highlight">{highlightLabel}</span>
-                  ) : null}
-                  <h2 className="heading-card">{title}</h2>
-                  <p className="text-lg font-light text-base-content/80">{price}</p>
-                </div>
-
-                <p className="text-sm leading-relaxed text-base-content/80">{description}</p>
-
-                <div className="space-y-3">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <QuantitySelector value={quantity} onChange={setQuantity} />
-
-                    <label className="form-control min-w-[200px] flex-1">
-                      <span className="sr-only">Termin auswählen</span>
-                      <select
-                        className="select select-bordered w-full"
-                        value={selectedDate ?? placeholderValue}
-                        disabled={!hasDates}
-                        aria-invalid={Boolean(dateError)}
-                        onChange={handleDateChange}
-                      >
-                        <option value={placeholderValue} disabled={hasDates}>
-                          {hasDates ? "Termin auswählen" : "Termine folgen in Kürze"}
-                        </option>
-                        {dates.map((option) => (
-                          <option key={option.id} value={option.id}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                      {dateError ? <span className="label-text-alt mt-1 text-xs text-error">{dateError}</span> : null}
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-center pb-[calc(env(safe-area-inset-bottom,0)+12px)]">
-            <button
-              type="button"
-              className="booking-sheet-cta btn btn-primary w-full max-w-sm h-[52px] text-base mb-2"
-              onClick={handleButtonClick}
-            >
-              {buttonText}
-            </button>
-          </div>
+              <option value={placeholderValue} disabled={hasDates}>
+                {hasDates ? "Termin auswählen" : "Termine folgen in Kürze"}
+              </option>
+              {dates.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            {dateError ? <span className="label-text-alt mt-1 text-xs text-error">{dateError}</span> : null}
+          </label>
         </div>
       </div>
-    </div>
+    </MobileBookingSheet>
   );
 }
