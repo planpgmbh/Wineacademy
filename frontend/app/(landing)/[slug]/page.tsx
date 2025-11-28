@@ -211,6 +211,8 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
       content.push(
         <ColumnsSection
           key={`columns-${index}`}
+          überschrift={section.überschrift}
+          überschriftStufe={section.überschriftStufe}
           hintergrund={section.hintergrund}
           darstellung={section.darstellung}
           spalten={section.spalten}

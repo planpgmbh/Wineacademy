@@ -11,6 +11,8 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
       fields: [
         'id',
         'name',
+        'slug',
+        'beschreibung',
         'minBetrag',
         'maxBetrag',
         'versandkosten',
@@ -20,19 +22,76 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
       populate: {
         bild: { fields: ['url', 'alternativeText'] },
         hintergrundbild: { fields: ['url', 'alternativeText'] },
-        gutscheininhalte: true,
         bookingbox: { fields: ['topline', 'überschrift', 'beschreibung'] },
+        abschnitte: {
+          on: {
+            'landing.bildergalerie': { populate: { bilder: true } },
+            'landing.card-grid': {
+              populate: {
+                karten: {
+                  populate: {
+                    backgroundImage: true,
+                  },
+                },
+              },
+            },
+            'landing.columns': {
+              populate: {
+                spalten: true,
+              },
+            },
+            'landing.trennlinie': true,
+            'landing.text-block': true,
+            'landing.seminar-liste': {
+              populate: {
+                seminarkategorie: {
+                  fields: ['id', 'name', 'slug', 'kurzbeschreibung'],
+                },
+              },
+            },
+            'landing.tabs': {
+              populate: {
+                reiter: true,
+              },
+            },
+            'landing.seminar-finder': {
+              populate: {
+                standardKategorie: {
+                  fields: ['id', 'name', 'slug'],
+                },
+                sichtbareFilter: {
+                  fields: ['id', 'name', 'slug'],
+                },
+              },
+            },
+            'landing.seminar-produkt-karten': {
+              populate: {
+                seminarkategorie: {
+                  fields: ['id', 'name', 'slug', 'kurzbeschreibung'],
+                },
+                produkte: {
+                  fields: ['id', 'name', 'slug', 'kurzbeschreibung'],
+                  populate: {
+                    bild: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        seo: true,
       },
       pagination: { limit: 1 },
     });
     const template = (Array.isArray(response) ? response[0] : response) as any;
     if (!template || template.aktiv === false) return ctx.notFound('Kein Gutschein-Template konfiguriert');
     const fallbackBild = { url: '/favicon.png', alternativeText: 'Gutscheinbild Platzhalter' } as any;
-    const gutscheininhalte = Array.isArray((template as any).gutscheininhalte) ? (template as any).gutscheininhalte : [];
     const shippingCost = normaliseShippingValue(template.versandkosten);
     const bookingbox = ((template as any).bookingbox ?? {}) as any;
     ctx.body = {
       name: template.name,
+      slug: template.slug ?? null,
+      beschreibung: template.beschreibung ?? null,
       minBetrag: template.minBetrag != null ? Number(template.minBetrag) : null,
       maxBetrag: template.maxBetrag != null ? Number(template.maxBetrag) : null,
       versandkosten: shippingCost,
@@ -50,8 +109,9 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
         typeof bookingbox?.beschreibung === 'string' && bookingbox.beschreibung.trim().length > 0
           ? bookingbox.beschreibung.trim()
           : null,
-      gutscheininhalte,
       heroDarkMode: Boolean(template.heroDarkMode),
+      abschnitte: Array.isArray(template.abschnitte) ? template.abschnitte : [],
+      seo: template.seo ?? null,
     };
   },
 

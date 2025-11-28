@@ -154,6 +154,8 @@ type StrapiColumnComponent = {
 
 type StrapiColumnsComponent = {
   __component: "landing.columns";
+  überschrift?: string | null;
+  überschriftStufe?: "h2" | "h3" | "h4" | null;
   hintergrundfarbe?: string | null;
   darstellung?: ColumnDisplayMode | null;
   spalten?: StrapiColumnComponent[] | null;
@@ -221,7 +223,7 @@ type StrapiSeminarProductCardsComponent = {
   mehrButtonAnzeigen?: boolean | null;
 };
 
-type StrapiLandingComponent =
+export type StrapiLandingComponent =
   | StrapiHeroComponent
   | StrapiHeroCarouselComponent
   | StrapiHeroSmallComponent
@@ -355,7 +357,7 @@ const normaliseColumnDisplayMode = (value: string | null | undefined): ColumnDis
   if (typeof value === "string" && COLUMN_DISPLAY_MODES.has(value as ColumnDisplayMode)) {
     return value as ColumnDisplayMode;
   }
-  return "box";
+  return "plain";
 };
 
 const normaliseCardTextAlignment = (value: string | null | undefined): "left" | "center" | "right" => {
@@ -450,6 +452,8 @@ export type LandingCardGridSection = {
 
 export type LandingColumnsSection = {
   type: "columns";
+  überschrift?: string | null;
+  überschriftStufe: "h2" | "h3" | "h4";
   hintergrund: SectionBackgroundKey | null;
   darstellung: ColumnDisplayMode;
   spalten: {
@@ -874,6 +878,8 @@ const transformColumnsSection = (component: StrapiColumnsComponent): LandingColu
 
   return {
     type: "columns",
+    überschrift: normaliseOptionalString(component.überschrift ?? null),
+    überschriftStufe: normaliseHeadingLevel(component.überschriftStufe ?? null),
     hintergrund: normaliseBackgroundKey(component.hintergrundfarbe ?? null),
     darstellung: normaliseColumnDisplayMode(component.darstellung ?? null),
     spalten: columns
@@ -1005,6 +1011,10 @@ const transformSection = (component: StrapiLandingComponent): LandingSection => 
     component: component.__component ?? "unbekannt",
     data: component as Record<string, unknown>
   };
+};
+
+export const transformLandingSection = (component: StrapiLandingComponent): LandingSection => {
+  return transformSection(component);
 };
 
 export async function fetchLandingPage(slug: string): Promise<LandingPage> {

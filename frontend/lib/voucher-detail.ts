@@ -1,4 +1,5 @@
 import { fetchJson, mediaUrl } from "./api";
+import { transformLandingSection, type LandingSection, type StrapiLandingComponent } from "./landing";
 import { normaliseShippingInput } from "./shipping";
 
 type StrapiMedia = {
@@ -6,14 +7,9 @@ type StrapiMedia = {
   alternativeText?: string | null;
 };
 
-type StrapiTab = {
-  id?: number | string;
-  titel?: string | null;
-  inhalt?: string | null;
-};
-
 type StrapiVoucherTemplate = {
   name: string;
+  slug?: string | null;
   beschreibung?: string | null;
   bookingbox_topline?: string | null;
   bookingbox_überschrift?: string | null;
@@ -23,18 +19,20 @@ type StrapiVoucherTemplate = {
   versandkosten?: number | null;
   bild?: StrapiMedia | null;
   hintergrundbild?: StrapiMedia | null;
-  gutscheininhalte?: StrapiTab[] | null;
   heroDarkMode?: boolean | null;
-};
-
-export type VoucherContentTab = {
-  id: string;
-  title: string;
-  contentHtml: string;
+  abschnitte?: StrapiLandingComponent[] | null;
+  seo?: {
+    title?: string | null;
+    description?: string | null;
+    canonical?: string | null;
+    robots?: string | null;
+    og_image?: StrapiMedia | null;
+  } | null;
 };
 
 export type VoucherDetail = {
   title: string;
+  slug?: string | null;
   hero: {
     title: string;
     paragraphs: string[];
@@ -52,26 +50,16 @@ export type VoucherDetail = {
     maxAmount?: number | null;
     defaultAmount: number;
   };
-  tabs: VoucherContentTab[];
   shippingCost?: number | null;
+  sections: LandingSection[];
+  seo?: {
+    title?: string | null;
+    description?: string | null;
+    canonical?: string | null;
+    robots?: string | null;
+    ogImageUrl?: string | null;
+  } | null;
 };
-
-function ensureHtmlContent(value: string | null | undefined): string {
-  if (!value) {
-    return "";
-  }
-
-  const trimmed = value.trim();
-  if (trimmed.length === 0) {
-    return "";
-  }
-
-  if (/<[a-z][\s\S]*>/i.test(trimmed)) {
-    return trimmed;
-  }
-
-  return `<p>${trimmed}</p>`;
-}
 
 function richTextToParagraphs(value: string | null | undefined): string[] {
   if (!value) {
@@ -98,32 +86,10 @@ function richTextToParagraphs(value: string | null | undefined): string[] {
     .filter((paragraph) => paragraph.length > 0);
 }
 
-function toTabs(tabs: StrapiTab[] | null | undefined): VoucherContentTab[] {
-  if (!Array.isArray(tabs)) {
-    return [];
-  }
-
-  return tabs
-    .map((tab, index) => {
-      const title = typeof tab?.titel === "string" && tab.titel.trim().length > 0 ? tab.titel.trim() : `Abschnitt ${index + 1}`;
-      const contentHtml = ensureHtmlContent(tab?.inhalt);
-      if (contentHtml.length === 0) {
-        return null;
-      }
-      const id =
-        typeof tab?.id === "number"
-          ? `tab-${tab.id}`
-          : typeof tab?.id === "string" && tab.id.length > 0
-            ? tab.id
-            : `tab-${index + 1}`;
-      return { id, title, contentHtml };
-    })
-    .filter((tab): tab is VoucherContentTab => Boolean(tab));
-}
-
 function createFallbackVoucherDetail(): VoucherDetail {
   return {
     title: "Geschenkgutschein",
+    slug: "gutscheine",
     hero: {
       title: "Geschenkgutschein",
       paragraphs: [
@@ -143,8 +109,9 @@ function createFallbackVoucherDetail(): VoucherDetail {
       maxAmount: null,
       defaultAmount: 25
     },
-    tabs: [],
-    shippingCost: null
+    shippingCost: null,
+    sections: [],
+    seo: null
   };
 }
 
@@ -172,8 +139,21 @@ export async function getVoucherDetail(): Promise<VoucherDetail> {
       defaultAmount = maxAmount;
     }
 
+    const sections = Array.isArray(payload.abschnitte)
+      ? payload.abschnitte
+          .map(transformLandingSection)
+          .filter(
+            (section) =>
+              section.type !== "hero-carousel" &&
+              section.type !== "hero-small" &&
+              section.type !== "hero-blank" &&
+              section.type !== "hero-video"
+          )
+      : [];
+
     return {
       title: payload.name,
+      slug: payload.slug ?? null,
       hero: {
         title: payload.name,
         paragraphs:
@@ -200,8 +180,17 @@ export async function getVoucherDetail(): Promise<VoucherDetail> {
         maxAmount,
         defaultAmount
       },
-      tabs: toTabs(payload.gutscheininhalte),
-      shippingCost: normaliseShippingInput(payload.versandkosten)
+      shippingCost: normaliseShippingInput(payload.versandkosten),
+      sections,
+      seo: payload.seo
+        ? {
+            title: payload.seo.title ?? null,
+            description: payload.seo.description ?? null,
+            canonical: payload.seo.canonical ?? null,
+            robots: payload.seo.robots ?? null,
+            ogImageUrl: payload.seo.og_image?.url ? mediaUrl(payload.seo.og_image.url) ?? null : null
+          }
+        : null
     };
   } catch (error) {
     console.warn("[voucher-detail] Konnte Gutschein-Template nicht laden, nutze Fallback:", error);

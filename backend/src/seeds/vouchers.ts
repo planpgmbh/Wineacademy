@@ -16,6 +16,7 @@ type GutscheinSeed = {
 
 type GutscheinTemplateSeed = {
   name: string;
+  slug?: string;
   beschreibung?: string;
   versandkosten?: number;
   minBetrag?: number;
@@ -25,7 +26,7 @@ type GutscheinTemplateSeed = {
   bild?: unknown;
   hintergrundbild?: unknown;
   bookingbox?: Record<string, unknown>;
-  gutscheininhalte?: Array<Record<string, unknown>>;
+  abschnitte?: Array<Record<string, unknown>>;
 };
 
 async function upsertGutschein(strapi: any, values: GutscheinSeed) {
@@ -83,9 +84,10 @@ async function cleanupLegacyTemplates(strapi: any) {
 }
 
 async function upsertGutscheinTemplate(strapi: any, values: GutscheinTemplateSeed) {
-  const { bookingbox, gutscheininhalte, ...rest } = values;
+  const { bookingbox, abschnitte, ...rest } = values;
   const data: Record<string, unknown> = {
     name: rest.name,
+    slug: rest.slug ?? 'gutscheine',
     beschreibung: rest.beschreibung ?? undefined,
     versandkosten:
       typeof rest.versandkosten !== 'undefined' && rest.versandkosten !== null
@@ -105,21 +107,20 @@ async function upsertGutscheinTemplate(strapi: any, values: GutscheinTemplateSee
   };
   if ('hintergrundbild' in rest) data.hintergrundbild = rest.hintergrundbild ?? undefined;
   if ('bild' in rest) data.bild = rest.bild ?? undefined;
-  if (Array.isArray(gutscheininhalte) && gutscheininhalte.length > 0) {
-    data.gutscheininhalte = gutscheininhalte;
+  if (Array.isArray(abschnitte) && abschnitte.length > 0) {
+    data.abschnitte = abschnitte;
   }
   if (!bookingbox) {
     delete data.bookingbox;
   }
-  if (!Array.isArray(gutscheininhalte) || gutscheininhalte.length === 0) {
-    delete data.gutscheininhalte;
+  if (!Array.isArray(abschnitte) || abschnitte.length === 0) {
+    delete data.abschnitte;
   }
 
   const existingSettings = await strapi.entityService.findMany(
     'api::gutscheineinstellung.gutscheineinstellung',
     {
       fields: ['id'],
-      populate: { gutscheininhalte: true },
       pagination: { limit: 1 },
     }
   );
@@ -175,6 +176,7 @@ export async function seedVouchers(strapi: any, log: (msg: string) => void) {
 
   await upsertGutscheinTemplate(strapi, {
     name: 'Geschenkgutschein',
+    slug: 'gutscheine',
     beschreibung: 'Verschenke frei wählbare Beträge für Seminare und Produkte.',
     versandkosten: 4.9,
     minBetrag: 50,

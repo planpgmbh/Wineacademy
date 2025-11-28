@@ -217,8 +217,11 @@ export interface LandingColumns extends Struct.ComponentSchema {
     displayName: 'Spalten';
   };
   attributes: {
+    überschrift: Schema.Attribute.String;
+    überschriftStufe: Schema.Attribute.Enumeration<['h2', 'h3', 'h4']> &
+      Schema.Attribute.DefaultTo<'h2'>;
     darstellung: Schema.Attribute.Enumeration<['box', 'plain']> &
-      Schema.Attribute.DefaultTo<'box'>;
+      Schema.Attribute.DefaultTo<'plain'>;
     hintergrundfarbe: Schema.Attribute.Enumeration<[
       'neutral',
       'black',

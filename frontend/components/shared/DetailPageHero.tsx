@@ -179,6 +179,7 @@ export function DetailPageHero({
     ? undefined
     : ({
         backgroundColor: "var(--color-primary)",
+        backgroundImage: "var(--hero-fallback-gradient)",
       } as const);
 
   return (

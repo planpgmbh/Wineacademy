@@ -27,6 +27,13 @@
   --section-bg-wine-blue-dark: oklch(60% 0.1 251.813);
   --section-bg-wine-blue-darker: oklch(45% 0.09 251.813);
   --section-bg-wine-blue-darkest: oklch(35% 0.08 251.813);
+  --hero-fallback-gradient: radial-gradient(
+    circle at 38% 42%,
+    #d6e6f5 0%,
+    #bcd4eb 40%,
+    #98b4d1 78%,
+    #809bbf 100%
+  );
   --color-secondary: #506A7E;
   --color-secondary-content: oklch(98% 0.003 247.858);
   --color-accent: oklch(0.583 0.082 244.6);

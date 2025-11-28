@@ -5,10 +5,18 @@
     "description": "Abschnitt mit bis zu drei individuell befüllbaren Spalten."
   },
   "attributes": {
+    "überschrift": {
+      "type": "string"
+    },
+    "überschriftStufe": {
+      "type": "enumeration",
+      "enum": ["h2", "h3", "h4"],
+      "default": "h2"
+    },
     "darstellung": {
       "type": "enumeration",
       "enum": ["box", "plain"],
-      "default": "box"
+      "default": "plain"
     },
     "hintergrundfarbe": {
       "type": "enumeration",

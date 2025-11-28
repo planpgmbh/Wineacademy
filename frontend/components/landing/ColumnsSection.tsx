@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import type { JSX } from "react";
 
 import {
   resolveSectionBackground,
@@ -19,6 +20,8 @@ type SpaltenEintrag = {
 };
 
 type ColumnsSectionProps = {
+  überschrift?: string | null;
+  überschriftStufe?: "h2" | "h3" | "h4" | null;
   hintergrund?: SectionBackgroundKey | null;
   darstellung?: "box" | "plain" | null;
   spalten: SpaltenEintrag[];
@@ -61,7 +64,13 @@ const normaliseLegacyListMarkup = (value: string): string => {
     });
 };
 
-export function ColumnsSection({ hintergrund, darstellung, spalten }: ColumnsSectionProps) {
+export function ColumnsSection({
+  überschrift,
+  überschriftStufe,
+  hintergrund,
+  darstellung,
+  spalten
+}: ColumnsSectionProps) {
   const items = spalten.filter((column) => column.html || column.bild);
   if (items.length === 0) {
     return null;
@@ -79,6 +88,7 @@ export function ColumnsSection({ hintergrund, darstellung, spalten }: ColumnsSec
   const resolvedBackground = resolveSectionBackground(hintergrund ?? null);
   const style = { backgroundColor: `var(${SECTION_BACKGROUND_CSS_VAR[resolvedBackground]})` };
   const isDarkBackground = isDarkSectionBackground(resolvedBackground);
+  const showHeadline = typeof überschrift === "string" && überschrift.trim().length > 0;
 
   const contentStyle = { maxWidth: "var(--landing-content-max-width)" };
   const dividerTone = isDarkBackground ? "divide-white/25" : "divide-neutral-200";
@@ -88,14 +98,28 @@ export function ColumnsSection({ hintergrund, darstellung, spalten }: ColumnsSec
       ? `grid ${columnLayoutClass} divide-y md:divide-y-0 ${dividerTone}`
       : `grid gap-6 ${columnLayoutClass}`;
 
+  const paddingY =
+    variant === "plain" && showHeadline
+      ? "py-[var(--section-padding-y-compact)] md:py-[var(--section-padding-y-lg)]"
+      : "";
+
   const wrapperPaddingClass =
     variant === "plain"
-      ? "mx-auto w-full px-6 md:px-8"
+      ? `mx-auto w-full px-6 md:px-8 ${paddingY}`.trim()
       : "mx-auto w-full px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)]";
+
+  const HeadingTag = (überschriftStufe ?? "h2") as keyof JSX.IntrinsicElements;
+  const headingClass = [
+    (überschriftStufe ?? "h2") === "h2" ? "heading-section" : "",
+    isDarkBackground ? "heading-on-dark" : ""
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <section style={style}>
-      <div className={wrapperPaddingClass} style={contentStyle}>
+      <div className={`${wrapperPaddingClass} flex flex-col gap-3 md:gap-3`} style={contentStyle}>
+        {showHeadline ? <HeadingTag className={`${headingClass} text-left`}>{überschrift?.trim()}</HeadingTag> : null}
         <div className={gridClass}>
           {items.map((column, index) => {
             const cardTone = isDarkBackground
