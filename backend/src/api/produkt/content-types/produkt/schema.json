@@ -75,10 +75,19 @@
       ],
       "multiple": false
     },
-    "produktinhalte": {
-      "type": "component",
-      "repeatable": true,
-      "component": "produkt.tab"
+    "abschnitte": {
+      "type": "dynamiczone",
+      "components": [
+        "landing.bildergalerie",
+        "landing.card-grid",
+        "landing.columns",
+        "landing.trennlinie",
+        "landing.text-block",
+        "landing.seminar-liste",
+        "landing.tabs",
+        "landing.seminar-finder",
+        "landing.seminar-produkt-karten"
+      ]
     },
     "seo": {
       "type": "component",

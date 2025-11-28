@@ -1,14 +1,9 @@
 import { fetchJson, mediaUrl } from "./api";
+import { transformLandingSection, type LandingSection, type StrapiLandingComponent } from "./landing";
 
 type StrapiMedia = {
   url?: string | null;
   alternativeText?: string | null;
-};
-
-type StrapiTab = {
-  id?: number | string;
-  titel?: string | null;
-  inhalt?: string | null;
 };
 
 type StrapiProductDetail = {
@@ -27,13 +22,7 @@ type StrapiProductDetail = {
   bookingbox_beschreibung?: string | null;
   hintergrundbild?: StrapiMedia | null;
   bild?: StrapiMedia | null;
-  produktinhalte?: StrapiTab[] | null;
-};
-
-export type ProductContentTab = {
-  id: string;
-  title: string;
-  contentHtml: string;
+  abschnitte?: StrapiLandingComponent[] | null;
 };
 
 export type ProductHero = {
@@ -61,7 +50,7 @@ export type ProductDetail = {
   hero: ProductHero;
   mainImage: { url: string; alt: string | null } | null;
   bookingBox: ProductBookingBox;
-  tabs: ProductContentTab[];
+  sections: LandingSection[];
   isVoucher: boolean;
 };
 
@@ -146,33 +135,6 @@ function richTextToParagraphs(value: string | null | undefined): string[] {
     .filter((paragraph) => paragraph.length > 0);
 }
 
-function toTabs(tabs: StrapiTab[] | null | undefined): ProductContentTab[] {
-  if (!Array.isArray(tabs)) {
-    return [];
-  }
-
-  return tabs
-    .map((tab, index) => {
-      const title = typeof tab?.titel === "string" && tab.titel.trim().length > 0 ? tab.titel.trim() : null;
-      const content = ensureHtmlContent(tab?.inhalt);
-      if (!title && !content) {
-        return null;
-      }
-      const id =
-        typeof tab?.id === "number"
-          ? `tab-${tab.id}`
-          : typeof tab?.id === "string" && tab.id.length > 0
-            ? tab.id
-            : `tab-${index + 1}`;
-      return {
-        id,
-        title: title ?? `Abschnitt ${index + 1}`,
-        contentHtml: content
-      };
-    })
-    .filter((tab): tab is ProductContentTab => Boolean(tab));
-}
-
 function createFallbackProduct(slug: string): ProductDetail {
   const title = "Wine Academy Produkt";
   const paragraphs = [
@@ -202,12 +164,20 @@ function createFallbackProduct(slug: string): ProductDetail {
         "Dieses Produkt konnte nicht geladen werden. Der Platzhalter demonstriert das Layout der Produktdetailseite.",
       buttonText: "Bald verfügbar"
     },
-    tabs: [
+    sections: [
       {
-        id: "description",
-        title: "Beschreibung",
-        contentHtml:
-          "<p>Hier erscheinen bald ausführliche Informationen zum Produkt. Sobald die Daten im CMS gepflegt sind, werden sie automatisch angezeigt.</p>"
+        type: "tabs",
+        überschrift: null,
+        überschriftStufe: "h2",
+        hintergrund: "neutral",
+        reiter: [
+          {
+            id: "description",
+            überschrift: "Beschreibung",
+            contentHtml:
+              "<p>Hier erscheinen bald ausführliche Informationen zum Produkt. Sobald die Daten im CMS gepflegt sind, werden sie automatisch angezeigt.</p>"
+          }
+        ]
       }
     ],
     isVoucher: false
@@ -245,7 +215,17 @@ function normaliseProductPayload(payload: StrapiProductDetail): ProductDetail {
       ? payload.bookingbox_beschreibung.trim()
       : payload.kurzbeschreibung?.trim() ?? "Dieses Produkt kann direkt über den Shop bestellt werden.";
 
-  const tabs = toTabs(payload.produktinhalte);
+  const sections = Array.isArray(payload.abschnitte)
+    ? payload.abschnitte
+        .map(transformLandingSection)
+        .filter(
+          (section) =>
+            section.type !== "hero-carousel" &&
+            section.type !== "hero-small" &&
+            section.type !== "hero-blank" &&
+            section.type !== "hero-video"
+        )
+    : [];
   const mainImageUrl = mediaUrl(payload.bild?.url);
   const mainImageAlt = payload.bild?.alternativeText ?? null;
   const backgroundImageUrl = mediaUrl(payload.hintergrundbild?.url) ?? mainImageUrl;
@@ -272,7 +252,7 @@ function normaliseProductPayload(payload: StrapiProductDetail): ProductDetail {
       beschreibung: bookingDescription,
       buttonText: "In den Warenkorb"
     },
-    tabs,
+    sections,
     isVoucher: Boolean(payload.gutschein)
   };
 }

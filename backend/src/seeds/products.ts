@@ -22,6 +22,25 @@ type ProductSeed = {
   produktinhalte?: Array<Record<string, unknown>>;
 };
 
+function buildAbschnitteFromTabs(tabs: Array<Record<string, unknown>> | null | undefined) {
+  if (!Array.isArray(tabs) || tabs.length === 0) {
+    return undefined;
+  }
+
+  return [
+    {
+      __component: 'landing.tabs',
+      überschrift: null,
+      überschriftStufe: 'h2',
+      hintergrundfarbe: null,
+      reiter: tabs.map((tab, index) => ({
+        überschrift: typeof tab?.titel === 'string' ? tab.titel : `Abschnitt ${index + 1}`,
+        inhalt: typeof tab?.inhalt === 'string' ? tab.inhalt : '',
+      })),
+    },
+  ];
+}
+
 async function upsertProduct(strapi: any, values: ProductSeed) {
   const slug = values.slug ? slugify(values.slug) : slugify(values.name);
   const existing = await strapi.db
@@ -29,6 +48,7 @@ async function upsertProduct(strapi: any, values: ProductSeed) {
     .findOne({ where: { slug }, select: ['id'] });
 
   const { bookingbox, produktinhalte, ...rest } = values;
+  const abschnitte = buildAbschnitteFromTabs(produktinhalte ?? null);
   const data: Record<string, unknown> = {
     ...rest,
     slug,
@@ -36,7 +56,7 @@ async function upsertProduct(strapi: any, values: ProductSeed) {
     aktiv: rest.aktiv ?? true,
     publishedAt: nowIso(),
     bookingbox: bookingbox ? { ...bookingbox } : undefined,
-    produktinhalte: produktinhalte ?? undefined,
+    abschnitte: abschnitte ?? undefined,
   };
 
   if (typeof rest.preisNetto !== 'undefined' && rest.preisNetto !== null) {
@@ -52,8 +72,8 @@ async function upsertProduct(strapi: any, values: ProductSeed) {
   if (!bookingbox) {
     delete data.bookingbox;
   }
-  if (!produktinhalte) {
-    delete data.produktinhalte;
+  if (!abschnitte) {
+    delete data.abschnitte;
   }
 
   if (existing) {

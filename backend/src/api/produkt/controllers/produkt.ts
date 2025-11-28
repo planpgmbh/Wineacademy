@@ -59,7 +59,62 @@ export default factories.createCoreController('api::produkt.produkt', ({ strapi 
       populate: {
         bild: { select: ['url', 'alternativeText'] },
         hintergrundbild: { select: ['url', 'alternativeText'] },
-        produktinhalte: true,
+        abschnitte: {
+          on: {
+            'landing.bildergalerie': { populate: { bilder: true } },
+            'landing.card-grid': {
+              populate: {
+                karten: {
+                  populate: {
+                    backgroundImage: true,
+                  },
+                },
+              },
+            },
+            'landing.columns': {
+              populate: {
+                spalten: true,
+              },
+            },
+            'landing.trennlinie': true,
+            'landing.text-block': true,
+            'landing.seminar-liste': {
+              populate: {
+                seminarkategorie: {
+                  fields: ['id', 'name', 'slug', 'kurzbeschreibung'],
+                },
+              },
+            },
+            'landing.tabs': {
+              populate: {
+                reiter: true,
+              },
+            },
+            'landing.seminar-finder': {
+              populate: {
+                standardKategorie: {
+                  fields: ['id', 'name', 'slug'],
+                },
+                sichtbareFilter: {
+                  fields: ['id', 'name', 'slug'],
+                },
+              },
+            },
+            'landing.seminar-produkt-karten': {
+              populate: {
+                seminarkategorie: {
+                  fields: ['id', 'name', 'slug', 'kurzbeschreibung'],
+                },
+                produkte: {
+                  fields: ['id', 'name', 'slug', 'kurzbeschreibung'],
+                  populate: {
+                    bild: true,
+                  },
+                },
+              },
+            },
+          },
+        },
         seo: true,
         bookingbox: { select: ['topline', 'überschrift', 'beschreibung'] },
       },
@@ -91,7 +146,7 @@ export default factories.createCoreController('api::produkt.produkt', ({ strapi 
       versandkosten: normaliseShippingValue((product as any).versandkosten),
       bild: product.bild ?? fallbackBild,
       hintergrundbild: product.hintergrundbild ?? fallbackBild,
-      produktinhalte: Array.isArray((product as any).produktinhalte) ? (product as any).produktinhalte : [],
+      abschnitte: Array.isArray((product as any).abschnitte) ? (product as any).abschnitte : [],
     };
     delete (payload as any).bookingbox;
 
