@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { draftMode } from "next/headers";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
@@ -38,9 +39,9 @@ const FALLBACK_METADATA = {
   description: "Landingpage der Wine Academy Hamburg."
 };
 
-async function resolveLanding(slug: string): Promise<LandingPage | null> {
+async function resolveLanding(slug: string, status: "draft" | "published"): Promise<LandingPage | null> {
   try {
-    return await fetchLandingPage(slug);
+    return await fetchLandingPage(slug, { status });
   } catch (error) {
     console.error(`[landing] Fehler beim Laden der Landingpage ${slug}:`, error);
     return null;
@@ -85,7 +86,10 @@ function findHeroVideo(sections: LandingSection[]): LandingHeroVideoSection | nu
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const landing = await resolveLanding(slug);
+  const draft = await draftMode();
+  const isDraftMode = draft.isEnabled;
+  const status = isDraftMode ? "draft" : "published";
+  const landing = await resolveLanding(slug, status);
 
   if (!landing) {
     return FALLBACK_METADATA;
@@ -109,7 +113,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function LandingPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const landing = await resolveLanding(slug);
+  const draft = await draftMode();
+  const isDraftMode = draft.isEnabled;
+  const status = isDraftMode ? "draft" : "published";
+  const landing = await resolveLanding(slug, status);
 
   if (!landing) {
     return notFound();

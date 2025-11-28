@@ -1017,10 +1017,28 @@ export const transformLandingSection = (component: StrapiLandingComponent): Land
   return transformSection(component);
 };
 
-export async function fetchLandingPage(slug: string): Promise<LandingPage> {
-  const response = await fetchJson<StrapiLandingResponse>(`/public/landing-pages/${slug}`, {
-    cache: "no-store"
-  });
+export async function fetchLandingPage(
+  slug: string,
+  options?: { status?: "draft" | "published" }
+): Promise<LandingPage> {
+  const status = options?.status === "draft" ? "draft" : "published";
+  const searchParams = new URLSearchParams();
+
+  if (status === "draft") {
+    searchParams.set("status", "draft");
+    const token = process.env.PREVIEW_SECRET ?? process.env.ADMIN_JWT_SECRET;
+    if (token) {
+      searchParams.set("token", token);
+    }
+  }
+
+  const query = searchParams.toString();
+  const response = await fetchJson<StrapiLandingResponse>(
+    `/public/landing-pages/${slug}${query ? `?${query}` : ""}`,
+    {
+      cache: "no-store"
+    }
+  );
 
   const sections = Array.isArray(response.abschnitte)
     ? response.abschnitte.map(transformSection)
