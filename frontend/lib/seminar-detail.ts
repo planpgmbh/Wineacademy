@@ -1,4 +1,5 @@
 import { fetchJson, mediaUrl } from "./api";
+import { transformLandingSection, type LandingSection, type StrapiLandingComponent } from "./landing";
 
 type StrapiMedia = {
   url?: string | null;
@@ -9,12 +10,6 @@ type StrapiCategory = {
   id?: number | string;
   name?: string | null;
   slug?: string | null;
-};
-
-type StrapiTab = {
-  id?: number | string;
-  titel?: string | null;
-  inhalt?: string | null;
 };
 
 type StrapiTermin = {
@@ -40,7 +35,7 @@ type StrapiSeminarDetail = {
   bookingbox_beschreibung?: string | null;
   hintergrundbild?: StrapiMedia | null;
   bild?: StrapiMedia | null;
-  seminarinhalte?: StrapiTab[] | null;
+  abschnitte?: StrapiLandingComponent[] | null;
   termine?: (StrapiTermin & { preis?: string | number | null })[];
   kategorien?: StrapiCategory[] | null;
 };
@@ -48,12 +43,6 @@ type StrapiSeminarDetail = {
 export type SeminarDateOption = {
   id: string;
   label: string;
-};
-
-export type SeminarContentTab = {
-  id: string;
-  title: string;
-  contentHtml: string;
 };
 
 export type SeminarDetail = {
@@ -73,7 +62,7 @@ export type SeminarDetail = {
     beschreibung: string;
     buttonText: string;
   };
-  tabs: SeminarContentTab[];
+  sections: LandingSection[];
   dates: SeminarDateOption[];
   categories: { id: number; name: string; slug: string | null }[];
   primaryCategoryName: string | null;
@@ -153,24 +142,6 @@ function extractParagraphsFromRichText(text: string | null | undefined): string[
     .split(/\n+/)
     .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
     .filter((paragraph) => paragraph.length > 0);
-}
-
-function toContentTabs(rawTabs: StrapiTab[] | null | undefined): SeminarContentTab[] {
-  if (!Array.isArray(rawTabs)) {
-    return [];
-  }
-
-  return rawTabs
-    .map((tab, index) => {
-      const title = typeof tab?.titel === "string" && tab.titel.trim().length > 0 ? tab.titel.trim() : `Abschnitt ${index + 1}`;
-      const contentHtml = ensureHtmlContent(tab?.inhalt);
-      if (contentHtml.length === 0) {
-        return null;
-      }
-      const tabId = typeof tab?.id === "number" || typeof tab?.id === "string" ? String(tab.id) : `tab-${index}`;
-      return { id: tabId, title, contentHtml };
-    })
-    .filter((tab): tab is SeminarContentTab => Boolean(tab));
 }
 
 function formatDateLabel(termin: StrapiTermin): string | null {
@@ -259,7 +230,17 @@ function normaliseSeminarPayload(payload: StrapiSeminarDetail): SeminarDetail {
         .filter((category): category is { id: number; name: string; slug: string | null } => Boolean(category))
     : [];
 
-  const tabs = toContentTabs(payload.seminarinhalte);
+  const sections = Array.isArray(payload.abschnitte)
+    ? payload.abschnitte
+        .map(transformLandingSection)
+        .filter(
+          (section) =>
+            section.type !== "hero-carousel" &&
+            section.type !== "hero-small" &&
+            section.type !== "hero-blank" &&
+            section.type !== "hero-video"
+        )
+    : [];
   const dates = mapDateOptions(payload.termine);
 
   const heroParagraphs = extractHeroParagraphs(payload);
@@ -294,7 +275,7 @@ function normaliseSeminarPayload(payload: StrapiSeminarDetail): SeminarDetail {
       beschreibung: bookingDescription,
       buttonText: "Jetzt anmelden",
     },
-    tabs,
+    sections,
     dates,
     categories,
     primaryCategoryName,
@@ -308,23 +289,31 @@ function createFallbackSeminar(slug: string): SeminarDetail {
     "Unsere kompakten Lehrmodule verbinden fundiertes Wissen mit praxisnahen Tastings, damit du das Gelernte sofort anwenden kannst. Die Plätze sind begrenzt, weshalb wir eine frühzeitige Buchung empfehlen.",
   ];
 
-  const tabs: SeminarContentTab[] = [
+  const sections: LandingSection[] = [
     {
-      id: "overview",
-      title: "Überblick",
-      contentHtml: `<p>${paragraphs[0]}</p><p>${paragraphs[1]}</p>`,
-    },
-    {
-      id: "agenda",
-      title: "Ablauf & Termine",
-      contentHtml:
-        "<p>Der Kurs erstreckt sich über drei Tage inklusive Prüfung. Jeder Tag fokussiert sich auf einen Themenblock: Sensorik, Herkunft & Stilistik sowie Service & Prüfungstraining.</p><p>Für jedes Datum stellen wir rechtzeitig eine detaillierte Agenda, Pausenplanung und optionale Zusatztermine zur Verfügung.</p>",
-    },
-    {
-      id: "infos",
-      title: "Weitere Infos",
-      contentHtml:
-        "<p>Im Preis sind alle Tasting-Weine, Unterlagen sowie die Prüfungsgebühren enthalten. Nach erfolgreichem Abschluss erhältst du ein Zertifikat der Wine Academy Hamburg.</p><p>Für Unternehmen bieten wir auf Anfrage Sammelbuchungen und Inhouse-Schulungen an. Sprich uns gern an, wenn du individuelle Wünsche hast.</p>",
+      type: "tabs",
+      überschrift: null,
+      überschriftStufe: "h2",
+      hintergrund: "neutral",
+      reiter: [
+        {
+          id: "overview",
+          überschrift: "Überblick",
+          contentHtml: `<p>${paragraphs[0]}</p><p>${paragraphs[1]}</p>`,
+        },
+        {
+          id: "agenda",
+          überschrift: "Ablauf & Termine",
+          contentHtml:
+            "<p>Der Kurs erstreckt sich über drei Tage inklusive Prüfung. Jeder Tag fokussiert sich auf einen Themenblock: Sensorik, Herkunft & Stilistik sowie Service & Prüfungstraining.</p><p>Für jedes Datum stellen wir rechtzeitig eine detaillierte Agenda, Pausenplanung und optionale Zusatztermine zur Verfügung.</p>",
+        },
+        {
+          id: "infos",
+          überschrift: "Weitere Infos",
+          contentHtml:
+            "<p>Im Preis sind alle Tasting-Weine, Unterlagen sowie die Prüfungsgebühren enthalten. Nach erfolgreichem Abschluss erhältst du ein Zertifikat der Wine Academy Hamburg.</p><p>Für Unternehmen bieten wir auf Anfrage Sammelbuchungen und Inhouse-Schulungen an. Sprich uns gern an, wenn du individuelle Wünsche hast.</p>",
+        },
+      ],
     },
   ];
 
@@ -346,7 +335,7 @@ function createFallbackSeminar(slug: string): SeminarDetail {
         "Hier steht die Kurzbeschreibung des Seminars mit allen wichtigen Eckdaten und Vorteilen. Du kannst das Datum auswählen und direkt deinen Platz sichern.",
       buttonText: "Jetzt anmelden",
     },
-    tabs,
+    sections,
     dates: [
       { id: "date-1", label: "Fr, 15. November · Hamburg" },
       { id: "date-2", label: "Sa, 23. November · Hamburg" },

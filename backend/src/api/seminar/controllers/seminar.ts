@@ -190,7 +190,62 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
       populate: {
         bild: { select: ['url', 'alternativeText'] },
         hintergrundbild: { select: ['url', 'alternativeText'] },
-        seminarinhalte: true,
+        abschnitte: {
+          on: {
+            'landing.bildergalerie': { populate: { bilder: true } },
+            'landing.card-grid': {
+              populate: {
+                karten: {
+                  populate: {
+                    backgroundImage: true,
+                  },
+                },
+              },
+            },
+            'landing.columns': {
+              populate: {
+                spalten: true,
+              },
+            },
+            'landing.trennlinie': true,
+            'landing.text-block': true,
+            'landing.seminar-liste': {
+              populate: {
+                seminarkategorie: {
+                  fields: ['id', 'name', 'slug', 'kurzbeschreibung'],
+                },
+              },
+            },
+            'landing.tabs': {
+              populate: {
+                reiter: true,
+              },
+            },
+            'landing.seminar-finder': {
+              populate: {
+                standardKategorie: {
+                  fields: ['id', 'name', 'slug'],
+                },
+                sichtbareFilter: {
+                  fields: ['id', 'name', 'slug'],
+                },
+              },
+            },
+            'landing.seminar-produkt-karten': {
+              populate: {
+                seminarkategorie: {
+                  fields: ['id', 'name', 'slug', 'kurzbeschreibung'],
+                },
+                produkte: {
+                  fields: ['id', 'name', 'slug', 'kurzbeschreibung'],
+                  populate: {
+                    bild: true,
+                  },
+                },
+              },
+            },
+          },
+        },
         kategorien: {
           select: ['id', 'name', 'slug'],
         },
@@ -251,7 +306,7 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
       ...bookingboxPayload,
       bild: (seminar as any).bild ?? fallbackBild,
       hintergrundbild: (seminar as any).hintergrundbild ?? fallbackHeroBild,
-      seminarinhalte: (seminar as any).seminarinhalte ?? [],
+      abschnitte: (seminar as any).abschnitte ?? [],
       kategorien,
     };
     delete (withBildern as any).bookingbox;

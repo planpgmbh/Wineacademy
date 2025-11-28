@@ -27,6 +27,25 @@ type SeminarSeed = {
   kategorien?: string[];
 };
 
+function buildAbschnitteFromTabs(tabs: SeminarTab[] | null | undefined) {
+  if (!Array.isArray(tabs) || tabs.length === 0) {
+    return undefined;
+  }
+
+  return [
+    {
+      __component: 'landing.tabs',
+      überschrift: null,
+      überschriftStufe: 'h2',
+      hintergrundfarbe: null,
+      reiter: tabs.map((tab) => ({
+        überschrift: tab.titel,
+        inhalt: tab.inhalt ?? '',
+      })),
+    },
+  ];
+}
+
 async function resolveCategoryConnections(strapi: any, categorySlugs: string[]) {
   if (!Array.isArray(categorySlugs) || categorySlugs.length === 0) {
     return { connections: [], missing: [] as string[] };
@@ -63,13 +82,7 @@ async function upsertSeminar(strapi: any, values: SeminarSeed, log: (msg: string
     : await documentService.findFirst({ ...baseParams, status: 'published' });
   const existing = existingDraft ?? existingPublished ?? null;
 
-  const seminarTabs =
-    Array.isArray(values.seminarinhalte) && values.seminarinhalte.length > 0
-      ? values.seminarinhalte.map((tab) => ({
-          titel: tab.titel,
-          inhalt: tab.inhalt ?? '',
-        }))
-      : undefined;
+  const abschnitte = buildAbschnitteFromTabs(values.seminarinhalte ?? null);
 
   const bookingbox =
     values.bookingbox && Object.values(values.bookingbox).some((entry) => entry != null && entry !== '')
@@ -104,7 +117,7 @@ async function upsertSeminar(strapi: any, values: SeminarSeed, log: (msg: string
     heroDarkMode: values.heroDarkMode ?? false,
     aktiv: values.aktiv ?? true,
     bookingbox: bookingbox ?? undefined,
-    seminarinhalte: seminarTabs ?? undefined,
+    abschnitte: abschnitte ?? undefined,
     seo: values.seo ?? null,
     kategorien: { set: categoryConnections },
     publishedAt: nowIso(),
@@ -113,8 +126,8 @@ async function upsertSeminar(strapi: any, values: SeminarSeed, log: (msg: string
   if (!bookingbox) {
     delete data.bookingbox;
   }
-  if (!seminarTabs) {
-    delete data.seminarinhalte;
+  if (!abschnitte) {
+    delete data.abschnitte;
   }
 
   if (existing) {
