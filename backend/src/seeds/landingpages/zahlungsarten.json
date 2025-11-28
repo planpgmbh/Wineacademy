@@ -10,13 +10,17 @@
       "hintergrundbild": null
     },
     {
-      "__component": "landing.text-block",
-      "überschrift": "Zahlungsarten der Wine Academy Hamburg",
+      "__component": "landing.columns",
+      "darstellung": "plain",
+      "hintergrundfarbe": null,
+      "überschrift": null,
       "überschriftStufe": "h2",
-      "hintergrundfarbe": "neutral",
-      "einleitung": "<h2>Unsere Zahlungsarten</h2>\n\n<p>Wählen Sie die für Sie passende Zahlungsart aus. Alle angegebenen Preise sind Endpreise inklusive gesetzlicher Steuern. Versandkosten oder zusätzliche Gebühren weisen wir transparent im Bestellprozess aus.</p>\n\n<h3>Lastschrift</h3>\n<p>Der Rechnungsbetrag wird bequem nach der Bestellung von Ihrem hinterlegten Bankkonto eingezogen.</p>\n\n<h3>Rechnung</h3>\n<p>Bestellen Sie jetzt und begleichen Sie den Betrag erst nach Erhalt der Rechnung.</p>\n\n<h3>Kreditkarte</h3>\n<p>Zahlen Sie sicher und schnell mit Ihrer Kreditkarte.</p>\n\n<h3>PayPal</h3>\n<p>Nutzen Sie Ihr PayPal-Konto für eine besonders schnelle und geschützte Zahlung.</p>\n\n<h3>Vorkasse</h3>\n<p>Überweisen Sie den Gesamtbetrag Ihrer Bestellung vorab. Innerhalb Deutschlands ist der Standardversand kostenfrei (ausgenommen Expressversand).</p>\n\n<h3>Bankverbindung</h3>\n<ul>\n  <li>Kontoinhaber: FN Wine Academy Hamburg GmbH</li>\n  <li>IBAN: DE81 2005 0550 1504 6081 57</li>\n  <li>BIC/SWIFT: HASPDEHHXXX</li>\n  <li>Kreditinstitut: Hamburger Sparkasse</li>\n</ul>",
-      "buttonLabel": null,
-      "buttonLink": null
+      "spalten": [
+        {
+          "inhalt": "<h2>Unsere Zahlungsarten</h2><p>Wählen Sie die für Sie passende Zahlungsart aus. Alle angegebenen Preise sind Endpreise inklusive gesetzlicher Steuern. Versandkosten oder zusätzliche Gebühren weisen wir transparent im Bestellprozess aus.</p><h3>Lastschrift</h3><p>Der Rechnungsbetrag wird bequem nach der Bestellung von Ihrem hinterlegten Bankkonto eingezogen.</p><h3>Rechnung</h3><p>Bestellen Sie jetzt und begleichen Sie den Betrag erst nach Erhalt der Rechnung.</p><h3>Kreditkarte</h3><p>Zahlen Sie sicher und schnell mit Ihrer Kreditkarte.</p><h3>PayPal</h3><p>Nutzen Sie Ihr PayPal-Konto für eine besonders schnelle und geschützte Zahlung.</p><h3>Vorkasse</h3><p>Überweisen Sie den Gesamtbetrag Ihrer Bestellung vorab. Innerhalb Deutschlands ist der Standardversand kostenfrei (ausgenommen Expressversand).</p><h3>Bankverbindung</h3><ul><li>Kontoinhaber: FN Wine Academy Hamburg GmbH</li><li>IBAN: DE81 2005 0550 1504 6081 57</li><li>BIC/SWIFT: HASPDEHHXXX</li><li>Kreditinstitut: Hamburger Sparkasse</li></ul><p><br></p>",
+          "titel": "Spalte"
+        }
+      ]
     }
   ],
   "seo": {

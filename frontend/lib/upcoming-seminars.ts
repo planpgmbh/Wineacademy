@@ -43,6 +43,11 @@ const ensureSlug = (value: string | null | undefined, fallback: string, id: numb
   return `seminar-${id}`;
 };
 
+const isPlaceholderImage = (url: string): boolean => {
+  const lower = url.toLowerCase();
+  return lower.includes("favicon") || lower.includes("logo") || lower.includes("placeholder");
+};
+
 const formatImage = (
   image: PublicSeminarResponse["bild"],
   fallbackTitle: string
@@ -53,6 +58,13 @@ const formatImage = (
       alt: fallbackTitle.length > 0 ? fallbackTitle : "Seminarbild"
     };
   }
+  if (isPlaceholderImage(image.url)) {
+    return {
+      src: null,
+      alt: fallbackTitle.length > 0 ? fallbackTitle : "Seminarbild"
+    };
+  }
+
   const src = mediaUrl(image.url);
   const alt = normaliseString(image.alternativeText) || fallbackTitle || "Seminarbild";
   return { src, alt };

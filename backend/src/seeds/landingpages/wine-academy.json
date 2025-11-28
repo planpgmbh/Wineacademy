@@ -4,20 +4,73 @@
   "abschnitte": [
     {
       "__component": "landing.hero-carousel",
-      "überschrift": "Wine Academy Hamburg",
+      "überschrift": "Wein neu entdecken",
       "überschriftStufe": "h1",
-      "einleitung": "Weinausbildung für Profis und Genussmenschen mit zertifizierten Programmen und persönlicher Betreuung.",
-      "rotationSekunden": 8,
+      "einleitung": "erleben – erfahren – genießen\nWeinausbildung nach Maß – individuell und zeitlich flexibel gestaltet",
+      "rotationSekunden": 3,
       "bilder": []
     },
     {
-      "__component": "landing.text-block",
-      "überschrift": "Wine Academy Hamburg",
-      "überschriftStufe": "h2",
+      "__component": "landing.card-grid",
       "hintergrundfarbe": "neutral",
-      "einleitung": "<div class=\"wp-block-cover alignfull is-light has-custom-content-position is-position-top-center is-style-default\" style=\"padding-top:15vh;padding-bottom:var(--wp--preset--spacing--content);min-height:812px;aspect-ratio:unset;\"><span aria-hidden=\"true\" class=\"wp-block-cover__background has-primary-mixed-background-color has-background-dim-0 has-background-dim\"></span><video autoplay=\"\" class=\"wp-block-cover__video-background intrinsic-ignore\" data-object-fit=\"cover\" loop=\"\" muted=\"\" playsinline=\"\" src=\"https://www.wineacademy.de/wp-content/uploads/WineAcademy-Header_final.mp4\"></video><div class=\"wp-block-cover__inner-container is-layout-flow wp-block-cover-is-layout-flow\">\n<div class=\"wp-block-group alignwide has-white-color has-text-color has-global-padding is-layout-constrained wp-block-group-is-layout-constrained\">\n<div class=\"wp-block-group alignwide has-global-padding is-content-justification-left is-layout-constrained wp-container-core-group-is-layout-6 wp-block-group-is-layout-constrained\">\n<div aria-hidden=\"true\" class=\"wp-block-spacer\" style=\"height:280px\"></div>\n<h1 class=\"alignfull wp-block-post-title\" style=\"padding-bottom:0;margin-top:0px;margin-bottom:0px;\">Wein neu entdecken</h1>\n<p class=\"has-l-font-size\" style=\"padding-top:0px\">erleben – erfahren – genießen<br/>Weinausbildung nach Maß – individuell und zeitlich flexibel gestaltet</p>\n</div>\n</div>\n</div></div>\n<h1 class=\"wp-block-heading has-text-align-center has-l-font-size\" style=\"letter-spacing:0.05em;text-transform:uppercase\"></h1>\n<div aria-hidden=\"true\" class=\"wp-block-spacer\" style=\"height:var(--wp--preset--spacing--content)\"></div>\n<h1 class=\"wp-block-heading alignwide has-text-align-center has-serifbabe-alpha-font-family\"></h1>\n<div class=\"wp-block-columns alignwide is-layout-flex wp-container-core-columns-is-layout-1 wp-block-columns-is-layout-flex\">\n<div class=\"wp-block-column is-layout-flow wp-block-column-is-layout-flow\">\n<div class=\"wp-block-group is-layout-flow wp-block-group-is-layout-flow\" style=\"padding-right:0\">\n<figure class=\"wp-block-image size-large\"><a href=\"https://www.wineacademy.de/kurse/weinkurse/\"><img alt=\"\" class=\"wp-image-3108\" decoding=\"async\" fetchpriority=\"high\" height=\"1024\" sizes=\"(max-width: 1024px) 100vw, 1024px\" src=\"https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-4-1024x1024.png\" srcset=\"https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-4-1024x1024.png 1024w, https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-4-300x300.png 300w, https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-4-480x480.png 480w, https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-4-768x768.png 768w, https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-4-800x800.png 800w, https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-4-200x200.png 200w, https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-4.png 1080w\" width=\"1024\"/></a></figure>\n</div>\n</div>\n<div class=\"wp-block-column is-layout-flow wp-block-column-is-layout-flow\">\n<div class=\"wp-block-group is-layout-flow wp-block-group-is-layout-flow\" style=\"padding-right:0\">\n<figure class=\"wp-block-image size-large\"><a href=\"https://www.wineacademy.de/tastings-events/\"><img alt=\"\" class=\"wp-image-3107\" decoding=\"async\" height=\"1024\" sizes=\"(max-width: 1024px) 100vw, 1024px\" src=\"https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-1-1024x1024.png\" srcset=\"https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-1-1024x1024.png 1024w, https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-1-300x300.png 300w, https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-1-480x480.png 480w, https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-1-768x768.png 768w, https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-1-800x800.png 800w, https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-1-200x200.png 200w, https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-1.png 1080w\" width=\"1024\"/></a></figure>\n</div>\n</div>\n<div class=\"wp-block-column is-layout-flow wp-block-column-is-layout-flow\">\n<div class=\"wp-block-group is-layout-flow wp-block-group-is-layout-flow\" style=\"padding-right:0\">\n<figure class=\"wp-block-image size-large\"><a href=\"https://www.wineacademy.de/kurse/wset/\"><img alt=\"\" class=\"wp-image-3102\" decoding=\"async\" height=\"1024\" sizes=\"(max-width: 1024px) 100vw, 1024px\" src=\"https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-2-1024x1024.png\" srcset=\"https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-2-1024x1024.png 1024w, https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-2-300x300.png 300w, https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-2-480x480.png 480w, https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-2-768x768.png 768w, https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-2-800x800.png 800w, https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-2-200x200.png 200w, https://www.wineacademy.de/wp-content/uploads/Website-Kursbuttons-2.png 1080w\" style=\"aspect-ratio:1;object-fit:cover\" width=\"1024\"/></a></figure>\n</div>\n</div>\n</div>\n<div class=\"wp-block-group alignfull has-global-padding is-layout-constrained wp-block-group-is-layout-constrained is-empty\" style=\"margin-top:var(--wp--preset--spacing--content);margin-bottom:0\"></div>\n<div class=\"wp-block-group alignfull has-base-background-color has-background has-global-padding is-layout-constrained wp-block-group-is-layout-constrained\" style=\"margin-top:0;padding-top:var(--wp--preset--spacing--content);padding-bottom:var(--wp--preset--spacing--xl)\">\n<div class=\"wp-block-columns alignwide is-layout-flex wp-container-core-columns-is-layout-2 wp-block-columns-is-layout-flex\" style=\"padding-top:0;padding-bottom:0\">\n<div class=\"wp-block-column has-base-background-color has-background is-layout-flow wp-container-core-column-is-layout-4 wp-block-column-is-layout-flow\" style=\"margin-top:0;padding-top:0\">\n<h2 class=\"wp-block-heading has-text-align-center has-alternative-font-family has-xxxl-font-size\">Wine Academy Hamburg – die Weinschule</h2>\n<p style=\"font-style:normal;font-weight:300\">Die Wine Academy Hamburg ist die Adresse für erstklassige Weinausbildung. „Weinausbildung nach Maß – individuell und zeitlich flexibel gestaltet“ bedeutet ein umfangreiches Kursangebot, das sowohl Fachleuten aus der Weinbranche als auch leidenschaftlichen Endverbraucher*innen den Schlüssel zu tiefgreifendem Weinwissen bietet.<br/><br/>Unsere Weinschule in Hamburg zeichnet sich durch ein vielfältiges Lehrangebot aus, einschließlich akkreditierter Kurse des renommierten Wine and Spirit Education Trust (<a data-id=\"408\" data-type=\"page\" href=\"https://www.wineacademy.de/kurse/wset/\">WSET®</a>), spezialisierter <a href=\"https://www.wineacademy.de/kurse/weinkurse/masterclass/\" title=\"Masterclass\">Masterclasses</a> und gezielter Prüfungsvorbereitung, nicht nur für WSET®-Zertifizierungen. Ob eine Karriere mit der <a href=\"https://www.wineacademy.de/kurse/sommelier/\" title=\"IHK Sommelier\">Ausbildung </a>zur Sommelière / zum Sommelier vorantreiben, oder einfach das Weinwissen erweitern, unsere maßgeschneiderten Kurse bieten für alle etwas.<br/><br/>Neben formalen Ausbildungen lädt die Wine Academy Hamburg zu inspirierenden <a data-id=\"406\" data-type=\"page\" href=\"https://www.wineacademy.de/kurse/wine-academy/\">Weinseminaren</a>, <a data-id=\"917\" data-type=\"page\" href=\"https://www.wineacademy.de/tastings-events/\">Weintastings</a> und Events ein, bei denen in entspannter Atmosphäre neue Weine entdeckt und Austausch mit Gleichgesinnten stattfindet. Unsere erfahrenen Dozent*innen und Weinexpert*innen teilen ihr umfassendes Wissen und ihre Leidenschaft für Wein in einer unvergesslichen Ausbildungserfahrung auf höchstem Niveau.<br/><br/>Starte Deine Weinausbildung in Hamburg und werde Teil einer lebendigen Community, die Deine Liebe zum Wein teilt.<br/><br/>Egal, ob berufliche Ziele verfolgt werden oder die Leidenschaft zum Wein vertieft werden soll, unsere Weinschule bietet die Tools und das Wissen.<br/>Tritt ein in die Welt der Getränke – flexibel, individuell und auf höchstem Niveau.</p>\n<div class=\"wp-block-buttons is-content-justification-center is-layout-flex wp-container-core-buttons-is-layout-2 wp-block-buttons-is-layout-flex\">\n<div class=\"wp-block-button is-style-outline\"><a class=\"wp-block-button__link has-contrast-alt-color has-text-color has-link-color wp-element-button\" href=\"https://www.wineacademy.de/kurse/\">Unsere Kurse →</a></div>\n</div>\n</div>\n</div>\n</div>\n<div class=\"wp-block-group alignfull has-primary-background-color has-background has-global-padding is-layout-constrained wp-block-group-is-layout-constrained\" style=\"margin-top:0;padding-top:var(--wp--preset--spacing--xxl);padding-bottom:var(--wp--preset--spacing--xxl)\">\n<div class=\"wp-block-columns alignwide is-layout-flex wp-container-core-columns-is-layout-4 wp-block-columns-is-layout-flex\" style=\"padding-top:0;padding-bottom:0\">\n<div class=\"wp-block-column is-layout-flow wp-container-core-column-is-layout-8 wp-block-column-is-layout-flow\">\n<div class=\"wp-block-columns is-layout-flex wp-container-core-columns-is-layout-3 wp-block-columns-is-layout-flex\">\n<div class=\"wp-block-column is-layout-flow wp-block-column-is-layout-flow\">\n<figure class=\"wp-block-image aligncenter size-full is-resized\"><img alt=\"\" class=\"wp-image-1638\" decoding=\"async\" height=\"186\" loading=\"lazy\" src=\"https://www.wineacademy.de/wp-content/uploads/flexibilty_white.png\" style=\"width:auto;height:100px\" width=\"256\"/></figure>\n<p class=\"has-text-align-center has-base-color has-text-color has-link-color wp-elements-bca8b32d900bdd203a300205ffb98917\">Online oder Präsenz – die TeilnehmerInnen können ihre Kursformate flexibel gestalten.</p>\n</div>\n<div class=\"wp-block-column is-vertically-aligned-top is-layout-flow wp-block-column-is-layout-flow\">\n<figure class=\"wp-block-image aligncenter size-full is-resized\"><img alt=\"\" class=\"wp-image-1630\" decoding=\"async\" height=\"256\" loading=\"lazy\" sizes=\"(max-width: 256px) 100vw, 256px\" src=\"https://www.wineacademy.de/wp-content/uploads/certificate_white.png\" srcset=\"https://www.wineacademy.de/wp-content/uploads/certificate_white.png 256w, https://www.wineacademy.de/wp-content/uploads/certificate_white-200x200.png 200w\" style=\"width:auto;height:100px\" width=\"256\"/></figure>\n<p class=\"has-base-color has-text-color has-link-color wp-elements-84ae2653d4e49694c37c8fc8c243457f\">Der WSET® ist der weltweit führende Anbieter von Getränkequalifikationen. WSET®-Qualifikationen inspirieren und befähigen Getränkefachleute und -LiebhaberInnen.</p>\n</div>\n<div class=\"wp-block-column is-layout-flow wp-block-column-is-layout-flow\">\n<figure class=\"wp-block-image aligncenter size-full is-resized\"><img alt=\"\" class=\"wp-image-1628\" decoding=\"async\" height=\"256\" loading=\"lazy\" sizes=\"(max-width: 256px) 100vw, 256px\" src=\"https://www.wineacademy.de/wp-content/uploads/fingerprint_white.png\" srcset=\"https://www.wineacademy.de/wp-content/uploads/fingerprint_white.png 256w, https://www.wineacademy.de/wp-content/uploads/fingerprint_white-200x200.png 200w\" style=\"width:auto;height:100px\" width=\"256\"/></figure>\n<p class=\"has-base-color has-text-color has-link-color wp-elements-1e4e28736068479afe4df4377c427f96\">Die verschiedenen Kurse können an individuelle und persönliche Bedingungen angepasst werden.</p>\n</div>\n</div>\n</div>\n</div>\n</div>",
-      "buttonLabel": null,
-      "buttonLink": null
+      "karten": [
+        {
+          "überschrift": "Weinkurse",
+          "einleitung": null,
+          "link": "https://wineacademy.plan-p.de/kurse",
+          "textAlignment": "center",
+          "verticalAlignment": "center",
+          "darkModeEnabled": true,
+          "backgroundImage": null
+        },
+        {
+          "überschrift": "Weintastings & Events",
+          "einleitung": null,
+          "link": "https://wineacademy.plan-p.de/veranstaltungen",
+          "textAlignment": "center",
+          "verticalAlignment": "center",
+          "darkModeEnabled": true,
+          "backgroundImage": null
+        },
+        {
+          "überschrift": "WSET",
+          "einleitung": null,
+          "link": "https://wineacademy.plan-p.de/wset",
+          "textAlignment": "center",
+          "verticalAlignment": "center",
+          "darkModeEnabled": true,
+          "backgroundImage": null
+        }
+      ]
+    },
+    {
+      "__component": "landing.columns",
+      "darstellung": "plain",
+      "hintergrundfarbe": null,
+      "überschrift": "Wine Academy Hamburg – die Weinschule",
+      "überschriftStufe": "h2",
+      "spalten": [
+        {
+          "titel": "Spalte",
+          "inhalt": "<p>Die Wine Academy Hamburg ist die Adresse für erstklassige Weinausbildung. „Weinausbildung nach Maß – individuell und zeitlich flexibel gestaltet“ bedeutet ein umfangreiches Kursangebot, das sowohl Fachleuten aus der Weinbranche als auch leidenschaftlichen Endverbraucher*innen den Schlüssel zu tiefgreifendem Weinwissen bietet.</p><p>Unsere Weinschule in Hamburg zeichnet sich durch ein vielfältiges Lehrangebot aus, einschließlich akkreditierter Kurse des renommierten Wine and Spirit Education Trust (<a href=\"https://www.wineacademy.de/kurse/wset/\" rel=\"noopener noreferrer\" target=\"_blank\">WSET®</a>), spezialisierter&nbsp;<a href=\"https://www.wineacademy.de/kurse/weinkurse/masterclass/\" rel=\"noopener noreferrer\" target=\"_blank\">Masterclasses</a>&nbsp;und gezielter Prüfungsvorbereitung, nicht nur für WSET®-Zertifizierungen. Ob eine Karriere mit der&nbsp;<a href=\"https://www.wineacademy.de/kurse/sommelier/\" rel=\"noopener noreferrer\" target=\"_blank\">Ausbildung&nbsp;</a>zur Sommelière / zum Sommelier vorantreiben, oder einfach das Weinwissen erweitern, unsere maßgeschneiderten Kurse bieten für alle etwas.</p>"
+        },
+        {
+          "titel": "Spalte",
+          "inhalt": "<p>Neben formalen Ausbildungen lädt die Wine Academy Hamburg zu inspirierenden&nbsp;<a href=\"https://www.wineacademy.de/kurse/wine-academy/\" rel=\"noopener noreferrer\" target=\"_blank\">Weinseminaren</a>,&nbsp;<a href=\"https://www.wineacademy.de/tastings-events/\" rel=\"noopener noreferrer\" target=\"_blank\">Weintastings</a>&nbsp;und Events ein, bei denen in entspannter Atmosphäre neue Weine entdeckt und Austausch mit Gleichgesinnten stattfindet. Unsere erfahrenen Dozent*innen und Weinexpert*innen teilen ihr umfassendes Wissen und ihre Leidenschaft für Wein in einer unvergesslichen Ausbildungserfahrung auf höchstem Niveau.</p><p>Starte Deine Weinausbildung in Hamburg und werde Teil einer lebendigen Community, die Deine Liebe zum Wein teilt.</p><p>Egal, ob berufliche Ziele verfolgt werden oder die Leidenschaft zum Wein vertieft werden soll, unsere Weinschule bietet die Tools und das Wissen.</p><p>Tritt ein in die Welt der Getränke – flexibel, individuell und auf höchstem Niveau.</p>"
+        }
+      ]
+    },
+    {
+      "__component": "landing.trennlinie",
+      "breite": "weit"
+    },
+    {
+      "__component": "landing.seminar-finder",
+      "überschrift": "Alle Seminare auf einen Blick",
+      "überschriftStufe": "h2",
+      "hintergrundfarbe": null,
+      "standardKategorie": null,
+      "sichtbareFilter": []
     }
   ],
   "seo": {

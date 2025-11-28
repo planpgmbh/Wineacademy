@@ -114,8 +114,23 @@ function SeminarListItem({ seminar, buttonText, isDarkBackground, onLocationClic
             className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-sm text-base-content/60">
-            Kein Bild verfügbar
+          <div
+            className="flex h-full w-full items-center justify-center"
+            style={{
+              backgroundImage: "var(--hero-fallback-gradient)",
+              backgroundSize: "cover",
+              backgroundPosition: "center"
+            }}
+          >
+            <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-white/70 shadow-md backdrop-blur-sm">
+              <Image
+                src="/icons/WineAcademy.png"
+                alt="Wine Academy Logo"
+                width={50}
+                height={50}
+                className="h-[50px] w-[50px] object-contain"
+              />
+            </div>
           </div>
         )}
       </div>
