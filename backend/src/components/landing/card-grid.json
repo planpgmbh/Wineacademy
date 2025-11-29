@@ -5,6 +5,12 @@
     "description": "Mehrspaltiges Grid aus einfachen Karten."
   },
   "attributes": {
+    "karten": {
+      "type": "component",
+      "repeatable": true,
+      "component": "landing.card",
+      "min": 1
+    },
     "hintergrundfarbe": {
       "type": "enumeration",
       "enum": [
@@ -18,12 +24,6 @@
         "wine-blue-darker",
         "wine-blue-darkest"
       ]
-    },
-    "karten": {
-      "type": "component",
-      "repeatable": true,
-      "component": "landing.card",
-      "min": 1
     }
   }
 }

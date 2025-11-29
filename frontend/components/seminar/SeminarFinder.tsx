@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useMemo, useState, type JSX } from "react";
+import { useCallback, useEffect, useMemo, useState, type JSX } from "react";
 
 import type { SeminarFinderCategory, SeminarFinderLocation, SeminarFinderSeminar } from "@/lib/seminar-finder";
 import {
@@ -123,6 +123,22 @@ export function SeminarFinder({
 
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [selectedLocation, setSelectedLocation] = useState<string>(initialLocation);
+  useEffect(() => {
+    const handler = (evt: Event) => {
+      const detail = (evt as CustomEvent)?.detail as { slug?: string | null } | undefined;
+      const slug = detail?.slug;
+      if (!slug) {
+        return;
+      }
+      const exists = availableCategories.some((category) => category.slug === slug);
+      if (!exists) {
+        return;
+      }
+      setSelectedCategory(slug);
+    };
+    window.addEventListener("seminar-finder:set-category", handler as EventListener);
+    return () => window.removeEventListener("seminar-finder:set-category", handler as EventListener);
+  }, [availableCategories]);
 
   const { categoriesWithSeminars, fallbackCategories } = useMemo(() => {
     const baseCategories =
@@ -186,7 +202,7 @@ export function SeminarFinder({
     .trim();
 
   return (
-    <section id={id ?? undefined} style={style}>
+    <section id={id ?? undefined} style={style} className="scroll-mt-28 md:scroll-mt-36">
       <div className="mx-auto max-w-6xl px-6 py-[var(--section-padding-y)] md:px-8 md:py-[var(--section-padding-y-lg)]">
         <div className="space-y-0 md:space-y-10">
           {showHeadline ? (

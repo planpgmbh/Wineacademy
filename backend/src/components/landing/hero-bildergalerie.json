@@ -1,0 +1,21 @@
+{
+  "collectionName": "components_landing_hero_bildergalerien",
+  "info": {
+    "displayName": "Hero-Bildergalerie",
+    "description": "Bildergalerie für den Hero mit Rotation."
+  },
+  "options": {},
+  "attributes": {
+    "bilder": {
+      "type": "media",
+      "allowedTypes": ["images"],
+      "multiple": true
+    },
+    "rotationSekunden": {
+      "type": "integer",
+      "default": 4,
+      "min": 1,
+      "max": 60
+    }
+  }
+}

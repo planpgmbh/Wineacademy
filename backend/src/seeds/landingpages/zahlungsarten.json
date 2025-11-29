@@ -3,11 +3,11 @@
   "slug": "zahlungsarten",
   "abschnitte": [
     {
-      "__component": "landing.hero-small",
+      "__component": "landing.hero",
+      "modus": "klein",
       "überschrift": "Zahlungsarten",
       "überschriftStufe": "h1",
-      "einleitung": "Übersicht über akzeptierte Zahlungsmethoden für Kurse, Events und Shop-Produkte.",
-      "hintergrundbild": null
+      "einleitung": "Übersicht über akzeptierte Zahlungsmethoden für Kurse, Events und Shop-Produkte."
     },
     {
       "__component": "landing.columns",

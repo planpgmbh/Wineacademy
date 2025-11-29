@@ -12,8 +12,15 @@
     "einleitung": {
       "type": "string"
     },
-    "link": {
-      "type": "string"
+    "button": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.button"
+    },
+    "seminarfinderKategorie": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::kategorie.kategorie"
     },
     "textAlignment": {
       "type": "enumeration",

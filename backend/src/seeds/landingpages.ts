@@ -9,6 +9,14 @@ type LandingPageSeed = {
   seo?: Record<string, unknown> | null;
 };
 
+async function findUploadIdByName(strapi: any, name: string): Promise<number | null> {
+  const file = await strapi.db.query('plugin::upload.file').findOne({
+    where: { name },
+    select: ['id'],
+  });
+  return file?.id ?? null;
+}
+
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (char) => {
     switch (char) {
@@ -28,36 +36,12 @@ function escapeHtml(value: string): string {
   });
 }
 
-function transformTextBlock(section: Record<string, unknown>): Record<string, unknown> {
-  const next = { ...section } as Record<string, unknown>;
-  const headlineRaw = typeof next.headline === 'string' ? next.headline.trim() : '';
-  const headline = headlineRaw.toLowerCase() === 'textblock' ? '' : headlineRaw;
-  const level = typeof next.headlineLevel === 'string' ? next.headlineLevel : 'h2';
-  const existing = typeof next.einleitung === 'string' ? next.einleitung.trim() : '';
-
-  delete next.headline;
-  delete next.headlineLevel;
-
-  if (headline.length === 0) {
-    next.einleitung = existing.length > 0 ? existing : null;
-    return next;
-  }
-
-  const safeHeadline = `<${level}>${escapeHtml(headline)}</${level}>`;
-  next.einleitung = existing.length > 0 ? `${safeHeadline}\n${existing}` : safeHeadline;
-  return next;
-}
-
 function transformSection(section: Record<string, unknown>): Record<string, unknown> {
   if (!section || typeof section !== 'object') {
     return section;
   }
 
   const component = (section as any).__component;
-  if (component === 'landing.text-block') {
-    return transformTextBlock(section);
-  }
-
   const next: Record<string, unknown> = { ...section };
   for (const key of Object.keys(next)) {
     const value = next[key];
@@ -69,6 +53,46 @@ function transformSection(section: Record<string, unknown>): Record<string, unkn
   }
 
   return next;
+}
+
+async function transformSectionWithMedia(
+  strapi: any,
+  section: Record<string, unknown>
+): Promise<Record<string, unknown>> {
+  const transformed = transformSection(section);
+
+  if (transformed.__component === 'landing.hero') {
+    const hero = { ...transformed } as Record<string, any>;
+    // Video component: map string -> upload id
+    if (hero.video) {
+      const video = { ...hero.video };
+      if (typeof video.video === 'string' && video.video.trim().length > 0) {
+        const mediaId = await findUploadIdByName(strapi, video.video.trim());
+        video.video = mediaId ?? null;
+      }
+      if (typeof video.hintergrundbild === 'string' && video.hintergrundbild.trim().length > 0) {
+        const mediaId = await findUploadIdByName(strapi, video.hintergrundbild.trim());
+        video.hintergrundbild = mediaId ?? null;
+      }
+      hero.video = video;
+    }
+    // Bildergalerie: map string names to ids
+    if (hero.bildergalerie && Array.isArray(hero.bildergalerie.bilder)) {
+      const bilder: any[] = [];
+      for (const item of hero.bildergalerie.bilder) {
+        if (typeof item === 'string') {
+          const mediaId = await findUploadIdByName(strapi, item.trim());
+          bilder.push(mediaId ?? null);
+        } else {
+          bilder.push(item);
+        }
+      }
+      hero.bildergalerie = { ...hero.bildergalerie, bilder };
+    }
+    return hero;
+  }
+
+  return transformed;
 }
 
 async function upsertLandingPage(strapi: any, values: LandingPageSeed) {
@@ -125,9 +149,13 @@ export async function seedLandingPages(strapi: any, log: (msg: string) => void) 
         log(`Landingpage-Datei ${file} hat kein gültiges Format und wird übersprungen.`);
         continue;
       }
+      const transformedSections: Array<Record<string, unknown>> = [];
+      for (const section of parsed.abschnitte) {
+        transformedSections.push(await transformSectionWithMedia(strapi, section));
+      }
       const transformed: LandingPageSeed = {
         ...parsed,
-        abschnitte: parsed.abschnitte.map((section) => transformSection(section))
+        abschnitte: transformedSections
       };
       const id = await upsertLandingPage(strapi, transformed);
       log(`Landingpage '${parsed.titel}' aktualisiert (ID ${id})`);

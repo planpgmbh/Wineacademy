@@ -1,11 +1,49 @@
 {
   "name": "For Professionals",
   "slug": "for-professionals",
-  "beschreibung": "Die Wine Academy Hamburg ist die Weinschule für exklusive Weinseminare , erstklassige Weintastings und hochwertige Sommelier-Ausbildungen . Werde Teil der faszinierenden Welt des Weins und erlebe unvergessliche Geschmackserlebnisse bei unseren Weinseminaren und Weintastings in Hamburg.\n\nOb  Weinseminar, Weintasting  oder einer fundierten Sommelier-Ausbildung, bei uns findet jeder das passende Angebot. Unsere erfahrenen Dozenten führen Dich durch eine breite Palette von Themen und bereiten Dich gezielt auf eine erfolgreiche Karriere im Weinbereich vor.\n\nErlebe die Aromen und Nuancen erstklassiger Weine und lasse Dich von unseren Weinexperten in die Geheimnisse des Weins einführen. Unsere praxisorientierten Kurse helfen Dir, Dich auf Prüfungen wie WSET und eine zukünftige Sommelier-Ausbildung (ab Herbst 2024) vorzubereiten. Bereichere Dein Weinwissen und erleben Sie unvergessliche Weinmomente bei der Wine Academy Hamburg – Ihrer führenden Adresse für Weinseminare, Weintastings und Sommelier-Ausbildungen in Hamburg.",
   "kurzbeschreibung": "Die Wine Academy Hamburg ist die Weinschule für exklusive Weinseminare , erstklassige Weintastings und hochwertige Sommelier-Ausbildungen . Werde Teil der faszinierenden Welt des Weins und erlebe unvergessliche Geschmackserlebnisse bei …",
-  "heroDarkMode": false,
   "seo": {
     "title": "For Professionals",
     "description": "Entdecke exklusive Weinschulungen, Weinseminare und Weintastings. Werde Teil der faszinierenden Welt des Weins und bereichere dein Weinwissen."
-  }
+  },
+  "abschnitte": [
+    {
+      "__component": "landing.hero",
+      "modus": "karussell",
+      "überschrift": "For Professionals",
+      "überschriftStufe": "h1",
+      "einleitung": "<p>Die Wine Academy Hamburg ist die Weinschule für exklusive Weinseminare , erstklassige Weintastings und hochwertige Sommelier-Ausbildungen . Werde Teil der faszinierenden Welt des Weins und erlebe unvergessliche Geschmackserlebnisse bei unseren Weinseminaren und Weintastings in Hamburg.\n\nOb  Weinseminar, Weintasting  oder einer fundierten Sommelier-Ausbildung, bei uns findet jeder das passende Angebot. Unsere erfahrenen Dozenten führen Dich durch eine breite Palette von Themen und bereiten Dich gezielt auf eine erfolgreiche Karriere im Weinbereich vor.\n\nErlebe die Aromen und Nuancen erstklassiger Weine und lasse Dich von unseren Weinexperten in die Geheimnisse des Weins einführen. Unsere praxisorientierten Kurse helfen Dir, Dich auf Prüfungen wie WSET und eine zukünftige Sommelier-Ausbildung (ab Herbst 2024) vorzubereiten. Bereichere Dein Weinwissen und erleben Sie unvergessliche Weinmomente bei der Wine Academy Hamburg – Ihrer führenden Adresse für Weinseminare, Weintastings und Sommelier-Ausbildungen in Hamburg.</p>",
+      "bildergalerie": {
+        "bilder": [],
+        "rotationSekunden": 8
+      }
+    },
+    {
+      "__component": "landing.seminar-liste",
+      "überschrift": "Unsere nächsten For Professionals",
+      "überschriftStufe": "h3",
+      "hintergrundfarbe": null,
+      "einleitung": null,
+      "anzahl": 4,
+      "mehrButtonText": "Mehr laden",
+      "mehrButtonAnzeigen": true,
+      "seminarkategorie": {
+        "slug": "for-professionals"
+      }
+    },
+    {
+      "__component": "landing.trennlinie",
+      "breite": "weit"
+    },
+    {
+      "__component": "landing.seminar-finder",
+      "überschrift": "Weitere Seminare",
+      "überschriftStufe": "h2",
+      "hintergrundfarbe": null,
+      "standardKategorie": {
+        "slug": "for-professionals"
+      },
+      "sichtbareFilter": []
+    }
+  ]
 }

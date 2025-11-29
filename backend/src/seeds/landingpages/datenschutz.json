@@ -3,11 +3,11 @@
   "slug": "datenschutz",
   "abschnitte": [
     {
-      "__component": "landing.hero-small",
+      "__component": "landing.hero",
+      "modus": "klein",
       "überschrift": "Datenschutz",
       "überschriftStufe": "h1",
-      "einleitung": "Transparente Informationen zur Verarbeitung personenbezogener Daten.",
-      "hintergrundbild": null
+      "einleitung": "Transparente Informationen zur Verarbeitung personenbezogener Daten."
     },
     {
       "__component": "landing.columns",

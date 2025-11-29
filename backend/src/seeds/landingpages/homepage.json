@@ -4,13 +4,23 @@
   "abschnitte": [
     {
       "__component": "landing.hero",
+      "modus": "video",
       "überschrift": "Wein neu entdecken",
       "überschriftStufe": "h1",
       "einleitung": "erleben – erfahren – genießen Weinausbildung nach Maß – individuell und zeitlich flexibel gestaltet",
-      "buttonText": "Kurse entdecken",
-      "buttonLink": "/kurse",
-      "heroVideo": null,
-      "heroPosterBild": null
+      "button": {
+        "name": "Kurse entdecken",
+        "link": "/kurse",
+        "stil": "primary"
+      },
+      "video": {
+        "video": "WineAcademy-Header_final.mp4",
+        "hintergrundbild": null
+      },
+      "bildergalerie": {
+        "bilder": [],
+        "rotationSekunden": 8
+      }
     },
     {
       "__component": "landing.card-grid",
@@ -19,29 +29,41 @@
         {
           "überschrift": "Weinkurse",
           "einleitung": "Fundiertes Wissen von den Grundlagen bis zur Vertiefung.",
-          "link": "/kurse/weinkurse",
           "textAlignment": "center",
           "verticalAlignment": "center",
           "darkModeEnabled": true,
-          "backgroundImage": null
+          "backgroundImage": null,
+          "button": {
+            "name": "Weinkurse",
+            "link": "/kurse/weinkurse",
+            "linkExtern": false
+          }
         },
         {
           "überschrift": "Tasting & Events",
           "einleitung": null,
-          "link": "https://wineacademy.plan-p.de/veranstaltungen",
           "textAlignment": "center",
           "verticalAlignment": "center",
           "darkModeEnabled": true,
-          "backgroundImage": null
+          "backgroundImage": null,
+          "button": {
+            "name": "Tasting & Events",
+            "link": "https://wineacademy.plan-p.de/veranstaltungen",
+            "linkExtern": false
+          }
         },
         {
           "überschrift": "WSET® ",
           "einleitung": "International anerkannte Abschlüsse – Level 1 bis Level 3.",
-          "link": "/wset",
           "textAlignment": "center",
           "verticalAlignment": "center",
           "darkModeEnabled": true,
-          "backgroundImage": null
+          "backgroundImage": null,
+          "button": {
+            "name": "WSET® ",
+            "link": "/wset",
+            "linkExtern": false
+          }
         }
       ]
     },
@@ -73,7 +95,6 @@
       "hintergrundfarbe": null,
       "einleitung": null,
       "anzahl": 6,
-      "buttonText": "Zum Seminar",
       "mehrButtonText": "Mehr laden",
       "mehrButtonAnzeigen": true,
       "seminarkategorie": null

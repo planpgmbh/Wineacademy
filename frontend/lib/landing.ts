@@ -79,34 +79,20 @@ type StrapiHeroComponent = {
   überschrift: string;
   überschriftStufe?: "h1" | "h2" | "h3" | "h4" | null;
   einleitung?: string | null;
-  heroVideo?: StrapiUploadFile | null;
-  heroPosterBild?: StrapiUploadFile | null;
-  buttonText?: string | null;
-  buttonLink?: string | null;
-};
-
-type StrapiHeroCarouselComponent = {
-  __component: "landing.hero-carousel";
-  überschrift: string;
-  überschriftStufe?: "h1" | "h2" | "h3" | "h4" | null;
-  einleitung?: string | null;
-  rotationSekunden?: number | null;
-  bilder?: StrapiUploadFile[] | null;
-};
-
-type StrapiHeroSmallComponent = {
-  __component: "landing.hero-small";
-  überschrift: string;
-  überschriftStufe?: "h1" | "h2" | "h3" | "h4" | null;
-  einleitung?: string | null;
-  hintergrundbild?: StrapiUploadFile | null;
-};
-
-type StrapiHeroBlankComponent = {
-  __component: "landing.hero-blank";
-  überschrift: string;
-  überschriftStufe?: "h1" | "h2" | "h3" | "h4" | null;
-  einleitung?: string | null;
+  bildergalerie?: {
+    bilder?: (StrapiUploadFile | string | number | null)[] | null;
+    rotationSekunden?: number | null;
+  } | null;
+  video?: {
+    video?: StrapiUploadFile | null;
+    hintergrundbild?: StrapiUploadFile | null;
+  } | null;
+  button?: {
+    name?: string | null;
+    link?: string | null;
+    linkExtern?: boolean | null;
+    stil?: string | null;
+  } | null;
 };
 
 type StrapiBildergalerieComponent = {
@@ -134,6 +120,12 @@ type StrapiCardComponent = {
   überschrift?: string | null;
   einleitung?: string | null;
   link?: string | null;
+  seminarfinderKategorie?: StrapiCategorySummary | null;
+  button?: {
+    name?: string | null;
+    link?: string | null;
+    stil?: string | null;
+  } | null;
   textAlignment?: "left" | "center" | "right" | null;
   verticalAlignment?: "top" | "center" | "bottom" | null;
   backgroundImage?: StrapiUploadFile | null;
@@ -164,17 +156,6 @@ type StrapiColumnsComponent = {
 type StrapiTrennlinieComponent = {
   __component: "landing.trennlinie";
   breite?: "normal" | "weit" | null;
-};
-
-type StrapiTextBlockComponent = {
-  __component: "landing.text-block";
-  hintergrundfarbe?: string | null;
-  einleitung?: string | null;
-  buttonText?: string | null;
-  buttonLink?: string | null;
-  /** Legacy-Felder – werden zu HTML migriert */
-  headline?: string | null;
-  headlineLevel?: "h2" | "h3" | "h4" | null;
 };
 
 type StrapiTabItemComponent = {
@@ -225,15 +206,11 @@ type StrapiSeminarProductCardsComponent = {
 
 export type StrapiLandingComponent =
   | StrapiHeroComponent
-  | StrapiHeroCarouselComponent
-  | StrapiHeroSmallComponent
-  | StrapiHeroBlankComponent
   | StrapiBildergalerieComponent
   | StrapiSeminarListComponent
   | StrapiCardGridComponent
   | StrapiColumnsComponent
   | StrapiTrennlinieComponent
-  | StrapiTextBlockComponent
   | StrapiTabsComponent
   | StrapiSeminarFinderComponent
   | StrapiSeminarProductCardsComponent
@@ -265,6 +242,22 @@ const normaliseString = (value: string | null | undefined): string => {
 const normaliseOptionalString = (value: string | null | undefined): string | null => {
   const trimmed = normaliseString(value);
   return trimmed.length > 0 ? trimmed : null;
+};
+
+const pickBestImageUrl = (
+  file?: StrapiUploadFile | null,
+  preferredOrder: string[] = ["large", "medium", "small", "thumbnail"]
+): string | null => {
+  if (!file) return null;
+  const formats = (file as any)?.formats ?? null;
+  for (const key of preferredOrder) {
+    const entry = formats?.[key];
+    if (entry?.url) {
+      const resolved = mediaUrl(entry.url);
+      if (resolved) return resolved;
+    }
+  }
+  return mediaUrl(file.url);
 };
 
 const slugify = (value: string): string => {
@@ -391,6 +384,12 @@ export type LandingHeroCarouselSection = {
     src: string;
     alt: string;
   }[];
+  button?: {
+    name: string;
+    link: string;
+    linkExtern?: boolean | null;
+    stil?: string | null;
+  } | null;
 };
 
 export type LandingHeroSmallSection = {
@@ -402,6 +401,12 @@ export type LandingHeroSmallSection = {
     src: string;
     alt: string;
   } | null;
+  button?: {
+    name: string;
+    link: string;
+    linkExtern?: boolean | null;
+    stil?: string | null;
+  } | null;
 };
 
 export type LandingHeroBlankSection = {
@@ -409,6 +414,12 @@ export type LandingHeroBlankSection = {
   überschrift: string;
   überschriftStufe: "h1" | "h2" | "h3" | "h4";
   einleitung?: string | null;
+  button?: {
+    name: string;
+    link: string;
+    linkExtern?: boolean | null;
+    stil?: string | null;
+  } | null;
 };
 
 export type LandingBildergalerieSection = {
@@ -428,8 +439,12 @@ export type LandingHeroVideoSection = {
   einleitung?: string | null;
   videoUrl?: string | null;
   posterUrl?: string | null;
-  buttonText?: string | null;
-  buttonLink?: string | null;
+  button?: {
+    name: string;
+    link: string;
+    linkExtern?: boolean | null;
+    stil?: string | null;
+  } | null;
 };
 
 export type LandingCardGridSection = {
@@ -440,6 +455,12 @@ export type LandingCardGridSection = {
     überschrift: string;
     einleitung?: string | null;
     link?: string | null;
+    seminarFinderCategorySlug?: string | null;
+    button?: {
+      name: string;
+      link: string;
+      stil?: string | null;
+    } | null;
     textAlign: "left" | "center" | "right";
     verticalAlign: "top" | "center" | "bottom";
     backgroundImage?: {
@@ -472,14 +493,6 @@ export type LandingDividerSection = {
   breite: "normal" | "weit";
 };
 
-export type LandingTextBlockSection = {
-  type: "text-block";
-  hintergrund: SectionBackgroundKey | null;
-  html?: string | null;
-  buttonText?: string | null;
-  buttonLink?: string | null;
-};
-
 export type LandingSeminarListSection = {
   type: "seminar-list";
   überschrift?: string | null;
@@ -490,12 +503,12 @@ export type LandingSeminarListSection = {
   mehrButtonAnzeigen: boolean;
   buttonText: string;
   mehrButtonText: string;
-  category: {
+  category?: {
     id: number;
     name: string;
     slug: string;
     shortDescription?: string | null;
-  };
+  } | null;
 };
 
 export type LandingSeminarProductCardsSection = {
@@ -558,7 +571,6 @@ export type LandingSection =
   | LandingCardGridSection
   | LandingColumnsSection
   | LandingDividerSection
-  | LandingTextBlockSection
   | LandingSeminarListSection
   | LandingSeminarProductCardsSection
   | LandingTabsSection
@@ -571,24 +583,21 @@ export type LandingPage = {
   sections: LandingSection[];
 };
 
-const transformHeroCarousel = (component: StrapiHeroCarouselComponent): LandingHeroCarouselSection => {
-  const rotationSeconds = typeof component.rotationSekunden === "number" ? component.rotationSekunden : null;
-  const rotationSekunden = rotationSeconds && rotationSeconds > 0 ? rotationSeconds : 8;
+const transformHeroCarousel = (component: StrapiHeroComponent): LandingHeroCarouselSection => {
+  const rotationSeconds =
+    typeof component.bildergalerie?.rotationSekunden === "number" ? component.bildergalerie.rotationSekunden : null;
+  const rotationSekunden = rotationSeconds && rotationSeconds > 0 ? rotationSeconds : 4;
 
   const bilder =
-    component.bilder
+    component.bildergalerie?.bilder
       ?.map((file) => {
-        if (!file?.url) {
-          return null;
+        if (!file) return null;
+        if (typeof (file as any).url === "string") {
+          const src = pickBestImageUrl(file as any);
+          if (!src) return null;
+          return { src, alt: toSlideAlt(file as any) };
         }
-        const src = mediaUrl(file.url);
-        if (!src) {
-          return null;
-        }
-        return {
-          src,
-          alt: toSlideAlt(file)
-        };
+        return null;
       })
       .filter((slide): slide is { src: string; alt: string } => Boolean(slide)) ?? [];
 
@@ -598,16 +607,24 @@ const transformHeroCarousel = (component: StrapiHeroCarouselComponent): LandingH
     überschriftStufe: normaliseHeroHeadingLevel(component.überschriftStufe ?? null),
     einleitung: normaliseRichText(component.einleitung ?? null),
     rotationSekunden,
-    bilder
+    bilder,
+    button: component.button
+      ? {
+          name: normaliseString(component.button.name ?? "") || "Mehr",
+          link: normaliseString(component.button.link ?? "#") || "#",
+          linkExtern: component.button.linkExtern ?? false,
+          stil: component.button.stil ?? null
+        }
+      : null
   };
 };
 
-const transformHeroSmall = (component: StrapiHeroSmallComponent): LandingHeroSmallSection => {
-  const media = component.hintergrundbild ?? null;
+const transformHeroSmall = (component: StrapiHeroComponent): LandingHeroSmallSection => {
+  const media = component.video?.hintergrundbild ?? null;
   let bild: LandingHeroSmallSection["bild"] = null;
 
   if (media?.url) {
-    const src = mediaUrl(media.url);
+    const src = pickBestImageUrl(media);
     if (src) {
       bild = {
         src,
@@ -625,12 +642,20 @@ const transformHeroSmall = (component: StrapiHeroSmallComponent): LandingHeroSma
   };
 };
 
-const transformHeroBlank = (component: StrapiHeroBlankComponent): LandingHeroBlankSection => {
+const transformHeroBlank = (component: StrapiHeroComponent): LandingHeroBlankSection => {
   return {
     type: "hero-blank",
     überschrift: normaliseString(component.überschrift) || "Hero",
     überschriftStufe: normaliseHeroHeadingLevel(component.überschriftStufe ?? null),
-    einleitung: normaliseRichText(component.einleitung ?? null)
+    einleitung: normaliseRichText(component.einleitung ?? null),
+    button: component.button
+      ? {
+          name: normaliseString(component.button.name ?? "") || "Mehr",
+          link: normaliseString(component.button.link ?? "#") || "#",
+          linkExtern: component.button.linkExtern ?? false,
+          stil: component.button.stil ?? null
+        }
+      : null
   };
 };
 
@@ -645,7 +670,7 @@ const transformBildergalerie = (component: StrapiBildergalerieComponent): Landin
         if (!file?.url) {
           return null;
         }
-        const src = mediaUrl(file.url);
+        const src = pickBestImageUrl(file);
         if (!src) {
           return null;
         }
@@ -664,17 +689,11 @@ const transformBildergalerie = (component: StrapiBildergalerieComponent): Landin
   };
 };
 
-const formatMediaUrl = (file?: StrapiUploadFile | null): string | null => {
-  if (!file?.url) {
-    return null;
-  }
-  const resolved = mediaUrl(file.url);
-  return resolved ?? file.url;
-};
+const formatMediaUrl = (file?: StrapiUploadFile | null): string | null => pickBestImageUrl(file);
 
 const transformHeroVideo = (component: StrapiHeroComponent): LandingHeroVideoSection => {
-  const videoUrl = formatMediaUrl(component.heroVideo ?? null);
-  const posterUrl = formatMediaUrl(component.heroPosterBild ?? null);
+  const videoUrl = formatMediaUrl(component.video?.video ?? null);
+  const posterUrl = formatMediaUrl(component.video?.hintergrundbild ?? null);
 
   return {
     type: "hero-video",
@@ -683,9 +702,42 @@ const transformHeroVideo = (component: StrapiHeroComponent): LandingHeroVideoSec
     einleitung: normaliseRichText(component.einleitung ?? null),
     videoUrl,
     posterUrl,
-    buttonText: normaliseOptionalString(component.buttonText ?? null),
-    buttonLink: normaliseOptionalString(component.buttonLink ?? null)
+    button: component.button
+      ? {
+          name: normaliseString(component.button.name ?? "") || "Mehr",
+          link: normaliseString(component.button.link ?? "#") || "#",
+          linkExtern: component.button.linkExtern ?? false,
+          stil: component.button.stil ?? null
+        }
+      : null
   };
+};
+
+const transformUnifiedHero = (component: StrapiHeroComponent): LandingSection => {
+  const hasVideo = Boolean(component.video?.video);
+  const hasGallery = Array.isArray(component.bildergalerie?.bilder) && component.bildergalerie!.bilder!.length > 0;
+
+  if (hasVideo) {
+    return transformHeroVideo(component);
+  }
+  if (hasGallery) {
+    return transformHeroCarousel({
+      __component: "landing.hero",
+      überschrift: component.überschrift,
+      überschriftStufe: component.überschriftStufe,
+      einleitung: component.einleitung,
+      bildergalerie: component.bildergalerie,
+      button: component.button
+    } as any);
+  }
+  // Fallback: Blank Hero
+  return transformHeroBlank({
+    __component: "landing.hero-blank",
+    überschrift: component.überschrift,
+    überschriftStufe: component.überschriftStufe,
+    einleitung: component.einleitung,
+    button: component.button ?? null
+  } as any);
 };
 
 const transformSeminarList = (
@@ -694,18 +746,11 @@ const transformSeminarList = (
   const anzahl = typeof component.anzahl === "number" && component.anzahl > 0 ? component.anzahl : 6;
   const category = component.seminarkategorie;
 
-  if (!category || typeof category.id !== "number" || category.id <= 0) {
-    return {
-      type: "unknown",
-      component: component.__component,
-      data: {
-        reason: "missing-category"
-      }
-    };
-  }
-
-  const name = normaliseString(category.name);
-  const slug = normaliseSlug(category.slug, name, category.id);
+  const name = category ? normaliseString(category.name) : "";
+  const slug =
+    category && typeof category.id === "number" && category.id > 0
+      ? normaliseSlug(category.slug, name, category.id)
+      : null;
 
   return {
     type: "seminar-list",
@@ -718,10 +763,10 @@ const transformSeminarList = (
     buttonText: normaliseString(component.buttonText ?? null) || "Zum Seminar",
     mehrButtonText: normaliseString(component.mehrButtonText ?? null) || "Mehr laden",
     category: {
-      id: category.id,
-      name: name.length > 0 ? name : "Kategorie",
-      slug,
-      shortDescription: normaliseOptionalString(category.kurzbeschreibung ?? null)
+      id: category?.id ?? -1,
+      name: name.length > 0 ? name : "Alle Seminare",
+      slug: slug ?? "",
+      shortDescription: normaliseOptionalString(category?.kurzbeschreibung ?? null)
     }
   };
 };
@@ -730,7 +775,7 @@ const formatProductImage = (media?: StrapiUploadFile | null): { src: string; alt
   if (!media?.url) {
     return null;
   }
-  const src = mediaUrl(media.url);
+  const src = pickBestImageUrl(media);
   if (!src) {
     return null;
   }
@@ -817,7 +862,8 @@ const transformCardGrid = (component: StrapiCardGridComponent): LandingCardGridS
         let backgroundImage: { src: string; alt: string } | null = null;
         const media = card?.backgroundImage ?? null;
         if (media?.url) {
-          const src = mediaUrl(media.url);
+          // Für Kacheln reicht das kleine Format (500px), danach steigern
+          const src = pickBestImageUrl(media, ["small", "medium", "large", "thumbnail"]);
           if (src) {
             backgroundImage = {
               src,
@@ -831,6 +877,15 @@ const transformCardGrid = (component: StrapiCardGridComponent): LandingCardGridS
           überschrift,
           einleitung: normaliseOptionalString(card?.einleitung ?? null),
           link: normaliseOptionalString(card?.link ?? null),
+          seminarFinderCategorySlug: normaliseOptionalString(card?.seminarfinderKategorie?.slug ?? null),
+          button:
+            card?.button && normaliseOptionalString(card.button.link ?? null)
+              ? {
+                  name: normaliseString(card.button.name ?? "") || "Mehr erfahren",
+                  link: normaliseString(card.button.link ?? ""),
+                  stil: card.button.stil ?? null
+                }
+              : null,
           textAlign: normaliseCardTextAlignment(card?.textAlignment ?? null),
           verticalAlign: normaliseCardVerticalAlignment(card?.verticalAlignment ?? null),
           backgroundImage,
@@ -855,7 +910,7 @@ const transformColumnsSection = (component: StrapiColumnsComponent): LandingColu
         let bild: { src: string; alt: string } | null = null;
         const media = column?.bild ?? null;
         if (media?.url) {
-          const src = mediaUrl(media.url);
+          const src = pickBestImageUrl(media);
           if (src) {
             bild = {
               src,
@@ -891,32 +946,6 @@ const transformDividerSection = (component: StrapiTrennlinieComponent): LandingD
     type: "divider",
     hintergrund: "neutral",
     breite: component.breite === "weit" ? "weit" : "normal"
-  };
-};
-
-const transformTextBlock = (component: StrapiTextBlockComponent): LandingTextBlockSection => {
-  const hintergrund = normaliseBackgroundKey(component.hintergrundfarbe ?? null);
-  const richText = normaliseRichText(component.einleitung ?? null);
-  const rawHeading = normaliseString(component.headline ?? null);
-  const isPlaceholderHeading = rawHeading.toLowerCase() === "textblock" || rawHeading.length === 0;
-  const heading = isPlaceholderHeading ? "" : rawHeading;
-  const headingLevel = normaliseHeadingLevel(component.headlineLevel ?? null);
-
-  const headingHtml = heading.length > 0 ? `<${headingLevel}>${escapeHtml(heading)}</${headingLevel}>` : "";
-  const htmlParts: string[] = [];
-  if (headingHtml.length > 0) {
-    htmlParts.push(headingHtml);
-  }
-  if (richText) {
-    htmlParts.push(richText);
-  }
-
-  return {
-    type: "text-block",
-    hintergrund,
-    html: htmlParts.length > 0 ? htmlParts.join("\n") : null,
-    buttonText: normaliseOptionalString(component.buttonText ?? null),
-    buttonLink: normaliseOptionalString(component.buttonLink ?? null)
   };
 };
 
@@ -968,16 +997,7 @@ const transformSeminarFinderSection = (
 
 const transformSection = (component: StrapiLandingComponent): LandingSection => {
   if (component.__component === "landing.hero") {
-    return transformHeroVideo(component as StrapiHeroComponent);
-  }
-  if (component.__component === "landing.hero-carousel") {
-    return transformHeroCarousel(component as StrapiHeroCarouselComponent);
-  }
-  if (component.__component === "landing.hero-small") {
-    return transformHeroSmall(component as StrapiHeroSmallComponent);
-  }
-  if (component.__component === "landing.hero-blank") {
-    return transformHeroBlank(component as StrapiHeroBlankComponent);
+    return transformUnifiedHero(component as StrapiHeroComponent);
   }
   if (component.__component === "landing.bildergalerie") {
     return transformBildergalerie(component as StrapiBildergalerieComponent);
@@ -996,9 +1016,6 @@ const transformSection = (component: StrapiLandingComponent): LandingSection => 
   }
   if (component.__component === "landing.trennlinie") {
     return transformDividerSection(component as StrapiTrennlinieComponent);
-  }
-  if (component.__component === "landing.text-block") {
-    return transformTextBlock(component as StrapiTextBlockComponent);
   }
   if (component.__component === "landing.tabs") {
     return transformTabsSection(component as StrapiTabsComponent);

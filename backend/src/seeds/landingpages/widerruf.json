@@ -3,11 +3,11 @@
   "slug": "widerruf",
   "abschnitte": [
     {
-      "__component": "landing.hero-small",
+      "__component": "landing.hero",
+      "modus": "klein",
       "überschrift": "Widerrufsbelehrung",
       "überschriftStufe": "h1",
-      "einleitung": "Informationen zu Widerrufsrecht, Fristen und Rückabwicklung für Verbraucherverträge.",
-      "hintergrundbild": null
+      "einleitung": "Informationen zu Widerrufsrecht, Fristen und Rückabwicklung für Verbraucherverträge."
     },
     {
       "__component": "landing.columns",

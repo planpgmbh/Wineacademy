@@ -18,22 +18,22 @@
       "targetField": "name",
       "required": true
     },
-    "beschreibung": {
-      "type": "text"
-    },
     "kurzbeschreibung": {
       "type": "string"
     },
-    "hintergrundbild": {
-      "type": "media",
-      "allowedTypes": [
-        "images"
-      ],
-      "multiple": false
-    },
-    "heroDarkMode": {
-      "type": "boolean",
-      "default": false
+    "abschnitte": {
+      "type": "dynamiczone",
+      "components": [
+        "landing.hero",
+        "landing.bildergalerie",
+        "landing.card-grid",
+        "landing.columns",
+        "landing.trennlinie",
+        "landing.seminar-liste",
+        "landing.tabs",
+        "landing.seminar-finder",
+        "landing.seminar-produkt-karten"
+      ]
     },
     "seo": {
       "type": "component",

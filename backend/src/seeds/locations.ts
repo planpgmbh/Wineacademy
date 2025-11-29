@@ -26,7 +26,7 @@ async function upsertStandort(strapi: any, values: StandortSeed) {
 export async function seedLocations(strapi: any, log: (msg: string) => void) {
   const seeds: StandortSeed[] = [
     {
-      name: 'Wine Academy Hamburg',
+      name: 'Hamburg',
       typ: 'vorort',
       veranstaltungsort: 'Wine Academy Hamburg',
       strasse: 'Eimsbütteler Chaussee 37',
@@ -35,7 +35,7 @@ export async function seedLocations(strapi: any, log: (msg: string) => void) {
       land: 'Deutschland',
     },
     {
-      name: 'Wine Academy Mannheim',
+      name: 'Mannheim',
       typ: 'vorort',
       veranstaltungsort: 'Weinrefugium Mannheim',
       strasse: 'Seckenheimer Straße 19',
@@ -44,7 +44,7 @@ export async function seedLocations(strapi: any, log: (msg: string) => void) {
       land: 'Deutschland',
     },
     {
-      name: 'Wine Academy Digital',
+      name: 'Digital',
       typ: 'online',
       veranstaltungsort: 'Digital',
       stadt: 'Online',

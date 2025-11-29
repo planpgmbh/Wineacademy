@@ -31,20 +31,21 @@ export default factories.createCoreController(CONTENT_UID, ({ strapi }) => ({
             on: {
               "landing.hero": {
                 populate: {
-                  heroVideo: true,
-                  heroPosterBild: true,
+                  button: true,
+                  bildergalerie: { populate: { bilder: true } },
+                  video: { populate: { video: true, hintergrundbild: true } },
                 },
               },
-              "landing.hero-carousel": { populate: { bilder: true } },
-              "landing.hero-blank": true,
-              "landing.hero-small": { populate: { hintergrundbild: true } },
               "landing.bildergalerie": { populate: { bilder: true } },
-              "landing.text-block": true,
               "landing.card-grid": {
                 populate: {
                   karten: {
                     populate: {
-                      backgroundImage: true
+                      backgroundImage: true,
+                      button: true,
+                      seminarfinderKategorie: {
+                        fields: ["id", "name", "slug"]
+                      }
                     }
                   }
                 }

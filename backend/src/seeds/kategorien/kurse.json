@@ -1,11 +1,49 @@
 {
   "name": "Kurse",
   "slug": "kurse",
-  "beschreibung": "Unsere Weinschule bietet eine umfassende Ausbildung für Gastronomie, Weinhandel, Weinliebhaber und alle Interessierten. Vom eintägigen Kurs für Einsteiger , einem geprüften Sommelier oder einer WSET Qualifikation – die Wine Academy Hamburg bietet für jeden den passenden Kurs. Mit einem besonderen Schwerpunkt auf der Bourgogne bieten wir ein breites Spektrum an Weiterbildungen: Sensorik für Einsteiger und Fortgeschrittene , eine Ausbildung zum Assistant Sommelier oder eine eintägige Masterclass Champagner – entdecke unser breit gefächtertes Kursangebot in Hamburg. Wir erstellen auch gerne ein maßgeschneidertes Angebot für firmeninterne Weiterbildungen. Für ein speziell auf das Sortiment abgestimmtes Schulungsangebot mit betriebsspezifischen Inhalten ruft gerne an oder schreibt uns eine Nachricht.",
   "kurzbeschreibung": "Unsere Weinschule bietet eine umfassende Ausbildung für Gastronomie, Weinhandel, Weinliebhaber und alle Interessierten. Vom eintägigen Kurs für Einsteiger , einem geprüften Sommelier oder einer WSET Qualifikation – die Wine Academy Hamburg …",
-  "heroDarkMode": false,
   "seo": {
     "title": "Kurse",
     "description": "Von Einsteigerkursen bis zum Sommelier: Entdecke das vielfältige Weinausbildungsangebot der Wine Academy Hamburg, inkl. Spezialkurse für die Bourgogne."
-  }
+  },
+  "abschnitte": [
+    {
+      "__component": "landing.hero",
+      "modus": "karussell",
+      "überschrift": "Kurse",
+      "überschriftStufe": "h1",
+      "einleitung": "<p>Unsere Weinschule bietet eine umfassende Ausbildung für Gastronomie, Weinhandel, Weinliebhaber und alle Interessierten. Vom eintägigen Kurs für Einsteiger , einem geprüften Sommelier oder einer WSET Qualifikation – die Wine Academy Hamburg bietet für jeden den passenden Kurs. Mit einem besonderen Schwerpunkt auf der Bourgogne bieten wir ein breites Spektrum an Weiterbildungen: Sensorik für Einsteiger und Fortgeschrittene , eine Ausbildung zum Assistant Sommelier oder eine eintägige Masterclass Champagner – entdecke unser breit gefächtertes Kursangebot in Hamburg. Wir erstellen auch gerne ein maßgeschneidertes Angebot für firmeninterne Weiterbildungen. Für ein speziell auf das Sortiment abgestimmtes Schulungsangebot mit betriebsspezifischen Inhalten ruft gerne an oder schreibt uns eine Nachricht.</p>",
+      "bildergalerie": {
+        "bilder": [],
+        "rotationSekunden": 8
+      }
+    },
+    {
+      "__component": "landing.seminar-liste",
+      "überschrift": "Unsere nächsten Kurse",
+      "überschriftStufe": "h3",
+      "hintergrundfarbe": null,
+      "einleitung": null,
+      "anzahl": 4,
+      "mehrButtonText": "Mehr laden",
+      "mehrButtonAnzeigen": true,
+      "seminarkategorie": {
+        "slug": "kurse"
+      }
+    },
+    {
+      "__component": "landing.trennlinie",
+      "breite": "weit"
+    },
+    {
+      "__component": "landing.seminar-finder",
+      "überschrift": "Weitere Seminare",
+      "überschriftStufe": "h2",
+      "hintergrundfarbe": null,
+      "standardKategorie": {
+        "slug": "kurse"
+      },
+      "sichtbareFilter": []
+    }
+  ]
 }

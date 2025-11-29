@@ -5,7 +5,6 @@ import { DividerSection } from "@/components/landing/DividerSection";
 import { SeminarList } from "@/components/landing/SeminarList";
 import { SeminarProductCards } from "@/components/landing/SeminarProductCards";
 import { TabsSection } from "@/components/landing/TabsSection";
-import { TextBlock } from "@/components/landing/TextBlock";
 import { SeminarFinder as LandingSeminarFinder } from "@/components/seminar/SeminarFinder";
 import { DesktopBookingOverlay } from "@/components/shared/DesktopBookingOverlay";
 import { SeminarBookingCard } from "@/components/seminar/SeminarBookingCard";
@@ -15,6 +14,7 @@ import { getSeminarFinderData } from "@/lib/seminar-finder";
 import { getSeminarDetail } from "@/lib/seminar-detail";
 import { fetchUpcomingSeminars } from "@/lib/upcoming-seminars";
 import type { LandingSeminarFinderSection, LandingSeminarListSection, LandingSeminarProductCardsSection, LandingSection, LandingTabsSection } from "@/lib/landing";
+import type { ReactNode } from "react";
 
 type SeminarDetailPageProps = {
   params: Promise<{
@@ -135,19 +135,6 @@ async function renderSections(
       continue;
     }
 
-    if (section.type === "text-block") {
-      rendered.push(
-        <TextBlock
-          key={`text-block-${index}`}
-          hintergrund={section.hintergrund ?? undefined}
-          html={section.html}
-          buttonText={section.buttonText}
-          buttonLink={section.buttonLink}
-        />
-      );
-      continue;
-    }
-
     if (section.type === "tabs") {
       rendered.push(renderTabsSection(section, index));
       continue;
@@ -190,26 +177,31 @@ function renderTabsSection(section: LandingTabsSection, index: number) {
 async function renderSeminarList(section: LandingSeminarListSection, index: number) {
   let initialItems = [] as Awaited<ReturnType<typeof fetchUpcomingSeminars>>;
   let initialError: string | null = null;
+  const categorySlug = section.category?.slug ?? "";
 
   try {
     initialItems = await fetchUpcomingSeminars({
-      categorySlug: section.category.slug,
+      categorySlug,
       limit: section.anzahl,
       offset: 0
     });
   } catch (error) {
-    console.error(`[seminar-detail] Seminarliste konnte nicht geladen werden (Kategorie ${section.category.slug}):`, error);
+    console.error(
+      `[seminar-detail] Seminarliste konnte nicht geladen werden (Kategorie ${categorySlug || "alle"}):`,
+      error
+    );
     initialError = "Seminare konnten nicht geladen werden.";
   }
 
   return (
     <SeminarList
-      key={`seminar-list-${section.category.slug}-${index}`}
+      key={`seminar-list-${categorySlug || "alle"}-${index}`}
+      id="seminar-liste"
       überschrift={section.überschrift}
       überschriftStufe={section.überschriftStufe}
       einleitung={section.einleitung}
       hintergrund={section.hintergrund ?? undefined}
-      categorySlug={section.category.slug}
+      categorySlug={categorySlug || null}
       buttonText={section.buttonText}
       mehrButtonText={section.mehrButtonText}
       mehrButtonAnzeigen={section.mehrButtonAnzeigen}
@@ -269,6 +261,7 @@ function renderSeminarFinder(
   return (
     <LandingSeminarFinder
       key={`seminar-finder-${index}`}
+      id="seminar-finder"
       überschrift={section.überschrift}
       überschriftStufe={section.überschriftStufe}
       hintergrund={section.hintergrund ?? undefined}

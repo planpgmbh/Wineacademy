@@ -14,7 +14,6 @@ import { HeroVideo } from "@/components/landing/HeroVideo";
 import { SeminarList } from "@/components/landing/SeminarList";
 import { SeminarProductCards } from "@/components/landing/SeminarProductCards";
 import { TabsSection } from "@/components/landing/TabsSection";
-import { TextBlock } from "@/components/landing/TextBlock";
 import { SeminarFinder as LandingSeminarFinder } from "@/components/seminar/SeminarFinder";
 import {
   fetchLandingPage,
@@ -161,8 +160,7 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
           einleitung={section.einleitung}
           videoUrl={section.videoUrl}
           posterUrl={section.posterUrl}
-          buttonText={section.buttonText}
-          buttonLink={section.buttonLink}
+          button={section.button ?? null}
         />
       );
       continue;
@@ -177,6 +175,7 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
           einleitung={section.einleitung}
           bilder={section.bilder}
           rotationSekunden={section.rotationSekunden}
+          button={section.button ?? null}
         />
       );
       continue;
@@ -231,19 +230,6 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
     if (section.type === "divider") {
       content.push(
         <DividerSection key={`divider-${index}`} hintergrund={section.hintergrund} breite={section.breite} />
-      );
-      continue;
-    }
-
-    if (section.type === "text-block") {
-      content.push(
-        <TextBlock
-          key={`text-block-${index}`}
-          hintergrund={section.hintergrund}
-          html={section.html}
-          buttonText={section.buttonText}
-          buttonLink={section.buttonLink}
-        />
       );
       continue;
     }
@@ -312,16 +298,17 @@ function renderTabsSection(section: LandingTabsSection, index: number) {
 async function renderSeminarList(section: LandingSeminarListSection, index: number) {
   let initialItems = [] as Awaited<ReturnType<typeof fetchUpcomingSeminars>>;
   let initialError: string | null = null;
+  const categorySlug = section.category?.slug ?? "";
 
   try {
     initialItems = await fetchUpcomingSeminars({
-      categorySlug: section.category.slug,
+      categorySlug,
       limit: section.anzahl,
       offset: 0
     });
   } catch (error) {
     console.error(
-      `[landing] Seminarliste konnte nicht geladen werden (Kategorie ${section.category.slug}):`,
+      `[landing] Seminarliste konnte nicht geladen werden (Kategorie ${categorySlug || "alle"}):`,
       error
     );
     initialError = "Seminare konnten nicht geladen werden.";
@@ -329,12 +316,13 @@ async function renderSeminarList(section: LandingSeminarListSection, index: numb
 
   return (
     <SeminarList
-      key={`seminar-list-${section.category.slug}-${index}`}
+      key={`seminar-list-${categorySlug || "alle"}-${index}`}
+      id="seminar-liste"
       überschrift={section.überschrift}
       überschriftStufe={section.überschriftStufe}
       einleitung={section.einleitung}
       hintergrund={section.hintergrund}
-      categorySlug={section.category.slug}
+      categorySlug={categorySlug || null}
       buttonText={section.buttonText}
       mehrButtonText={section.mehrButtonText}
       mehrButtonAnzeigen={section.mehrButtonAnzeigen}
@@ -394,6 +382,7 @@ function renderSeminarFinder(
   return (
     <LandingSeminarFinder
       key={`seminar-finder-${index}`}
+      id="seminar-finder"
       überschrift={section.überschrift}
       überschriftStufe={section.überschriftStufe}
       hintergrund={section.hintergrund}

@@ -3,11 +3,11 @@
   "slug": "agb",
   "abschnitte": [
     {
-      "__component": "landing.hero-small",
+      "__component": "landing.hero",
+      "modus": "klein",
       "überschrift": "Allgemeine Geschäftsbedingungen",
       "überschriftStufe": "h1",
-      "einleitung": "Regelungen für Buchungen, Teilnahme und Vertragsabwicklung der Wine Academy Hamburg.",
-      "hintergrundbild": null
+      "einleitung": "Regelungen für Buchungen, Teilnahme und Vertragsabwicklung der Wine Academy Hamburg."
     },
     {
       "__component": "landing.columns",

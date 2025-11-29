@@ -5,6 +5,9 @@
     "description": "Liste der nächsten Seminare für eine ausgewählte Kategorie."
   },
   "attributes": {
+    "anker": {
+      "type": "string"
+    },
     "überschrift": {
       "type": "string"
     },
@@ -13,28 +16,13 @@
       "enum": ["h2", "h3", "h4"],
       "default": "h2"
     },
-    "hintergrundfarbe": {
-      "type": "enumeration",
-      "enum": [
-        "neutral",
-        "black",
-        "wine-blue",
-        "wine-blue-light",
-        "wine-blue-lighter",
-        "wine-blue-lightest",
-        "wine-blue-dark",
-        "wine-blue-darker",
-        "wine-blue-darkest"
-      ]
-    },
     "einleitung": {
       "type": "text"
     },
     "seminarkategorie": {
       "type": "relation",
       "relation": "oneToOne",
-      "target": "api::kategorie.kategorie",
-      "required": true
+      "target": "api::kategorie.kategorie"
     },
     "anzahl": {
       "type": "integer",
@@ -53,6 +41,20 @@
     "mehrButtonAnzeigen": {
       "type": "boolean",
       "default": true
+    },
+    "hintergrundfarbe": {
+      "type": "enumeration",
+      "enum": [
+        "neutral",
+        "black",
+        "wine-blue",
+        "wine-blue-light",
+        "wine-blue-lighter",
+        "wine-blue-lightest",
+        "wine-blue-dark",
+        "wine-blue-darker",
+        "wine-blue-darkest"
+      ]
     }
   }
 }

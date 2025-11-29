@@ -1,11 +1,49 @@
 {
   "name": "WSET",
   "slug": "wset",
-  "beschreibung": "Der Wine and Spirit Education Trust (WSET®) befasst sich mit der Entwicklung und Durchführung von Qualifikationen und Kursen im Bereich Wein und Spirituosen. Aber auch Sake und seit 2024 Bier sind Teil des Angebots. 1969 gegründet, gehört der WSET® heute zu den weltweit führenden Anbietern für Weinausbildungen. Die aufeinander aufbauenden Level, angefangen bei WSET® Level 1 , WSET® Level  2 , WSET® Level 3 , bis hin zum WSET® Level 4 Diploma, welche von einem Netzwerk an Kursanbietern in über 80 Ländern weltweit angeboten werden, haben sowohl für die Getränkebranche als auch private Enthusiasten Relevanz. Als Approved Programme Provider (APP) ist die Wine Academy Hamburg als Weinschule Teil eines strengen Qualitätsmanagements, welches den hohen Standard der WSET® -Richtlinien sowohl im Unterricht als auch bei Prüfungen garantiert. Hier geht’s zur offiziellen Seite des WSET ®.",
   "kurzbeschreibung": "Der Wine and Spirit Education Trust (WSET®) befasst sich mit der Entwicklung und Durchführung von Qualifikationen und Kursen im Bereich Wein und Spirituosen. Aber auch Sake und seit 2024 Bier sind Teil des Angebots. 1969 gegründet, gehört …",
-  "heroDarkMode": false,
   "seo": {
     "title": "WSET",
     "description": "Starte Deine Karriere bei der Wine Academy Hamburg. Steige ein in die Welt von Wein und Spirituosen mit WSET-Kursen. Dein Zugang zur internationalen Expertise."
-  }
+  },
+  "abschnitte": [
+    {
+      "__component": "landing.hero",
+      "modus": "karussell",
+      "überschrift": "WSET",
+      "überschriftStufe": "h1",
+      "einleitung": "<p>Der Wine and Spirit Education Trust (WSET®) befasst sich mit der Entwicklung und Durchführung von Qualifikationen und Kursen im Bereich Wein und Spirituosen. Aber auch Sake und seit 2024 Bier sind Teil des Angebots. 1969 gegründet, gehört der WSET® heute zu den weltweit führenden Anbietern für Weinausbildungen. Die aufeinander aufbauenden Level, angefangen bei WSET® Level 1 , WSET® Level  2 , WSET® Level 3 , bis hin zum WSET® Level 4 Diploma, welche von einem Netzwerk an Kursanbietern in über 80 Ländern weltweit angeboten werden, haben sowohl für die Getränkebranche als auch private Enthusiasten Relevanz. Als Approved Programme Provider (APP) ist die Wine Academy Hamburg als Weinschule Teil eines strengen Qualitätsmanagements, welches den hohen Standard der WSET® -Richtlinien sowohl im Unterricht als auch bei Prüfungen garantiert. Hier geht’s zur offiziellen Seite des WSET ®.</p>",
+      "bildergalerie": {
+        "bilder": [],
+        "rotationSekunden": 8
+      }
+    },
+    {
+      "__component": "landing.seminar-liste",
+      "überschrift": "Unsere nächsten WSET",
+      "überschriftStufe": "h3",
+      "hintergrundfarbe": null,
+      "einleitung": null,
+      "anzahl": 4,
+      "mehrButtonText": "Mehr laden",
+      "mehrButtonAnzeigen": true,
+      "seminarkategorie": {
+        "slug": "wset"
+      }
+    },
+    {
+      "__component": "landing.trennlinie",
+      "breite": "weit"
+    },
+    {
+      "__component": "landing.seminar-finder",
+      "überschrift": "Weitere Seminare",
+      "überschriftStufe": "h2",
+      "hintergrundfarbe": null,
+      "standardKategorie": {
+        "slug": "wset"
+      },
+      "sichtbareFilter": []
+    }
+  ]
 }

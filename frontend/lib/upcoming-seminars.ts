@@ -52,21 +52,33 @@ const formatImage = (
   image: PublicSeminarResponse["bild"],
   fallbackTitle: string
 ): { src: string | null; alt: string } => {
+  const alt = normaliseString(image?.alternativeText) || fallbackTitle || "Seminarbild";
+
   if (!image || !image.url) {
     return {
       src: null,
-      alt: fallbackTitle.length > 0 ? fallbackTitle : "Seminarbild"
+      alt
     };
   }
   if (isPlaceholderImage(image.url)) {
     return {
       src: null,
-      alt: fallbackTitle.length > 0 ? fallbackTitle : "Seminarbild"
+      alt
     };
   }
 
+  // Bevorzugt ein kleines Format, dann größer, zuletzt Original
+  const formats = (image as any)?.formats ?? null;
+  const order = ["small", "medium", "large", "thumbnail"];
+  for (const key of order) {
+    const entry = formats?.[key];
+    if (entry?.url) {
+      const resolved = mediaUrl(entry.url);
+      if (resolved) return { src: resolved, alt };
+    }
+  }
+
   const src = mediaUrl(image.url);
-  const alt = normaliseString(image.alternativeText) || fallbackTitle || "Seminarbild";
   return { src, alt };
 };
 
@@ -86,17 +98,18 @@ const formatLocationLabel = (location: PublicSeminarLocation | null | undefined)
   if (type.toLowerCase() === "online") {
     return "Online";
   }
-  if (venue && city && !venue.toLowerCase().includes(city.toLowerCase())) {
-    return `${venue} · ${city}`;
-  }
+  // Badge soll primär den Standort-Namen zeigen, nicht den Veranstaltungsort.
   if (name && city && !name.toLowerCase().includes(city.toLowerCase())) {
     return `${name} · ${city}`;
   }
-  if (venue.length > 0) {
-    return venue;
-  }
   if (name.length > 0) {
     return name;
+  }
+  if (venue && city && !venue.toLowerCase().includes(city.toLowerCase())) {
+    return `${venue} · ${city}`;
+  }
+  if (venue.length > 0) {
+    return venue;
   }
   if (city.length > 0) {
     return city;
@@ -141,7 +154,7 @@ export type UpcomingSeminar = {
 };
 
 export type FetchUpcomingSeminarsOptions = {
-  categorySlug: string;
+  categorySlug?: string | null;
   limit: number;
   offset?: number;
 };
@@ -152,7 +165,10 @@ export async function fetchUpcomingSeminars({
   offset = 0
 }: FetchUpcomingSeminarsOptions): Promise<UpcomingSeminar[]> {
   const params = new URLSearchParams();
-  params.set("category", categorySlug);
+  const slug = typeof categorySlug === "string" && categorySlug.trim().length > 0 ? categorySlug.trim() : null;
+  if (slug) {
+    params.set("category", slug);
+  }
   params.set("limit", String(Math.max(1, limit)));
   if (offset > 0) {
     params.set("offset", String(offset));

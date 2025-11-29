@@ -5,6 +5,9 @@
     "description": "Abschnitt mit bis zu drei individuell befüllbaren Spalten."
   },
   "attributes": {
+    "anker": {
+      "type": "string"
+    },
     "überschrift": {
       "type": "string"
     },
@@ -17,6 +20,13 @@
       "type": "enumeration",
       "enum": ["box", "plain"],
       "default": "plain"
+    },
+    "spalten": {
+      "type": "component",
+      "repeatable": true,
+      "component": "landing.column",
+      "min": 1,
+      "max": 3
     },
     "hintergrundfarbe": {
       "type": "enumeration",
@@ -31,13 +41,6 @@
         "wine-blue-darker",
         "wine-blue-darkest"
       ]
-    },
-    "spalten": {
-      "type": "component",
-      "repeatable": true,
-      "component": "landing.column",
-      "min": 1,
-      "max": 3
     }
   }
 }

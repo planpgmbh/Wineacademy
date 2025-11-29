@@ -3,12 +3,15 @@
   "slug": "veranstaltungen",
   "abschnitte": [
     {
-      "__component": "landing.hero-carousel",
+      "__component": "landing.hero",
+      "modus": "karussell",
       "überschrift": "Veranstaltungen & Tastings",
       "überschriftStufe": "h1",
       "einleitung": "Weinerlebnisse für Teams, private Gruppen und anspruchsvolle Genießer:innen.",
-      "rotationSekunden": 8,
-      "bilder": []
+      "bildergalerie": {
+        "bilder": [],
+        "rotationSekunden": 8
+      }
     },
     {
       "__component": "landing.columns",
@@ -34,7 +37,6 @@
       "hintergrundfarbe": null,
       "einleitung": null,
       "anzahl": 6,
-      "buttonText": "Zum Seminar",
       "mehrButtonText": "Mehr laden",
       "mehrButtonAnzeigen": true,
       "seminarkategorie": 2

@@ -15,6 +15,12 @@ type HeroCarouselProps = {
   einleitung?: string | null;
   bilder: Bild[];
   rotationSekunden?: number;
+  button?: {
+    name: string;
+    link: string;
+    stil?: "primary" | "secondary" | "ghost" | string | null;
+    linkExtern?: boolean | null;
+  } | null;
 };
 
 const headingStyles: Record<"h1" | "h2" | "h3" | "h4", string> = {
@@ -38,7 +44,26 @@ const clampInterval = (value: number | undefined, fallback: number): number => {
   return Math.min(Math.max(value, 2000), 60000);
 };
 
-export function HeroCarousel({ überschrift, überschriftStufe, einleitung, bilder, rotationSekunden }: HeroCarouselProps) {
+const resolveLinkProps = (href: string) => {
+  const isExternal = /^https?:\/\//i.test(href);
+  if (isExternal) {
+    return { href, rel: "noopener noreferrer", target: "_blank" };
+  }
+  return { href };
+};
+
+const resolveButtonClasses = (stil?: string | null) => {
+  switch (stil) {
+    case "secondary":
+      return "inline-flex min-w-[180px] items-center justify-center gap-2 rounded-full border border-white/70 bg-white/10 px-6 py-3 text-base font-semibold text-white transition hover:border-white hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white md:px-8 md:py-3.5";
+    case "ghost":
+      return "inline-flex min-w-[180px] items-center justify-center gap-2 rounded-full px-6 py-3 text-base font-semibold text-white transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white md:px-8 md:py-3.5";
+    default:
+      return "inline-flex min-w-[180px] items-center justify-center gap-2 rounded-full border border-white/75 px-6 py-3 text-base font-semibold text-white transition hover:border-white hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white md:px-8 md:py-3.5";
+  }
+};
+
+export function HeroCarousel({ überschrift, überschriftStufe, einleitung, bilder, rotationSekunden, button }: HeroCarouselProps) {
   const validSlides = useMemo(
     () => bilder.filter((bild) => typeof bild.src === "string" && bild.src.trim().length > 0),
     [bilder]
@@ -101,9 +126,7 @@ export function HeroCarousel({ überschrift, überschriftStufe, einleitung, bild
       ))}
 
       <div className="relative z-10 mx-auto flex w-full max-w-[var(--landing-content-max-width)] flex-col items-center gap-6 px-6 py-24 text-center md:py-32">
-        <HeadingTag className={`heading-on-dark ${headingClass}`}>
-          {überschrift}
-        </HeadingTag>
+        <HeadingTag className={`heading-on-dark ${headingClass}`}>{überschrift}</HeadingTag>
         {paragraphs.length > 0 ? (
           <p className="text-lg leading-relaxed text-base-100/90 drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)] md:text-xl">
             {paragraphs.map((paragraph, index) => (
@@ -112,6 +135,11 @@ export function HeroCarousel({ überschrift, überschriftStufe, einleitung, bild
               </span>
             ))}
           </p>
+        ) : null}
+        {button && button.name && button.link ? (
+          <a className={resolveButtonClasses(button.stil)} {...resolveLinkProps(button.link)}>
+            {button.name}
+          </a>
         ) : null}
       </div>
     </section>

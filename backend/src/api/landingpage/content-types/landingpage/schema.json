@@ -30,19 +30,15 @@
     "abschnitte": {
       "type": "dynamiczone",
       "components": [
-        "landing.hero-blank",
         "landing.hero",
-        "landing.hero-carousel",
         "landing.bildergalerie",
-        "landing.hero-small",
-        "landing.seminar-produkt-karten",
         "landing.card-grid",
         "landing.columns",
         "landing.trennlinie",
-        "landing.text-block",
         "landing.seminar-liste",
         "landing.tabs",
-        "landing.seminar-finder"
+        "landing.seminar-finder",
+        "landing.seminar-produkt-karten"
       ]
     },
     "seo": {

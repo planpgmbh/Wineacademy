@@ -3,12 +3,15 @@
   "slug": "wine-academy-philosophie",
   "abschnitte": [
     {
-      "__component": "landing.hero-carousel",
+      "__component": "landing.hero",
+      "modus": "karussell",
       "überschrift": "Unsere Philosophie",
       "überschriftStufe": "h1",
       "einleitung": "Wofür wir stehen",
-      "rotationSekunden": 8,
-      "bilder": []
+      "bildergalerie": {
+        "bilder": [],
+        "rotationSekunden": 8
+      }
     },
     {
       "__component": "landing.columns",

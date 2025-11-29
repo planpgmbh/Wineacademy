@@ -3,12 +3,15 @@
   "slug": "wine-academy-team",
   "abschnitte": [
     {
-      "__component": "landing.hero-carousel",
+      "__component": "landing.hero",
+      "modus": "karussell",
       "überschrift": "Unser Team",
       "überschriftStufe": "h1",
       "einleitung": "Weinexpert:innen, Gastgeber:innen und Dozent:innen mit jahrzehntelanger Branchenerfahrung.",
-      "rotationSekunden": 8,
-      "bilder": []
+      "bildergalerie": {
+        "bilder": [],
+        "rotationSekunden": 8
+      }
     },
     {
       "__component": "landing.columns",

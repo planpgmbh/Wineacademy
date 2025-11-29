@@ -3,11 +3,11 @@
   "slug": "impressum",
   "abschnitte": [
     {
-      "__component": "landing.hero-small",
+      "__component": "landing.hero",
+      "modus": "klein",
       "überschrift": "Impressum",
       "überschriftStufe": "h1",
-      "einleitung": "Gesetzliche Anbieterkennzeichnung und Kontaktdaten der Wine Academy Hamburg.",
-      "hintergrundbild": null
+      "einleitung": "Gesetzliche Anbieterkennzeichnung und Kontaktdaten der Wine Academy Hamburg."
     },
     {
       "__component": "landing.columns",

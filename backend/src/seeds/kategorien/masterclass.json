@@ -1,11 +1,49 @@
 {
   "name": "Masterclasses",
   "slug": "masterclass",
-  "beschreibung": "Für (angehende) Sommeliers, WSET -Studenten und Weinliebhaber. Unsere Masterclasses und Tageskurse bieten einen tiefgehenden Einblick in verschieden Regionen, Weine und Sake. Vormittags oder Abends, unter der Woche und am Wochenende, einige Stunden bis hin zu einem ganzen Tag – unsere Masterclasses lassen sich auch in einen vollen Alltag integrieren. Werde Teil unserer Community von Weinliebhabern und Fachleuten und vertiefe Dein Wissen unter der Anleitung von erfahrenen Experten. Entdecke auch unsere Prüfungsvorbereitungskurse für WSET und IHK Sommelier und genieße eine einzigartige Lernerfahrung in unserer Weinschule .",
   "kurzbeschreibung": "Für (angehende) Sommeliers, WSET -Studenten und Weinliebhaber. Unsere Masterclasses und Tageskurse bieten einen tiefgehenden Einblick in verschieden Regionen, Weine und Sake. Vormittags oder Abends, unter der Woche und am Wochenende, …",
-  "heroDarkMode": false,
   "seo": {
     "title": "Masterclasses",
     "description": "Erlebe tiefe Einblicke in die Welt der Weine durch unsere Masterclasses und Workshops, ideal für Sommeliers, WSET Studenten, und alle Weinbegeisterten."
-  }
+  },
+  "abschnitte": [
+    {
+      "__component": "landing.hero",
+      "modus": "karussell",
+      "überschrift": "Masterclasses",
+      "überschriftStufe": "h1",
+      "einleitung": "<p>Für (angehende) Sommeliers, WSET -Studenten und Weinliebhaber. Unsere Masterclasses und Tageskurse bieten einen tiefgehenden Einblick in verschieden Regionen, Weine und Sake. Vormittags oder Abends, unter der Woche und am Wochenende, einige Stunden bis hin zu einem ganzen Tag – unsere Masterclasses lassen sich auch in einen vollen Alltag integrieren. Werde Teil unserer Community von Weinliebhabern und Fachleuten und vertiefe Dein Wissen unter der Anleitung von erfahrenen Experten. Entdecke auch unsere Prüfungsvorbereitungskurse für WSET und IHK Sommelier und genieße eine einzigartige Lernerfahrung in unserer Weinschule .</p>",
+      "bildergalerie": {
+        "bilder": [],
+        "rotationSekunden": 8
+      }
+    },
+    {
+      "__component": "landing.seminar-liste",
+      "überschrift": "Unsere nächsten Masterclasses",
+      "überschriftStufe": "h3",
+      "hintergrundfarbe": null,
+      "einleitung": null,
+      "anzahl": 4,
+      "mehrButtonText": "Mehr laden",
+      "mehrButtonAnzeigen": true,
+      "seminarkategorie": {
+        "slug": "masterclass"
+      }
+    },
+    {
+      "__component": "landing.trennlinie",
+      "breite": "weit"
+    },
+    {
+      "__component": "landing.seminar-finder",
+      "überschrift": "Weitere Seminare",
+      "überschriftStufe": "h2",
+      "hintergrundfarbe": null,
+      "standardKategorie": {
+        "slug": "masterclass"
+      },
+      "sichtbareFilter": []
+    }
+  ]
 }

@@ -1,11 +1,49 @@
 {
   "name": "Sensorik",
   "slug": "sensorik",
-  "beschreibung": "Entdecke die verborgenen Nuancen des Weins und werde zum Sensorik-Experten in in unserer Weinschule . In unseren Masterclasses zur Wein Sensorik erkunden wir die Welt unserer Sinneswahrnehmung. Von Einsteigern bis zum Profi – wir helfen Euch gerne das passende Level zu finden. Auch das spannende Thema der Weinfehler , sie zu erkennen und zu beschreiben ist Teil des Kursangebots. Tauche ein in die Grundlagen der menschlichen Sinneswahrnehmung und schärfe deine Sinne, um subtile Aromen in Weinen besser wahrzunehmen. Ein unverzichtbarer Kurs für alle Weinliebhaber und Fachleute, die ihr Sensorik-Wissen vertiefen möchten. Wenn Du bereits Erfahrung im Verkosten hast, bist Du bei unserem Sensorik Kurs für Fortgeschrittene und Weinfehler für Professionals richtig. Bist du bereit, die Herausforderung anzunehmen und Deine Sinne bei einer Blindverkostung auf die Probe zu stellen?",
   "kurzbeschreibung": "Entdecke die verborgenen Nuancen des Weins und werde zum Sensorik-Experten in in unserer Weinschule . In unseren Masterclasses zur Wein Sensorik erkunden wir die Welt unserer Sinneswahrnehmung. Von Einsteigern bis zum Profi – wir helfen …",
-  "heroDarkMode": false,
   "seo": {
     "title": "Sensorik",
     "description": "Erkunde Sensorik und Weinfehler in unseren Weinkursen. Perfekt für Einsteiger bis Profis, die ihre Verkostungsfähigkeiten und -kenntnisse erweitern möchten."
-  }
+  },
+  "abschnitte": [
+    {
+      "__component": "landing.hero",
+      "modus": "karussell",
+      "überschrift": "Sensorik",
+      "überschriftStufe": "h1",
+      "einleitung": "<p>Entdecke die verborgenen Nuancen des Weins und werde zum Sensorik-Experten in in unserer Weinschule . In unseren Masterclasses zur Wein Sensorik erkunden wir die Welt unserer Sinneswahrnehmung. Von Einsteigern bis zum Profi – wir helfen Euch gerne das passende Level zu finden. Auch das spannende Thema der Weinfehler , sie zu erkennen und zu beschreiben ist Teil des Kursangebots. Tauche ein in die Grundlagen der menschlichen Sinneswahrnehmung und schärfe deine Sinne, um subtile Aromen in Weinen besser wahrzunehmen. Ein unverzichtbarer Kurs für alle Weinliebhaber und Fachleute, die ihr Sensorik-Wissen vertiefen möchten. Wenn Du bereits Erfahrung im Verkosten hast, bist Du bei unserem Sensorik Kurs für Fortgeschrittene und Weinfehler für Professionals richtig. Bist du bereit, die Herausforderung anzunehmen und Deine Sinne bei einer Blindverkostung auf die Probe zu stellen?</p>",
+      "bildergalerie": {
+        "bilder": [],
+        "rotationSekunden": 8
+      }
+    },
+    {
+      "__component": "landing.seminar-liste",
+      "überschrift": "Unsere nächsten Sensorik",
+      "überschriftStufe": "h3",
+      "hintergrundfarbe": null,
+      "einleitung": null,
+      "anzahl": 4,
+      "mehrButtonText": "Mehr laden",
+      "mehrButtonAnzeigen": true,
+      "seminarkategorie": {
+        "slug": "sensorik"
+      }
+    },
+    {
+      "__component": "landing.trennlinie",
+      "breite": "weit"
+    },
+    {
+      "__component": "landing.seminar-finder",
+      "überschrift": "Weitere Seminare",
+      "überschriftStufe": "h2",
+      "hintergrundfarbe": null,
+      "standardKategorie": {
+        "slug": "sensorik"
+      },
+      "sichtbareFilter": []
+    }
+  ]
 }

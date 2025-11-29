@@ -1,0 +1,21 @@
+{
+  "collectionName": "components_shared_buttons",
+  "info": {
+    "displayName": "Button",
+    "description": "Link-Button mit Beschriftung und Extern-Flag."
+  },
+  "options": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "link": {
+      "type": "string"
+    },
+    "stil": {
+      "type": "enumeration",
+      "enum": ["primary", "secondary", "ghost"],
+      "default": "primary"
+    }
+  }
+}

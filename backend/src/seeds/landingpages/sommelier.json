@@ -3,12 +3,15 @@
   "slug": "sommelier",
   "abschnitte": [
     {
-      "__component": "landing.hero-carousel",
+      "__component": "landing.hero",
+      "modus": "karussell",
       "überschrift": "Sommelier-Ausbildung",
       "überschriftStufe": "h1",
       "einleitung": "Berufsbegleitende Programme für angehende und aktive Sommelièren und Sommeliers.",
-      "rotationSekunden": 8,
-      "bilder": []
+      "bildergalerie": {
+        "bilder": [],
+        "rotationSekunden": 8
+      }
     },
     {
       "__component": "landing.columns",
@@ -34,7 +37,6 @@
       "hintergrundfarbe": null,
       "einleitung": null,
       "anzahl": 6,
-      "buttonText": "Zum Seminar",
       "mehrButtonText": "Mehr laden",
       "mehrButtonAnzeigen": true,
       "seminarkategorie": 6
@@ -52,7 +54,7 @@
       "spalten": [
         {
           "titel": "Spalte",
-          "inhalt": "<h4 class=\"rt-heading-m\">Kostenlose Online Info-Veranstaltung: Sommelier/Sommeli\u00e8re</h4><p>Unsere kostenlose Online Info-Veranstaltung zum neuen&nbsp;<a href=\"https://www.wineacademy.de/kurse/sommelier/\" rel=\"noopener noreferrer\" target=\"_blank\">Berufsspezialisten/in gepr. Sommelier/Sommeli\u00e8re</a>&nbsp;bietet Dir einen umfassenden Einblick in den Vorbereitungslehrgang zum/r Sommelier/i\u00e8re der Wine Academy Hamburg.</p><p>Erfahre alles \u00fcber die&nbsp;<a href=\"https://www.ihk.de/koblenz/bildung/weiterbildung/pruefungen-von-a-z/sommelier-5251048\" rel=\"noopener noreferrer\" target=\"_blank\">neuen IHK-Vorgaben</a>, und wie Du mit F\u00f6rderm\u00f6glichkeiten Deine Weiterbildung finanzieren kannst.</p><p>Hole Dir alle Infos zu exklusiven Workshops und Rabatte f\u00fcr zus\u00e4tzliche Qualifikationen (z.B.&nbsp;<a href=\"https://www.wineacademy.de/buchung/wset-level-3-weine/\" rel=\"noopener noreferrer\" target=\"_blank\">WSET\u00ae Level 3 Weine</a>) f\u00fcr unsere angehenden Sommeliers/Sommeli\u00e8ren.</p><p>Wir beantworten alle Deine Fragen und zeigen Dir den Weg zur Karriere als Berufspezialist/in gepr. Sommelier/Sommeli\u00e8re (IHK).</p><p>Durch Zuschaltung von IHK-gepr\u00fcften Sommeliers/i\u00e8rs, die diese Ausbildung absolviert haben, k\u00f6nnte Ihr auch direkt Fragen an die Kollegen stellen und von ihren Erfahrungen h\u00f6ren.</p><p>Melde dich an zur kostenlosen Online Info-Veranstaltung, und starte Deine Karriere als Berufspezialist/in gepr. Sommelier/i\u00e8re (IHK).</p>"
+          "inhalt": "<h4 class=\"rt-heading-m\">Kostenlose Online Info-Veranstaltung: Sommelier/Sommelière</h4><p>Unsere kostenlose Online Info-Veranstaltung zum neuen&nbsp;<a href=\"https://www.wineacademy.de/kurse/sommelier/\" rel=\"noopener noreferrer\" target=\"_blank\">Berufsspezialisten/in gepr. Sommelier/Sommelière</a>&nbsp;bietet Dir einen umfassenden Einblick in den Vorbereitungslehrgang zum/r Sommelier/ière der Wine Academy Hamburg.</p><p>Erfahre alles über die&nbsp;<a href=\"https://www.ihk.de/koblenz/bildung/weiterbildung/pruefungen-von-a-z/sommelier-5251048\" rel=\"noopener noreferrer\" target=\"_blank\">neuen IHK-Vorgaben</a>, und wie Du mit Fördermöglichkeiten Deine Weiterbildung finanzieren kannst.</p><p>Hole Dir alle Infos zu exklusiven Workshops und Rabatte für zusätzliche Qualifikationen (z.B.&nbsp;<a href=\"https://www.wineacademy.de/buchung/wset-level-3-weine/\" rel=\"noopener noreferrer\" target=\"_blank\">WSET® Level 3 Weine</a>) für unsere angehenden Sommeliers/Sommelièren.</p><p>Wir beantworten alle Deine Fragen und zeigen Dir den Weg zur Karriere als Berufspezialist/in gepr. Sommelier/Sommelière (IHK).</p><p>Durch Zuschaltung von IHK-geprüften Sommeliers/ièrs, die diese Ausbildung absolviert haben, könnte Ihr auch direkt Fragen an die Kollegen stellen und von ihren Erfahrungen hören.</p><p>Melde dich an zur kostenlosen Online Info-Veranstaltung, und starte Deine Karriere als Berufspezialist/in gepr. Sommelier/ière (IHK).</p>"
         }
       ]
     },

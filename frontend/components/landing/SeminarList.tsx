@@ -14,10 +14,11 @@ import { useCallback, useMemo, useState, type JSX } from "react";
 import { SeminarDateBadge } from "@/components/shared/SeminarDateBadge";
 
 type SeminarListProps = {
+  id?: string;
   überschrift?: string | null;
   überschriftStufe: "h2" | "h3" | "h4";
   einleitung?: string | null;
-  categorySlug: string;
+  categorySlug?: string | null;
   buttonText: string;
   mehrButtonText: string;
   mehrButtonAnzeigen: boolean;
@@ -176,6 +177,7 @@ function SeminarListItem({ seminar, buttonText, isDarkBackground, onLocationClic
 }
 
 export function SeminarList({
+  id,
   überschrift,
   überschriftStufe,
   einleitung,
@@ -204,7 +206,7 @@ export function SeminarList({
     try {
       const offset = items.length;
       const nextItems = await fetchUpcomingSeminars({
-        categorySlug,
+        categorySlug: categorySlug ?? undefined,
         limit: loadLimit,
         offset
       });
@@ -287,7 +289,7 @@ export function SeminarList({
   const getLocationPillClass = (active: boolean) => (active ? locationPillActive : locationPillInactive);
 
   return (
-    <section style={style}>
+    <section style={style} id={id} className="scroll-mt-28 md:scroll-mt-36">
       <div
         className={`mx-auto flex w-full max-w-[var(--landing-content-max-width)] flex-col px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)] ${
           isDarkBackground ? "text-base-100" : ""

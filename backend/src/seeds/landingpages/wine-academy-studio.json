@@ -3,12 +3,15 @@
   "slug": "wine-academy-studio",
   "abschnitte": [
     {
-      "__component": "landing.hero-carousel",
+      "__component": "landing.hero",
+      "modus": "karussell",
       "überschrift": "Wine Academy Studio",
       "überschriftStufe": "h1",
       "einleitung": "Unsere Location in Hamburg – ausgestattet für Tastings, Masterclasses und hybride Formate.",
-      "rotationSekunden": 8,
-      "bilder": []
+      "bildergalerie": {
+        "bilder": [],
+        "rotationSekunden": 8
+      }
     },
     {
       "__component": "landing.columns",

@@ -5,9 +5,8 @@ import { nowIso, slugify } from './helpers';
 type CategorySeed = {
   name: string;
   slug?: string;
-  beschreibung?: string | null;
   kurzbeschreibung?: string | null;
-  heroDarkMode?: boolean;
+  abschnitte?: Array<Record<string, unknown>> | null;
   seo?: Record<string, unknown> | null;
 };
 
@@ -25,9 +24,8 @@ async function upsertCategory(strapi: any, values: CategorySeed) {
   const data = {
     name: values.name,
     slug,
-    beschreibung: values.beschreibung ?? null,
     kurzbeschreibung: values.kurzbeschreibung ?? null,
-    heroDarkMode: values.heroDarkMode ?? false,
+    abschnitte: Array.isArray(values.abschnitte) && values.abschnitte.length > 0 ? values.abschnitte : undefined,
     seo: values.seo ?? null,
     publishedAt: nowIso(),
   };

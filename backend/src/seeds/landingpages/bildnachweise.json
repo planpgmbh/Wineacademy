@@ -3,11 +3,11 @@
   "slug": "bildnachweise",
   "abschnitte": [
     {
-      "__component": "landing.hero-small",
+      "__component": "landing.hero",
+      "modus": "klein",
       "überschrift": "Bildnachweise",
       "überschriftStufe": "h1",
-      "einleitung": "Urheberangaben und Quellen zu den verwendeten Fotos und Grafiken.",
-      "hintergrundbild": null
+      "einleitung": "Urheberangaben und Quellen zu den verwendeten Fotos und Grafiken."
     },
     {
       "__component": "landing.columns",

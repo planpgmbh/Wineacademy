@@ -61,12 +61,21 @@ export default factories.createCoreController('api::produkt.produkt', ({ strapi 
         hintergrundbild: { select: ['url', 'alternativeText'] },
         abschnitte: {
           on: {
+            'landing.hero': {
+              populate: {
+                button: true,
+                bildergalerie: { populate: { bilder: true } },
+                video: { populate: { video: true, hintergrundbild: true } },
+              },
+            },
             'landing.bildergalerie': { populate: { bilder: true } },
             'landing.card-grid': {
               populate: {
                 karten: {
                   populate: {
                     backgroundImage: true,
+                    button: true,
+                    seminarfinderKategorie: { fields: ['id', 'name', 'slug'] },
                   },
                 },
               },
@@ -77,7 +86,6 @@ export default factories.createCoreController('api::produkt.produkt', ({ strapi 
               },
             },
             'landing.trennlinie': true,
-            'landing.text-block': true,
             'landing.seminar-liste': {
               populate: {
                 seminarkategorie: {

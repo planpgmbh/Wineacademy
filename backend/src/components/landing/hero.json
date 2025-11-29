@@ -1,8 +1,8 @@
 {
   "collectionName": "components_landing_heroes",
   "info": {
-    "displayName": "Hero (Video)",
-    "description": "Großes Hero-Element mit Video-Hintergrund und Call-to-Action."
+    "displayName": "Hero",
+    "description": "Vereint Hero-Varianten (Karussell, Video, Small, Blank) mit konfigurierbarem Modus."
   },
   "attributes": {
     "überschrift": {
@@ -17,21 +17,20 @@
     "einleitung": {
       "type": "text"
     },
-    "heroVideo": {
-      "type": "media",
-      "allowedTypes": ["videos"],
-      "multiple": false
+    "bildergalerie": {
+      "type": "component",
+      "repeatable": false,
+      "component": "landing.hero-bildergalerie"
     },
-    "heroPosterBild": {
-      "type": "media",
-      "allowedTypes": ["images"],
-      "multiple": false
+    "video": {
+      "type": "component",
+      "repeatable": false,
+      "component": "landing.hero-video"
     },
-    "buttonText": {
-      "type": "string"
-    },
-    "buttonLink": {
-      "type": "string"
+    "button": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.button"
     }
   }
 }

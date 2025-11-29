@@ -5,6 +5,9 @@
     "description": "Bildkarussell für Hero- oder Content-Bereiche."
   },
   "attributes": {
+    "anker": {
+      "type": "string"
+    },
     "rotationSekunden": {
       "type": "integer",
       "default": 7,

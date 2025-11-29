@@ -1,11 +1,49 @@
 {
   "name": "Berufsspezialist/in gepr. Sommelier/ière (IHK)",
   "slug": "sommelier",
-  "beschreibung": "Heute sind Sommeliers/Sommelièren längst mehr als „nur“ Mundschenk des Gastes, die den passenden Wein zum Essen empfehlen. Sie sind moderne Gastgeber:innen mit umfassendem Wissen über die gesamte Getränkekunde, und besitzen tiefgehendes Wissen aus der Welt des Weines. Darüber hinaus sind sie in Marketingbelange involviert, verantworten Budgets und Ergebnisse, pflegen Guest Relations und können als Trendsetter auftreten. Wir bieten Dir das nötige Rüstzeug, um Deine eigene maßgeschneiderte Rolle zu übernehmen.\n\nHier gehts zur Anmeldung.\n\nDu möchtest mehr über die Ausbildung Berufspezialist/in gepr. Sommelier/ierè (IHK) erfahren? Dann komm doch gerne zu unserer kostenlosen Info-Veranstaltung. Hier gehts zur Anmeldung .\n\nFür mehr Informationen kontaktiert uns gerne! E-Mail: post@wineacademy.de Tel :            040-88128027",
   "kurzbeschreibung": "Heute sind Sommeliers/Sommelièren längst mehr als „nur“ Mundschenk des Gastes, die den passenden Wein zum Essen empfehlen. Sie sind moderne Gastgeber:innen mit umfassendem Wissen über die gesamte Getränkekunde, und besitzen tiefgehendes …",
-  "heroDarkMode": false,
   "seo": {
     "title": "Berufsspezialist/in gepr. Sommelier/ière (IHK)",
     "description": "Erhalte fundiertes Wissen & praktische Fähigkeiten mit unserer Sommelier Ausbildung in Hamburg. Werde zum IHK-geprüften Weinexperten und entdecke unsere Kurse."
-  }
+  },
+  "abschnitte": [
+    {
+      "__component": "landing.hero",
+      "modus": "karussell",
+      "überschrift": "Berufsspezialist/in gepr. Sommelier/ière (IHK)",
+      "überschriftStufe": "h1",
+      "einleitung": "<p>Heute sind Sommeliers/Sommelièren längst mehr als „nur“ Mundschenk des Gastes, die den passenden Wein zum Essen empfehlen. Sie sind moderne Gastgeber:innen mit umfassendem Wissen über die gesamte Getränkekunde, und besitzen tiefgehendes Wissen aus der Welt des Weines. Darüber hinaus sind sie in Marketingbelange involviert, verantworten Budgets und Ergebnisse, pflegen Guest Relations und können als Trendsetter auftreten. Wir bieten Dir das nötige Rüstzeug, um Deine eigene maßgeschneiderte Rolle zu übernehmen.\n\nHier gehts zur Anmeldung.\n\nDu möchtest mehr über die Ausbildung Berufspezialist/in gepr. Sommelier/ierè (IHK) erfahren? Dann komm doch gerne zu unserer kostenlosen Info-Veranstaltung. Hier gehts zur Anmeldung .\n\nFür mehr Informationen kontaktiert uns gerne! E-Mail: post@wineacademy.de Tel :            040-88128027</p>",
+      "bildergalerie": {
+        "bilder": [],
+        "rotationSekunden": 8
+      }
+    },
+    {
+      "__component": "landing.seminar-liste",
+      "überschrift": "Unsere nächsten Berufsspezialist/in gepr. Sommelier/ière (IHK)",
+      "überschriftStufe": "h3",
+      "hintergrundfarbe": null,
+      "einleitung": null,
+      "anzahl": 4,
+      "mehrButtonText": "Mehr laden",
+      "mehrButtonAnzeigen": true,
+      "seminarkategorie": {
+        "slug": "sommelier"
+      }
+    },
+    {
+      "__component": "landing.trennlinie",
+      "breite": "weit"
+    },
+    {
+      "__component": "landing.seminar-finder",
+      "überschrift": "Weitere Seminare",
+      "überschriftStufe": "h2",
+      "hintergrundfarbe": null,
+      "standardKategorie": {
+        "slug": "sommelier"
+      },
+      "sichtbareFilter": []
+    }
+  ]
 }

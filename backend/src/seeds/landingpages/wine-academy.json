@@ -3,12 +3,15 @@
   "slug": "wine-academy",
   "abschnitte": [
     {
-      "__component": "landing.hero-carousel",
+      "__component": "landing.hero",
+      "modus": "karussell",
       "überschrift": "Wein neu entdecken",
       "überschriftStufe": "h1",
       "einleitung": "erleben – erfahren – genießen\nWeinausbildung nach Maß – individuell und zeitlich flexibel gestaltet",
-      "rotationSekunden": 3,
-      "bilder": []
+      "bildergalerie": {
+        "bilder": [],
+        "rotationSekunden": 3
+      }
     },
     {
       "__component": "landing.card-grid",
@@ -17,29 +20,41 @@
         {
           "überschrift": "Weinkurse",
           "einleitung": null,
-          "link": "https://wineacademy.plan-p.de/kurse",
           "textAlignment": "center",
           "verticalAlignment": "center",
           "darkModeEnabled": true,
-          "backgroundImage": null
+          "backgroundImage": null,
+          "button": {
+            "name": "Weinkurse",
+            "link": "https://wineacademy.plan-p.de/kurse",
+            "linkExtern": false
+          }
         },
         {
           "überschrift": "Weintastings & Events",
           "einleitung": null,
-          "link": "https://wineacademy.plan-p.de/veranstaltungen",
           "textAlignment": "center",
           "verticalAlignment": "center",
           "darkModeEnabled": true,
-          "backgroundImage": null
+          "backgroundImage": null,
+          "button": {
+            "name": "Weintastings & Events",
+            "link": "https://wineacademy.plan-p.de/veranstaltungen",
+            "linkExtern": false
+          }
         },
         {
           "überschrift": "WSET",
           "einleitung": null,
-          "link": "https://wineacademy.plan-p.de/wset",
           "textAlignment": "center",
           "verticalAlignment": "center",
           "darkModeEnabled": true,
-          "backgroundImage": null
+          "backgroundImage": null,
+          "button": {
+            "name": "WSET",
+            "link": "https://wineacademy.plan-p.de/wset",
+            "linkExtern": false
+          }
         }
       ]
     },

@@ -25,6 +25,13 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
         bookingbox: { fields: ['topline', 'überschrift', 'beschreibung'] },
         abschnitte: {
           on: {
+            'landing.hero': {
+              populate: {
+                button: true,
+                bildergalerie: { populate: { bilder: true } },
+                video: { populate: { video: true, hintergrundbild: true } },
+              },
+            },
             'landing.bildergalerie': { populate: { bilder: true } },
             'landing.card-grid': {
               populate: {
@@ -41,7 +48,6 @@ export default factories.createCoreController('api::gutschein.gutschein', ({ str
               },
             },
             'landing.trennlinie': true,
-            'landing.text-block': true,
             'landing.seminar-liste': {
               populate: {
                 seminarkategorie: {

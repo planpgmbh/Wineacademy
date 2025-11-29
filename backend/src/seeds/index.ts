@@ -8,12 +8,14 @@ import { seedLandingPages } from './landingpages';
 import { seedCategories } from './kategorien';
 import { seedSeminars } from './seminare';
 import { ensureAuditFields } from './helpers';
+import { seedUploads } from './uploads';
 
 export async function runSeed(strapi: any) {
   const log = (msg: string) => strapi.log.info(`[seed] ${msg}`);
 
   log('Starte Seeding');
 
+  await seedUploads(strapi, log);
   await seedLocations(strapi, log);
   await seedProducts(strapi, log);
   await seedVouchers(strapi, log);

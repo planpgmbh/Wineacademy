@@ -3,12 +3,15 @@
   "slug": "kurse-weinkurse",
   "abschnitte": [
     {
-      "__component": "landing.hero-carousel",
+      "__component": "landing.hero",
+      "modus": "karussell",
       "überschrift": "Weinkurse",
       "überschriftStufe": "h1",
       "einleitung": "Sensorik, Regionenwissen und Praxis – Weinkurse für jedes Wissenslevel.",
-      "rotationSekunden": 8,
-      "bilder": []
+      "bildergalerie": {
+        "bilder": [],
+        "rotationSekunden": 8
+      }
     },
     {
       "__component": "landing.columns",
@@ -30,7 +33,6 @@
       "hintergrundfarbe": null,
       "einleitung": null,
       "anzahl": 6,
-      "buttonText": "Zum Seminar",
       "mehrButtonText": "Mehr laden",
       "mehrButtonAnzeigen": true,
       "seminarkategorie": 16

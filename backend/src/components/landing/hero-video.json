@@ -1,0 +1,20 @@
+{
+  "collectionName": "components_landing_hero_videos",
+  "info": {
+    "displayName": "Hero-Video",
+    "description": "Video + Poster/Hintergrund für Hero."
+  },
+  "options": {},
+  "attributes": {
+    "video": {
+      "type": "media",
+      "allowedTypes": ["videos"],
+      "multiple": false
+    },
+    "hintergrundbild": {
+      "type": "media",
+      "allowedTypes": ["images"],
+      "multiple": false
+    }
+  }
+}

@@ -6,6 +6,9 @@
   },
   "options": {},
   "attributes": {
+    "anker": {
+      "type": "string"
+    },
     "überschrift": {
       "type": "string"
     },
@@ -13,6 +16,12 @@
       "type": "enumeration",
       "enum": ["h2", "h3", "h4"],
       "default": "h2"
+    },
+    "reiter": {
+      "type": "component",
+      "repeatable": true,
+      "component": "landing.tab",
+      "min": 1
     },
     "hintergrundfarbe": {
       "type": "enumeration",
@@ -27,12 +36,6 @@
         "wine-blue-darker",
         "wine-blue-darkest"
       ]
-    },
-    "reiter": {
-      "type": "component",
-      "repeatable": true,
-      "component": "landing.tab",
-      "min": 1
     }
   }
 }

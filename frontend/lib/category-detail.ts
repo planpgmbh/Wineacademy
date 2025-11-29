@@ -1,4 +1,5 @@
-import { fetchJson, mediaUrl } from "./api";
+import { fetchJson } from "./api";
+import { transformLandingSection, type LandingSection, type StrapiLandingComponent } from "./landing";
 
 type StrapiMedia = {
   url?: string | null;
@@ -9,36 +10,29 @@ type CategoryResponse = {
   id: number;
   name: string;
   slug: string;
-  beschreibung?: string | null;
-  heroDarkMode?: boolean | null;
+  kurzbeschreibung?: string | null;
   seoTitle?: string | null;
   seoDescription?: string | null;
-  hintergrundbild?: StrapiMedia | null;
+  abschnitte?: StrapiLandingComponent[] | null;
+  seo?: {
+    title?: string | null;
+    description?: string | null;
+    canonical?: string | null;
+    robots?: string | null;
+    og_image?: StrapiMedia | null;
+  } | null;
 };
 
 export type CategoryDetail = {
   id: number;
   slug: string;
   title: string;
-  description: string;
-  paragraphs: string[];
-  backgroundImageUrl: string | null;
-  backgroundImageAlt: string | null;
-  heroDarkMode: boolean;
+  shortDescription: string | null;
   seoTitle: string | null;
   seoDescription: string | null;
+  sections: LandingSection[];
+  seo?: CategoryResponse["seo"];
 };
-
-function splitParagraphs(text: string | null | undefined): string[] {
-  if (!text) {
-    return [];
-  }
-
-  return text
-    .split(/\r?\n{2,}/)
-    .map((paragraph) => paragraph.trim())
-    .filter((paragraph) => paragraph.length > 0);
-}
 
 export async function getCategoryDetail(slug: string): Promise<CategoryDetail | null> {
   const trimmedSlug = typeof slug === "string" ? slug.trim() : "";
@@ -49,26 +43,23 @@ export async function getCategoryDetail(slug: string): Promise<CategoryDetail | 
   try {
     const payload = await fetchJson<CategoryResponse>(`/public/kategorien/${encodeURIComponent(trimmedSlug)}`);
 
-    const description = typeof payload.beschreibung === "string" ? payload.beschreibung.trim() : "";
-    const paragraphs = splitParagraphs(description);
-    const backgroundImageUrl = mediaUrl(payload.hintergrundbild?.url);
-    const backgroundImageAlt =
-      typeof payload.hintergrundbild?.alternativeText === "string"
-        ? payload.hintergrundbild.alternativeText.trim()
+    const sections = Array.isArray(payload.abschnitte)
+      ? payload.abschnitte.map(transformLandingSection).filter((section) => Boolean(section))
+      : [];
+    const shortDescription =
+      typeof payload.kurzbeschreibung === "string" && payload.kurzbeschreibung.trim().length > 0
+        ? payload.kurzbeschreibung.trim()
         : null;
 
     return {
       id: payload.id,
       slug: payload.slug,
       title: payload.name,
-      description,
-      paragraphs,
-      backgroundImageUrl,
-      backgroundImageAlt,
-      heroDarkMode: Boolean(payload.heroDarkMode),
+      shortDescription,
       seoTitle: typeof payload.seoTitle === "string" ? payload.seoTitle.trim() || null : null,
-      seoDescription:
-        typeof payload.seoDescription === "string" ? payload.seoDescription.trim() || null : null
+      seoDescription: typeof payload.seoDescription === "string" ? payload.seoDescription.trim() || null : null,
+      sections,
+      seo: payload.seo ?? null
     };
   } catch (error) {
     const status = (error as Error & { status?: number }).status;

@@ -1,11 +1,49 @@
 {
   "name": "Weinkurse",
   "slug": "weinkurse",
-  "beschreibung": "Wine Academy Hamburg steht für exklusive Weinkurse und Weinseminare. Tauche ein in die faszinierende Welt des Weins mit unseren Masterclasses , entdecke die Geheimnisse der Sensorik , und trainiere Deine Sinne, um Wein wie ein Profi zu verkosten und beurteilen. Unsere Kurse für Professionals bieten eine tiefgehende Auseinandersetzung mit anspruchsvollen Themen, perfekt für alle, die eine Karriere in der Weinbranche anstreben. Mit einem besonderen Fokus auf die Bourgogne bietet die Wine Academy Hamburg einzigartige Einblicke in die Traditionen und Terroirs der Weinregionen der Welt. Egal ob Einsteiger , Fortgeschritten oder erfahrener Kenner – in der Wine Academy Hamburg findet jeder den individuell passenden Kurs, um Wissen zu erweitern und die Leidenschaft für Wein und andere Getränke zu vertiefen. Als akkreditierter Kursanbieter für WSET ® bietet unsere Weinschule auch international anerkannte Abschlüsse, wie z.B. WSET® Level 1 , Level 2 und Level 3 Weine an.",
   "kurzbeschreibung": "Wine Academy Hamburg steht für exklusive Weinkurse und Weinseminare. Tauche ein in die faszinierende Welt des Weins mit unseren Masterclasses , entdecke die Geheimnisse der Sensorik , und trainiere Deine Sinne, um Wein wie ein Profi zu …",
-  "heroDarkMode": false,
   "seo": {
     "title": "Weinkurse",
     "description": "Vertiefe dein Weinwissen an der Wine Academy Hamburg, mit Kursen von Einsteiger bis Expertenniveau, inklusive Masterclasses und WSET® Zertifizierungen."
-  }
+  },
+  "abschnitte": [
+    {
+      "__component": "landing.hero",
+      "modus": "karussell",
+      "überschrift": "Weinkurse",
+      "überschriftStufe": "h1",
+      "einleitung": "<p>Wine Academy Hamburg steht für exklusive Weinkurse und Weinseminare. Tauche ein in die faszinierende Welt des Weins mit unseren Masterclasses , entdecke die Geheimnisse der Sensorik , und trainiere Deine Sinne, um Wein wie ein Profi zu verkosten und beurteilen. Unsere Kurse für Professionals bieten eine tiefgehende Auseinandersetzung mit anspruchsvollen Themen, perfekt für alle, die eine Karriere in der Weinbranche anstreben. Mit einem besonderen Fokus auf die Bourgogne bietet die Wine Academy Hamburg einzigartige Einblicke in die Traditionen und Terroirs der Weinregionen der Welt. Egal ob Einsteiger , Fortgeschritten oder erfahrener Kenner – in der Wine Academy Hamburg findet jeder den individuell passenden Kurs, um Wissen zu erweitern und die Leidenschaft für Wein und andere Getränke zu vertiefen. Als akkreditierter Kursanbieter für WSET ® bietet unsere Weinschule auch international anerkannte Abschlüsse, wie z.B. WSET® Level 1 , Level 2 und Level 3 Weine an.</p>",
+      "bildergalerie": {
+        "bilder": [],
+        "rotationSekunden": 8
+      }
+    },
+    {
+      "__component": "landing.seminar-liste",
+      "überschrift": "Unsere nächsten Weinkurse",
+      "überschriftStufe": "h3",
+      "hintergrundfarbe": null,
+      "einleitung": null,
+      "anzahl": 4,
+      "mehrButtonText": "Mehr laden",
+      "mehrButtonAnzeigen": true,
+      "seminarkategorie": {
+        "slug": "weinkurse"
+      }
+    },
+    {
+      "__component": "landing.trennlinie",
+      "breite": "weit"
+    },
+    {
+      "__component": "landing.seminar-finder",
+      "überschrift": "Weitere Seminare",
+      "überschriftStufe": "h2",
+      "hintergrundfarbe": null,
+      "standardKategorie": {
+        "slug": "weinkurse"
+      },
+      "sichtbareFilter": []
+    }
+  ]
 }

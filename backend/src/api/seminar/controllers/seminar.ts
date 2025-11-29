@@ -34,7 +34,6 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
         bild: { select: ['url', 'alternativeText'] },
         kategorien: { select: ['id', 'name', 'slug', 'kurzbeschreibung'] },
       },
-      orderBy: categorySlug ? { id: 'asc' } : { name: 'asc' },
     });
 
     const today = new Date();
@@ -155,16 +154,13 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
       });
     }
 
-    let ordered = result;
-    if (categorySlug) {
-      ordered = result
-        .filter((seminar) => seminar.naechsterTermin?.timestamp != null)
-        .sort((a, b) => {
-          const aTime = a.naechsterTermin?.timestamp ?? Number.POSITIVE_INFINITY;
-          const bTime = b.naechsterTermin?.timestamp ?? Number.POSITIVE_INFINITY;
-          return aTime - bTime;
-        });
-    }
+    const ordered = result
+      .filter((seminar) => seminar.naechsterTermin?.timestamp != null)
+      .sort((a, b) => {
+        const aTime = a.naechsterTermin?.timestamp ?? Number.POSITIVE_INFINITY;
+        const bTime = b.naechsterTermin?.timestamp ?? Number.POSITIVE_INFINITY;
+        return aTime - bTime;
+      });
 
     let paginated = ordered;
     if (parsedLimit && parsedLimit > 0) {
@@ -192,12 +188,21 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
         hintergrundbild: { select: ['url', 'alternativeText'] },
         abschnitte: {
           on: {
+            'landing.hero': {
+              populate: {
+                button: true,
+                bildergalerie: { populate: { bilder: true } },
+                video: { populate: { video: true, hintergrundbild: true } },
+              },
+            },
             'landing.bildergalerie': { populate: { bilder: true } },
             'landing.card-grid': {
               populate: {
                 karten: {
                   populate: {
                     backgroundImage: true,
+                    button: true,
+                    seminarfinderKategorie: { fields: ['id', 'name', 'slug'] },
                   },
                 },
               },
@@ -208,7 +213,6 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
               },
             },
             'landing.trennlinie': true,
-            'landing.text-block': true,
             'landing.seminar-liste': {
               populate: {
                 seminarkategorie: {

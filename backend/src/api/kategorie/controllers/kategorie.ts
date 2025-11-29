@@ -7,11 +7,8 @@ export default factories.createCoreController('api::kategorie.kategorie', ({ str
   async publicList(ctx) {
     const kategorien = await strapi.db.query('api::kategorie.kategorie').findMany({
       where: { publishedAt: { $not: null } },
-      select: ['id', 'name', 'slug', 'kurzbeschreibung', 'heroDarkMode'],
-      populate: {
-        hintergrundbild: { select: ['url', 'alternativeText'] },
-        seo: true,
-      },
+      select: ['id', 'name', 'slug', 'kurzbeschreibung'],
+      populate: { seo: true },
       orderBy: { name: 'asc' },
     });
 
@@ -24,11 +21,9 @@ export default factories.createCoreController('api::kategorie.kategorie', ({ str
         name,
         slug: resolvedSlug,
         kurzbeschreibung: typeof kategorie.kurzbeschreibung === 'string' ? kategorie.kurzbeschreibung : null,
-        heroDarkMode: Boolean(kategorie.heroDarkMode),
         seoTitle: typeof seo === 'object' ? seo.title ?? null : null,
         seoDescription: typeof seo === 'object' ? seo.description ?? null : null,
         seo,
-        hintergrundbild: kategorie.hintergrundbild ?? null,
       };
     });
   },
@@ -47,10 +42,73 @@ export default factories.createCoreController('api::kategorie.kategorie', ({ str
         publishedAt: { $not: null },
         slug: requestedSlug,
       },
-      select: ['id', 'name', 'slug', 'kurzbeschreibung', 'beschreibung', 'heroDarkMode'],
+      select: ['id', 'name', 'slug', 'kurzbeschreibung'],
       populate: {
-        hintergrundbild: { select: ['url', 'alternativeText'] },
         seo: true,
+        abschnitte: {
+          on: {
+            'landing.hero': {
+              populate: {
+                button: true,
+                bildergalerie: { populate: { bilder: true } },
+                video: { populate: { video: true, hintergrundbild: true } },
+              },
+            },
+            'landing.bildergalerie': { populate: { bilder: true } },
+            'landing.card-grid': {
+              populate: {
+                karten: {
+                  populate: {
+                    backgroundImage: true,
+                    button: true,
+                    seminarfinderKategorie: { fields: ['id', 'name', 'slug'] },
+                  },
+                },
+              },
+            },
+            'landing.columns': {
+              populate: {
+                spalten: true,
+              },
+            },
+            'landing.trennlinie': true,
+            'landing.seminar-liste': {
+              populate: {
+                seminarkategorie: {
+                  fields: ['id', 'name', 'slug', 'kurzbeschreibung'],
+                },
+              },
+            },
+            'landing.tabs': {
+              populate: {
+                reiter: true,
+              },
+            },
+            'landing.seminar-finder': {
+              populate: {
+                standardKategorie: {
+                  fields: ['id', 'name', 'slug'],
+                },
+                sichtbareFilter: {
+                  fields: ['id', 'name', 'slug'],
+                },
+              },
+            },
+            'landing.seminar-produkt-karten': {
+              populate: {
+                seminarkategorie: {
+                  fields: ['id', 'name', 'slug', 'kurzbeschreibung'],
+                },
+                produkte: {
+                  fields: ['id', 'name', 'slug', 'kurzbeschreibung'],
+                  populate: {
+                    bild: true,
+                  },
+                },
+              },
+            },
+          },
+        },
         seminare: {
           select: ['id', 'name', 'slug', 'kurzbeschreibung', 'preis', 'mwst'],
           populate: {
@@ -66,8 +124,6 @@ export default factories.createCoreController('api::kategorie.kategorie', ({ str
       return ctx.notFound('Kategorie nicht gefunden');
     }
 
-    const hintergrundbild = (category as any).hintergrundbild ?? FALLBACK_IMAGE;
-    const beschreibung = typeof category.beschreibung === 'string' ? category.beschreibung : '';
     const kurzbeschreibung = typeof category.kurzbeschreibung === 'string' ? category.kurzbeschreibung : null;
     const seo = (category as any).seo ?? {};
 
@@ -89,12 +145,10 @@ export default factories.createCoreController('api::kategorie.kategorie', ({ str
       name: category.name,
       slug: category.slug ?? requestedSlug,
       kurzbeschreibung,
-      beschreibung,
-      heroDarkMode: Boolean((category as any).heroDarkMode),
       seoTitle: typeof seo === 'object' ? seo.title ?? null : null,
       seoDescription: typeof seo === 'object' ? seo.description ?? null : null,
       seo,
-      hintergrundbild,
+      abschnitte: Array.isArray((category as any).abschnitte) ? (category as any).abschnitte : [],
       seminare,
     };
   },

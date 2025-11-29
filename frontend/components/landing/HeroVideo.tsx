@@ -11,8 +11,12 @@ type HeroVideoProps = {
   einleitung?: string | null;
   videoUrl?: string | null;
   posterUrl?: string | null;
-  buttonText?: string | null;
-  buttonLink?: string | null;
+  button?: {
+    name: string;
+    link: string;
+    stil?: "primary" | "secondary" | "ghost" | string | null;
+    linkExtern?: boolean | null;
+  } | null;
 };
 
 const extractParagraphs = (text?: string | null): string[] => {
@@ -31,6 +35,17 @@ const resolveLinkProps = (href: string) => {
   return { href };
 };
 
+const resolveButtonClasses = (stil?: string | null) => {
+  switch (stil) {
+    case "secondary":
+      return "inline-flex min-w-[180px] items-center justify-center gap-2 rounded-full border border-white/70 bg-white/10 px-6 py-3 text-base font-semibold text-white transition hover:border-white hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white md:px-8 md:py-3.5";
+    case "ghost":
+      return "inline-flex min-w-[180px] items-center justify-center gap-2 rounded-full px-6 py-3 text-base font-semibold text-white transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white md:px-8 md:py-3.5";
+    default:
+      return "inline-flex min-w-[180px] items-center justify-center gap-2 rounded-full border border-white/75 px-6 py-3 text-base font-semibold text-white transition hover:border-white hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white md:px-8 md:py-3.5";
+  }
+};
+
 const headingStyles: Record<"h1" | "h2" | "h3" | "h4", string> = {
   h1: "heading-hero",
   h2: "heading-hero",
@@ -47,10 +62,10 @@ const headingTags: Record<"h1" | "h2" | "h3" | "h4", keyof JSX.IntrinsicElements
 
 const DESKTOP_MIN_WIDTH = 1024;
 
-export function HeroVideo({ überschrift, überschriftStufe, einleitung, videoUrl, posterUrl, buttonText, buttonLink }: HeroVideoProps) {
+export function HeroVideo({ überschrift, überschriftStufe, einleitung, videoUrl, posterUrl, button }: HeroVideoProps) {
   const [canPlayVideo, setCanPlayVideo] = useState(false);
   const paragraphs = useMemo(() => extractParagraphs(einleitung), [einleitung]);
-  const showButton = buttonText && buttonText.trim().length > 0 && buttonLink && buttonLink.trim().length > 0;
+  const showButton = Boolean(button && button.name && button.link);
   const HeadingTag = headingTags[überschriftStufe];
   const headingClass = headingStyles[überschriftStufe];
 
@@ -133,10 +148,10 @@ export function HeroVideo({ überschrift, überschriftStufe, einleitung, videoUr
 
         {showButton ? (
           <Link
-            className="inline-flex min-w-[180px] items-center justify-center gap-2 rounded-full border border-white/75 px-6 py-3 text-base font-semibold text-white transition hover:border-white hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white md:px-8 md:py-3.5"
-            {...resolveLinkProps(buttonLink.trim())}
+            className={resolveButtonClasses(button?.stil)}
+            {...resolveLinkProps(button!.link!)}
           >
-            {buttonText.trim()}
+            {button?.name ?? "Mehr"}
           </Link>
         ) : null}
       </div>
