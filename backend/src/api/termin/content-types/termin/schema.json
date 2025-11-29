@@ -21,7 +21,6 @@
     "kapazitaet": {
       "type": "integer",
       "required": true,
-      "min": 1,
       "default": 30
     },
     "planungsstatus": {

@@ -13,6 +13,7 @@ import {
   sendVoucherMailForOrder,
 } from '../../utils/notifications';
 import { createGutscheineForPaidOrder } from '../../utils/gutschein-erzeugung';
+import { updateTerminCapacity, buildSeatChangesFromPositions } from '../../utils/termin-capacity';
 
 const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
@@ -263,6 +264,27 @@ export default {
     }
 
     if (bestellungId && currentStatus === 'storniert' && previousStatus !== 'storniert') {
+      try {
+        const orderWithPositions = await strapi.entityService.findOne('api::bestellung.bestellung', bestellungId, {
+          populate: {
+            positionen: {
+              populate: {
+                termin: { fields: ['id'] },
+              },
+            },
+          },
+        });
+        const seatChanges = await buildSeatChangesFromPositions(orderWithPositions?.positionen, 1, strapi);
+        for (const change of seatChanges) {
+          await updateTerminCapacity(strapi, change);
+        }
+      } catch (err) {
+        strapi.log.error('[Bestellung lifecycles] Kapazität konnte bei Storno nicht angepasst werden.', {
+          bestellungId,
+          error: err instanceof Error ? err.message : err,
+        });
+      }
+
       await handleSevDeskStorno(bestellungId);
       await sendStornoNotificationsForOrder(strapi, bestellungId);
     }

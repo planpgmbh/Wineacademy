@@ -15,6 +15,8 @@ type StrapiCategory = {
 type StrapiTermin = {
   id: number;
   starttag?: string | null;
+  kapazitaet?: number | null;
+  planungsstatus?: string | null;
   standort?: {
     name?: string | null;
     stadt?: string | null;
@@ -43,6 +45,8 @@ type StrapiSeminarDetail = {
 export type SeminarDateOption = {
   id: string;
   label: string;
+  kapazitaet?: number | null;
+  planungsstatus?: string | null;
 };
 
 export type SeminarDetail = {
@@ -171,15 +175,22 @@ function mapDateOptions(termine: StrapiSeminarDetail["termine"]): SeminarDateOpt
     return [];
   }
 
-  return termine
-    .map((termin) => {
-      const label = formatDateLabel(termin);
-      if (!label) {
-        return null;
-      }
-      return { id: String(termin.id), label };
-    })
-    .filter((option): option is SeminarDateOption => Boolean(option));
+  const options: SeminarDateOption[] = [];
+
+  for (const termin of termine) {
+    const label = formatDateLabel(termin);
+    if (!label) {
+      continue;
+    }
+    options.push({
+      id: String(termin.id),
+      label,
+      kapazitaet: typeof termin.kapazitaet === "number" ? termin.kapazitaet : null,
+      planungsstatus: termin.planungsstatus ?? null,
+    });
+  }
+
+  return options;
 }
 
 function extractHeroParagraphs(seminar: StrapiSeminarDetail): string[] {

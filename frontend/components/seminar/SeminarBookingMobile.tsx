@@ -16,7 +16,7 @@ type SeminarBookingMobileProps = {
   title: string;
   price: string;
   description: string;
-  dates: { id: string; label: string }[];
+  dates: { id: string; label: string; kapazitaet?: number | null; planungsstatus?: string | null }[];
   buttonText: string;
   onSubmit?: (payload: { quantity: number; dateId?: string }) => void;
   seminarSlug?: string;
@@ -39,6 +39,32 @@ export function SeminarBookingMobile({
   const hasDates = dates.length > 0;
   const placeholderValue = "";
   const datesKey = useMemo(() => dates.map((date) => date.id).join("|"), [dates]);
+  const selectedDateInfo = useMemo(
+    () => (selectedDate ? dates.find((date) => date.id === selectedDate) ?? null : null),
+    [dates, selectedDate]
+  );
+
+  const normalisedStatus = (selectedDateInfo?.planungsstatus ?? "").toLowerCase();
+  const capacity =
+    selectedDateInfo?.kapazitaet != null && Number.isFinite(selectedDateInfo.kapazitaet)
+      ? Number(selectedDateInfo.kapazitaet)
+      : null;
+  const isCancelled = normalisedStatus === "abgesagt";
+  const isSoldOut = normalisedStatus === "ausgebucht" || (capacity != null && capacity <= 0);
+  const isLowStock = capacity != null && capacity > 0 && capacity < 10;
+  const remainingLabel =
+    capacity === 1 ? "Nur noch 1 Platz" : isLowStock && capacity != null ? `Nur noch ${capacity} Plätze` : null;
+  const dynamicHighlight =
+    isCancelled || isSoldOut
+      ? isCancelled
+        ? "Termin abgesagt"
+        : "Leider Ausgebucht"
+      : remainingLabel
+        ? remainingLabel
+        : highlightLabel;
+  const ctaLabel = isCancelled ? "Termin abgesagt" : isSoldOut ? "Termin ausgebucht" : buttonText;
+  const disableCta = isCancelled || isSoldOut;
+  const badgeClassName = `badge-highlight ${isLowStock ? "badge-highlight-pulse" : ""}`.trim();
 
   const syncSelection = useCallback(
     (preferredDate?: string) => {
@@ -122,6 +148,10 @@ export function SeminarBookingMobile({
   );
 
   const handleConfirm = () => {
+    if (disableCta) {
+      return false;
+    }
+
     if (hasDates && !selectedDate) {
       setDateError("Bitte wähle einen Termin aus.");
       return false;
@@ -143,11 +173,9 @@ export function SeminarBookingMobile({
   };
 
   return (
-    <MobileBookingSheet ctaLabel={buttonText} onConfirm={handleConfirm}>
+    <MobileBookingSheet ctaLabel={ctaLabel} onConfirm={handleConfirm} ctaDisabled={disableCta}>
       <div className="space-y-2">
-        {highlightLabel ? (
-          <span className="badge-highlight">{highlightLabel}</span>
-        ) : null}
+        {dynamicHighlight ? <span className={badgeClassName}>{dynamicHighlight}</span> : null}
         <h2 className="heading-card">{title}</h2>
         <p className="text-lg font-light text-base-content/80">{price}</p>
       </div>

@@ -25,7 +25,7 @@ export function MobileBookingSheet({ ctaLabel, onConfirm, ctaDisabled = false, c
 
   const shouldShowSheet = isOpen || showCTA;
   const safeAreaBottom = "env(safe-area-inset-bottom, 0)";
-  const isButtonDisabled = isOpen && ctaDisabled;
+  const isButtonDisabled = ctaDisabled;
 
   const handleConfirm = async () => {
     if (!isOpen) {

@@ -25,6 +25,7 @@ import {
 } from '../utils/notifications';
 import { normaliseShippingValue, roundCurrency } from '../../../utils/shipping';
 import { createGutscheineForPaidOrder } from '../utils/gutschein-erzeugung';
+import { updateTerminCapacity } from '../utils/termin-capacity';
 
 type PositionInput = {
   typ?: 'seminar' | 'produkt' | 'gutschein';
@@ -360,7 +361,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
   const loadTermin = async (id: number) => {
     return strapi.db.query('api::termin.termin').findOne({
       where: { id },
-      select: ['id', 'planungsstatus', 'publishedAt', 'starttag'],
+      select: ['id', 'planungsstatus', 'publishedAt', 'starttag', 'kapazitaet'],
       populate: {
         seminar: { select: ['id', 'name', 'mwst', 'preis'] },
         tageMitUhrzeit: { select: ['datum', 'startzeit', 'endzeit'] },
@@ -476,7 +477,7 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
         const terminId = Number(raw.terminId);
         if (!Number.isFinite(terminId)) return ctx.badRequest('Termin für Seminar-Position fehlt');
         const termin = await loadTermin(terminId);
-        if (!termin || termin.planungsstatus !== 'geplant' || !termin.publishedAt) {
+        if (!termin || termin.planungsstatus === 'abgesagt' || !termin.publishedAt) {
           return ctx.badRequest('Termin nicht verfügbar');
         }
         const seminar = (termin as any).seminar;
@@ -528,8 +529,10 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
           summeSteuer,
         };
         positionen.push(position);
+        const existingSeat = seminarSeats.get(termin.id);
+        const totalMenge = (existingSeat?.menge ?? 0) + menge;
         seminarSeats.set(termin.id, {
-          menge,
+          menge: totalMenge,
           brutto,
           netto,
           titel,
@@ -792,6 +795,20 @@ export default factories.createCoreController('api::bestellung.bestellung', ({ s
               bestellung: bestellungId,
             },
           });
+        }
+      }
+
+      // Kapazität nach erfolgreichem Anlegen der Bestellung reduzieren.
+      for (const [terminId, seatInfo] of seminarSeats.entries()) {
+        try {
+          await updateTerminCapacity(strapi, { terminId, delta: -(seatInfo?.menge ?? 0) });
+        } catch (capErr: any) {
+          strapi.log.error('[publicCreate Bestellung] Kapazität konnte nicht aktualisiert werden.', {
+            terminId,
+            bestellungId,
+            error: capErr?.message ?? capErr,
+          });
+          return ctx.internalServerError('Kapazität konnte nicht aktualisiert werden');
         }
       }
 

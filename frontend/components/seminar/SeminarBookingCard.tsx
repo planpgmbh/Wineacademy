@@ -9,7 +9,7 @@ type SeminarBookingCardProps = {
   title: string;
   price: string;
   description: string;
-  dates: { id: string; label: string }[];
+  dates: { id: string; label: string; kapazitaet?: number | null; planungsstatus?: string | null }[];
   buttonText: string;
   className?: string;
   seminarSlug?: string;
@@ -33,6 +33,32 @@ export function SeminarBookingCard({
   const hasDates = dates.length > 0;
   const placeholderValue = "";
   const datesKey = useMemo(() => dates.map((date) => date.id).join("|"), [dates]);
+  const selectedDateInfo = useMemo(
+    () => (selectedDate ? dates.find((date) => date.id === selectedDate) ?? null : null),
+    [dates, selectedDate]
+  );
+
+  const normalisedStatus = (selectedDateInfo?.planungsstatus ?? "").toLowerCase();
+  const capacity =
+    selectedDateInfo?.kapazitaet != null && Number.isFinite(selectedDateInfo.kapazitaet)
+      ? Number(selectedDateInfo.kapazitaet)
+      : null;
+  const isCancelled = normalisedStatus === "abgesagt";
+  const isSoldOut = normalisedStatus === "ausgebucht" || (capacity != null && capacity <= 0);
+  const isLowStock = capacity != null && capacity > 0 && capacity < 10;
+  const remainingLabel =
+    capacity === 1 ? "Nur noch 1 Platz" : isLowStock && capacity != null ? `Nur noch ${capacity} Plätze` : null;
+  const dynamicHighlight =
+    isCancelled || isSoldOut
+      ? isCancelled
+        ? "Termin abgesagt"
+        : "Leider Ausgebucht"
+      : remainingLabel
+        ? remainingLabel
+        : highlightLabel;
+  const ctaLabel = isCancelled ? "Termin abgesagt" : isSoldOut ? "Termin ausgebucht" : buttonText;
+  const disableCta = isCancelled || isSoldOut;
+  const badgeClassName = `badge-highlight ${isLowStock ? "badge-highlight-pulse" : ""}`.trim();
 
   const syncSelection = useCallback(
     (preferredDate?: string) => {
@@ -104,6 +130,10 @@ export function SeminarBookingCard({
   }, [datesKey, syncSelection, seminarSlug]);
 
   const handleSubmit = useCallback(() => {
+    if (disableCta) {
+      return;
+    }
+
     if (hasDates && !selectedDate) {
       setDateError("Bitte wähle einen Termin aus.");
       return;
@@ -122,7 +152,7 @@ export function SeminarBookingCard({
       seminarSlug,
       seminarTitle: title,
     });
-  }, [hasDates, onSubmit, quantity, selectedDate, seminarSlug, title]);
+  }, [disableCta, hasDates, onSubmit, quantity, selectedDate, seminarSlug, title]);
 
   const handleDateChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value === placeholderValue ? undefined : event.target.value;
@@ -138,9 +168,7 @@ export function SeminarBookingCard({
       className={`flex w-full flex-col gap-6 rounded-box border ui-border bg-base-100/65 p-4 shadow-xl backdrop-blur-xl md:min-w-[360px] md:max-w-[360px] md:w-[360px] md:p-5 ${className}`.trim()}
     >
       <div className="space-y-2.5">
-        {highlightLabel ? (
-          <span className="badge-highlight">{highlightLabel}</span>
-        ) : null}
+        {dynamicHighlight ? <span className={badgeClassName}>{dynamicHighlight}</span> : null}
 
         <div className="space-y-1.5">
           <h2 className="heading-card">{title}</h2>
@@ -178,8 +206,8 @@ export function SeminarBookingCard({
           </label>
         </div>
 
-        <button type="button" className="btn btn-primary w-full" onClick={handleSubmit}>
-          {buttonText}
+        <button type="button" className="btn btn-primary w-full" onClick={handleSubmit} disabled={disableCta}>
+          {ctaLabel}
         </button>
       </div>
     </article>
