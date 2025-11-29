@@ -35,7 +35,7 @@
       "anzahl": 6,
       "mehrButtonText": "Mehr laden",
       "mehrButtonAnzeigen": true,
-      "seminarkategorie": 16
+      "seminarkategorie": "weinkurse"
     },
     {
       "__component": "landing.trennlinie",

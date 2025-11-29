@@ -35,7 +35,7 @@
       "anzahl": 6,
       "mehrButtonText": "Mehr laden",
       "mehrButtonAnzeigen": true,
-      "seminarkategorie": 8
+      "seminarkategorie": "masterclass"
     },
     {
       "__component": "landing.trennlinie",
@@ -46,7 +46,7 @@
       "überschrift": "Alle Seminare auf einen Blick",
       "überschriftStufe": "h2",
       "hintergrundfarbe": null,
-      "standardKategorie": 8,
+      "standardKategorie": "masterclass",
       "sichtbareFilter": []
     }
   ],

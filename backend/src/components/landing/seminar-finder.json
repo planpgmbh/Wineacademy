@@ -6,9 +6,6 @@
   },
   "options": {},
   "attributes": {
-    "anker": {
-      "type": "string"
-    },
     "überschrift": {
       "type": "string"
     },

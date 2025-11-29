@@ -5,9 +5,6 @@
     "description": "Liste der nächsten Seminare für eine ausgewählte Kategorie."
   },
   "attributes": {
-    "anker": {
-      "type": "string"
-    },
     "überschrift": {
       "type": "string"
     },

@@ -39,7 +39,7 @@
       "anzahl": 6,
       "mehrButtonText": "Mehr laden",
       "mehrButtonAnzeigen": true,
-      "seminarkategorie": 2
+      "seminarkategorie": "tastings-events"
     },
     {
       "__component": "landing.trennlinie",

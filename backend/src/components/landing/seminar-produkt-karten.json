@@ -5,9 +5,6 @@
     "description": "Raster für Seminare oder Produkte mit Lade-Button."
   },
   "attributes": {
-    "anker": {
-      "type": "string"
-    },
     "überschrift": {
       "type": "string"
     },

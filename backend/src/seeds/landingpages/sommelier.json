@@ -39,7 +39,7 @@
       "anzahl": 6,
       "mehrButtonText": "Mehr laden",
       "mehrButtonAnzeigen": true,
-      "seminarkategorie": 6
+      "seminarkategorie": "sommelier"
     },
     {
       "__component": "landing.trennlinie",

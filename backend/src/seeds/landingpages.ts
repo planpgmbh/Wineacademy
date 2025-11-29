@@ -17,6 +17,32 @@ async function findUploadIdByName(strapi: any, name: string): Promise<number | n
   return file?.id ?? null;
 }
 
+function extractSlug(value: unknown): string | null {
+  if (typeof value === 'string') {
+    return value.trim().length > 0 ? value.trim() : null;
+  }
+  if (value && typeof value === 'object') {
+    const slug = (value as any).slug ?? (value as any).name ?? null;
+    if (typeof slug === 'string' && slug.trim().length > 0) {
+      return slug.trim();
+    }
+  }
+  return null;
+}
+
+async function findCategoryIdBySlug(strapi: any, value: string | null | undefined): Promise<number | null> {
+  if (typeof value !== 'string' || value.trim().length === 0) return null;
+  const slug = slugify(value);
+  if (!slug || slug.length === 0) return null;
+  const documentService = strapi.documents('api::kategorie.kategorie');
+  const found = await documentService.findFirst({
+    filters: { slug },
+    status: 'published',
+    fields: ['id'],
+  });
+  return found?.id ?? null;
+}
+
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (char) => {
     switch (char) {
@@ -90,6 +116,63 @@ async function transformSectionWithMedia(
       hero.bildergalerie = { ...hero.bildergalerie, bilder };
     }
     return hero;
+  }
+
+  if (transformed.__component === 'landing.card-grid') {
+    const grid = { ...transformed } as Record<string, any>;
+    if (Array.isArray(grid.karten)) {
+      const mapped: any[] = [];
+      for (const card of grid.karten) {
+        if (!card || typeof card !== 'object') {
+          mapped.push(card);
+          continue;
+        }
+        const nextCard: Record<string, any> = { ...card };
+        if (typeof nextCard.backgroundImage === 'string' && nextCard.backgroundImage.trim().length > 0) {
+          const mediaId = await findUploadIdByName(strapi, nextCard.backgroundImage.trim());
+          nextCard.backgroundImage = mediaId ?? null;
+        }
+        if ('seminarfinderKategorie' in nextCard) {
+          const relation = nextCard.seminarfinderKategorie;
+          const slug = extractSlug(relation);
+          nextCard.seminarfinderKategorie = await findCategoryIdBySlug(strapi, slug);
+        }
+        mapped.push(nextCard);
+      }
+      grid.karten = mapped;
+    }
+    return grid;
+  }
+
+  if (transformed.__component === 'landing.seminar-liste') {
+    const list = { ...transformed } as Record<string, any>;
+    if ('seminarkategorie' in list) {
+      const relation = list.seminarkategorie;
+      const slug = extractSlug(relation);
+      list.seminarkategorie = await findCategoryIdBySlug(strapi, slug);
+    }
+    return list;
+  }
+
+  if (transformed.__component === 'landing.seminar-finder') {
+    const finder = { ...transformed } as Record<string, any>;
+    if ('standardKategorie' in finder) {
+      const relation = finder.standardKategorie;
+      const slug = extractSlug(relation);
+      finder.standardKategorie = await findCategoryIdBySlug(strapi, slug);
+    }
+    if (Array.isArray(finder.sichtbareFilter)) {
+      const mapped: number[] = [];
+      for (const entry of finder.sichtbareFilter) {
+        const slug = extractSlug(entry);
+        const id = await findCategoryIdBySlug(strapi, slug);
+        if (id) {
+          mapped.push(id);
+        }
+      }
+      finder.sichtbareFilter = mapped;
+    }
+    return finder;
   }
 
   return transformed;

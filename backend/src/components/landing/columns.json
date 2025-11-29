@@ -5,9 +5,6 @@
     "description": "Abschnitt mit bis zu drei individuell befüllbaren Spalten."
   },
   "attributes": {
-    "anker": {
-      "type": "string"
-    },
     "überschrift": {
       "type": "string"
     },

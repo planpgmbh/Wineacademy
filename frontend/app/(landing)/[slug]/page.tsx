@@ -33,6 +33,24 @@ import { fetchUpcomingSeminars } from "@/lib/upcoming-seminars";
 
 export const revalidate = 120;
 
+const ANCHOR_BASE: Record<LandingSection["type"], string | null> = {
+  "hero-video": null,
+  "hero-carousel": null,
+  "hero-small": null,
+  "hero-blank": null,
+  bildergalerie: "bildergalerie",
+  "card-grid": "card-grid",
+  columns: "spalten",
+  divider: null,
+  "seminar-list": "seminar-liste",
+  "seminar-product-cards": "seminar-produkt-karten",
+  tabs: "tabs",
+  "seminar-finder": "seminar-finder",
+  unknown: null
+};
+
+const anchorWrapperClass = "scroll-mt-28 md:scroll-mt-36";
+
 const FALLBACK_METADATA = {
   title: "Wine Academy Landingpage",
   description: "Landingpage der Wine Academy Hamburg."
@@ -135,12 +153,31 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
   }
 
   const content: ReactNode[] = [];
+  const anchorCounts = new Map<string, number>();
+
+  const resolveAnchorId = (type: LandingSection["type"]): string | null => {
+    const base = ANCHOR_BASE[type];
+    if (!base) return null;
+    const nextCount = (anchorCounts.get(base) ?? 0) + 1;
+    anchorCounts.set(base, nextCount);
+    return nextCount === 1 ? base : `${base}-${nextCount}`;
+  };
+
+  const wrapWithAnchor = (node: ReactNode, key: string, anchorId: string | null): ReactNode => {
+    if (!anchorId) return node;
+    return (
+      <div key={key} id={anchorId} className={anchorWrapperClass}>
+        {node}
+      </div>
+    );
+  };
 
   for (let index = 0; index < sections.length; index += 1) {
     const section = sections[index];
+    const anchorId = resolveAnchorId(section.type);
 
     if (section.type === "hero-blank") {
-      content.push(
+      const node = (
         <HeroBlank
           key={`hero-blank-${index}`}
           überschrift={section.überschrift}
@@ -148,11 +185,12 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
           einleitung={section.einleitung}
         />
       );
+      content.push(wrapWithAnchor(node, `hero-blank-${index}`, anchorId));
       continue;
     }
 
     if (section.type === "hero-video") {
-      content.push(
+      const node = (
         <HeroVideo
           key={`hero-video-${index}`}
           überschrift={section.überschrift}
@@ -163,11 +201,12 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
           button={section.button ?? null}
         />
       );
+      content.push(wrapWithAnchor(node, `hero-video-${index}`, anchorId));
       continue;
     }
 
     if (section.type === "hero-carousel") {
-      content.push(
+      const node = (
         <HeroCarousel
           key={`hero-carousel-${index}`}
           überschrift={section.überschrift}
@@ -178,11 +217,12 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
           button={section.button ?? null}
         />
       );
+      content.push(wrapWithAnchor(node, `hero-carousel-${index}`, anchorId));
       continue;
     }
 
     if (section.type === "bildergalerie") {
-      content.push(
+      const node = (
         <Bildergalerie
           key={`bildergalerie-${index}`}
           bilder={section.bilder}
@@ -190,11 +230,12 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
           breite={section.breite}
         />
       );
+      content.push(wrapWithAnchor(node, `bildergalerie-${index}`, anchorId));
       continue;
     }
 
     if (section.type === "hero-small") {
-      content.push(
+      const node = (
         <HeroSmall
           key={`hero-small-${index}`}
           überschrift={section.überschrift}
@@ -203,18 +244,18 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
           bild={section.bild}
         />
       );
+      content.push(wrapWithAnchor(node, `hero-small-${index}`, anchorId));
       continue;
     }
 
     if (section.type === "card-grid") {
-      content.push(
-        <CardGrid key={`card-grid-${index}`} karten={section.karten} hintergrund={section.hintergrund} />
-      );
+      const node = <CardGrid key={`card-grid-${index}`} karten={section.karten} hintergrund={section.hintergrund} />;
+      content.push(wrapWithAnchor(node, `card-grid-${index}`, anchorId));
       continue;
     }
 
     if (section.type === "columns") {
-      content.push(
+      const node = (
         <ColumnsSection
           key={`columns-${index}`}
           überschrift={section.überschrift}
@@ -224,6 +265,7 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
           spalten={section.spalten}
         />
       );
+      content.push(wrapWithAnchor(node, `columns-${index}`, anchorId));
       continue;
     }
 
@@ -235,24 +277,26 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
     }
 
     if (section.type === "tabs") {
-      content.push(renderTabsSection(section, index));
+      content.push(wrapWithAnchor(renderTabsSection(section, index), `tabs-${index}`, anchorId));
       continue;
     }
 
     if (section.type === "seminar-list") {
-      content.push(await renderSeminarList(section, index));
+      const node = await renderSeminarList(section, index, anchorId);
+      content.push(node);
       continue;
     }
 
     if (section.type === "seminar-product-cards") {
-      content.push(await renderSeminarProductCards(section, index));
+      const node = await renderSeminarProductCards(section, index);
+      content.push(wrapWithAnchor(node, `seminar-product-cards-${index}`, anchorId));
       continue;
     }
 
     if (section.type === "seminar-finder") {
       const finder = renderSeminarFinder(section, index, seminarFinderData);
       if (finder) {
-        content.push(finder);
+        content.push(wrapWithAnchor(finder, `seminar-finder-${index}`, anchorId));
       }
       continue;
     }
@@ -295,7 +339,7 @@ function renderTabsSection(section: LandingTabsSection, index: number) {
   );
 }
 
-async function renderSeminarList(section: LandingSeminarListSection, index: number) {
+async function renderSeminarList(section: LandingSeminarListSection, index: number, anchorId: string | null) {
   let initialItems = [] as Awaited<ReturnType<typeof fetchUpcomingSeminars>>;
   let initialError: string | null = null;
   const categorySlug = section.category?.slug ?? "";
@@ -314,10 +358,10 @@ async function renderSeminarList(section: LandingSeminarListSection, index: numb
     initialError = "Seminare konnten nicht geladen werden.";
   }
 
-  return (
+  const node = (
     <SeminarList
       key={`seminar-list-${categorySlug || "alle"}-${index}`}
-      id="seminar-liste"
+      id={anchorId ?? "seminar-liste"}
       überschrift={section.überschrift}
       überschriftStufe={section.überschriftStufe}
       einleitung={section.einleitung}
@@ -331,6 +375,16 @@ async function renderSeminarList(section: LandingSeminarListSection, index: numb
       anzahl={section.anzahl}
     />
   );
+
+  if (anchorId) {
+    return (
+      <div key={`seminar-list-wrapper-${index}`} id={anchorId} className={anchorWrapperClass}>
+        {node}
+      </div>
+    );
+  }
+
+  return node;
 }
 
 async function renderSeminarProductCards(section: LandingSeminarProductCardsSection, index: number) {

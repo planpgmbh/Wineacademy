@@ -4,18 +4,13 @@
   "abschnitte": [
     {
       "__component": "landing.hero",
-      "modus": "video",
       "überschrift": "Wein neu entdecken",
       "überschriftStufe": "h1",
       "einleitung": "erleben – erfahren – genießen Weinausbildung nach Maß – individuell und zeitlich flexibel gestaltet",
-      "button": {
-        "name": "Kurse entdecken",
-        "link": "/kurse",
-        "stil": "primary"
-      },
+      "button": null,
       "video": {
         "video": "WineAcademy-Header_final.mp4",
-        "hintergrundbild": null
+        "hintergrundbild": "139-WineAcademy_Schulung_015579-1-scaled.jpg"
       },
       "bildergalerie": {
         "bilder": [],
@@ -32,12 +27,13 @@
           "textAlignment": "center",
           "verticalAlignment": "center",
           "darkModeEnabled": true,
-          "backgroundImage": null,
+          "backgroundImage": "141-WineAcademy_Schulung_015591-scaled-e1714553733476.jpg",
           "button": {
-            "name": "Weinkurse",
-            "link": "/kurse/weinkurse",
-            "linkExtern": false
-          }
+            "name": "Mehr erfahren",
+            "link": null,
+            "stil": "primary"
+          },
+          "seminarfinderKategorie": "kurse"
         },
         {
           "überschrift": "Tasting & Events",
@@ -45,11 +41,11 @@
           "textAlignment": "center",
           "verticalAlignment": "center",
           "darkModeEnabled": true,
-          "backgroundImage": null,
+          "backgroundImage": "40-WineAcademy_Detail_014788-1-scaled.jpg",
           "button": {
-            "name": "Tasting & Events",
-            "link": "https://wineacademy.plan-p.de/veranstaltungen",
-            "linkExtern": false
+            "name": "Mehr erfahren",
+            "link": "#seminar-liste",
+            "stil": "primary"
           }
         },
         {
@@ -58,11 +54,11 @@
           "textAlignment": "center",
           "verticalAlignment": "center",
           "darkModeEnabled": true,
-          "backgroundImage": null,
+          "backgroundImage": "Wine_WSET_202001-scaled.jpg",
           "button": {
-            "name": "WSET® ",
-            "link": "/wset",
-            "linkExtern": false
+            "name": "Mehr erfahren",
+            "link": "wset",
+            "stil": "primary"
           }
         }
       ]
@@ -86,7 +82,7 @@
     },
     {
       "__component": "landing.trennlinie",
-      "breite": "weit"
+      "breite": "normal"
     },
     {
       "__component": "landing.seminar-liste",
@@ -95,9 +91,14 @@
       "hintergrundfarbe": null,
       "einleitung": null,
       "anzahl": 6,
+      "buttonText": "Zum Seminar",
       "mehrButtonText": "Mehr laden",
       "mehrButtonAnzeigen": true,
-      "seminarkategorie": null
+      "seminarkategorie": "tastings-events"
+    },
+    {
+      "__component": "landing.trennlinie",
+      "breite": "weit"
     },
     {
       "__component": "landing.seminar-finder",
