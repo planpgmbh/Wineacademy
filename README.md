@@ -6,7 +6,7 @@ Diese Codebasis liefert die Wine Academy Hamburg Website: ein Strapi-Backend fü
 - **Backend:** Strapi 5 auf Node 20 mit PostgreSQL 15; liefert ausschließlich öffentliche REST-Endpunkte unter `/api/public/*`.
 - **Frontend:** Next.js 15 (App Router, Tailwind 4) konsumiert die Public-API und stellt Seminare, Produkte, Gutschein-Flow und Checkout bereit.
 - **Stacks:** Zwei Compose-Stacks (`docker-compose.yml` für Produktion, `docker-compose-staging.yml` für Staging) mit gemeinsamen Traefik-Proxy (`proxy` Netzwerk) und getrennten Datenbank-Volumes.
-- **Domänen:** Produktion `https://wineacademymain.plan-p.de`, Staging `https://wineacademy.plan-p.de`.
+ - **Domänen:** Produktion `https://main.wineacademy.de`, Staging `https://staging.wineacademy.de`.
 
 ## Schnellstart für KI-Agenten
 1. **Pflichtlektüre:** `AGENTS.md`, `docs/entwicklungsplan.md` sowie die Teilprojekt-Readmes lesen.

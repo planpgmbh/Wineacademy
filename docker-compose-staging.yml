@@ -52,19 +52,19 @@ services:
       traefik.enable: "true"
       traefik.docker.network: "proxy"
       traefik.http.services.service_wineacadamy_staging.loadbalancer.server.port: "1337"
-      traefik.http.routers.service_wineacadamy_staging.rule: "Host(`wineacademy.plan-p.de`) && PathPrefix(`/api`)"
+      traefik.http.routers.service_wineacadamy_staging.rule: "Host(`staging.wineacademy.de`) && PathPrefix(`/api`)"
       traefik.http.routers.service_wineacadamy_staging.entrypoints: "websecure"
       traefik.http.routers.service_wineacadamy_staging.tls.certresolver: "http-resolver"
       # Admin/Plugin-APIs (JSON-Endpunkte für das Admin-Panel)
-      traefik.http.routers.service_wineacadamy_staging-adminapi.rule: "Host(`wineacademy.plan-p.de`) && (PathPrefix(`/content-manager`) || PathPrefix(`/content-type-builder`) || PathPrefix(`/i18n`) || PathPrefix(`/users-permissions`) || PathPrefix(`/email`) || PathPrefix(`/upload`) || PathPrefix(`/users`))"
+      traefik.http.routers.service_wineacadamy_staging-adminapi.rule: "Host(`staging.wineacademy.de`) && (PathPrefix(`/content-manager`) || PathPrefix(`/content-type-builder`) || PathPrefix(`/i18n`) || PathPrefix(`/users-permissions`) || PathPrefix(`/email`) || PathPrefix(`/upload`) || PathPrefix(`/users`))"
       traefik.http.routers.service_wineacadamy_staging-adminapi.entrypoints: "websecure"
       traefik.http.routers.service_wineacadamy_staging-adminapi.tls.certresolver: "http-resolver"
       # Serve uploads without /api prefix for frontend asset URLs
-      traefik.http.routers.service_wineacadamy_staging-uploads.rule: "Host(`wineacademy.plan-p.de`) && PathPrefix(`/uploads`)"
+      traefik.http.routers.service_wineacadamy_staging-uploads.rule: "Host(`staging.wineacademy.de`) && PathPrefix(`/uploads`)"
       traefik.http.routers.service_wineacadamy_staging-uploads.entrypoints: "websecure"
       traefik.http.routers.service_wineacadamy_staging-uploads.tls.certresolver: "http-resolver"
       # Serve Strapi Admin under /admin (no strip)
-      traefik.http.routers.service_wineacadamy_staging-admin.rule: "Host(`wineacademy.plan-p.de`) && PathPrefix(`/admin`)"
+      traefik.http.routers.service_wineacadamy_staging-admin.rule: "Host(`staging.wineacademy.de`) && PathPrefix(`/admin`)"
       traefik.http.routers.service_wineacadamy_staging-admin.entrypoints: "websecure"
       traefik.http.routers.service_wineacadamy_staging-admin.tls.certresolver: "http-resolver"
       monitor.category: "website"
@@ -74,7 +74,7 @@ services:
     build:
       context: ./frontend
       args:
-        NEXT_PUBLIC_API_URL: https://wineacademy.plan-p.de/api
+        NEXT_PUBLIC_API_URL: https://staging.wineacademy.de/api
         API_INTERNAL_URL: http://service_wineacadamy_staging:1337/api
         NEXT_PUBLIC_PAYPAL_CLIENT_ID: ${NEXT_PUBLIC_PAYPAL_CLIENT_ID}
         NEXT_PUBLIC_PAYPAL_CURRENCY: ${NEXT_PUBLIC_PAYPAL_CURRENCY:-EUR}
@@ -89,7 +89,7 @@ services:
       traefik.enable: "true"
       traefik.docker.network: "proxy"
       traefik.http.services.web_wineacadamy_staging.loadbalancer.server.port: "3000"
-      traefik.http.routers.web_wineacadamy_staging.rule: "Host(`wineacademy.plan-p.de`)"
+      traefik.http.routers.web_wineacadamy_staging.rule: "Host(`staging.wineacademy.de`)"
       traefik.http.routers.web_wineacadamy_staging.entrypoints: "websecure"
       traefik.http.routers.web_wineacadamy_staging.tls.certresolver: "http-resolver"
       monitor.category: "website"

@@ -16,7 +16,7 @@ Ziel: Strapi- und Next.js-basierte Buchungs- und Commerce-Plattform für die Win
 ## Getroffene Entscheidungen
 - Tech-Stack: Strapi 5 (Node 20, Postgres 15) als Headless CMS + Next.js 15 (App Router) mit Tailwind 4.
 - Frontend konsumiert ausschließlich `/api/public/*`-Endpoints; kein direkter Admin-Zugriff aus React-Komponenten.
-- Deployment per Docker Compose; getrennte Stacks für Produktion und Staging hinter Traefik (Domains `wineacademymain.plan-p.de` / `wineacademy.plan-p.de`).
+- Deployment per Docker Compose; getrennte Stacks für Produktion und Staging hinter Traefik (Domains `main.wineacademy.de` / `staging.wineacademy.de`).
 - Zahlungsarten: Rechnung als Default, PayPal via Capture + Webhook-Verifikation (Sandbox-Mode bis Go-Live).
 - Gutscheine: Ein Template in Strapi, Codes werden nach erfolgreicher Bezahlung serverseitig generiert und Bestellungen zugeordnet.
 - Newsletter-Opt-in wird im Kundenstamm (`api::kunde`) persistiert und bei Wiederbestellungen aktualisiert.

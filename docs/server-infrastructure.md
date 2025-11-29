@@ -8,8 +8,8 @@ Diese Seite beschreibt die produktive/staging Infrastruktur für Wine Academy Ha
 - Container: Docker, Orchestrierung via docker-compose
 - Reverse Proxy: Traefik v3.x (TLS via Let's Encrypt)
 - Domains:
-  - Produktion: `wineacademymain.plan-p.de`
-  - Staging: `wineacademy.plan-p.de`
+  - Produktion: `main.wineacademy.de`
+  - Staging: `staging.wineacademy.de`
 - Basis-Pfad (Server): `/opt/docker/projects/wineacadamy`
 
 ## Netzwerke
@@ -25,11 +25,11 @@ Komposition:
 ## Traefik-Routing
 
 - Produktion (`docker-compose.yml`):
-  - Frontend: `Host(wineacademymain.plan-p.de)` → Service-Port 3000
-  - Backend: `Host(wineacademymain.plan-p.de) && PathPrefix(/api)` → Service-Port 1337, Middleware StripPrefix `/api`
+  - Frontend: `Host(main.wineacademy.de)` → Service-Port 3000
+  - Backend: `Host(main.wineacademy.de) && PathPrefix(/api)` → Service-Port 1337, Middleware StripPrefix `/api`
 - Staging (`docker-compose-staging.yml`):
-  - Frontend: `Host(wineacademy.plan-p.de)` → Service-Port 3000
-  - Backend: `Host(wineacademy.plan-p.de) && PathPrefix(/api)` → Service-Port 1337, StripPrefix `/api`
+  - Frontend: `Host(staging.wineacademy.de)` → Service-Port 3000
+  - Backend: `Host(staging.wineacademy.de) && PathPrefix(/api)` → Service-Port 1337, StripPrefix `/api`
 
 Hinweis: EntryPoint-Name (`websecure`) und CertResolver (`http-resolver` vs. `letsencrypt`) müssen zu eurer Traefik-Config passen. Bei Abweichung Labels anpassen.
 
@@ -44,11 +44,11 @@ Gemeinsam:
 - Frontend intern: `API_INTERNAL_URL` (`http://backend:1337` bzw. `http://backend-staging:1337`)
 
 Produktion (`.env`):
-- `NEXT_PUBLIC_API_URL=https://wineacademymain.plan-p.de/api`
+- `NEXT_PUBLIC_API_URL=https://main.wineacademy.de/api`
 - DB-Host intern: `DATABASE_HOST=db`
 
 Staging (`.env.staging`):
-- `NEXT_PUBLIC_API_URL=https://wineacademy.plan-p.de/api`
+- `NEXT_PUBLIC_API_URL=https://staging.wineacademy.de/api`
 - DB-Host intern: `DATABASE_HOST=db_staging`
 
 Frontend-Port-Fix: In allen Compose-Dateien ist `PORT=3000` für das Frontend explizit gesetzt, damit Strapi-`PORT=1337` das Frontend nicht beeinflusst.
@@ -74,12 +74,12 @@ docker compose up -d --build
 ```
 
 Überprüfung:
-- Frontend Prod: https://wineacademymain.plan-p.de
-- Backend Prod: https://wineacademymain.plan-p.de/api
-- Admin Prod: https://wineacademymain.plan-p.de/admin
-- Frontend Staging: https://wineacademy.plan-p.de
-- Backend Staging: https://wineacademy.plan-p.de/api
-- Admin Staging: https://wineacademy.plan-p.de/admin
+- Frontend Prod: https://main.wineacademy.de
+- Backend Prod: https://main.wineacademy.de/api
+- Admin Prod: https://main.wineacademy.de/admin
+- Frontend Staging: https://staging.wineacademy.de
+- Backend Staging: https://staging.wineacademy.de/api
+- Admin Staging: https://staging.wineacademy.de/admin
 
 Logs & Status:
 ```bash

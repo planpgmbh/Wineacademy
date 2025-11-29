@@ -193,7 +193,7 @@ function applyLayout(
   const brandText = '#0f172a';
   const brandMuted = '#4b5563';
   const brandBg = '#f7f7f4';
-  const logoUrl = process.env.EMAIL_LOGO_URL || 'https://wineacademy.plan-p.de/icons/WineAcademy.png';
+  const logoUrl = process.env.EMAIL_LOGO_URL || 'https://main.wineacademy.de/icons/WineAcademy.png';
 
   const normalisedHtml = html || '';
   const vorschauzeileText = options?.vorschauzeile || '';

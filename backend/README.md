@@ -114,7 +114,7 @@ curl -s -X POST http://localhost:1337/api/public/bestellungen \
 - **Codeänderungen:** Bei Anpassungen an Content-Types immer `schema.json` prüfen und ggf. Admin-Oberfläche testen.
 - **Middleware:** `backend/src/middlewares/force-https.ts` sorgt für korrekte HTTPS-Erkennung hinter Traefik.
 - **Troubleshooting:** Logs via `docker compose -f docker-compose-staging.yml logs -f service_wineacadamy_staging`; DB-Verbindungen mit `psql` prüfen, falls Migrationen fehlschlagen.
-- **Build & Sichtprüfung:** Nach jeder Backend-Änderung `docker compose -f docker-compose-staging.yml up -d --build --force-recreate service_wineacadamy_staging` ausführen und anschließend das Strapi-Admin unter `https://wineacademy.plan-p.de/admin` im Browser öffnen, um die Anpassungen zu kontrollieren (z. B. Content-Types, Felder, Texte).
+- **Build & Sichtprüfung:** Nach jeder Backend-Änderung `docker compose -f docker-compose-staging.yml up -d --build --force-recreate service_wineacadamy_staging` ausführen und anschließend das Strapi-Admin unter `https://staging.wineacademy.de/admin` im Browser öffnen, um die Anpassungen zu kontrollieren (z. B. Content-Types, Felder, Texte).
 
 ## Weiterführende Ressourcen
 - Root-README für Gesamtüberblick & Compose-Kommandos.

@@ -26,7 +26,7 @@
           "backgroundImage": null,
           "button": {
             "name": "Weinkurse",
-            "link": "https://wineacademy.plan-p.de/kurse",
+            "link": "https://main.wineacademy.de/kurse",
             "linkExtern": false
           }
         },
@@ -39,7 +39,7 @@
           "backgroundImage": null,
           "button": {
             "name": "Weintastings & Events",
-            "link": "https://wineacademy.plan-p.de/veranstaltungen",
+            "link": "https://main.wineacademy.de/veranstaltungen",
             "linkExtern": false
           }
         },
@@ -52,7 +52,7 @@
           "backgroundImage": null,
           "button": {
             "name": "WSET",
-            "link": "https://wineacademy.plan-p.de/wset",
+            "link": "https://main.wineacademy.de/wset",
             "linkExtern": false
           }
         }

@@ -13,7 +13,7 @@
  * - Fehlermeldung inkl. Schritt, falls ein Szenario scheitert.
  *
  * Anpassungen:
- * - CHECKOUT_BASE_URL: Basis der Staging-Instanz (Default https://wineacademy.plan-p.de).
+ * - CHECKOUT_BASE_URL: Basis der Staging-Instanz (Default https://staging.wineacademy.de).
  * - DEBUG_PUPPETEER=1 aktiviert Browser-Console-Logging.
  * - CHECKOUT_TIMEOUT definierbar für Navigation-/Aktionstimeouts.
  * - CHECKOUT_VOUCHER_PERCENT etc. erlauben Override der Testgutscheine.
@@ -23,7 +23,7 @@ const fs = require("fs");
 const path = require("path");
 const puppeteer = require("puppeteer");
 
-const DEFAULT_BASE_URL = "https://wineacademy.plan-p.de";
+const DEFAULT_BASE_URL = "https://staging.wineacademy.de";
 const BASE_URL = (process.env.CHECKOUT_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, "");
 const API_BASE = `${BASE_URL}/api/public`;
 const DEBUG = process.env.DEBUG_PUPPETEER === "1";
