@@ -81,7 +81,7 @@ jobs:
           STAGING_BASE_URL: ${{ secrets.STAGING_BASE_URL }}
         run: |
           set -euo pipefail
-          BASE="${STAGING_BASE_URL:-https://wineacademy.plan-p.de}"
+          BASE="${STAGING_BASE_URL:-https://staging.wineacademy.de}"
           api_url="$BASE/api/public/seminare"
           admin_url="$BASE/admin"
 

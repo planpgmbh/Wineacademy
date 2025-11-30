@@ -81,7 +81,7 @@ jobs:
           PRODUCTION_BASE_URL: ${{ secrets.PRODUCTION_BASE_URL }}
         run: |
           set -euo pipefail
-          BASE="${PRODUCTION_BASE_URL:-https://wineacademymain.plan-p.de}"
+          BASE="${PRODUCTION_BASE_URL:-https://main.wineacademy.de}"
           api_url="$BASE/api/public/seminare"
           admin_url="$BASE/admin"
 
