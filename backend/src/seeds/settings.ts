@@ -37,12 +37,12 @@ async function upsertEinstellungen(strapi: any, values: EinstellungSeed) {
 export async function seedSettings(strapi: any, log: (msg: string) => void) {
   const einstellungenId = await upsertEinstellungen(strapi, {
     absenderName: 'Wine Academy Hamburg',
-    absenderEmail: 'philipp@plan-p.com',
-    antwortEmail: 'support@wineacademy.de',
+    absenderEmail: 'booking@notify.wineacademy.de',
+    antwortEmail: 'booking@notify.wineacademy.de',
     benachrichtigungen: [
-      { bezeichnung: 'Backoffice Bestellungen', email: 'philipp@plan-p.com', typ: 'bestellung' },
-      { bezeichnung: 'Storno-Team', email: 'philipp@plan-p.com', typ: 'storno' },
-      { bezeichnung: 'Operations', email: 'philipp@plan-p.com', typ: 'sonstiges' },
+      { bezeichnung: 'Backoffice Bestellungen', email: 'booking@notify.wineacademy.de', typ: 'bestellung' },
+      { bezeichnung: 'Storno-Team', email: 'booking@notify.wineacademy.de', typ: 'storno' },
+      { bezeichnung: 'Operations', email: 'booking@notify.wineacademy.de', typ: 'sonstiges' },
     ],
   });
   log(`Einstellungen aktualisiert (ID ${einstellungenId})`);

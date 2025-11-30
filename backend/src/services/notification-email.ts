@@ -54,6 +54,7 @@ function ensureTransport(): Transporter {
   const allowSelfSigned = toBoolean(process.env.SMTP_ALLOW_SELF_SIGNED, false);
   const requireTLS = toBoolean(process.env.SMTP_REQUIRE_TLS, false);
   const hostIsIp = !!host && /^[0-9.]+$/.test(host);
+  const enableLogger = toBoolean(process.env.SMTP_DEBUG_LOG, false);
 
   if (!host) {
     throw new Error('SMTP_HOST ist nicht gesetzt.');
@@ -66,6 +67,8 @@ function ensureTransport(): Transporter {
     requireTLS,
     auth: user ? { user, pass } : undefined,
     tls: allowSelfSigned || hostIsIp ? { rejectUnauthorized: false } : undefined,
+    logger: enableLogger,
+    debug: enableLogger,
   });
 
   return transporter;
