@@ -74,7 +74,10 @@ export function CardGrid({ karten, hintergrund, id }: CardGridProps) {
           isDarkBackground ? "text-base-100" : ""
         }`}
       >
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div
+          className="grid gap-6"
+          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))" }}
+        >
           {karten.map((card) => {
             const hasButtonLink = Boolean(card.button?.link && card.button.link.trim().length > 0);
             const hasSeminarFinderTarget = Boolean(card.seminarFinderCategorySlug);

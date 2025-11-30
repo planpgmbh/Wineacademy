@@ -123,7 +123,6 @@ async function renderSections(
           überschriftStufe={section.überschriftStufe}
           hintergrund={section.hintergrund ?? undefined}
           darstellung={section.darstellung}
-          flush
           spalten={section.spalten}
         />
       );
