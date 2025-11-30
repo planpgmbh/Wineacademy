@@ -109,8 +109,8 @@ export default async function VoucherDetailPage() {
 
       {voucher.sections.length > 0 ? (
         <div className="relative">
-          <div className="mx-auto max-w-[var(--detail-content-max-width)] px-6 md:px-8">
-            <div className="mt-12 space-y-10 md:mt-16 md:pr-[420px]">
+          <div className="mx-auto max-w-[var(--detail-content-max-width)]">
+            <div className="mt-6 space-y-10 md:mt-10 md:pr-[400px]">
               {await renderSections(voucher.sections, seminarFinderData)}
             </div>
           </div>
@@ -146,6 +146,7 @@ async function renderSections(
           überschriftStufe={section.überschriftStufe}
           hintergrund={section.hintergrund ?? undefined}
           darstellung={section.darstellung}
+          flush
           spalten={section.spalten}
         />
       );

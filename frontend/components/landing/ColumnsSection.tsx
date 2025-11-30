@@ -24,6 +24,7 @@ type ColumnsSectionProps = {
   überschriftStufe?: "h2" | "h3" | "h4" | null;
   hintergrund?: SectionBackgroundKey | null;
   darstellung?: "box" | "plain" | null;
+  flush?: boolean;
   spalten: SpaltenEintrag[];
 };
 
@@ -69,6 +70,7 @@ export function ColumnsSection({
   überschriftStufe,
   hintergrund,
   darstellung,
+  flush = false,
   spalten
 }: ColumnsSectionProps) {
   const items = spalten.filter((column) => column.html || column.bild);
@@ -103,10 +105,18 @@ export function ColumnsSection({
       ? "py-[var(--section-padding-y-compact)] md:py-[var(--section-padding-y-lg)]"
       : "";
 
+  const horizontalPaddingClass = flush ? "" : "px-6 md:px-8";
   const wrapperPaddingClass =
     variant === "plain"
-      ? `mx-auto w-full px-6 md:px-8 ${paddingY}`.trim()
-      : "mx-auto w-full px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)]";
+      ? ["mx-auto w-full", horizontalPaddingClass, paddingY].filter(Boolean).join(" ")
+      : [
+          "mx-auto w-full",
+          horizontalPaddingClass || undefined,
+          "py-[var(--section-padding-y-compact)]",
+          "md:py-[var(--section-padding-y-lg)]"
+        ]
+          .filter(Boolean)
+          .join(" ");
 
   const HeadingTag = (überschriftStufe ?? "h2") as keyof JSX.IntrinsicElements;
   const headingClass = [
@@ -143,7 +153,7 @@ export function ColumnsSection({
                 : "";
             const articleClass =
               variant === "plain"
-                ? `${baseArticleClass} ${plainTone} pt-0 pb-6 md:pt-0 md:pb-8 md:px-8 ${edgePaddingAdjustment}`.trim()
+                ? `${baseArticleClass} ${plainTone} pt-0 pb-0 md:pt-0 md:pb-0 md:px-8 ${edgePaddingAdjustment}`.trim()
                 : `${baseArticleClass} rounded-3xl border p-6 shadow-sm ${cardTone}`;
 
             const columnContent = (
@@ -184,7 +194,7 @@ export function ColumnsSection({
                     <span
                       aria-hidden="true"
                       className={`pointer-events-none absolute left-0 hidden w-px md:block ${verticalLineClass}`}
-                      style={{ top: "2rem", bottom: "2rem" }}
+                      style={{ top: 0, bottom: 0 }}
                     />
                   ) : null}
                   {columnContent}
