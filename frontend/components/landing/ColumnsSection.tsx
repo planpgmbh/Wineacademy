@@ -116,9 +116,12 @@ export function ColumnsSection({
     .filter(Boolean)
     .join(" ");
 
+  const stackGapClass =
+    variant === "plain" && showHeadline ? "gap-1.5 md:gap-1.5" : "gap-3 md:gap-3";
+
   return (
     <section style={style}>
-      <div className={`${wrapperPaddingClass} flex flex-col gap-3 md:gap-3`} style={contentStyle}>
+      <div className={`${wrapperPaddingClass} flex flex-col ${stackGapClass}`} style={contentStyle}>
         {showHeadline ? <HeadingTag className={`${headingClass} text-left`}>{überschrift?.trim()}</HeadingTag> : null}
         <div className={gridClass}>
           {items.map((column, index) => {
@@ -140,7 +143,7 @@ export function ColumnsSection({
                 : "";
             const articleClass =
               variant === "plain"
-                ? `${baseArticleClass} ${plainTone} py-6 md:py-8 md:px-8 ${edgePaddingAdjustment}`.trim()
+                ? `${baseArticleClass} ${plainTone} pt-0 pb-6 md:pt-0 md:pb-8 md:px-8 ${edgePaddingAdjustment}`.trim()
                 : `${baseArticleClass} rounded-3xl border p-6 shadow-sm ${cardTone}`;
 
             const columnContent = (
