@@ -43,10 +43,6 @@ const resolveLinkAttributes = (href: string) => {
 };
 
 export function CardGrid({ karten, hintergrund, id }: CardGridProps) {
-  if (karten.length === 0) {
-    return null;
-  }
-
   const horizontalAlignClasses: Record<Karte["textAlign"], string> = {
     left: "items-start text-left",
     center: "items-center text-center",
@@ -102,6 +98,10 @@ export function CardGrid({ karten, hintergrund, id }: CardGridProps) {
     container.addEventListener("scroll", handleScroll, { passive: true });
     return () => container.removeEventListener("scroll", handleScroll);
   }, []);
+
+  if (karten.length === 0) {
+    return null;
+  }
 
   return (
     <section style={style} id={id}>
