@@ -7,6 +7,7 @@ import { seedSettings } from './settings';
 import { seedLandingPages } from './landingpages';
 import { seedCategories } from './kategorien';
 import { seedSeminars } from './seminare';
+import { seedTermine } from './termine';
 import { ensureAuditFields } from './helpers';
 import { seedUploads } from './uploads';
 
@@ -21,6 +22,7 @@ export async function runSeed(strapi: any) {
   await seedVouchers(strapi, log);
   await seedCategories(strapi, log);
   await seedSeminars(strapi, log);
+  await seedTermine(strapi, log);
   await seedNavigationAndFooter(strapi, log);
   await seedNotifications(strapi, log);
   await seedSettings(strapi, log);
