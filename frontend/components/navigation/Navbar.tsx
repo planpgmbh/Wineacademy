@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useState, type MouseEvent, type MouseEventHandler, type ReactNode } from "react";
 import type { NavigationItem, NavigationLink } from "@/lib/navigation";
 import { CartIcon, InstagramIcon, LinkedinIcon, MailIcon } from "./icons";
 
@@ -15,9 +15,10 @@ type AnchorProps = {
   className?: string;
   tabIndex?: number;
   children?: ReactNode;
+  onClick?: MouseEventHandler<HTMLElement>;
 };
 
-function NavigationAnchor({ item, className, tabIndex, children }: AnchorProps) {
+function NavigationAnchor({ item, className, tabIndex, children, onClick }: AnchorProps) {
   const rel = item.target === "_blank" ? "noreferrer noopener" : undefined;
 
   if (item.href) {
@@ -28,6 +29,7 @@ function NavigationAnchor({ item, className, tabIndex, children }: AnchorProps) 
         tabIndex={tabIndex}
         target={item.target === "_blank" ? "_blank" : undefined}
         rel={rel}
+        onClick={onClick}
       >
         {children ?? item.title}
       </Link>
@@ -35,7 +37,7 @@ function NavigationAnchor({ item, className, tabIndex, children }: AnchorProps) 
   }
 
   return (
-    <span className={className} tabIndex={tabIndex}>
+    <span className={className} tabIndex={tabIndex} onClick={onClick}>
       {children ?? item.title}
     </span>
   );
@@ -108,6 +110,7 @@ export function Navbar({ items }: NavbarProps) {
 
   const [cartCount, setCartCount] = useState(0);
   const [openMobileSections, setOpenMobileSections] = useState<Set<number>>(new Set());
+  const [openDesktopIndex, setOpenDesktopIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const readCartCount = () => {
@@ -168,6 +171,24 @@ export function Navbar({ items }: NavbarProps) {
     });
   };
 
+  const handleDesktopEnter = (index: number) => setOpenDesktopIndex(index);
+  const handleDesktopLeave = () => setOpenDesktopIndex(null);
+  const handleDesktopBlur = (event: React.FocusEvent<HTMLLIElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+      setOpenDesktopIndex(null);
+    }
+  };
+
+  const handleSubItemClick = () => {
+    setOpenDesktopIndex(null);
+    if (typeof document !== "undefined") {
+      const active = document.activeElement;
+      if (active instanceof HTMLElement) {
+        active.blur();
+      }
+    }
+  };
+
   return (
     <nav className="navbar sticky top-0 z-50 border-b border-base-200 bg-base-100 px-4 md:px-8">
       <div className="navbar-start gap-3">
@@ -217,18 +238,28 @@ export function Navbar({ items }: NavbarProps) {
           {items.map((item, index) => {
             const hasSubItems = item.subItems.length > 0;
             if (hasSubItems) {
+              const isOpen = openDesktopIndex === index;
               return (
                 <li
                   key={`desktop-${index}-${item.title}`}
-                  className="group relative flex items-center"
+                  className="relative flex items-center"
+                  onMouseEnter={() => handleDesktopEnter(index)}
+                  onMouseLeave={handleDesktopLeave}
+                  onFocus={() => handleDesktopEnter(index)}
+                  onBlur={handleDesktopBlur}
                 >
                   <NavigationAnchor item={item} className={desktopLinkClass} tabIndex={0} />
-                  <ul className="absolute left-0 top-full z-10 hidden min-w-[14rem] flex-col gap-1 rounded-box bg-base-100 p-3 text-sm shadow-md group-hover:flex group-focus-within:flex">
+                  <ul
+                    className={`absolute left-0 top-full z-10 ${
+                      isOpen ? "flex" : "hidden"
+                    } min-w-[14rem] flex-col gap-1 rounded-box bg-base-100 p-3 text-sm shadow-md`}
+                  >
                     {item.subItems.map((subItem, subIndex) => (
                       <li key={`desktop-${index}-${subIndex}`}>
                         <NavigationAnchor
                           item={subItem}
                           className="block rounded-lg px-3 py-2 transition hover:bg-base-200 focus:bg-base-200 focus:outline-none"
+                          onClick={handleSubItemClick}
                         />
                       </li>
                     ))}
