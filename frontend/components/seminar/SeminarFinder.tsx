@@ -134,12 +134,6 @@ export function SeminarFinder({
   const [selectedLocation, setSelectedLocation] = useState<string>(initialLocationId ?? ALL_LOCATIONS);
   const [isLocationMenuOpen, setIsLocationMenuOpen] = useState(false);
   const locationDropdownRef = useRef<HTMLDivElement | null>(null);
-  const [isDesktop, setIsDesktop] = useState<boolean>(() => {
-    if (typeof window === "undefined") {
-      return false;
-    }
-    return window.matchMedia("(min-width: 768px)").matches;
-  });
 
   useEffect(() => {
     const handler = (evt: Event) => {
@@ -179,21 +173,6 @@ export function SeminarFinder({
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    const media = window.matchMedia("(min-width: 768px)");
-    const update = () => setIsDesktop(media.matches);
-    update();
-    if (typeof media.addEventListener === "function") {
-      media.addEventListener("change", update);
-      return () => media.removeEventListener("change", update);
-    }
-    media.addListener(update);
-    return () => media.removeListener(update);
   }, []);
 
   const { categoriesWithSeminars, fallbackCategories } = useMemo(() => {
@@ -435,7 +414,6 @@ export function SeminarFinder({
                     seminars={seminars}
                     onLocationClick={handleLocationBadgeClick}
                     compactCards={compactCards}
-                    isDesktop={isDesktop}
                     isFiltered={resolvedSelectedLocation !== ALL_LOCATIONS || selectedCategory !== ALL_CATEGORIES}
                     locationLabels={locationLabelMap}
                   />
@@ -474,7 +452,6 @@ type CategorySeminarListProps = {
   seminars: SeminarFinderSeminar[];
   onLocationClick?: (locationId: string) => void;
   compactCards: boolean;
-  isDesktop: boolean;
   isFiltered: boolean;
   locationLabels: Record<string, string>;
 };
@@ -483,7 +460,6 @@ function CategorySeminarList({
   seminars,
   onLocationClick,
   compactCards,
-  isDesktop,
   isFiltered,
   locationLabels
 }: CategorySeminarListProps) {
@@ -491,7 +467,7 @@ function CategorySeminarList({
   const [activeSlide, setActiveSlide] = useState(0);
   const [userInteracted, setUserInteracted] = useState(false);
   const [hasEnteredView, setHasEnteredView] = useState(false);
-  const isFilteredMobile = !isDesktop && isFiltered;
+  const isFilteredMobile = isFiltered;
 
   const scrollToIndex = useCallback((index: number) => {
     const container = listRef.current;
@@ -506,11 +482,11 @@ function CategorySeminarList({
   }, []);
 
   useEffect(() => {
-    if (isDesktop || seminars.length <= 1 || isFilteredMobile) {
+    if (seminars.length <= 1 || isFilteredMobile) {
       return;
     }
     const container = listRef.current;
-    if (!container) {
+    if (!container || container.offsetParent === null) {
       return;
     }
     const handleScroll = () => {
@@ -537,17 +513,10 @@ function CategorySeminarList({
       container.removeEventListener("scroll", handleScroll);
       container.removeEventListener("pointerdown", handlePointerDown);
     };
-  }, [isDesktop, seminars.length, isFilteredMobile]);
+  }, [seminars.length, isFilteredMobile]);
 
   useEffect(() => {
-    if (
-      isDesktop ||
-      seminars.length <= 1 ||
-      userInteracted ||
-      typeof window === "undefined" ||
-      !hasEnteredView ||
-      isFilteredMobile
-    ) {
+    if (seminars.length <= 1 || userInteracted || typeof window === "undefined" || !hasEnteredView || isFilteredMobile) {
       return;
     }
     const timer = window.setTimeout(() => {
@@ -555,22 +524,22 @@ function CategorySeminarList({
       scrollToIndex(nextIndex);
     }, 4000);
     return () => window.clearTimeout(timer);
-  }, [activeSlide, isDesktop, seminars.length, userInteracted, scrollToIndex, hasEnteredView, isFilteredMobile]);
+  }, [activeSlide, seminars.length, userInteracted, scrollToIndex, hasEnteredView, isFilteredMobile]);
 
   useEffect(() => {
     setActiveSlide(0);
     setUserInteracted(false);
-    if (!isDesktop && listRef.current) {
+    if (listRef.current && listRef.current.offsetParent !== null) {
       listRef.current.scrollTo({ left: 0, behavior: "auto" });
     }
-  }, [isDesktop, seminars.length]);
+  }, [seminars.length, isFilteredMobile]);
 
   useEffect(() => {
-    if (isDesktop || typeof window === "undefined") {
+    if (typeof window === "undefined" || isFilteredMobile) {
       return;
     }
     const target = listRef.current;
-    if (!target) {
+    if (!target || target.offsetParent === null) {
       return;
     }
     const observer = new IntersectionObserver(
@@ -585,7 +554,7 @@ function CategorySeminarList({
     );
     observer.observe(target);
     return () => observer.disconnect();
-  }, [isDesktop]);
+  }, [isFilteredMobile]);
 
   return (
     <>

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState, type JSX } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type JSX } from "react";
 
 import { fetchUpcomingSeminars, type UpcomingSeminar } from "@/lib/upcoming-seminars";
 import {
@@ -11,6 +11,7 @@ import {
   isDarkSectionBackground,
   type SectionBackgroundKey
 } from "@/lib/landing";
+import { SliderDots } from "@/components/shared/SliderDots";
 
 type ProductCardItem = {
   id: number;
@@ -39,21 +40,21 @@ type SeminarProductCardsProps = {
   initialError?: string | null;
 };
 
-const DATE_FORMATTER = new Intl.DateTimeFormat("de-DE", {
-  day: "2-digit",
-  month: "long",
-  year: "numeric"
-});
+const TOPLINE_DAY_FORMATTER = new Intl.DateTimeFormat("de-DE", { day: "2-digit" });
+const TOPLINE_MONTH_FORMATTER = new Intl.DateTimeFormat("de-DE", { month: "long" });
 
-const formatDate = (isoString: string): string | null => {
-  if (!isoString) {
+const formatToplineDate = (value?: string | Date | null): { day: string; month: string } | null => {
+  if (!value) {
     return null;
   }
-  const parsed = new Date(isoString);
-  if (Number.isNaN(parsed.getTime())) {
+  const parsed = typeof value === "string" ? new Date(value) : value;
+  if (!(parsed instanceof Date) || Number.isNaN(parsed.getTime())) {
     return null;
   }
-  return DATE_FORMATTER.format(parsed);
+  return {
+    day: TOPLINE_DAY_FORMATTER.format(parsed),
+    month: TOPLINE_MONTH_FORMATTER.format(parsed).toUpperCase()
+  };
 };
 
 const formatRichText = (html?: string | null) => {
@@ -82,11 +83,11 @@ type SeminarCardProps = {
 function SeminarCard({ seminar, buttonText }: SeminarCardProps) {
   const imageAlt = seminar.image.alt?.trim() || seminar.title || "Seminarbild";
   const hasImage = Boolean(seminar.image.src);
-  const dateLabel = formatDate(seminar.nextDateIso);
+  const mobileToplineDate = formatToplineDate(seminar.nextDateIso);
   const location = seminar.locationLabel ?? null;
   const truncatedDescription = truncateText(seminar.shortDescription);
   const titleClass =
-    "heading-card rt-heading-xs font-semibold leading-tight text-balance text-base-content !mt-0 !mb-[0.2rem] !text-[1.35rem] w-fit";
+    "heading-card rt-heading-xs font-semibold leading-tight text-balance text-base-content !mt-0 !mb-[0.15rem] !text-[1.35rem] w-fit";
   const href = `/seminare/${encodeURIComponent(seminar.slug)}`;
 
   return (
@@ -94,34 +95,60 @@ function SeminarCard({ seminar, buttonText }: SeminarCardProps) {
       href={href}
       className="group block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-base-100"
     >
-      <article className="card card-compact h-full bg-base-100 shadow-lg transition hover:-translate-y-1 hover:shadow-xl">
-        <figure className="relative h-48 w-full overflow-hidden bg-base-200">
+      <article className="group flex h-full flex-col overflow-hidden rounded-2xl bg-base-100 p-0 shadow-sm ring-1 ring-base-300/70 transition hover:shadow-md">
+        <div className="relative h-[190px] w-full shrink-0 overflow-hidden bg-base-200">
           {hasImage ? (
             <Image
               src={seminar.image.src as string}
               alt={imageAlt}
               fill
-              className="object-cover transition duration-500 group-hover:scale-[1.02]"
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
               sizes="(min-width: 1024px) 360px, (min-width: 768px) 320px, 100vw"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-sm text-base-content/60">
-              Kein Bild verfügbar
+            <div
+              className="flex h-full w-full items-center justify-center"
+              style={{
+                backgroundImage: "var(--hero-fallback-gradient)",
+                backgroundSize: "cover",
+                backgroundPosition: "center"
+              }}
+            >
+              <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-white/70 shadow-md backdrop-blur-sm">
+                <Image
+                  src="/icons/WineAcademy.png"
+                  alt="Wine Academy Logo"
+                  width={50}
+                  height={50}
+                  className="h-[50px] w-[50px] object-contain"
+                />
+              </div>
             </div>
           )}
-        </figure>
-        <div className="card-body gap-3">
-          <div className="flex flex-col gap-1">
-            {dateLabel ? <p className="text-xs font-semibold uppercase text-base-content/60">{dateLabel}</p> : null}
+        </div>
+        <div className="flex flex-1 flex-col justify-between gap-4 px-6 pb-6 pt-4">
+          <div className="flex flex-col gap-[0.35rem]">
+            {mobileToplineDate || location ? (
+              <div className="flex items-center justify-between">
+                {mobileToplineDate ? (
+                  <p className="flex items-baseline gap-1.25 text-sm font-semibold uppercase leading-tight tracking-wide text-base-content">
+                    <span className="text-base-content text-2xl leading-none">{mobileToplineDate.day}</span>
+                    <span className="text-base-content/30">|</span>
+                    <span className="font-normal text-base-content/60">{mobileToplineDate.month}</span>
+                  </p>
+                ) : (
+                  <span />
+                )}
+                {location ? <span className="badge-location badge-location-light">{location}</span> : null}
+              </div>
+            ) : null}
+
             <h3 className={titleClass}>{seminar.title}</h3>
-            {location ? <p className="text-sm text-base-content/70">{location}</p> : null}
+            {truncatedDescription ? <p className="text-base text-base-content/80">{truncatedDescription}</p> : null}
           </div>
-          {truncatedDescription ? (
-            <p className="text-base text-base-content/75">{truncatedDescription}</p>
-          ) : null}
-          <div className="card-actions mt-auto pt-1">
-            <span className="btn btn-primary pointer-events-none transition-colors duration-200 hover:brightness-105">{buttonText}</span>
-          </div>
+          <span className="btn btn-primary pointer-events-none min-w-[150px] self-start transition-colors duration-200 hover:brightness-105">
+            {buttonText}
+          </span>
         </div>
       </article>
     </Link>
@@ -212,6 +239,13 @@ export function SeminarProductCards({
     [resolvedBackground]
   );
   const isDarkBackground = isDarkSectionBackground(resolvedBackground);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const sliderRef = useRef<HTMLDivElement | null>(null);
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [userInteracted, setUserInteracted] = useState(false);
+  const [hasEnteredView, setHasEnteredView] = useState(false);
+  const [maxMobileHeight, setMaxMobileHeight] = useState<number | null>(null);
 
   const HeadingTag = überschriftStufe as keyof JSX.IntrinsicElements;
   const headingClass = [
@@ -231,6 +265,10 @@ export function SeminarProductCards({
     () => (modus === "produkte" ? (Array.isArray(produkte) ? produkte.slice(0, productVisible) : []) : []),
     [modus, produkte, productVisible]
   );
+  const contentItems = modus === "produkte" ? visibleProducts : seminars;
+  const showMoreButton = hasMore && mehrButtonAnzeigen;
+  const hasIntro = Boolean(introHtml);
+  const listSpacingClass = hasIntro ? "mt-6 md:mt-8" : "mt-4 md:mt-6";
 
   const handleLoadMore = async () => {
     if (isLoading || !hasMore) {
@@ -270,34 +308,183 @@ export function SeminarProductCards({
     }
   };
 
-  const contentItems = modus === "produkte" ? visibleProducts : seminars;
-  const showMoreButton = hasMore && mehrButtonAnzeigen;
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const media = window.matchMedia("(min-width: 768px)");
+    const update = () => setIsDesktop(media.matches);
+    update();
+    const listener = () => update();
+    media.addEventListener("change", listener);
+    return () => media.removeEventListener("change", listener);
+  }, []);
+
+  useEffect(() => {
+    if (isDesktop) {
+      setMaxMobileHeight(null);
+      return;
+    }
+    const measure = () => {
+      const heights = itemRefs.current
+        .map((el) => {
+          if (!el) {
+            return 0;
+          }
+          const rect = el.getBoundingClientRect();
+          return rect.height || el.offsetHeight;
+        })
+        .filter((height) => height > 0);
+      if (heights.length === 0) {
+        setMaxMobileHeight(null);
+        return;
+      }
+      setMaxMobileHeight(Math.max(...heights));
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [contentItems.length, isDesktop]);
+
+  useEffect(() => {
+    if (isDesktop) {
+      return;
+    }
+    const container = sliderRef.current;
+    if (!container) {
+      return;
+    }
+    const handleScroll = () => {
+      const children = Array.from(container.children) as HTMLElement[];
+      if (children.length === 0) {
+        return;
+      }
+      const { scrollLeft } = container;
+      let closestIndex = 0;
+      let smallestDistance = Number.POSITIVE_INFINITY;
+      children.forEach((child, index) => {
+        const distance = Math.abs(child.offsetLeft - scrollLeft);
+        if (distance < smallestDistance) {
+          smallestDistance = distance;
+          closestIndex = index;
+        }
+      });
+      setActiveSlide(closestIndex);
+    };
+    const handlePointerDown = () => setUserInteracted(true);
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    container.addEventListener("pointerdown", handlePointerDown, { passive: true });
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+      container.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [isDesktop, contentItems.length]);
+
+  useEffect(() => {
+    if (isDesktop || typeof window === "undefined") {
+      return;
+    }
+    const target = sliderRef.current;
+    if (!target) {
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting) {
+          setHasEnteredView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [isDesktop]);
+
+  useEffect(() => {
+    if (isDesktop || contentItems.length <= 1 || userInteracted || typeof window === "undefined" || !hasEnteredView) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      const nextIndex = (activeSlide + 1) % contentItems.length;
+      const container = sliderRef.current;
+      const child = container?.children[nextIndex] as HTMLElement | undefined;
+      if (!container || !child) {
+        return;
+      }
+      container.scrollTo({ left: child.offsetLeft, behavior: "smooth" });
+    }, 4500);
+    return () => window.clearTimeout(timer);
+  }, [activeSlide, contentItems.length, isDesktop, userInteracted, hasEnteredView]);
+
+  useEffect(() => {
+    setActiveSlide(0);
+    setUserInteracted(false);
+    if (!isDesktop && sliderRef.current) {
+      sliderRef.current.scrollTo({ left: 0, behavior: "auto" });
+    }
+  }, [contentItems.length, isDesktop]);
 
   return (
     <section style={style}>
       <div
-        className={`mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-[var(--section-padding-y-compact)] md:gap-10 md:px-8 md:py-[var(--section-padding-y-lg)] ${textClass}`}
+        className={`mx-auto flex w-full max-w-[var(--landing-content-max-width)] flex-col px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)] ${textClass}`}
       >
-        <div className="flex flex-col gap-1 text-center mb-4 md:mb-5">
-          {überschrift ? <HeadingTag className={`${headingClass} mb-0 md:mb-0`}>{überschrift}</HeadingTag> : null}
-          {introHtml ? <div className={introClass} dangerouslySetInnerHTML={{ __html: introHtml }} /> : null}
+        <div className="flex flex-col gap-1 text-center">
+          {überschrift ? <HeadingTag className={`${headingClass} !mb-3 md:!mb-4`}>{überschrift}</HeadingTag> : null}
+          {introHtml ? (
+            <div className={`${introClass} mb-1.5 md:mb-2`} dangerouslySetInnerHTML={{ __html: introHtml }} />
+          ) : null}
         </div>
 
         {error ? <p className={`text-center text-sm ${errorClass}`}>{error}</p> : null}
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-[repeat(auto-fit,minmax(260px,1fr))] lg:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
-          {contentItems.map((item) =>
-            modus === "produkte" ? (
-              <ProductCard key={`product-${item.id}`} product={item as ProductCardItem} buttonText={buttonText} />
-            ) : (
-              <SeminarCard key={`seminar-${(item as UpcomingSeminar).id}`} seminar={item as UpcomingSeminar} buttonText={buttonText} />
-            )
-          )}
-          {contentItems.length === 0 ? (
-            <div className="col-span-full flex items-center justify-center rounded-2xl border border-dashed border-base-200 p-10 text-base-content/70">
-              Keine Inhalte vorhanden.
+        <div className={listSpacingClass}>
+          <div className="hidden grid-cols-1 gap-6 md:grid md:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
+            {contentItems.map((item) =>
+              modus === "produkte" ? (
+                <ProductCard key={`product-${item.id}`} product={item as ProductCardItem} buttonText={buttonText} />
+              ) : (
+                <SeminarCard key={`seminar-${(item as UpcomingSeminar).id}`} seminar={item as UpcomingSeminar} buttonText={buttonText} />
+              )
+            )}
+            {contentItems.length === 0 ? (
+              <div className="col-span-full flex items-center justify-center rounded-2xl border border-dashed border-base-200 p-10 text-base-content/70">
+                Keine Inhalte vorhanden.
+              </div>
+            ) : null}
+          </div>
+
+          <div className="md:hidden">
+            <div
+              ref={sliderRef}
+              className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 [-webkit-overflow-scrolling:touch] no-scrollbar"
+            >
+              {contentItems.map((item, index) => (
+                <div
+                  key={`${modus}-${"id" in item ? item.id : index}`}
+                  className="w-full shrink-0 snap-center"
+                  ref={(el) => {
+                    itemRefs.current[index] = el;
+                  }}
+                  style={maxMobileHeight ? { minHeight: maxMobileHeight } : undefined}
+                >
+                  {modus === "produkte" ? (
+                    <ProductCard product={item as ProductCardItem} buttonText={buttonText} />
+                  ) : (
+                    <SeminarCard seminar={item as UpcomingSeminar} buttonText={buttonText} />
+                  )}
+                </div>
+              ))}
             </div>
-          ) : null}
+            <SliderDots count={contentItems.length} activeIndex={activeSlide} />
+            {contentItems.length === 0 ? (
+              <div className="mt-4 rounded-2xl border border-dashed border-base-200 p-8 text-center text-base-content/70">
+                Keine Inhalte vorhanden.
+              </div>
+            ) : null}
+          </div>
         </div>
 
         {showMoreButton ? (

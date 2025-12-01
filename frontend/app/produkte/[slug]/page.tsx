@@ -86,10 +86,8 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
       {product.sections.length > 0 ? (
         <div className="relative">
-          <div className="mx-auto max-w-[var(--detail-content-max-width)]">
-            <div className="mt-6 space-y-10 md:mt-10 md:pr-[400px]">
-              {await renderSections(product.sections, seminarFinderData)}
-            </div>
+          <div className="mx-auto max-w-[var(--detail-content-max-width)] md:pr-[400px]">
+            {await renderSections(product.sections, seminarFinderData)}
           </div>
         </div>
       ) : null}
