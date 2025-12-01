@@ -269,7 +269,7 @@ body {
   .heading-card-grid {
     font-family: var(--font-serifbabe), ui-serif, Georgia, serif;
     font-weight: 400;
-    font-size: clamp(1.35rem, 1.1rem + 0.9vw, 1.9rem);
+    font-size: clamp(1.85rem, 1.35rem + 1.5vw, 2.7rem);
     line-height: 1.2;
     text-wrap: balance;
     margin: 0;
