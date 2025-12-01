@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import {
   resolveSectionBackground,
@@ -66,6 +67,41 @@ export function CardGrid({ karten, hintergrund, id }: CardGridProps) {
     center: "md:group-hover:-translate-y-3",
     bottom: "md:group-hover:-translate-y-5"
   };
+  const cardCount = karten.length;
+  const desktopGridColumns =
+    cardCount <= 1
+      ? "md:grid-cols-1"
+      : cardCount === 2
+        ? "md:grid-cols-2"
+        : "md:grid-cols-2 lg:grid-cols-3";
+  const cardListClass = [
+    "flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 [-webkit-overflow-scrolling:touch] no-scrollbar",
+    "md:grid md:snap-none md:overflow-visible md:gap-6",
+    desktopGridColumns
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const container = listRef.current;
+    if (!container) {
+      return;
+    }
+    const handleScroll = () => {
+      const children = Array.from(container.children) as HTMLElement[];
+      if (children.length === 0) {
+        return;
+      }
+      const { scrollLeft, offsetWidth } = container;
+      const index = Math.round((scrollLeft / offsetWidth) * 1);
+      const clampIndex = Math.min(children.length - 1, Math.max(0, index));
+      setActiveIndex(clampIndex);
+    };
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <section style={style} id={id}>
@@ -74,10 +110,7 @@ export function CardGrid({ karten, hintergrund, id }: CardGridProps) {
           isDarkBackground ? "text-base-100" : ""
         }`}
       >
-        <div
-          className="grid gap-6"
-          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))" }}
-        >
+        <div ref={listRef} className={cardListClass}>
           {karten.map((card) => {
             const hasButtonLink = Boolean(card.button?.link && card.button.link.trim().length > 0);
             const hasSeminarFinderTarget = Boolean(card.seminarFinderCategorySlug);
@@ -91,7 +124,7 @@ export function CardGrid({ karten, hintergrund, id }: CardGridProps) {
             const cardProps = href ? resolveLinkAttributes(href) : {};
             const hasBackgroundImage = Boolean(card.backgroundImage);
             const cardClasses = [
-              "group relative h-full overflow-hidden rounded-3xl border border-base-200 bg-base-100 shadow-sm transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary",
+              "group relative flex h-full w-full flex-none snap-center overflow-hidden rounded-3xl border border-base-200 bg-base-100 shadow-sm transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary md:flex-auto",
               card.darkMode && !hasBackgroundImage ? "border-neutral-700 bg-neutral-900" : "",
               hasBackgroundImage ? "bg-transparent" : "",
               hasAction ? "cursor-pointer" : ""
@@ -197,6 +230,16 @@ export function CardGrid({ karten, hintergrund, id }: CardGridProps) {
             );
           })}
         </div>
+        {cardCount > 1 ? (
+          <div className="flex justify-center gap-2 md:hidden">
+            {karten.map((card, index) => (
+              <span
+                key={card.id}
+                className={`h-2 w-2 rounded-full transition ${index === activeIndex ? "bg-primary" : "bg-base-content/30"}`}
+              />
+            ))}
+          </div>
+        ) : null}
       </div>
     </section>
   );

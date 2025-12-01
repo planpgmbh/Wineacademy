@@ -208,6 +208,7 @@ async function renderSeminarList(section: LandingSeminarListSection, index: numb
       initialItems={initialItems}
       initialError={initialError}
       anzahl={section.anzahl}
+      compactLayout
     />
   );
 }
@@ -269,6 +270,7 @@ function renderSeminarFinder(
       locations={data.locations}
       initialCategorySlug={section.initialCategorySlug}
       allowedCategorySlugs={section.allowedCategorySlugs}
+      compactCards
     />
   );
 }

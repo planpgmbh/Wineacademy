@@ -26,6 +26,7 @@ type SeminarListProps = {
   initialError?: string | null;
   anzahl: number;
   hintergrund?: SectionBackgroundKey | null;
+  compactLayout?: boolean;
 };
 
 const formatParagraphs = (text?: string | null): string[] => {
@@ -86,9 +87,10 @@ type SeminarListItemProps = {
   buttonText: string;
   isDarkBackground: boolean;
   onLocationClick?: (locationKey: string) => void;
+  compactLayout?: boolean;
 };
 
-function SeminarListItem({ seminar, buttonText, isDarkBackground, onLocationClick }: SeminarListItemProps) {
+function SeminarListItem({ seminar, buttonText, isDarkBackground, onLocationClick, compactLayout = false }: SeminarListItemProps) {
   const image = formatImageSrc(seminar);
   const seminarHref = `/seminare/${encodeURIComponent(seminar.slug)}`;
   const mobileToplineDate = useMemo(() => formatToplineDate(seminar.nextDateIso), [seminar.nextDateIso]);
@@ -103,9 +105,18 @@ function SeminarListItem({ seminar, buttonText, isDarkBackground, onLocationClic
     onLocationClick?.(locationKey);
   };
 
+  const gridTemplateDesktop = compactLayout
+    ? "md:grid-cols-[215px_var(--width-seminar-date)_minmax(0,1fr)]"
+    : "md:grid-cols-[280px_var(--width-seminar-date)_minmax(0,1fr)]";
+  const imageWidthClass = compactLayout ? "md:w-[215px]" : "md:w-[280px]";
+
   return (
-    <article className="group grid gap-6 rounded-2xl bg-base-100 p-0 shadow-sm ring-1 ring-base-300/70 transition hover:shadow-md md:grid-cols-[280px_var(--width-seminar-date)_minmax(0,1fr)] md:items-start md:gap-6 md:rounded-none md:bg-transparent md:p-0 md:shadow-none md:ring-0 md:hover:shadow-none">
-      <div className="relative col-span-full h-[180px] w-full overflow-hidden rounded-t-2xl bg-base-200 md:col-span-1 md:row-span-full md:h-[170px] md:w-[280px] md:rounded-2xl md:shadow-md">
+    <article
+      className={`group grid gap-6 rounded-2xl bg-base-100 p-0 shadow-sm ring-1 ring-base-300/70 transition hover:shadow-md md:items-start md:gap-6 md:rounded-none md:bg-transparent md:p-0 md:shadow-none md:ring-0 md:hover:shadow-none ${gridTemplateDesktop}`}
+    >
+      <div
+        className={`relative col-span-full h-[180px] w-full overflow-hidden rounded-t-2xl bg-base-200 md:col-span-1 md:row-span-full md:h-[170px] ${imageWidthClass} md:rounded-2xl md:shadow-md`}
+      >
         {image.src ? (
           <Image
             src={image.src}
@@ -188,7 +199,8 @@ export function SeminarList({
   initialItems,
   initialError = null,
   anzahl,
-  hintergrund
+  hintergrund,
+  compactLayout = false
 }: SeminarListProps) {
   const loadLimit = Math.max(1, anzahl);
   const [items, setItems] = useState<UpcomingSeminar[]>(() => initialItems);
@@ -348,6 +360,7 @@ export function SeminarList({
                   buttonText={buttonText}
                   isDarkBackground={isDarkBackground}
                   onLocationClick={handleLocationFilterChange}
+                  compactLayout={compactLayout}
                 />
               ))}
             </div>

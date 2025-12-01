@@ -25,6 +25,7 @@ type SeminarFinderProps = {
   initialLocationId?: string | null;
   hintergrund?: SectionBackgroundKey | null;
   allowedCategorySlugs?: string[] | null;
+  compactCards?: boolean;
 };
 
 const buttonBaseClasses =
@@ -32,7 +33,9 @@ const buttonBaseClasses =
 const buttonActiveClasses =
   "border border-transparent bg-secondary text-secondary-content hover:bg-secondary/90 focus-visible:outline-secondary";
 const buttonInactiveClasses =
-  "ui-border bg-base-100 text-base-content hover:bg-base-200 hover:text-base-content/80 focus-visible:outline-base-content";
+  "ui-border bg-base-100 text-base-content hover:bg-base-200 hover:text-base-content/80 focus-visible:outline-none";
+const locationSelectClasses =
+  "ui-border bg-secondary/15 text-base-content hover:bg-secondary/25 hover:text-base-content focus-visible:outline-none focus-visible:ring focus-visible:ring-secondary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-base-100";
 
 const headingTags: Record<"h2" | "h3" | "h4", keyof JSX.IntrinsicElements> = {
   h2: "h2",
@@ -55,7 +58,8 @@ export function SeminarFinder({
   initialCategorySlug,
   initialLocationId,
   hintergrund,
-  allowedCategorySlugs
+  allowedCategorySlugs,
+  compactCards = false
 }: SeminarFinderProps) {
   const allowedCategorySet = useMemo(() => {
     if (!Array.isArray(allowedCategorySlugs)) {
@@ -83,9 +87,7 @@ export function SeminarFinder({
     const ids = new Set<string>();
     availableCategories.forEach((category) => {
       category.seminars.forEach((seminar) => {
-        seminar.locationIds.forEach((locationId) => {
-          ids.add(locationId);
-        });
+        seminar.locationIds.forEach((locationId) => ids.add(locationId));
       });
     });
     return Array.from(ids);
@@ -111,18 +113,10 @@ export function SeminarFinder({
     return ALL_CATEGORIES;
   }, [initialCategorySlug, availableCategories]);
 
-  const initialLocation = useMemo(() => {
-    if (typeof initialLocationId === "string") {
-      const match = availableLocations.find((location) => location.id === initialLocationId);
-      if (match) {
-        return match.id;
-      }
-    }
-    return ALL_LOCATIONS;
-  }, [initialLocationId, availableLocations]);
-
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
-  const [selectedLocation, setSelectedLocation] = useState<string>(initialLocation);
+  const [selectedLocation, setSelectedLocation] = useState<string>(
+    initialLocationId ?? ALL_LOCATIONS
+  );
   useEffect(() => {
     const handler = (evt: Event) => {
       const detail = (evt as CustomEvent)?.detail as { slug?: string | null } | undefined;
@@ -171,16 +165,9 @@ export function SeminarFinder({
   const categoriesToDisplay =
     hasSeminars || selectedCategory === ALL_CATEGORIES ? categoriesWithSeminars : fallbackCategories;
 
-  const handleLocationBadgeClick = useCallback(
-    (locationId: string) => {
-      const exists = availableLocations.some((location) => location.id === locationId);
-      if (!exists) {
-        return;
-      }
-      setSelectedLocation(locationId);
-    },
-    [availableLocations]
-  );
+  const handleLocationBadgeClick = useCallback((locationId: string) => {
+    setSelectedLocation((current) => (current === locationId ? "" : locationId));
+  }, []);
 
   const resolvedBackground = resolveSectionBackground(hintergrund ?? null);
   const isDarkBackground = isDarkSectionBackground(resolvedBackground);
@@ -253,11 +240,10 @@ export function SeminarFinder({
                 ))}
               </div>
 
-              <label className="hidden items-center gap-3 text-base-content/80 md:flex lg:self-start">
-                <span className="text-sm font-semibold text-base-content/60">Standort</span>
+              <div className="relative hidden md:flex lg:self-start">
                 <select
-                  className="select select-bordered select-sm w-48 border-base-300 bg-base-100 text-base-content shadow-sm shadow-base-300/40"
-                  value={selectedLocation}
+                  className={`${buttonBaseClasses} ${locationSelectClasses} appearance-none pr-8 pl-4 text-base`}
+                  value={selectedLocation || ALL_LOCATIONS}
                   onChange={(event) => setSelectedLocation(event.target.value)}
                 >
                   <option value={ALL_LOCATIONS}>Alle Standorte</option>
@@ -267,7 +253,12 @@ export function SeminarFinder({
                     </option>
                   ))}
                 </select>
-              </label>
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-base-content/70">
+                  <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+              </div>
             </div>
           </div>
 
@@ -295,6 +286,7 @@ export function SeminarFinder({
                         key={seminar.id}
                         seminar={seminar}
                         onLocationClick={handleLocationBadgeClick}
+                        forceMobileLayout={compactCards}
                       />
                     ))}
                   </div>
@@ -325,18 +317,28 @@ export function SeminarFinder({
 type SeminarFinderCardProps = {
   seminar: SeminarFinderSeminar;
   onLocationClick?: (locationId: string) => void;
+  forceMobileLayout?: boolean;
 };
 
-function SeminarFinderCard({ seminar, onLocationClick }: SeminarFinderCardProps) {
+function SeminarFinderCard({ seminar, onLocationClick, forceMobileLayout = false }: SeminarFinderCardProps) {
+  const cardLayoutClasses = forceMobileLayout
+    ? "flex flex-col gap-3 rounded-2xl bg-base-100 p-5 shadow-sm ring-1 ring-base-200 md:gap-4"
+    : "flex flex-col gap-3 rounded-2xl bg-base-100 p-5 md:grid md:grid-cols-[var(--width-seminar-date)_minmax(0,1fr)_auto_auto] md:items-start md:gap-[var(--gap-seminar-columns)] md:px-7 md:py-6";
   return (
-    <article className="flex flex-col gap-3 rounded-2xl bg-base-100 p-5 md:grid md:grid-cols-[var(--width-seminar-date)_minmax(0,1fr)_auto_auto] md:items-start md:gap-[var(--gap-seminar-columns)] md:px-7 md:py-6">
-      <SeminarFinderCardMobile seminar={seminar} onLocationClick={onLocationClick} />
-      <SeminarFinderCardDesktop seminar={seminar} onLocationClick={onLocationClick} />
+    <article className={cardLayoutClasses}>
+      <SeminarFinderCardMobile
+        seminar={seminar}
+        onLocationClick={onLocationClick}
+        forceVisible={forceMobileLayout}
+      />
+      {forceMobileLayout ? null : <SeminarFinderCardDesktop seminar={seminar} onLocationClick={onLocationClick} />}
     </article>
   );
 }
 
-function SeminarFinderCardMobile({ seminar, onLocationClick }: SeminarFinderCardProps) {
+type SeminarFinderCardMobileProps = SeminarFinderCardProps & { forceVisible?: boolean };
+
+function SeminarFinderCardMobile({ seminar, onLocationClick, forceVisible = false }: SeminarFinderCardMobileProps) {
   const locationBadgeClass = "badge-location badge-location-light";
 
   const handleBadgeClick = () => {
@@ -347,7 +349,7 @@ function SeminarFinderCardMobile({ seminar, onLocationClick }: SeminarFinderCard
   };
 
   return (
-    <div className="flex flex-col gap-2 md:hidden">
+    <div className={`flex flex-col gap-2 ${forceVisible ? "" : "md:hidden"}`}>
       <div className="flex flex-col gap-[0.35rem]">
         <h4 className="font-sans text-base font-semibold text-base-content [&]:m-0">{seminar.name}</h4>
         {seminar.locationLabel ? (

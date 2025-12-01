@@ -97,7 +97,7 @@ export function ColumnsSection({
   const verticalLineClass = isDarkBackground ? "bg-base-100/30" : "bg-base-content/20";
   const gridClass =
     variant === "plain"
-      ? `grid ${columnLayoutClass} divide-y md:divide-y-0 ${dividerTone}`
+      ? `grid ${columnLayoutClass} gap-y-2 md:gap-y-0 md:divide-y-0 ${dividerTone}`
       : `grid gap-6 ${columnLayoutClass}`;
 
   const paddingY =
@@ -156,6 +156,27 @@ export function ColumnsSection({
                 ? `${baseArticleClass} ${plainTone} pt-0 pb-0 md:pt-0 md:pb-0 md:px-8 ${edgePaddingAdjustment}`.trim()
                 : `${baseArticleClass} rounded-3xl border p-6 shadow-sm ${cardTone}`;
 
+            const richTextClass = [
+              "w-full text-base leading-relaxed",
+              "[&_p:not(:first-child)]:mt-4",
+              "[&_ul]:list-disc",
+              "[&_ul]:space-y-2",
+              "[&_ul]:pl-5",
+              "[&_ol]:list-decimal",
+              "[&_ol]:space-y-2",
+              "[&_ol]:pl-5",
+              "[&_a]:underline",
+              isDarkBackground ? "[&_a]:text-primary-200" : "[&_a]:text-primary",
+              isDarkBackground ? "text-base-100/85" : "text-base-content/80",
+              "[&_strong]:text-current",
+              "[&_em]:text-current",
+              "[&_h3]:text-current",
+              "[&_h4]:text-current",
+              "[&_h5]:text-current"
+            ]
+              .filter(Boolean)
+              .join(" ");
+
             const columnContent = (
               <article className={articleClass}>
                 {column.bild ? (
@@ -172,14 +193,7 @@ export function ColumnsSection({
                   </figure>
                 ) : null}
                 {column.html ? (
-                  <div
-                    className={`prose prose-sm max-w-none ${
-                      isDarkBackground
-                        ? "text-base-100/85 prose-headings:text-base-100"
-                        : "text-base-content/80 prose-headings:text-base-content"
-                    }`}
-                    dangerouslySetInnerHTML={{ __html: normalisedHtml ?? "" }}
-                  />
+                  <div className={richTextClass} dangerouslySetInnerHTML={{ __html: normalisedHtml ?? "" }} />
                 ) : null}
               </article>
             );
@@ -188,7 +202,7 @@ export function ColumnsSection({
               return (
                 <div
                   key={column.id}
-                  className="relative flex h-full flex-col mt-[5px] first:mt-0 md:mt-0"
+                  className="relative flex h-full flex-col my-2 first:mt-0 last:mb-0 md:my-0"
                 >
                   {index > 0 ? (
                     <span
