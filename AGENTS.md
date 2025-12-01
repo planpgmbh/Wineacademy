@@ -11,6 +11,7 @@ Diese Regeln gelten sowohl auf dem Server (Staging/Live) als auch lokal. Zu Begi
 - **Teste:** Nach Implementierungen die relevanten Tests/Linting ausführen und Ergebnisse nennen.
 - **Commit-Protokoll (Backend & Frontend):** Commit-Log ist die zentrale Dokumentation. Jeder Commit enthält einen kurzen deutschen Titel und einen aussagekräftigen Body mit: Ziel/Vorhaben, Versuchen incl. Fehlversuchen, ggf. Fehlermeldungen/Logs, finaler Lösung oder Erkenntnis, Tests/Checks, offene Punkte. Keine neuen Einträge mehr in `docs/backend-arbeitsprotokoll.md` (nur Historie).
 - **Commits:** Nur auf ausdrückliche Anweisung committen. Direkt nach jedem Commit sofort `git push origin staging`; Commit-Body wie oben beschrieben formulieren.
+- **Git Reset nur nach Rückfrage:** Befehle wie `git reset` oder andere globale Rollbacks dürfen erst nach expliziter Nachfrage und Zustimmung ausgeführt werden (z. B. „Zum Wiederherstellen würde ich `git reset` nutzen – ist das ok?“).
 - **Datenbank Reset:** Wenn „dbreset“ o. ä. gefordert wird, Datenbank löschen und Seeds neu einspielen.
 - **Server-Infrastruktur:** Für Compose-/Traefik-/Hosting-Fragen `docs/server-infrastructure.md` heranziehen.
 - **Liveserver:** Arbeitest du direkt auf dem Server, jede Änderung besonders vorsichtig durchführen und unnötige Eingriffe vermeiden.
