@@ -9,9 +9,10 @@ import {
 } from "@/lib/landing";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useMemo, useState, type JSX } from "react";
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState, type JSX } from "react";
 
 import { SeminarDateBadge } from "@/components/shared/SeminarDateBadge";
+import { SliderDots } from "@/components/shared/SliderDots";
 
 type SeminarListProps = {
   id?: string;
@@ -62,6 +63,17 @@ const TOPLINE_DATE_FORMATTER = new Intl.DateTimeFormat("de-DE", { day: "2-digit"
 const TOPLINE_DAY_FORMATTER = new Intl.DateTimeFormat("de-DE", { day: "2-digit" });
 const TOPLINE_MONTH_FORMATTER = new Intl.DateTimeFormat("de-DE", { month: "long" });
 
+const truncateText = (value?: string | null, limit = 160): string | null => {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const trimmed = value.trim();
+  if (trimmed.length <= limit) {
+    return trimmed;
+  }
+  return `${trimmed.slice(0, limit).trimEnd()}...`;
+};
+
 const formatImageSrc = (item: UpcomingSeminar): { src: string | null; alt: string } => {
   const alt = item.image.alt?.trim() || item.title.trim() || "Seminarbild";
   const src = item.image.src && item.image.src.length > 0 ? item.image.src : null;
@@ -88,15 +100,20 @@ type SeminarListItemProps = {
   isDarkBackground: boolean;
   onLocationClick?: (locationKey: string) => void;
   compactLayout?: boolean;
+  mobileHeight?: number | null;
 };
 
-function SeminarListItem({ seminar, buttonText, isDarkBackground, onLocationClick, compactLayout = false }: SeminarListItemProps) {
+const SeminarListItem = forwardRef<HTMLElement, SeminarListItemProps>(function SeminarListItem(
+  { seminar, buttonText, isDarkBackground, onLocationClick, compactLayout = false, mobileHeight = null },
+  ref
+) {
   const image = formatImageSrc(seminar);
   const seminarHref = `/seminare/${encodeURIComponent(seminar.slug)}`;
   const mobileToplineDate = useMemo(() => formatToplineDate(seminar.nextDateIso), [seminar.nextDateIso]);
   const locationLabel = seminar.locationLabel ?? null;
   const locationKey = deriveLocationKeyFromSeminar(seminar);
   const locationBadgeClass = isDarkBackground ? "badge-location badge-location-dark" : "badge-location badge-location-light";
+  const truncatedDescription = truncateText(seminar.shortDescription);
 
   const handleLocationBadgeClick = () => {
     if (!locationKey) {
@@ -112,10 +129,12 @@ function SeminarListItem({ seminar, buttonText, isDarkBackground, onLocationClic
 
   return (
     <article
-      className={`group grid gap-6 rounded-2xl bg-base-100 p-0 shadow-sm ring-1 ring-base-300/70 transition hover:shadow-md md:items-start md:gap-6 md:rounded-none md:bg-transparent md:p-0 md:shadow-none md:ring-0 md:hover:shadow-none ${gridTemplateDesktop}`}
+      ref={ref}
+      style={mobileHeight ? { minHeight: mobileHeight } : undefined}
+      className={`group flex h-full flex-col overflow-hidden rounded-2xl bg-base-100 p-0 shadow-sm ring-1 ring-base-300/70 transition hover:shadow-md md:grid md:h-auto md:items-start md:gap-6 md:rounded-none md:bg-transparent md:p-0 md:shadow-none md:ring-0 md:hover:shadow-none ${gridTemplateDesktop}`}
     >
       <div
-        className={`relative col-span-full h-[180px] w-full overflow-hidden rounded-t-2xl bg-base-200 md:col-span-1 md:row-span-full md:h-[170px] ${imageWidthClass} md:rounded-2xl md:shadow-md`}
+        className={`relative col-span-full h-[190px] w-full shrink-0 overflow-hidden bg-base-200 md:col-span-1 md:row-span-full md:h-[170px] ${imageWidthClass} md:rounded-2xl md:shadow-md`}
       >
         {image.src ? (
           <Image
@@ -151,33 +170,35 @@ function SeminarListItem({ seminar, buttonText, isDarkBackground, onLocationClic
         <SeminarDateBadge date={seminar.nextDateIso} />
       </div>
 
-      <div className="flex flex-col gap-3 px-6 pb-6 md:col-start-3 md:row-start-1 md:gap-4 md:self-start md:px-0 md:pb-0">
-        <div className="flex flex-col gap-[0.2rem] md:gap-1">
-          {mobileToplineDate ? (
-            <p className="mb-0 flex items-baseline gap-1.25 text-sm font-semibold uppercase leading-tight tracking-wide text-base-content md:hidden">
-              <span className="text-base-content">{mobileToplineDate.day}</span>
-              <span className="text-base-content/30">|</span>
-              <span className="font-normal text-base-content/60">{mobileToplineDate.month}</span>
-            </p>
+      <div className="flex flex-1 flex-col justify-between gap-4 px-6 pb-6 pt-4 md:col-start-3 md:row-start-1 md:flex-none md:gap-4 md:self-start md:px-0 md:pb-0 md:pt-0">
+        <div className="flex flex-col gap-[0.35rem] md:gap-1">
+          {(mobileToplineDate || locationLabel) ? (
+            <div className="flex items-center justify-between md:hidden">
+              {mobileToplineDate ? (
+                <p className="flex items-baseline gap-1.25 text-sm font-semibold uppercase leading-tight tracking-wide text-base-content">
+                  <span className="text-base-content text-2xl leading-none">{mobileToplineDate.day}</span>
+                  <span className="text-base-content/30">|</span>
+                  <span className="font-normal text-base-content/60">{mobileToplineDate.month}</span>
+                </p>
+              ) : <span />}
+              {locationLabel ? (
+                <button
+                  type="button"
+                  onClick={handleLocationBadgeClick}
+                  className={`${locationBadgeClass} md:hidden`}
+                  aria-label={`Seminare am Standort ${locationLabel} filtern`}
+                >
+                  {locationLabel}
+                </button>
+              ) : null}
+            </div>
           ) : null}
           <div className="flex flex-col gap-1">
-            <h3 className="heading-card rt-heading-xs font-semibold leading-tight text-balance text-base-content !mt-0 !mb-[0.2rem] !text-[1.35rem] w-fit">
+            <h3 className="heading-card rt-heading-xs font-semibold leading-tight text-balance text-base-content !mt-0 !mb-[0.15rem] !text-[1.35rem] w-fit">
               {seminar.title}
             </h3>
-          {locationLabel ? (
-            <button
-              type="button"
-              onClick={handleLocationBadgeClick}
-              className={locationBadgeClass}
-              aria-label={`Seminare am Standort ${locationLabel} filtern`}
-            >
-              {locationLabel}
-            </button>
-          ) : null}
           </div>
-          {seminar.shortDescription ? (
-            <p className="mt-1 text-base text-base-content/80">{seminar.shortDescription}</p>
-          ) : null}
+          {truncatedDescription ? <p className="text-base text-base-content/80">{truncatedDescription}</p> : null}
         </div>
         <Link className="btn btn-primary min-w-[160px] self-start md:self-start" href={seminarHref}>
           {buttonText}
@@ -185,7 +206,7 @@ function SeminarListItem({ seminar, buttonText, isDarkBackground, onLocationClic
       </div>
     </article>
   );
-}
+});
 
 export function SeminarList({
   id,
@@ -208,8 +229,15 @@ export function SeminarList({
   const [hasMore, setHasMore] = useState(mehrButtonAnzeigen && initialItems.length >= loadLimit);
   const [error, setError] = useState<string | null>(initialError);
   const [selectedLocationKey, setSelectedLocationKey] = useState<string | null>(null);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [userInteracted, setUserInteracted] = useState(false);
+  const [hasEnteredView, setHasEnteredView] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const sliderRef = useRef<HTMLDivElement | null>(null);
+  const itemRefs = useRef<(HTMLElement | null)[]>([]);
+  const [maxMobileHeight, setMaxMobileHeight] = useState<number | null>(null);
 
-  const handleLoadMore = async () => {
+  const handleLoadMore = useCallback(async () => {
     if (isLoading || !hasMore) {
       return;
     }
@@ -231,7 +259,7 @@ export function SeminarList({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [categorySlug, hasMore, isLoading, items.length, loadLimit]);
 
   const paragraphs = formatParagraphs(einleitung);
   const trimmedHeadline = überschrift?.trim() ?? "";
@@ -300,6 +328,142 @@ export function SeminarList({
     : "badge-location badge-location-active-light";
   const getLocationPillClass = (active: boolean) => (active ? locationPillActive : locationPillInactive);
 
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const media = window.matchMedia("(min-width: 768px)");
+    const update = () => setIsDesktop(media.matches);
+    update();
+    const listener = () => update();
+    media.addEventListener("change", listener);
+    return () => media.removeEventListener("change", listener);
+  }, []);
+
+  const scrollToIndex = useCallback((index: number) => {
+    const container = sliderRef.current;
+    if (!container) {
+      return;
+    }
+    const child = container.children[index] as HTMLElement | undefined;
+    if (!child) {
+      return;
+    }
+    container.scrollTo({ left: child.offsetLeft, behavior: "smooth" });
+  }, []);
+
+  useEffect(() => {
+    if (isDesktop || filteredItems.length <= 1) {
+      return;
+    }
+    const container = sliderRef.current;
+    if (!container) {
+      return;
+    }
+    const handleScroll = () => {
+      const children = Array.from(container.children) as HTMLElement[];
+      if (children.length === 0) {
+        return;
+      }
+      const { scrollLeft } = container;
+      let closestIndex = 0;
+      let smallestDistance = Number.POSITIVE_INFINITY;
+      children.forEach((child, index) => {
+        const distance = Math.abs(child.offsetLeft - scrollLeft);
+        if (distance < smallestDistance) {
+          smallestDistance = distance;
+          closestIndex = index;
+        }
+      });
+      setActiveSlide(closestIndex);
+      if (closestIndex === filteredItems.length - 1 && hasMore && !isLoading && userInteracted) {
+        handleLoadMore();
+      }
+    };
+    const handlePointerDown = () => setUserInteracted(true);
+    const handleWheel = () => setUserInteracted(true);
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    container.addEventListener("pointerdown", handlePointerDown, { passive: true });
+    container.addEventListener("wheel", handleWheel, { passive: true });
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+      container.removeEventListener("pointerdown", handlePointerDown);
+      container.removeEventListener("wheel", handleWheel);
+    };
+  }, [filteredItems.length, handleLoadMore, hasMore, isDesktop, isLoading, userInteracted]);
+
+  useEffect(() => {
+    if (
+      isDesktop ||
+      filteredItems.length <= 1 ||
+      userInteracted ||
+      typeof window === "undefined" ||
+      !hasEnteredView
+    ) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      const nextIndex = (activeSlide + 1) % filteredItems.length;
+      scrollToIndex(nextIndex);
+    }, 4000);
+    return () => window.clearTimeout(timer);
+  }, [activeSlide, filteredItems.length, isDesktop, scrollToIndex, userInteracted, hasEnteredView]);
+
+  useEffect(() => {
+    setActiveSlide(0);
+    if (!isDesktop && sliderRef.current) {
+      sliderRef.current.scrollTo({ left: 0, behavior: "auto" });
+    }
+  }, [filteredItems.length, isDesktop, selectedLocationKey]);
+
+  useEffect(() => {
+    if (isDesktop || typeof window === "undefined") {
+      return;
+    }
+    const target = sliderRef.current;
+    if (!target) {
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting) {
+          setHasEnteredView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [isDesktop]);
+
+  useEffect(() => {
+    if (isDesktop) {
+      setMaxMobileHeight(null);
+      return;
+    }
+    const measure = () => {
+      const heights = itemRefs.current
+        .map((el) => {
+          if (!el) {
+            return 0;
+          }
+          const rect = el.getBoundingClientRect();
+          return rect.height || el.offsetHeight;
+        })
+        .filter((height) => height > 0);
+      if (heights.length === 0) {
+        setMaxMobileHeight(null);
+        return;
+      }
+      setMaxMobileHeight(Math.max(...heights));
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [filteredItems.length, isDesktop]);
+
   return (
     <section style={style} id={id} className="scroll-mt-28 md:scroll-mt-36">
       <div
@@ -318,7 +482,7 @@ export function SeminarList({
         ) : null}
 
         {hasLocationFilter ? (
-          <div className={`mb-6 flex flex-wrap justify-center gap-3 md:gap-4 ${hasIntro ? "mt-0" : "mt-2"}`}>
+          <div className={`mb-0 flex flex-wrap justify-center gap-3 md:mb-0 md:gap-4 ${hasIntro ? "mt-0" : "mt-2"}`}>
             <button
               type="button"
               className={getLocationPillClass(selectedLocationKey === null)}
@@ -352,25 +516,55 @@ export function SeminarList({
               {noItemsMessage}
             </div>
           ) : (
-            <div className="flex flex-col gap-10 md:gap-14">
-              {filteredItems.map((seminar) => (
-                <SeminarListItem
-                  key={`${seminar.id}-${seminar.nextDateTimestamp}`}
-                  seminar={seminar}
-                  buttonText={buttonText}
-                  isDarkBackground={isDarkBackground}
-                  onLocationClick={handleLocationFilterChange}
-                  compactLayout={compactLayout}
-                />
-              ))}
-            </div>
+            <>
+              <div className="hidden md:flex md:flex-col md:gap-14">
+                {filteredItems.map((seminar) => (
+                  <SeminarListItem
+                    key={`${seminar.id}-${seminar.nextDateTimestamp}`}
+                    seminar={seminar}
+                    buttonText={buttonText}
+                    isDarkBackground={isDarkBackground}
+                    onLocationClick={handleLocationFilterChange}
+                    compactLayout={compactLayout}
+                  />
+                ))}
+              </div>
+
+              <div className="md:hidden">
+                <div
+                  ref={sliderRef}
+                  className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 [-webkit-overflow-scrolling:touch] no-scrollbar"
+                >
+                  {filteredItems.map((seminar, index) => (
+                    <div
+                      key={`${seminar.id}-${seminar.nextDateTimestamp}`}
+                      className="w-full shrink-0 snap-center"
+                      style={maxMobileHeight ? { minHeight: maxMobileHeight } : undefined}
+                    >
+                      <SeminarListItem
+                        ref={(el) => {
+                          itemRefs.current[index] = el;
+                        }}
+                        seminar={seminar}
+                        buttonText={buttonText}
+                        isDarkBackground={isDarkBackground}
+                        onLocationClick={handleLocationFilterChange}
+                        compactLayout={compactLayout}
+                        mobileHeight={maxMobileHeight}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <SliderDots count={filteredItems.length} activeIndex={activeSlide} />
+              </div>
+            </>
           )}
         </div>
 
         {error ? <p className="text-sm text-error">{error}</p> : null}
 
         {hasMore ? (
-          <div className="mt-10 flex justify-center md:mt-12">
+          <div className="mt-10 hidden justify-center md:mt-12 md:flex">
             <button
               type="button"
               className="btn-more-outline min-w-[200px]"

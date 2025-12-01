@@ -8,6 +8,7 @@ import {
   isDarkSectionBackground,
   type SectionBackgroundKey
 } from "@/lib/landing";
+import { SliderDots } from "@/components/shared/SliderDots";
 
 type Karte = {
   id: number;
@@ -44,9 +45,9 @@ const resolveLinkAttributes = (href: string) => {
 
 export function CardGrid({ karten, hintergrund, id }: CardGridProps) {
   const horizontalAlignClasses: Record<Karte["textAlign"], string> = {
-    left: "items-start text-left",
+    left: "items-center text-center",
     center: "items-center text-center",
-    right: "items-end text-right"
+    right: "items-center text-center"
   };
 
   const verticalAlignClasses: Record<Karte["verticalAlign"], string> = {
@@ -68,8 +69,10 @@ export function CardGrid({ karten, hintergrund, id }: CardGridProps) {
     cardCount <= 1
       ? "md:grid-cols-1"
       : cardCount === 2
-        ? "md:grid-cols-2"
-        : "md:grid-cols-2 lg:grid-cols-3";
+        ? "md:grid-cols-2 lg:grid-cols-2"
+        : cardCount === 4
+          ? "md:grid-cols-2 lg:grid-cols-2"
+          : "md:grid-cols-2 lg:grid-cols-3";
   const cardListClass = [
     "flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 [-webkit-overflow-scrolling:touch] no-scrollbar",
     "md:grid md:snap-none md:overflow-visible md:gap-6",
@@ -106,7 +109,7 @@ export function CardGrid({ karten, hintergrund, id }: CardGridProps) {
   return (
     <section style={style} id={id}>
       <div
-        className={`mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)] md:gap-8 ${
+        className={`mx-auto flex w-full max-w-6xl flex-col gap-2 px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)] md:gap-8 ${
           isDarkBackground ? "text-base-100" : ""
         }`}
       >
@@ -124,7 +127,7 @@ export function CardGrid({ karten, hintergrund, id }: CardGridProps) {
             const cardProps = href ? resolveLinkAttributes(href) : {};
             const hasBackgroundImage = Boolean(card.backgroundImage);
             const cardClasses = [
-              "group relative flex h-full w-full flex-none snap-center overflow-hidden rounded-3xl border border-base-200 bg-base-100 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary md:flex-auto",
+              "group relative flex h-full w-full flex-none snap-center overflow-hidden rounded-3xl border border-base-200 bg-base-100 shadow-sm transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary md:flex-auto",
               card.darkMode && !hasBackgroundImage ? "border-neutral-700 bg-neutral-900" : "",
               hasBackgroundImage ? "bg-transparent" : "",
               hasAction ? "cursor-pointer" : ""
@@ -134,31 +137,31 @@ export function CardGrid({ karten, hintergrund, id }: CardGridProps) {
             const textColorClass = card.darkMode ? "text-base-100" : "text-base-content";
             const introColorClass = card.darkMode ? "text-base-100/80" : "text-base-content/70";
             const ctaColorClass = card.darkMode ? "text-base-100" : "text-primary";
-            const overlayTintClass = card.darkMode ? "bg-neutral-900/30" : "bg-base-100/80";
+            const overlayTintClass = card.darkMode ? "bg-neutral-950/50" : "bg-base-100/85";
             const headlineClasses = [
-              "transform-gpu transition-all duration-300 ease-out leading-tight text-[clamp(1.75rem,4vw,2.5rem)] [&]:m-0",
-            "md:translate-y-0",
-            headingHoverShift[card.verticalAlign],
-            card.darkMode ? "text-base-100" : ""
-          ]
-            .filter(Boolean)
-            .join(" ");
+              "heading-card-grid text-center transform-gpu transition-all duration-300 ease-out",
+              "md:translate-y-0",
+              headingHoverShift[card.verticalAlign],
+              card.darkMode ? "text-base-100" : ""
+            ]
+              .filter(Boolean)
+              .join(" ");
             const detailContainerClasses = [
-              "mt-1 flex w-full flex-col gap-1 text-inherit",
+              "mt-3 flex w-full flex-col gap-2 text-inherit text-center items-center",
               "md:mt-0 md:max-h-0 md:translate-y-4 md:opacity-0 md:overflow-hidden md:pointer-events-none md:transition-all md:duration-300 md:ease-out",
               "md:group-hover:mt-3 md:group-hover:max-h-96 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:group-hover:pointer-events-auto"
             ]
               .filter(Boolean)
               .join(" ");
             const introClasses = [
-              `text-base ${introColorClass}`,
+              `text-base ${introColorClass} text-center`,
               "md:opacity-0 md:translate-y-2 md:transition md:duration-300 md:ease-out",
               "md:group-hover:opacity-100 md:group-hover:translate-y-0"
             ]
               .filter(Boolean)
               .join(" ");
             const ctaClasses = [
-              `text-sm font-semibold ${ctaColorClass}`,
+              `text-sm font-semibold ${ctaColorClass} text-center`,
               "md:opacity-0 md:translate-y-2 md:transition md:duration-300 md:ease-out",
               "md:group-hover:opacity-100 md:group-hover:translate-y-0"
             ]
@@ -213,8 +216,12 @@ export function CardGrid({ karten, hintergrund, id }: CardGridProps) {
                   </>
                 ) : null}
                 <div
-                  className={`relative z-20 flex min-h-[16rem] flex-col p-6 ${horizontalAlignClasses[card.textAlign]} ${verticalAlignClasses[card.verticalAlign]} ${textColorClass} mx-auto max-w-3xl`}
-                  style={card.darkMode ? { textShadow: "0 2px 6px rgba(0, 0, 0, 0.45)" } : undefined}
+                  className={`relative z-20 flex min-h-[16rem] w-full flex-col p-6 ${horizontalAlignClasses[card.textAlign]} ${verticalAlignClasses[card.verticalAlign]} ${textColorClass}`}
+                  style={
+                    card.darkMode
+                      ? { textShadow: "0 3px 10px rgba(0, 0, 0, 0.6)" }
+                      : { textShadow: "0 2px 8px rgba(0, 0, 0, 0.35)" }
+                  }
                 >
                   <h2 className={headlineClasses}>{card.überschrift}</h2>
                   {hasDetails ? (
@@ -230,16 +237,9 @@ export function CardGrid({ karten, hintergrund, id }: CardGridProps) {
             );
           })}
         </div>
-        {cardCount > 1 ? (
-          <div className="flex justify-center gap-2 md:hidden">
-            {karten.map((card, index) => (
-              <span
-                key={card.id}
-                className={`h-2 w-2 rounded-full transition ${index === activeIndex ? "bg-primary" : "bg-base-content/30"}`}
-              />
-            ))}
-          </div>
-        ) : null}
+        <div className="md:hidden">
+          <SliderDots count={cardCount} activeIndex={activeIndex} />
+        </div>
       </div>
     </section>
   );
