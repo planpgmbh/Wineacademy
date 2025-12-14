@@ -62,7 +62,7 @@ export interface SeminarTab extends Struct.ComponentSchema {
     displayName: 'Tab';
   };
   attributes: {
-    inhalt: Schema.Attribute.CustomField<'plugin::advanced-richtext.advanced-richtext'>;
+    inhalt: Schema.Attribute.CustomField<'plugin::adentdk-tiptap-editor.full-tiptap-editor'>;
     titel: Schema.Attribute.String & Schema.Attribute.Required;
   };
 }
@@ -206,7 +206,7 @@ export interface LandingColumn extends Struct.ComponentSchema {
   attributes: {
     titel: Schema.Attribute.String & Schema.Attribute.Private & Schema.Attribute.DefaultTo<'Spalte'>;
     bild: Schema.Attribute.Media<'images'>;
-    inhalt: Schema.Attribute.CustomField<'plugin::advanced-richtext.advanced-richtext'>;
+    inhalt: Schema.Attribute.CustomField<'plugin::adentdk-tiptap-editor.full-tiptap-editor'>;
   };
 }
 
@@ -371,7 +371,7 @@ export interface LandingTextBlock extends Struct.ComponentSchema {
       'wine-blue-darkest'
     ]>;
     einleitung: Schema.Attribute.Text &
-      Schema.Attribute.CustomField<'plugin::advanced-richtext.advanced-richtext'>;
+      Schema.Attribute.CustomField<'plugin::adentdk-tiptap-editor.full-tiptap-editor'>;
     buttonText: Schema.Attribute.String;
     buttonLink: Schema.Attribute.String;
   };
@@ -384,7 +384,7 @@ export interface LandingTab extends Struct.ComponentSchema {
     displayName: 'Tab';
   };
   attributes: {
-    inhalt: Schema.Attribute.CustomField<'plugin::advanced-richtext.advanced-richtext'>;
+    inhalt: Schema.Attribute.CustomField<'plugin::adentdk-tiptap-editor.full-tiptap-editor'>;
     überschrift: Schema.Attribute.String & Schema.Attribute.Required;
   };
 }

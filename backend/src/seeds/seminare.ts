@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { nowIso, slugify } from './helpers';
+import { nowIso, slugify, htmlToTiptap } from './helpers';
 
 type SeminarTab = {
   titel: string;
@@ -39,7 +39,7 @@ function buildAbschnitteFromTabs(tabs: SeminarTab[] | null | undefined) {
       hintergrundfarbe: null,
       reiter: tabs.map((tab) => ({
         überschrift: tab.titel,
-        inhalt: tab.inhalt ?? '',
+        inhalt: htmlToTiptap(tab.inhalt ?? null),
       })),
     },
   ];

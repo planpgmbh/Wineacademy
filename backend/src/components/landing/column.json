@@ -7,7 +7,7 @@
   "attributes": {
     "inhalt": {
       "type": "customField",
-      "customField": "plugin::advanced-richtext.advanced-richtext"
+      "customField": "plugin::adentdk-tiptap-editor.full-tiptap-editor"
     },
     "titel": {
       "type": "string",
