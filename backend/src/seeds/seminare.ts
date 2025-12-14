@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { nowIso, slugify } from './helpers';
+import { nowIso, slugify, htmlToTiptap } from './helpers';
 
 type SeminarTab = {
   titel: string;
@@ -14,7 +14,6 @@ type SeminarSeed = {
   beschreibung?: string | null;
   preis?: string | null;
   mwst?: boolean | null;
-  kapazitaet?: number | null;
   heroDarkMode?: boolean;
   aktiv?: boolean;
   bookingbox?: {
@@ -40,7 +39,7 @@ function buildAbschnitteFromTabs(tabs: SeminarTab[] | null | undefined) {
       hintergrundfarbe: null,
       reiter: tabs.map((tab) => ({
         überschrift: tab.titel,
-        inhalt: tab.inhalt ?? '',
+        inhalt: htmlToTiptap(tab.inhalt ?? null),
       })),
     },
   ];
@@ -113,7 +112,6 @@ async function upsertSeminar(strapi: any, values: SeminarSeed, log: (msg: string
     beschreibung: values.beschreibung ?? null,
     preis: values.preis ?? null,
     mwst: typeof values.mwst === 'boolean' ? values.mwst : values.mwst == null ? null : Boolean(values.mwst),
-    kapazitaet: typeof values.kapazitaet === 'number' ? values.kapazitaet : null,
     heroDarkMode: values.heroDarkMode ?? false,
     aktiv: values.aktiv ?? true,
     bookingbox: bookingbox ?? undefined,
