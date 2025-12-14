@@ -1,8 +1,4 @@
 import { fetchJson, mediaUrl } from "./api";
-import { generateHTML } from "@tiptap/html";
-import StarterKit from "@tiptap/starter-kit";
-import Link from "@tiptap/extension-link";
-import Image from "@tiptap/extension-image";
 
 export type SectionBackgroundKey =
   | "neutral"
@@ -70,15 +66,6 @@ type StrapiUploadFile = {
   caption?: string | null;
   name?: string | null;
 };
-
-type TiptapJSON = {
-  type: string;
-  attrs?: Record<string, unknown>;
-  content?: TiptapJSON[];
-  text?: string;
-};
-
-type RichTextValue = string | TiptapJSON | null | undefined;
 
 type StrapiCategorySummary = {
   id: number;
@@ -154,7 +141,7 @@ type StrapiCardGridComponent = {
 type StrapiColumnComponent = {
   id?: number | null;
   bild?: StrapiUploadFile | null;
-  inhalt?: RichTextValue;
+  inhalt?: string | null;
 };
 
 type StrapiColumnsComponent = {
@@ -174,7 +161,7 @@ type StrapiTrennlinieComponent = {
 type StrapiTabItemComponent = {
   id?: number | string | null;
   überschrift?: string | null;
-  inhalt?: RichTextValue;
+  inhalt?: string | null;
 };
 
 type StrapiTabsComponent = {
@@ -309,43 +296,15 @@ const rewriteRichTextMediaSources = (value: string): string => {
   });
 };
 
-const TIPTAP_EXTENSIONS = [
-  StarterKit,
-  Link.configure({ openOnClick: true }),
-  Image.configure({ HTMLAttributes: { loading: "lazy" } })
-];
-
-const extractPlainText = (node?: TiptapJSON | null): string => {
-  if (!node) return "";
-  if (node.text) return node.text;
-  return (node.content ?? []).map(extractPlainText).join(" ").trim();
-};
-
-const normaliseRichText = (value: RichTextValue): string | null => {
-  if (value == null) {
+const normaliseRichText = (value: string | null | undefined): string | null => {
+  if (typeof value !== "string") {
     return null;
   }
-
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    if (trimmed.length === 0) {
-      return null;
-    }
-    return rewriteRichTextMediaSources(trimmed);
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return null;
   }
-
-  if (typeof value === "object") {
-    try {
-      const html = generateHTML(value as TiptapJSON, TIPTAP_EXTENSIONS);
-      const trimmed = typeof html === "string" ? html.trim() : "";
-      return trimmed ? rewriteRichTextMediaSources(trimmed) : null;
-    } catch {
-      const fallback = extractPlainText(value as TiptapJSON);
-      return fallback ? `<p>${escapeHtml(fallback)}</p>` : null;
-    }
-  }
-
-  return null;
+  return rewriteRichTextMediaSources(trimmed);
 };
 
 const escapeHtml = (value: string): string =>

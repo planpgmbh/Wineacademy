@@ -21,7 +21,7 @@
     "kapazitaet": {
       "type": "integer",
       "required": true,
-      "default": 30
+      "default": 25
     },
     "planungsstatus": {
       "type": "enumeration",

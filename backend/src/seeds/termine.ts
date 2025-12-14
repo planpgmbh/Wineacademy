@@ -22,7 +22,7 @@ function formatDate(daysFromToday: number): string {
 async function fetchPublishedSeminars(strapi: any): Promise<SeminarDocument[]> {
   const items = await strapi.documents('api::seminar.seminar').findMany({
     status: 'published',
-    fields: ['id', 'documentId', 'name', 'kapazitaet'],
+    fields: ['id', 'documentId', 'name'],
   });
   return Array.isArray(items) ? items.filter((item) => item?.documentId) : [];
 }
@@ -47,13 +47,11 @@ export async function seedTermine(strapi: any, log: (msg: string) => void) {
   }
 
   const fallbackStandortId = standorte[0]?.id ?? null;
+  const defaultCapacity = 25;
   let createdCount = 0;
 
   for (const [index, seminar] of seminars.entries()) {
-    const baseCapacity =
-      seminar.kapazitaet != null && Number.isFinite(Number(seminar.kapazitaet))
-        ? Number(seminar.kapazitaet)
-        : 30;
+    const baseCapacity = defaultCapacity;
     for (let i = 0; i < 3; i += 1) {
       const starttag = formatDate(30 * (i + 1) + index);
       const standort = standorte[(index + i) % Math.max(standorte.length, 1)];
@@ -63,8 +61,12 @@ export async function seedTermine(strapi: any, log: (msg: string) => void) {
           kapazitaet: baseCapacity,
           planungsstatus: 'geplant',
           publishedAt: nowIso(),
-          seminar: seminar.id,
-          standort: standort?.id ?? fallbackStandortId,
+          // Link über die veröffentlichte ID herstellen (Termin hängt an der aktuellen Version)
+          seminar: seminar.id ? { connect: [{ id: seminar.id }] } : undefined,
+          standort:
+            standort?.id || fallbackStandortId
+              ? { connect: [{ id: standort?.id ?? fallbackStandortId }] }
+              : undefined,
           tageMitUhrzeit: [
             {
               datum: starttag,

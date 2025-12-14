@@ -207,11 +207,21 @@ function extractHeroParagraphs(seminar: StrapiSeminarDetail): string[] {
   return [];
 }
 
-export async function getSeminarDetail(slug: string): Promise<SeminarDetail | null> {
+export async function getSeminarDetail(
+  slug: string,
+  options?: { status?: "draft" | "published"; token?: string }
+): Promise<SeminarDetail | null> {
   try {
-    const payload = await fetchJson<StrapiSeminarDetail>(`/public/seminare/${encodeURIComponent(slug)}`, {
-      next: { revalidate: 60 },
-      cache: "force-cache",
+    const query = new URLSearchParams();
+    if (options?.status === "draft" && options?.token) {
+      query.set("status", "draft");
+      query.set("token", options.token);
+    }
+    const qs = query.toString();
+    const url = `/public/seminare/${encodeURIComponent(slug)}${qs ? `?${qs}` : ""}`;
+    const payload = await fetchJson<StrapiSeminarDetail>(url, {
+      next: options?.status === "draft" ? { revalidate: 0 } : { revalidate: 60 },
+      cache: options?.status === "draft" ? "no-store" : "force-cache",
     });
     return normaliseSeminarPayload(payload);
   } catch (error) {

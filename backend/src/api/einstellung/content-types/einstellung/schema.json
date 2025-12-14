@@ -51,6 +51,16 @@
           "displayName": "Benachrichtigungsempfänger"
         }
       }
+    },
+    "trackingSnippets": {
+      "type": "component",
+      "repeatable": true,
+      "component": "system.tracking-snippet",
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Tracking Snippets"
+        }
+      }
     }
   }
 }

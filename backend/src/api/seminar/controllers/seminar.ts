@@ -172,104 +172,117 @@ export default factories.createCoreController('api::seminar.seminar', ({ strapi 
 
   async publicDetail(ctx) {
     const { slug } = ctx.params;
-    const items = await strapi.db.query('api::seminar.seminar').findMany({
-      where: { aktiv: true, publishedAt: { $not: null }, slug },
-      select: [
-        'id',
-        'name',
-        'slug',
-        'kurzbeschreibung',
-        'beschreibung',
-        'preis',
-        'mwst',
-      ],
-      populate: {
-        bild: { select: ['url', 'alternativeText'] },
-        hintergrundbild: { select: ['url', 'alternativeText'] },
-        abschnitte: {
-          on: {
-            'landing.hero': {
-              populate: {
-                button: true,
-                bildergalerie: { populate: { bilder: true } },
-                video: { populate: { video: true, hintergrundbild: true } },
+    const requestedStatus = typeof ctx.query?.status === 'string' ? ctx.query.status : null;
+    const token = typeof ctx.query?.token === 'string' ? ctx.query.token : null;
+    const previewSecret = process.env.PREVIEW_SECRET ?? process.env.ADMIN_JWT_SECRET ?? null;
+    const wantsDraft = requestedStatus === 'draft';
+    const tokenValid = wantsDraft && previewSecret && token === previewSecret;
+    const statusesToTry: Array<'draft' | 'published'> = tokenValid ? ['draft', 'published'] : ['published'];
+
+    let seminar: any = null;
+
+    for (const status of statusesToTry) {
+      const items = await (strapi as any).documents('api::seminar.seminar').findMany({
+        filters: status === 'published' ? { slug, aktiv: true } : { slug },
+        status,
+        fields: ['id', 'documentId', 'name', 'slug', 'kurzbeschreibung', 'beschreibung', 'preis', 'mwst'],
+        populate: {
+          bild: { fields: ['url', 'alternativeText'] },
+          hintergrundbild: { fields: ['url', 'alternativeText'] },
+          abschnitte: {
+            on: {
+              'landing.hero': {
+                populate: {
+                  button: true,
+                  bildergalerie: { populate: { bilder: true } },
+                  video: { populate: { video: true, hintergrundbild: true } },
+                },
               },
-            },
-            'landing.bildergalerie': { populate: { bilder: true } },
-            'landing.card-grid': {
-              populate: {
-                karten: {
-                  populate: {
-                    backgroundImage: true,
-                    button: true,
-                    seminarfinderKategorie: { fields: ['id', 'name', 'slug'] },
+              'landing.bildergalerie': { populate: { bilder: true } },
+              'landing.card-grid': {
+                populate: {
+                  karten: {
+                    populate: {
+                      backgroundImage: true,
+                      button: true,
+                      seminarfinderKategorie: { fields: ['id', 'name', 'slug'] },
+                    },
                   },
                 },
               },
-            },
-            'landing.columns': {
-              populate: {
-                spalten: true,
-              },
-            },
-            'landing.trennlinie': true,
-            'landing.seminar-liste': {
-              populate: {
-                seminarkategorie: {
-                  fields: ['id', 'name', 'slug', 'kurzbeschreibung'],
+              'landing.columns': {
+                populate: {
+                  spalten: true,
                 },
               },
-            },
-            'landing.tabs': {
-              populate: {
-                reiter: true,
-              },
-            },
-            'landing.seminar-finder': {
-              populate: {
-                standardKategorie: {
-                  fields: ['id', 'name', 'slug'],
-                },
-                sichtbareFilter: {
-                  fields: ['id', 'name', 'slug'],
+              'landing.trennlinie': true,
+              'landing.seminar-liste': {
+                populate: {
+                  seminarkategorie: {
+                    fields: ['id', 'name', 'slug', 'kurzbeschreibung'],
+                  },
                 },
               },
-            },
-            'landing.seminar-produkt-karten': {
-              populate: {
-                seminarkategorie: {
-                  fields: ['id', 'name', 'slug', 'kurzbeschreibung'],
+              'landing.tabs': {
+                populate: {
+                  reiter: true,
                 },
-                produkte: {
-                  fields: ['id', 'name', 'slug', 'kurzbeschreibung'],
-                  populate: {
-                    bild: true,
+              },
+              'landing.seminar-finder': {
+                populate: {
+                  standardKategorie: {
+                    fields: ['id', 'name', 'slug'],
+                  },
+                  sichtbareFilter: {
+                    fields: ['id', 'name', 'slug'],
+                  },
+                },
+              },
+              'landing.seminar-produkt-karten': {
+                populate: {
+                  seminarkategorie: {
+                    fields: ['id', 'name', 'slug', 'kurzbeschreibung'],
+                  },
+                  produkte: {
+                    fields: ['id', 'name', 'slug', 'kurzbeschreibung'],
+                    populate: {
+                      bild: true,
+                    },
                   },
                 },
               },
             },
           },
+          kategorien: {
+            fields: ['id', 'name', 'slug'],
+          },
+          seo: true,
+          bookingbox: { fields: ['topline', 'überschrift', 'beschreibung'] },
         },
-        kategorien: {
-          select: ['id', 'name', 'slug'],
-        },
-        seo: true,
-        bookingbox: { select: ['topline', 'überschrift', 'beschreibung'] },
-      },
-      limit: 1,
-    });
+        limit: 1,
+      } as any);
 
-    const seminar = Array.isArray(items) ? items[0] : items;
+      const candidate = Array.isArray(items) ? items[0] : items;
+      if (candidate) {
+        seminar = candidate;
+        break;
+      }
+    }
+
     if (!seminar) return ctx.notFound('Seminar nicht gefunden');
-    const termineRaw = await strapi.db.query('api::termin.termin').findMany({
-      where: { planungsstatus: 'geplant', publishedAt: { $not: null }, seminar: seminar.id },
-      select: ['kapazitaet', 'planungsstatus', 'id', 'starttag'],
-      populate: {
-        tageMitUhrzeit: { select: ['datum', 'startzeit', 'endzeit'] },
-        standort: { select: ['name', 'typ', 'veranstaltungsort', 'stadt'] },
+    const termineRaw = await (strapi as any).documents('api::termin.termin').findMany({
+      filters: {
+        planungsstatus: 'geplant',
+        seminar: seminar?.documentId ? { documentId: seminar.documentId } : undefined,
       },
-      orderBy: { id: 'asc' },
-    });
+      status: 'published',
+      fields: ['id', 'starttag', 'kapazitaet', 'planungsstatus'],
+      populate: {
+        tageMitUhrzeit: { fields: ['datum', 'startzeit', 'endzeit'] },
+        standort: { fields: ['name', 'typ', 'veranstaltungsort', 'stadt'] },
+      },
+      sort: { starttag: 'asc' },
+    } as any);
     const termine = termineRaw.map((t) => ({ ...t, preis: (seminar as any).preis }));
     const fallbackBild = { url: '/favicon.png', alternativeText: 'Weinseminar – Testbild' } as any;
     const fallbackHeroBild = fallbackBild;

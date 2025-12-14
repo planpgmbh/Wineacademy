@@ -12,7 +12,7 @@
     },
     "inhalt": {
       "type": "customField",
-      "customField": "plugin::adentdk-tiptap-editor.full-tiptap-editor"
+      "customField": "plugin::advanced-richtext.advanced-richtext"
     }
   }
 }

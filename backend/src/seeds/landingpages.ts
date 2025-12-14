@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { slugify, htmlToTiptap } from './helpers';
+import { slugify } from './helpers';
 
 type LandingPageSeed = {
   titel: string;
@@ -173,36 +173,6 @@ async function transformSectionWithMedia(
       finder.sichtbareFilter = mapped;
     }
     return finder;
-  }
-
-  if (transformed.__component === 'landing.columns') {
-    const columns = { ...transformed } as Record<string, any>;
-    if (Array.isArray(columns.spalten)) {
-      columns.spalten = columns.spalten.map((col: any) =>
-        col && typeof col === 'object'
-          ? { ...col, inhalt: htmlToTiptap((col as any).inhalt) ?? null }
-          : col
-      );
-    }
-    return columns;
-  }
-
-  if (transformed.__component === 'landing.tabs') {
-    const tabs = { ...transformed } as Record<string, any>;
-    if (Array.isArray(tabs.reiter)) {
-      tabs.reiter = tabs.reiter.map((tab: any) =>
-        tab && typeof tab === 'object'
-          ? { ...tab, inhalt: htmlToTiptap((tab as any).inhalt) ?? null }
-          : tab
-      );
-    }
-    return tabs;
-  }
-
-  if (transformed.__component === 'landing.text-block') {
-    const block = { ...transformed } as Record<string, any>;
-    block.einleitung = htmlToTiptap(block.einleitung ?? null);
-    return block;
   }
 
   return transformed;

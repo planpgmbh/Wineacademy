@@ -1,8 +1,3 @@
-import { generateJSON } from '@tiptap/html';
-import StarterKit from '@tiptap/starter-kit';
-import Link from '@tiptap/extension-link';
-import Image from '@tiptap/extension-image';
-
 export type UID =
   | 'api::kategorie.kategorie'
   | 'api::standort.standort'
@@ -24,41 +19,6 @@ export function slugify(input: string): string {
     .replace(/[^\p{L}\p{N}]+/gu, '-')
     .replace(/^-+|-+$/g, '')
     .toLowerCase();
-}
-
-export type TiptapJSON = {
-  type: string;
-  attrs?: Record<string, unknown>;
-  content?: TiptapJSON[];
-  text?: string;
-};
-
-const TIPTAP_EXTENSIONS = [
-  StarterKit,
-  Link.configure({ openOnClick: true }),
-  Image.configure({ allowBase64: false })
-];
-
-export function htmlToTiptap(value: unknown): TiptapJSON | null {
-  if (typeof value !== 'string') {
-    return null;
-  }
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return null;
-  }
-  try {
-    return generateJSON(trimmed, TIPTAP_EXTENSIONS) as TiptapJSON;
-  } catch {
-    const plain = trimmed.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-    if (!plain) {
-      return null;
-    }
-    return {
-      type: 'doc',
-      content: [{ type: 'paragraph', content: [{ type: 'text', text: plain }] }]
-    };
-  }
 }
 
 export async function upsertSingleType(strapi: any, uid: UID, data: Record<string, unknown>) {

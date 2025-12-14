@@ -1,8 +1,9 @@
 import path from 'path';
 
 export default () => ({
-  'adentdk-tiptap-editor': {
+  'advanced-richtext': {
     enabled: true,
+    resolve: path.resolve(__dirname, '../src/plugins/advanced-richtext'),
   },
   upload: {
     config: {

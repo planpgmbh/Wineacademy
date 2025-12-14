@@ -22,7 +22,7 @@
       "type": "text"
     },
     "beschreibung": {
-      "type": "richtext"
+      "type": "text"
     },
     "bild": {
       "type": "media",
@@ -54,9 +54,6 @@
     "mwst": {
       "type": "boolean",
       "default": true
-    },
-    "kapazitaet": {
-      "type": "integer"
     },
     "aktiv": {
       "type": "boolean",

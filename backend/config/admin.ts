@@ -20,15 +20,31 @@ export default ({ env }) => ({
     enabled: true,
     config: {
       allowedOrigins: env.array('PREVIEW_ALLOWED_ORIGINS', [env('FRONTEND_BASE_URL', env('PUBLIC_URL', ''))].filter(Boolean)),
-      handler: async (uid: string, { documentId, status }: { documentId?: string; status?: 'draft' | 'published' }) => {
-        if (uid !== 'api::landingpage.landingpage' || !documentId) {
+      handler: async (
+        uid: string,
+        { documentId, status }: { documentId?: string; status?: 'draft' | 'published' }
+      ) => {
+        if (!documentId) {
           return undefined;
         }
 
         const previewSecret = env('PREVIEW_SECRET', env('ADMIN_JWT_SECRET'));
-        const frontendBase = env('PREVIEW_FRONTEND_URL', env('FRONTEND_BASE_URL', env('PUBLIC_URL', ''))).replace(/\/*$/, '');
+        const frontendBase = env('PREVIEW_FRONTEND_URL', env('FRONTEND_BASE_URL', env('PUBLIC_URL', ''))).replace(
+          /\/*$/,
+          ''
+        );
 
         if (!previewSecret || !frontendBase) {
+          return undefined;
+        }
+
+        const allowedTypes = [
+          'api::landingpage.landingpage',
+          'api::seminar.seminar',
+          'api::kategorie.kategorie',
+          'api::produkt.produkt',
+        ] as const;
+        if (!allowedTypes.includes(uid as any)) {
           return undefined;
         }
 
@@ -44,9 +60,17 @@ export default ({ env }) => ({
           return undefined;
         }
 
+        const typeParam =
+          uid === 'api::seminar.seminar'
+            ? 'seminar'
+            : uid === 'api::kategorie.kategorie'
+            ? 'category'
+            : uid === 'api::produkt.produkt'
+            ? 'product'
+            : 'landingpage';
         const searchParams = new URLSearchParams({
           secret: previewSecret,
-          type: 'landingpage',
+          type: typeParam,
           documentId,
           status: status === 'published' ? 'published' : 'draft',
           slug,

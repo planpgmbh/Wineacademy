@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { CardGrid } from "@/components/landing/CardGrid";
 import { ColumnsSection } from "@/components/landing/ColumnsSection";
 import { DividerSection } from "@/components/landing/DividerSection";
+import { Bildergalerie } from "@/components/landing/Bildergalerie";
 import { SeminarList } from "@/components/landing/SeminarList";
 import { SeminarProductCards } from "@/components/landing/SeminarProductCards";
 import { TabsSection } from "@/components/landing/TabsSection";
@@ -17,14 +18,21 @@ import type { LandingSeminarFinderSection, LandingSeminarListSection, LandingSem
 import type { ReactNode } from "react";
 
 type SeminarDetailPageProps = {
-  params: Promise<{
-    slug: string;
-  }>;
+  params: Promise<{ slug: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function SeminarDetailPage({ params }: SeminarDetailPageProps) {
+export default async function SeminarDetailPage({ params, searchParams }: SeminarDetailPageProps) {
   const { slug } = await params;
-  const seminar = await getSeminarDetail(slug);
+  const search = (await searchParams) ?? {};
+  const statusRaw = typeof search.status === "string" ? search.status : Array.isArray(search.status) ? search.status[0] : null;
+  const tokenRaw = typeof search.token === "string" ? search.token : Array.isArray(search.token) ? search.token[0] : null;
+
+  const isDraft = statusRaw === "draft";
+  const seminar = await getSeminarDetail(slug, {
+    status: isDraft ? "draft" : undefined,
+    token: tokenRaw ?? undefined
+  });
 
   if (!seminar) {
     notFound();
@@ -104,6 +112,18 @@ async function renderSections(
 
   for (let index = 0; index < sections.length; index += 1) {
     const section = sections[index];
+
+    if (section.type === "bildergalerie") {
+      rendered.push(
+        <Bildergalerie
+          key={`bildergalerie-${index}`}
+          bilder={section.bilder}
+          rotationSekunden={section.rotationSekunden}
+          breite={section.breite}
+        />
+      );
+      continue;
+    }
 
     if (section.type === "card-grid") {
       rendered.push(

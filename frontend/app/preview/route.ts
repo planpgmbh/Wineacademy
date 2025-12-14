@@ -16,13 +16,26 @@ function buildRedirectUrl(
   request: NextRequest,
   slug: string,
   status: "draft" | "published",
-  documentId: string
+  documentId: string,
+  type: "landingpage" | "seminar" | "category" | "product",
+  token: string
 ) {
   const target = new URL(resolveExternalOrigin(request));
-  target.pathname = `/${encodeURIComponent(slug)}`;
+  const path =
+    type === "seminar"
+      ? `/seminare/${encodeURIComponent(slug)}`
+      : type === "category"
+      ? `/kategorien/${encodeURIComponent(slug)}`
+      : type === "product"
+      ? `/produkte/${encodeURIComponent(slug)}`
+      : `/${encodeURIComponent(slug)}`;
+  target.pathname = path;
   target.searchParams.set("preview", "true");
   target.searchParams.set("status", status);
   target.searchParams.set("documentId", documentId);
+  if (status === "draft") {
+    target.searchParams.set("token", token);
+  }
   return target;
 }
 
@@ -39,18 +52,18 @@ export async function GET(request: NextRequest) {
     return new NextResponse("Unauthorized", { status: 401 });
   }
 
-  if (type !== "landingpage") {
-    return new NextResponse("Unsupported preview type", { status: 400 });
-  }
-
   if (!documentId || !slug) {
     return new NextResponse("Missing preview parameters", { status: 400 });
+  }
+
+  if (type !== "landingpage" && type !== "seminar" && type !== "category" && type !== "product") {
+    return new NextResponse("Unsupported preview type", { status: 400 });
   }
 
   const draft = await draftMode();
   draft.enable();
 
-  const redirectUrl = buildRedirectUrl(request, slug, status, documentId);
+  const redirectUrl = buildRedirectUrl(request, slug, status, documentId, type, secret);
   return NextResponse.redirect(redirectUrl);
 }
 

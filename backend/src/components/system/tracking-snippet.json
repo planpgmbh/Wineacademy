@@ -1,0 +1,42 @@
+{
+  "collectionName": "components_system_tracking_snippets",
+  "info": {
+    "displayName": "Tracking Snippet",
+    "description": "Externe Tracking/Analytics Codes (GTM, GA, Pixel, Custom)."
+  },
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true
+    },
+    "typ": {
+      "type": "enumeration",
+      "enum": [
+        "gtm",
+        "gtag",
+        "fb_pixel",
+        "custom"
+      ],
+      "default": "custom"
+    },
+    "position": {
+      "type": "enumeration",
+      "enum": [
+        "head",
+        "body_end"
+      ],
+      "default": "head"
+    },
+    "code": {
+      "type": "text",
+      "required": true
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "remark": {
+      "type": "text"
+    }
+  }
+}

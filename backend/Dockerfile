@@ -2,9 +2,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Abhängigkeiten installieren (peer-Conflicts erlauben, z. B. beim TipTap-Plugin)
+# Abhängigkeiten installieren
 COPY package*.json ./
-RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+RUN npm ci || npm install
 
 # Quellcode kopieren
 COPY . .

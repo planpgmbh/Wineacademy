@@ -9,6 +9,8 @@ import { TransitionProvider } from "@/components/animations/TransitionProvider";
 import { Navbar } from "@/components/navigation/Navbar";
 import { SiteFooter } from "@/components/shared/SiteFooter";
 import { getNavigation } from "@/lib/navigation";
+import { getTrackingSnippets } from "@/lib/tracking";
+import { TrackingScriptsClient } from "@/components/analytics/TrackingScriptsClient";
 
 export const metadata: Metadata = {
   title: "Wine Academy",
@@ -26,10 +28,12 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const navigationItems = await getNavigation();
+  const trackingSnippets = await getTrackingSnippets();
 
   return (
     <html lang="de" data-theme="WineAcademy" className={serifBabe.variable}>
       <body className="flex min-h-screen flex-col bg-base-200 text-base-content antialiased">
+        <TrackingScriptsClient snippets={trackingSnippets} />
         <Navbar items={navigationItems} />
         <Suspense fallback={null}>
           <TransitionProvider>

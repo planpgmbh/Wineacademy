@@ -1,6 +1,24 @@
 export default {
   config: {
     locales: ['de'],
+    theme: {
+      light: {
+        colors: {
+          primary100: '#f0f4fb',
+          primary200: '#dbe5f6',
+          primary500: '#3b5b99',
+          primary600: '#2b4270',
+          primary700: '#1f3150',
+          accent200: '#f3dbe1',
+          accent500: '#8c1430',
+          neutral100: '#f7f8fb',
+          neutral200: '#e5e7eb',
+          neutral500: '#4b5563',
+          neutral700: '#1f2937',
+          neutral900: '#0f172a',
+        },
+      },
+    },
   },
   register(app: any) {
     // Direktlink zu "bezahlt"-Bestellungen im Content-Manager
