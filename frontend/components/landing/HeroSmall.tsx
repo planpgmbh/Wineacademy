@@ -42,20 +42,20 @@ export function HeroSmall({ überschrift, überschriftStufe, einleitung, bild }:
   const headingClass = headingStyles[überschriftStufe];
 
   return (
-    <section className="relative isolate overflow-hidden mb-[calc(var(--section-padding-y)*1.5)] md:mb-[var(--section-padding-y-xl)]">
-      <div className="min-h-[280px] px-6 py-16 sm:py-20">
-        <div className="relative z-10 mx-auto flex max-w-[var(--landing-content-max-width)] flex-col gap-6 text-center text-base-100">
+    <section className="relative isolate overflow-hidden mb-[var(--space-section-lg)]">
+      <div className="min-h-[280px] px-6 py-[var(--space-section)] md:px-8 md:py-[var(--space-section-lg)]">
+        <div className="relative z-10 mx-auto flex max-w-[var(--landing-content-max-width)] flex-col gap-[var(--space-block)] text-center text-base-100">
           <HeadingTag className={`heading-on-dark leading-tight tracking-tight ${headingClass}`}>
           {überschrift}
         </HeadingTag>
           {paragraphs.length > 0 ? (
-            <p className="mx-auto max-w-2xl text-lg leading-relaxed text-base-100/90 md:text-xl">
+            <div className="mx-auto flex max-w-2xl flex-col gap-[var(--space-compact)] text-lg leading-relaxed text-base-100/90 md:text-xl">
               {paragraphs.map((paragraph, index) => (
                 <span key={index} className="block">
                   {paragraph}
                 </span>
               ))}
-            </p>
+            </div>
           ) : null}
         </div>
       </div>

@@ -131,7 +131,7 @@ const SeminarListItem = forwardRef<HTMLElement, SeminarListItemProps>(function S
     <article
       ref={ref}
       style={mobileHeight ? { minHeight: mobileHeight } : undefined}
-      className={`group flex h-full flex-col overflow-hidden rounded-2xl bg-base-100 p-0 shadow-sm ring-1 ring-base-300/70 transition hover:shadow-md md:grid md:h-auto md:items-start md:gap-6 md:rounded-none md:bg-transparent md:p-0 md:shadow-none md:ring-0 md:hover:shadow-none ${gridTemplateDesktop}`}
+      className={`group flex h-full flex-col overflow-hidden rounded-2xl bg-base-100 p-0 shadow-sm ring-1 ring-base-300/70 transition hover:shadow-md md:grid md:h-auto md:items-start md:gap-[var(--space-block)] md:rounded-none md:bg-transparent md:p-0 md:shadow-none md:ring-0 md:hover:shadow-none ${gridTemplateDesktop}`}
     >
       <div
         className={`relative col-span-full h-[190px] w-full shrink-0 overflow-hidden bg-base-200 md:col-span-1 md:row-span-full md:h-[170px] ${imageWidthClass} md:rounded-2xl md:shadow-md`}
@@ -170,8 +170,8 @@ const SeminarListItem = forwardRef<HTMLElement, SeminarListItemProps>(function S
         <SeminarDateBadge date={seminar.nextDateIso} />
       </div>
 
-      <div className="flex flex-1 flex-col justify-between gap-4 px-6 pb-6 pt-4 md:col-start-3 md:row-start-1 md:flex-none md:gap-4 md:self-start md:px-0 md:pb-0 md:pt-0">
-        <div className="flex flex-col gap-[0.35rem] md:gap-1">
+      <div className="flex flex-1 flex-col justify-between gap-[var(--space-block)] px-6 pb-6 pt-4 md:col-start-3 md:row-start-1 md:flex-none md:gap-[var(--space-block)] md:self-start md:px-0 md:pb-0 md:pt-0">
+        <div className="flex flex-col gap-[var(--space-compact)] md:gap-[var(--space-compact)]">
           {(mobileToplineDate || locationLabel) ? (
             <div className="flex items-center justify-between md:hidden">
               {mobileToplineDate ? (
@@ -193,7 +193,7 @@ const SeminarListItem = forwardRef<HTMLElement, SeminarListItemProps>(function S
               ) : null}
             </div>
           ) : null}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-[var(--space-compact)]">
             <h3 className="heading-card rt-heading-xs font-semibold leading-tight text-balance text-base-content !mt-0 !mb-[0.15rem] !text-[1.35rem] w-fit">
               {seminar.title}
             </h3>
@@ -321,7 +321,10 @@ export function SeminarList({
     : "Aktuell sind keine Termine geplant.";
 
   const hasIntro = paragraphs.length > 0;
-  const listSpacingClass = hasIntro || hasLocationFilter ? "mt-6 md:mt-8" : "mt-4 md:mt-6";
+  const listSpacingClass =
+    hasIntro || hasLocationFilter
+      ? "mt-[var(--space-block)] md:mt-[var(--space-section)]"
+      : "mt-[var(--space-compact)] md:mt-[var(--space-block)]";
   const locationPillInactive = isDarkBackground ? "badge-location badge-location-dark" : "badge-location badge-location-light";
   const locationPillActive = isDarkBackground
     ? "badge-location badge-location-active-dark"
@@ -471,10 +474,16 @@ export function SeminarList({
           isDarkBackground ? "text-base-100" : ""
         }`}
       >
-        {showHeadline ? <HeadingTag className={`${headingClass} mb-2 md:mb-3`}>{trimmedHeadline}</HeadingTag> : null}
+        {showHeadline ? (
+          <HeadingTag className={`${headingClass} mb-[var(--space-compact)] md:mb-[var(--space-compact)]`}>
+            {trimmedHeadline}
+          </HeadingTag>
+        ) : null}
 
         {paragraphs.length > 0 ? (
-          <div className={`max-w-3xl space-y-4 text-lg leading-relaxed ${introTextClass} mb-6 md:mb-8`}>
+          <div
+            className={`max-w-3xl space-y-[var(--space-compact)] text-lg leading-relaxed ${introTextClass} mb-[var(--space-block)] md:mb-[var(--space-section)]`}
+          >
             {paragraphs.map((paragraph, index) => (
               <p key={index}>{paragraph}</p>
             ))}
@@ -482,7 +491,7 @@ export function SeminarList({
         ) : null}
 
         {hasLocationFilter ? (
-          <div className={`mb-0 flex flex-wrap justify-center gap-3 md:mb-0 md:gap-4 ${hasIntro ? "mt-0" : "mt-2"}`}>
+          <div className={`mb-0 flex flex-wrap justify-center gap-[var(--space-compact)] md:mb-0 md:gap-[var(--space-block)] ${hasIntro ? "mt-0" : "mt-[var(--space-compact)]"}`}>
             <button
               type="button"
               className={getLocationPillClass(selectedLocationKey === null)}
@@ -517,7 +526,7 @@ export function SeminarList({
             </div>
           ) : (
             <>
-              <div className="hidden md:flex md:flex-col md:gap-14">
+              <div className="hidden md:flex md:flex-col md:gap-[var(--space-block)]">
                 {filteredItems.map((seminar) => (
                   <SeminarListItem
                     key={`${seminar.id}-${seminar.nextDateTimestamp}`}
@@ -533,7 +542,7 @@ export function SeminarList({
               <div className="md:hidden">
                 <div
                   ref={sliderRef}
-                  className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 [-webkit-overflow-scrolling:touch] no-scrollbar"
+              className="flex snap-x snap-mandatory gap-[var(--space-compact)] overflow-x-auto pb-[var(--space-compact)] [-webkit-overflow-scrolling:touch] no-scrollbar"
                 >
                   {filteredItems.map((seminar, index) => (
                     <div
@@ -564,7 +573,7 @@ export function SeminarList({
         {error ? <p className="text-sm text-error">{error}</p> : null}
 
         {hasMore ? (
-          <div className="mt-10 hidden justify-center md:mt-12 md:flex">
+          <div className="mt-[var(--space-compact)] hidden justify-center md:mt-[var(--space-block)] md:flex">
             <button
               type="button"
               className="btn-more-outline min-w-[200px]"

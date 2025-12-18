@@ -22,11 +22,11 @@ export function DividerSection({ hintergrund, breite }: DividerSectionProps) {
   return (
     <section>
       <div
-        className="mx-auto flex w-full items-center px-6 py-3 md:px-8 md:py-5"
+        className="mx-auto flex w-full items-center px-6 pt-[15px] md:px-8"
         style={contentStyle}
         aria-hidden="true"
       >
-        <div className="flex w-full items-center gap-4 md:gap-6">
+        <div className="flex w-full items-center gap-[var(--space-compact)] md:gap-[var(--space-block)]">
           <span className={`h-px flex-1 ${lineClass}`} />
           <div className="flex items-center justify-center px-2">
             <Image

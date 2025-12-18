@@ -100,8 +100,8 @@ export function HeroCarousel({ überschrift, überschriftStufe, einleitung, bild
 
   if (slideCount === 0) {
     return (
-      <section className="flex min-h-[420px] items-center justify-center bg-base-100 px-6 py-24 text-center mb-[calc(var(--section-padding-y)*1.5)] md:mb-[var(--section-padding-y-xl)]">
-        <div className="mx-auto max-w-3xl space-y-6">
+      <section className="flex min-h-[420px] items-center justify-center bg-base-100 px-6 py-[var(--space-section)] text-center mb-[var(--space-section-lg)] md:px-8 md:py-[var(--space-section-lg)]">
+        <div className="mx-auto max-w-3xl space-y-[var(--space-block)]">
           <HeadingTag className={headingClass}>{überschrift}</HeadingTag>
           {einleitung ? <p className="text-lg text-base-content/80">{einleitung}</p> : null}
         </div>
@@ -110,7 +110,7 @@ export function HeroCarousel({ überschrift, überschriftStufe, einleitung, bild
   }
 
   return (
-    <section className="relative isolate flex min-h-[600px] items-center justify-center overflow-hidden mb-[calc(var(--section-padding-y)*1.5)] md:mb-[var(--section-padding-y-xl)]">
+    <section className="relative isolate flex min-h-[600px] items-center justify-center overflow-hidden mb-[var(--space-section-lg)]">
       {validSlides.map((slide, index) => (
         <Image
           key={`${slide.src}-${index}`}
@@ -125,16 +125,16 @@ export function HeroCarousel({ überschrift, überschriftStufe, einleitung, bild
         />
       ))}
 
-      <div className="relative z-10 mx-auto flex w-full max-w-[var(--landing-content-max-width)] flex-col items-center gap-6 px-6 py-24 text-center md:py-32">
+      <div className="relative z-10 mx-auto flex w-full max-w-[var(--landing-content-max-width)] flex-col items-center gap-[var(--space-block)] px-6 py-[var(--space-section)] text-center md:px-8 md:py-[var(--space-section-lg)]">
         <HeadingTag className={`heading-on-dark ${headingClass}`}>{überschrift}</HeadingTag>
         {paragraphs.length > 0 ? (
-          <p className="text-lg leading-relaxed text-base-100/90 drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)] md:text-xl">
+          <div className="flex flex-col gap-[var(--space-compact)] text-lg leading-relaxed text-base-100/90 drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)] md:text-xl">
             {paragraphs.map((paragraph, index) => (
               <span key={index} className="block">
                 {paragraph}
               </span>
             ))}
-          </p>
+          </div>
         ) : null}
         {button && button.name && button.link ? (
           <a className={resolveButtonClasses(button.stil)} {...resolveLinkProps(button.link)}>

@@ -74,8 +74,8 @@ export function CardGrid({ karten, hintergrund, id }: CardGridProps) {
           ? "md:grid-cols-2 lg:grid-cols-2"
           : "md:grid-cols-2 lg:grid-cols-3";
   const cardListClass = [
-    "flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 [-webkit-overflow-scrolling:touch] no-scrollbar",
-    "md:grid md:snap-none md:overflow-visible md:gap-6",
+    "flex snap-x snap-mandatory gap-[var(--space-compact)] overflow-x-auto pb-[var(--space-compact)] [-webkit-overflow-scrolling:touch] no-scrollbar",
+    "md:grid md:snap-none md:overflow-visible md:gap-[var(--space-block)]",
     desktopGridColumns
   ]
     .filter(Boolean)

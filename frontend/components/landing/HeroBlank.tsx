@@ -37,19 +37,19 @@ export function HeroBlank({ überschrift, überschriftStufe, einleitung }: HeroB
   const headingClass = headingStyles[überschriftStufe];
 
   return (
-    <section className="relative isolate bg-base-100 mb-[calc(var(--section-padding-y)*1.5)] md:mb-[var(--section-padding-y-xl)]">
-      <div className="mx-auto flex max-w-[var(--landing-content-max-width)] flex-col items-center justify-center gap-0 px-6 pt-10 pb-6 text-center md:gap-0.5 md:pt-16 md:pb-10">
-        <HeadingTag className={`leading-tight tracking-tight text-base-content ${headingClass} mb-5`}>
+    <section className="relative isolate bg-base-100 mb-[var(--space-section-lg)]">
+      <div className="mx-auto flex max-w-[var(--landing-content-max-width)] flex-col items-center justify-center gap-[var(--space-compact)] px-6 py-[var(--space-section)] text-center md:gap-[var(--space-block)] md:px-8 md:py-[var(--space-section-lg)]">
+        <HeadingTag className={`leading-tight tracking-tight text-base-content ${headingClass}`}>
           {überschrift}
         </HeadingTag>
         {paragraphs.length > 0 ? (
-          <p className="mx-auto max-w-3xl text-lg leading-tight text-base-content/80 md:text-xl [word-spacing:-0.1em]">
+          <div className="mx-auto flex max-w-3xl flex-col gap-[var(--space-compact)] text-lg leading-tight text-base-content/80 md:text-xl [word-spacing:-0.1em]">
             {paragraphs.map((paragraph, index) => (
               <span key={index} className="block">
                 {paragraph}
               </span>
             ))}
-          </p>
+          </div>
         ) : null}
       </div>
       <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-base-100 via-base-100 to-base-200" aria-hidden="true" />

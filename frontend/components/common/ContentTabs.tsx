@@ -74,10 +74,10 @@ export function ContentTabs({ tabs, classNames }: ContentTabsProps) {
         </div>
       </div>
 
-      <div className={cx('mt-8 flex justify-start', classNames?.contentWrapper)}>
+      <div className={cx('mt-[var(--space-compact)] flex justify-start', classNames?.contentWrapper)}>
         <div
           className={cx(
-            "w-full text-base leading-relaxed text-base-content/80 [&_a]:text-primary [&_a]:underline [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-5 [&_p:not(:first-child)]:mt-4 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5",
+            "richtext-stack w-full text-base leading-relaxed text-base-content/80 [&_a]:text-primary [&_a]:underline [&_ol]:list-decimal [&_ul]:list-disc",
             classNames?.content
           )}
           dangerouslySetInnerHTML={{ __html: activeTab.contentHtml }}

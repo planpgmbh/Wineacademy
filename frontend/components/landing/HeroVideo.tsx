@@ -104,7 +104,7 @@ export function HeroVideo({ überschrift, überschriftStufe, einleitung, videoUr
   const hasPosterImage = typeof posterUrl === "string" && posterUrl.trim().length > 0;
 
   return (
-    <section className="relative isolate flex min-h-[620px] items-center justify-center overflow-hidden bg-base-200 mb-[calc(var(--section-padding-y)*1.5)] md:mb-[var(--section-padding-y-xl)]">
+    <section className="relative isolate flex min-h-[620px] items-center justify-center overflow-hidden bg-base-200 mb-[var(--space-section-lg)]">
       {shouldRenderVideo ? (
         <video
           className="absolute inset-0 -z-20 h-full w-full object-cover"
@@ -132,18 +132,18 @@ export function HeroVideo({ überschrift, überschriftStufe, einleitung, videoUr
 
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-black/60 via-black/40 to-black/70" aria-hidden="true" />
 
-      <div className="relative z-10 mx-auto flex w-full max-w-[var(--landing-content-max-width)] flex-col items-center gap-6 px-6 py-24 text-center md:gap-8 md:py-32">
+      <div className="relative z-10 mx-auto flex w-full max-w-[var(--landing-content-max-width)] flex-col items-center gap-[var(--space-block)] px-6 py-[var(--space-section)] text-center md:gap-[var(--space-section)] md:px-8 md:py-[var(--space-section-lg)]">
         <HeadingTag className={`heading-on-dark ${headingClass} mb-0`}>
           {überschrift}
         </HeadingTag>
         {paragraphs.length > 0 ? (
-          <p className="max-w-2xl text-lg leading-relaxed text-base-100/90 md:text-xl">
+          <div className="flex max-w-2xl flex-col gap-[var(--space-compact)] text-lg leading-relaxed text-base-100/90 md:text-xl">
             {paragraphs.map((paragraph, index) => (
               <span key={index} className="block">
                 {paragraph}
               </span>
             ))}
-          </p>
+          </div>
         ) : null}
 
         {showButton ? (

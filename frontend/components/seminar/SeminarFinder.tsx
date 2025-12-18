@@ -232,8 +232,8 @@ export function SeminarFinder({
   const headingClass = [
     headingClasses[überschriftStufe],
     isDarkBackground ? "heading-on-dark" : "",
-    "!mb-4",
-    "md:!mb-6"
+    "!mb-[var(--space-compact)]",
+    "md:!mb-[var(--space-compact)]"
   ]
     .filter(Boolean)
     .join(" ")
@@ -299,18 +299,20 @@ export function SeminarFinder({
   return (
     <section id={id ?? undefined} style={style} className="scroll-mt-28 md:scroll-mt-36">
       <div className="mx-auto max-w-6xl px-6 py-[var(--section-padding-y)] md:px-8 md:py-[var(--section-padding-y-lg)]">
-        <div className="space-y-6 md:space-y-8">
+        <div className="space-y-[var(--space-block)] md:space-y-[var(--space-section)]">
           {showHeadline ? (
-            <div className="space-y-3">
+            <div className="space-y-[var(--space-compact)]">
               <HeadingTag className={headingClass}>{überschrift}</HeadingTag>
             </div>
           ) : null}
 
-          <div className="space-y-5 md:space-y-0">
-            <div className="flex w-full flex-wrap gap-2 md:hidden">{renderCategoryButtons()}</div>
+          <div className="space-y-[var(--space-block)] md:space-y-0">
+            <div className="flex w-full flex-wrap gap-[var(--space-compact)] md:hidden">{renderCategoryButtons()}</div>
 
-            <div className="hidden md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-start md:gap-3 lg:gap-5">
-              <div className="flex flex-wrap gap-2 lg:max-w-4xl lg:gap-2">{renderCategoryButtons()}</div>
+            <div className="hidden md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-start md:gap-[var(--space-block)] lg:gap-[var(--space-section)]">
+              <div className="flex flex-wrap gap-[var(--space-compact)] lg:max-w-4xl lg:gap-[var(--space-compact)]">
+                {renderCategoryButtons()}
+              </div>
 
               {hasLocationFilter ? (
                 <div className="relative hidden md:flex md:justify-end" ref={locationDropdownRef}>
@@ -392,13 +394,13 @@ export function SeminarFinder({
             </div>
           </div>
 
-          <div className="space-y-6 md:space-y-8">
+          <div className="space-y-[var(--space-block)] md:space-y-[var(--space-section)]">
             {categoriesToDisplay.map(({ category, seminars }) => (
               <div
                 key={category.slug}
                 className="rounded-[24px] bg-secondary px-6 py-8 text-secondary-content shadow-[0_18px_40px_-24px_rgba(34,55,99,0.55)] md:px-10 md:py-10"
               >
-                <div className="space-y-3">
+                <div className="space-y-[var(--space-compact)]">
                   <h3 className="font-serif text-3xl font-light text-secondary-content md:text-[2.1rem]">
                     {category.name}
                   </h3>
@@ -418,7 +420,7 @@ export function SeminarFinder({
                     locationLabels={locationLabelMap}
                   />
                 ) : (
-                  <div className="mt-6 rounded-2xl border border-secondary/40 bg-secondary-content/10 p-8 text-secondary-content md:mt-8">
+                  <div className="mt-[var(--space-block)] rounded-2xl border border-secondary/40 bg-secondary-content/10 p-8 text-secondary-content md:mt-[var(--space-section)]">
                     <p className="text-base font-medium text-secondary-content">
                       Aktuell gibt es keine Seminare, die zu diesem Standort-Filter passen. Ändere die Auswahl, um
                       weitere Seminare zu entdecken.
@@ -558,7 +560,7 @@ function CategorySeminarList({
 
   return (
     <>
-      <div className="hidden md:block md:mt-8 md:space-y-[var(--gap-seminar-columns)]">
+      <div className="hidden md:block md:mt-[var(--space-block)] md:space-y-[var(--gap-seminar-columns)]">
         {seminars.map((seminar) => (
           <SeminarFinderCard
             key={seminar.id}
@@ -570,9 +572,9 @@ function CategorySeminarList({
         ))}
       </div>
 
-      <div className="mt-6 md:hidden">
+      <div className="mt-[var(--space-block)] md:hidden">
         {isFilteredMobile ? (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-[var(--space-block)]">
             {seminars.map((seminar) => (
               <SeminarFinderCard
                 key={seminar.id}
@@ -587,7 +589,7 @@ function CategorySeminarList({
           <>
             <div
               ref={listRef}
-              className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 [-webkit-overflow-scrolling:touch] no-scrollbar"
+              className="flex snap-x snap-mandatory gap-[var(--space-compact)] overflow-x-auto pb-[var(--space-compact)] [-webkit-overflow-scrolling:touch] no-scrollbar"
             >
               {seminars.map((seminar) => (
                 <div key={seminar.id} className="w-full shrink-0 snap-center">
@@ -610,8 +612,8 @@ function CategorySeminarList({
 
 function SeminarFinderCard({ seminar, onLocationClick, forceMobileLayout = false, locationLabels }: SeminarFinderCardProps) {
   const cardLayoutClasses = forceMobileLayout
-    ? "flex h-full flex-col gap-3 rounded-2xl bg-base-100 p-5 shadow-sm ring-1 ring-base-200 md:gap-4"
-    : "flex flex-col gap-3 rounded-2xl bg-base-100 p-5 md:grid md:grid-cols-[var(--width-seminar-date)_minmax(0,1fr)_auto_auto] md:items-start md:gap-[var(--gap-seminar-columns)] md:px-7 md:py-6";
+    ? "flex h-full flex-col gap-[var(--space-compact)] rounded-2xl bg-base-100 p-5 shadow-sm ring-1 ring-base-200 md:gap-[var(--space-block)]"
+    : "flex flex-col gap-[var(--space-compact)] rounded-2xl bg-base-100 p-5 md:grid md:grid-cols-[var(--width-seminar-date)_minmax(0,1fr)_auto_auto] md:items-start md:gap-[var(--gap-seminar-columns)] md:px-7 md:py-6";
   return (
     <article className={cardLayoutClasses}>
       <SeminarFinderCardMobile
@@ -664,11 +666,11 @@ function SeminarFinderCardMobile({
   };
 
   return (
-    <div className={`flex h-full flex-col justify-between gap-4 ${forceVisible ? "" : "md:hidden"}`}>
-      <div className="flex flex-col gap-[0.35rem]">
+    <div className={`flex h-full flex-col justify-between gap-[var(--space-block)] ${forceVisible ? "" : "md:hidden"}`}>
+      <div className="flex flex-col gap-[var(--space-compact)]">
         <h4 className="font-sans text-base font-semibold text-base-content [&]:m-0">{seminar.name}</h4>
         {locationBadges.length > 0 ? (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-[var(--space-compact)]">
             {locationBadges.map((badge) => (
               <button
                 key={badge.id}
@@ -684,7 +686,7 @@ function SeminarFinderCardMobile({
         ) : null}
         {shortDescription ? <p className="text-sm leading-relaxed text-base-content/70">{shortDescription}</p> : null}
       </div>
-      <div className="flex w-full items-center justify-between gap-3">
+      <div className="flex w-full items-center justify-between gap-[var(--space-compact)]">
         <span className="font-sans text-xl font-semibold text-base-content">{seminar.priceLabel ?? ""}</span>
         <Link href={`/seminare/${seminar.slug}`} className="btn btn-primary min-w-[140px] px-4">
           Zum Seminar
@@ -724,11 +726,11 @@ function SeminarFinderCardDesktop({ seminar, onLocationClick, locationLabels }: 
       <div className="hidden md:flex md:col-start-1 md:items-center md:justify-center">
         {seminar.nextDateIso ? <SeminarDateBadge date={seminar.nextDateIso} /> : null}
       </div>
-      <div className="hidden md:flex md:col-start-2 md:flex-col md:gap-2">
-        <div className="flex flex-col gap-[0.35rem]">
+      <div className="hidden md:flex md:col-start-2 md:flex-col md:gap-[var(--space-compact)]">
+        <div className="flex flex-col gap-[var(--space-compact)]">
           <h4 className="font-sans text-base font-semibold text-base-content md:text-lg [&]:m-0">{seminar.name}</h4>
           {locationBadges.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-[var(--space-compact)]">
               {locationBadges.map((badge) => (
                 <button
                   key={badge.id}

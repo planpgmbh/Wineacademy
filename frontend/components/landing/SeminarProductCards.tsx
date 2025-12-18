@@ -126,7 +126,7 @@ function SeminarCard({ seminar, buttonText }: SeminarCardProps) {
             </div>
           )}
         </div>
-        <div className="flex flex-1 flex-col justify-between gap-4 px-6 pb-6 pt-4">
+        <div className="flex flex-1 flex-col justify-between gap-[var(--space-block)] px-6 pb-6 pt-4">
           <div className="flex flex-col gap-[0.35rem]">
             {mobileToplineDate || location ? (
               <div className="flex items-center justify-between">
@@ -189,7 +189,7 @@ function ProductCard({ product, buttonText }: ProductCardProps) {
             </div>
           )}
         </figure>
-        <div className="card-body gap-3">
+        <div className="card-body gap-[var(--space-compact)]">
           <h3 className={titleClass}>{product.name}</h3>
           {truncatedDescription ? <p className="text-base text-base-content/75">{truncatedDescription}</p> : null}
           <div className="card-actions mt-auto pt-1">
@@ -257,7 +257,16 @@ export function SeminarProductCards({
     .join(" ")
     .trim();
   const introHtml = formatRichText(einleitung);
-  const introClass = isDarkBackground ? "prose prose-invert max-w-3xl mx-auto" : "prose max-w-3xl mx-auto";
+  const introClass = [
+    "richtext-stack max-w-3xl mx-auto text-lg leading-relaxed",
+    isDarkBackground ? "text-base-100/85" : "text-base-content/80",
+    isDarkBackground ? "[&_a]:text-primary-200" : "[&_a]:text-primary",
+    "[&_a]:underline",
+    "[&_ul]:list-disc",
+    "[&_ol]:list-decimal"
+  ]
+    .filter(Boolean)
+    .join(" ");
   const textClass = isDarkBackground ? "text-base-100" : "text-base-content";
   const errorClass = isDarkBackground ? "text-error-content" : "text-error";
 
@@ -268,7 +277,9 @@ export function SeminarProductCards({
   const contentItems = modus === "produkte" ? visibleProducts : seminars;
   const showMoreButton = hasMore && mehrButtonAnzeigen;
   const hasIntro = Boolean(introHtml);
-  const listSpacingClass = hasIntro ? "mt-6 md:mt-8" : "mt-4 md:mt-6";
+  const listSpacingClass = hasIntro
+    ? "mt-[var(--space-block)] md:mt-[var(--space-section)]"
+    : "mt-[var(--space-compact)] md:mt-[var(--space-block)]";
 
   const handleLoadMore = async () => {
     if (isLoading || !hasMore) {
@@ -431,17 +442,24 @@ export function SeminarProductCards({
       <div
         className={`mx-auto flex w-full max-w-[var(--landing-content-max-width)] flex-col px-6 py-[var(--section-padding-y-compact)] md:px-8 md:py-[var(--section-padding-y-lg)] ${textClass}`}
       >
-        <div className="flex flex-col gap-1 text-center">
-          {überschrift ? <HeadingTag className={`${headingClass} !mb-3 md:!mb-4`}>{überschrift}</HeadingTag> : null}
+        <div className="flex flex-col gap-[var(--space-compact)] text-center">
+          {überschrift ? (
+            <HeadingTag className={`${headingClass} !mb-[var(--space-compact)] md:!mb-[var(--space-compact)]`}>
+              {überschrift}
+            </HeadingTag>
+          ) : null}
           {introHtml ? (
-            <div className={`${introClass} mb-1.5 md:mb-2`} dangerouslySetInnerHTML={{ __html: introHtml }} />
+            <div
+              className={`${introClass} mb-[var(--space-compact)] md:mb-[var(--space-block)]`}
+              dangerouslySetInnerHTML={{ __html: introHtml }}
+            />
           ) : null}
         </div>
 
         {error ? <p className={`text-center text-sm ${errorClass}`}>{error}</p> : null}
 
         <div className={listSpacingClass}>
-          <div className="hidden grid-cols-1 gap-6 md:grid md:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
+          <div className="hidden grid-cols-1 gap-[var(--space-block)] md:grid md:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
             {contentItems.map((item) =>
               modus === "produkte" ? (
                 <ProductCard key={`product-${item.id}`} product={item as ProductCardItem} buttonText={buttonText} />
@@ -459,7 +477,7 @@ export function SeminarProductCards({
           <div className="md:hidden">
             <div
               ref={sliderRef}
-              className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 [-webkit-overflow-scrolling:touch] no-scrollbar"
+              className="flex snap-x snap-mandatory gap-[var(--space-compact)] overflow-x-auto pb-[var(--space-compact)] [-webkit-overflow-scrolling:touch] no-scrollbar"
             >
               {contentItems.map((item, index) => (
                 <div
@@ -480,7 +498,7 @@ export function SeminarProductCards({
             </div>
             <SliderDots count={contentItems.length} activeIndex={activeSlide} />
             {contentItems.length === 0 ? (
-              <div className="mt-4 rounded-2xl border border-dashed border-base-200 p-8 text-center text-base-content/70">
+              <div className="mt-[var(--space-block)] rounded-2xl border border-dashed border-base-200 p-8 text-center text-base-content/70">
                 Keine Inhalte vorhanden.
               </div>
             ) : null}
@@ -488,7 +506,7 @@ export function SeminarProductCards({
         </div>
 
         {showMoreButton ? (
-          <div className="flex justify-center">
+          <div className="mt-[var(--space-compact)] flex justify-center md:mt-[var(--space-block)]">
             <button
               type="button"
               className={`btn-more-outline ${isLoading ? "loading" : ""}`}

@@ -92,9 +92,9 @@ export function DetailPageHero({
     resolvedMediaUrl = null;
   }
 
-  const layoutBase = "flex flex-col gap-12";
+  const layoutBase = "flex flex-col gap-[var(--space-section)]";
   const layoutClasses = withSidebarPlaceholder
-    ? `${layoutBase} md:grid md:grid-cols-[minmax(0,1fr)_360px] md:items-start md:gap-12`
+    ? `${layoutBase} md:grid md:grid-cols-[minmax(0,1fr)_360px] md:items-start md:gap-[var(--space-section)]`
     : layoutBase;
 
   const breadcrumbColor = preferDarkMode ? "text-base-100" : "text-base-content/80";
@@ -103,53 +103,55 @@ export function DetailPageHero({
     breadcrumbs.length >= 3 ? breadcrumbs[breadcrumbs.length - 2] : null;
 
   const content = (
-    <div className={`relative w-full px-6 py-16 md:px-8 md:py-20 ${contentClassName}`.trim()}>
+    <div className={`relative w-full px-6 py-[var(--space-section)] md:px-8 md:py-[var(--space-section-lg)] ${contentClassName}`.trim()}>
       <div className={layoutClasses}>
-        <div className="space-y-6 md:max-w-[680px]">
-          <nav
-            className={`breadcrumbs text-sm ${breadcrumbColor} hidden md:block overflow-x-auto no-scrollbar`}
-            aria-label="Breadcrumb"
-          >
-            <ul>
-              {breadcrumbs.map((item, index) => {
-                const isCurrent = index === breadcrumbs.length - 1;
-                const key = `${item.label}-${index}`;
-                return (
-                  <li key={key} aria-current={isCurrent ? "page" : undefined}>
-                    {!isCurrent && item.href ? <Link href={item.href}>{item.label}</Link> : item.label}
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
+        <div className="flex flex-col gap-[var(--space-compact)] md:max-w-[680px]">
+          <div className="flex flex-col gap-[calc(var(--space-compact)*0.6)]">
+            <nav
+              className={`breadcrumbs text-sm ${breadcrumbColor} hidden md:block overflow-x-auto no-scrollbar`}
+              aria-label="Breadcrumb"
+            >
+              <ul>
+                {breadcrumbs.map((item, index) => {
+                  const isCurrent = index === breadcrumbs.length - 1;
+                  const key = `${item.label}-${index}`;
+                  return (
+                    <li key={key} aria-current={isCurrent ? "page" : undefined}>
+                      {!isCurrent && item.href ? <Link href={item.href}>{item.label}</Link> : item.label}
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
 
-          {mobileCategoryBreadcrumb ? (
-            <div className={`md:hidden text-xs font-medium uppercase tracking-wide mb-2 ${breadcrumbColor}`}>
-              {mobileCategoryBreadcrumb.href ? (
-                <Link href={mobileCategoryBreadcrumb.href}>{mobileCategoryBreadcrumb.label}</Link>
-              ) : (
-                mobileCategoryBreadcrumb.label
-              )}
-            </div>
-          ) : null}
+            {mobileCategoryBreadcrumb ? (
+              <div className={`md:hidden text-xs font-medium uppercase tracking-wide ${breadcrumbColor}`}>
+                {mobileCategoryBreadcrumb.href ? (
+                  <Link href={mobileCategoryBreadcrumb.href}>{mobileCategoryBreadcrumb.label}</Link>
+                ) : (
+                  mobileCategoryBreadcrumb.label
+                )}
+              </div>
+            ) : null}
 
-          {resolvedMediaUrl ? (
-            <div className="relative h-[260px] w-full overflow-hidden rounded-3xl bg-base-200">
-              <Image
-                src={resolvedMediaUrl}
-                alt={mediaImageAlt ?? ""}
-                fill
-                sizes="(min-width: 768px) 40vw, 100vw"
-                className="object-cover"
-              />
-            </div>
-          ) : null}
+            {resolvedMediaUrl ? (
+              <div className="relative h-[260px] w-full overflow-hidden rounded-3xl bg-base-200">
+                <Image
+                  src={resolvedMediaUrl}
+                  alt={mediaImageAlt ?? ""}
+                  fill
+                  sizes="(min-width: 768px) 40vw, 100vw"
+                  className="object-cover"
+                />
+              </div>
+            ) : null}
 
-          <h1 className={`${preferDarkMode ? "heading-on-dark" : ""} hero-heading`.trim()}>
-            {title}
-          </h1>
+            <h1 className={`${preferDarkMode ? "heading-on-dark" : ""} hero-heading`.trim()}>
+              {title}
+            </h1>
+          </div>
 
-          <div className={`space-y-4 text-base leading-relaxed md:text-lg ${paragraphColor}`}>
+          <div className={`space-y-[var(--space-compact)] text-base leading-relaxed md:text-lg ${paragraphColor}`}>
             {paragraphs.map((paragraph, index) => (
               <p key={index}>{paragraph}</p>
             ))}
@@ -184,7 +186,7 @@ export function DetailPageHero({
 
   return (
     <section
-      className={`relative isolate flex min-h-[500px] items-center overflow-hidden bg-base-200 mb-[calc(var(--section-padding-y)*1.5)] md:mb-[var(--section-padding-y-xl)] ${
+      className={`relative isolate flex min-h-[500px] items-center overflow-hidden bg-base-200 mb-[var(--space-section-lg)] ${
         preferDarkMode ? "text-base-100" : ""
       }`}
       style={fallbackBackgroundStyle}

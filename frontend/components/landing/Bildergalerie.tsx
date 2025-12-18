@@ -46,7 +46,7 @@ export function Bildergalerie({ bilder, rotationSekunden, breite = "full" }: Bil
 
   if (slideCount === 0) {
     return (
-      <section className="mb-[calc(var(--section-padding-y)*1.5)] flex min-h-[400px] items-center justify-center bg-base-200 text-base-content/50 md:mb-[var(--section-padding-y-xl)]">
+      <section className="mb-[var(--space-section-lg)] flex min-h-[400px] items-center justify-center bg-base-200 text-base-content/50">
         <span className="text-sm uppercase tracking-[0.3em]">Bildergalerie</span>
       </section>
     );
@@ -55,8 +55,8 @@ export function Bildergalerie({ bilder, rotationSekunden, breite = "full" }: Bil
   const minHeight = isContentWidth ? 420 : 550;
   const sectionClasses = [
     "relative isolate overflow-hidden",
-    isContentWidth ? "py-[var(--section-padding-y)] md:py-[var(--section-padding-y-lg)]" : "",
-    isContentWidth ? "" : "mb-[calc(var(--section-padding-y)*1.5)] md:mb-[var(--section-padding-y-xl)] flex items-center justify-center"
+    isContentWidth ? "py-[var(--space-section)] md:py-[var(--space-section-lg)]" : "",
+    isContentWidth ? "" : "mb-[var(--space-section-lg)] flex items-center justify-center"
   ]
     .filter(Boolean)
     .join(" ");

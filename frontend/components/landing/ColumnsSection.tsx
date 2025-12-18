@@ -97,8 +97,8 @@ export function ColumnsSection({
   const verticalLineClass = isDarkBackground ? "bg-base-100/30" : "bg-base-content/20";
   const gridClass =
     variant === "plain"
-      ? `grid ${columnLayoutClass} gap-y-2 md:gap-y-0 md:divide-y-0 ${dividerTone}`
-      : `grid gap-6 ${columnLayoutClass}`;
+      ? `grid ${columnLayoutClass} gap-y-[var(--space-compact)] md:gap-y-0 md:divide-y-0 ${dividerTone}`
+      : `grid gap-[var(--space-block)] ${columnLayoutClass}`;
 
   const paddingY =
     variant === "plain" && showHeadline
@@ -127,7 +127,9 @@ export function ColumnsSection({
     .join(" ");
 
   const stackGapClass =
-    variant === "plain" && showHeadline ? "gap-1.5 md:gap-1.5" : "gap-3 md:gap-3";
+    variant === "plain" && showHeadline
+      ? "gap-[calc(var(--space-compact)*0.8)] md:gap-[calc(var(--space-compact)*0.8)]"
+      : "gap-[var(--space-block)] md:gap-[var(--space-block)]";
 
   return (
     <section style={style}>
@@ -141,7 +143,7 @@ export function ColumnsSection({
             const plainTone = isDarkBackground ? "text-base-100" : "text-base-content";
             const normalisedHtml =
               typeof column.html === "string" ? normaliseLegacyListMarkup(column.html) : column.html;
-            const baseArticleClass = "flex h-full flex-col gap-4";
+            const baseArticleClass = "flex h-full flex-col gap-[var(--space-block)]";
             const edgePaddingAdjustment =
               variant === "plain"
                 ? [
@@ -157,14 +159,9 @@ export function ColumnsSection({
                 : `${baseArticleClass} rounded-3xl border p-6 shadow-sm ${cardTone}`;
 
             const richTextClass = [
-              "w-full text-base leading-relaxed",
-              "[&_p:not(:first-child)]:mt-4",
+              "richtext-stack w-full text-base leading-relaxed",
               "[&_ul]:list-disc",
-              "[&_ul]:space-y-2",
-              "[&_ul]:pl-5",
               "[&_ol]:list-decimal",
-              "[&_ol]:space-y-2",
-              "[&_ol]:pl-5",
               "[&_a]:underline",
               isDarkBackground ? "[&_a]:text-primary-200" : "[&_a]:text-primary",
               isDarkBackground ? "text-base-100/85" : "text-base-content/80",
