@@ -170,6 +170,10 @@ type StrapiSeminarProductCardsComponent = {
   modus?: "seminare" | "produkte" | null;
   seminarkategorie?: StrapiCategorySummary | null;
   produkte?: StrapiProductSummary[] | null;
+  anzahl?: number | null;
+  buttonText?: string | null;
+  mehrButtonText?: string | null;
+  mehrButtonAnzeigen?: boolean | null;
 };
 
 export type StrapiLandingComponent =
