@@ -76,6 +76,16 @@
       "type": "component",
       "repeatable": false,
       "component": "seo.meta"
+    },
+    "adminTitle": {
+      "type": "string",
+      "required": true,
+      "default": "Gutscheineinstellung",
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Admin Title"
+        }
+      }
     }
   }
 }

@@ -22,6 +22,16 @@
       "type": "component",
       "repeatable": true,
       "component": "footer.section"
+    },
+    "adminTitle": {
+      "type": "string",
+      "required": true,
+      "default": "Footer",
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Admin Title"
+        }
+      }
     }
   }
 }

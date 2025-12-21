@@ -61,6 +61,16 @@
           "displayName": "Tracking Snippets"
         }
       }
+    },
+    "adminTitle": {
+      "type": "string",
+      "required": true,
+      "default": "Einstellung",
+      "pluginOptions": {
+        "content-manager": {
+          "displayName": "Admin Title"
+        }
+      }
     }
   }
 }
