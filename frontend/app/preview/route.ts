@@ -2,6 +2,8 @@ import { draftMode } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 const PREVIEW_SECRET = process.env.PREVIEW_SECRET ?? process.env.ADMIN_JWT_SECRET ?? "";
+const SLUG_PATTERN = /^[a-z0-9-]+$/i;
+const MAX_SLUG_LENGTH = 120;
 
 function resolveExternalOrigin(request: NextRequest): string {
   const forwardedHost = request.headers.get("x-forwarded-host");
@@ -54,6 +56,9 @@ export async function GET(request: NextRequest) {
 
   if (!documentId || !slug) {
     return new NextResponse("Missing preview parameters", { status: 400 });
+  }
+  if (slug.length > MAX_SLUG_LENGTH || !SLUG_PATTERN.test(slug)) {
+    return new NextResponse("Ungültiger Slug", { status: 400 });
   }
 
   if (type !== "landingpage" && type !== "seminar" && type !== "category" && type !== "product") {

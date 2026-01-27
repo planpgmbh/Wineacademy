@@ -672,8 +672,9 @@ export async function fetchLandingPage(
   }
 
   const query = searchParams.toString();
+  const encodedSlug = encodeURIComponent(slug);
   const response = await fetchJson<StrapiLandingResponse>(
-    `/public/landing-pages/${slug}${query ? `?${query}` : ""}`,
+    `/public/landing-pages/${encodedSlug}${query ? `?${query}` : ""}`,
     {
       cache: "no-store"
     }

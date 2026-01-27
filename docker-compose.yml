@@ -45,6 +45,17 @@ services:
         condition: service_healthy
     volumes:
       - uploads_data:/app/public/uploads
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m
+      - /var/tmp:rw,noexec,nosuid,nodev,size=64m
+      - /app/.cache:rw,nosuid,nodev,size=64m
+      - /app/.tmp:rw,nosuid,nodev,size=64m
+      - /root/.config:rw,nosuid,nodev,size=16m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     networks:
       - db
       - proxy
@@ -85,6 +96,15 @@ services:
       - .env
     environment:
       - PORT=3000
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m
+      - /var/tmp:rw,noexec,nosuid,nodev,size=64m
+      - /app/.next/cache:rw,nosuid,nodev,size=64m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     networks:
       - proxy
     labels:

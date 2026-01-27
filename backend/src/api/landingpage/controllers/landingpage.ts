@@ -2,6 +2,8 @@ import { factories } from "@strapi/strapi";
 import type { UID } from "@strapi/types";
 
 const CONTENT_UID = "api::landingpage.landingpage" as UID.ContentType;
+const SLUG_PATTERN = /^[a-z0-9-]+$/i;
+const MAX_SLUG_LENGTH = 120;
 
 export default factories.createCoreController(CONTENT_UID, ({ strapi }) => ({
   async public(ctx) {
@@ -18,6 +20,9 @@ export default factories.createCoreController(CONTENT_UID, ({ strapi }) => ({
 
     if (typeof slug !== "string" || slug.length === 0) {
       return ctx.badRequest("Slug erforderlich");
+    }
+    if (slug.length > MAX_SLUG_LENGTH || !SLUG_PATTERN.test(slug)) {
+      return ctx.badRequest("Ungültiger Slug");
     }
 
     let entry: any = null;

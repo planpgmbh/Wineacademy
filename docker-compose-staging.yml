@@ -45,6 +45,17 @@ services:
         condition: service_healthy
     volumes:
       - uploads_staging_data:/app/public/uploads
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m
+      - /var/tmp:rw,noexec,nosuid,nodev,size=64m
+      - /app/.cache:rw,nosuid,nodev,size=64m
+      - /app/.tmp:rw,nosuid,nodev,size=64m
+      - /root/.config:rw,nosuid,nodev,size=16m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     networks:
       - db_wineacadamy_staging
       - proxy
@@ -52,19 +63,19 @@ services:
       traefik.enable: "true"
       traefik.docker.network: "proxy"
       traefik.http.services.service_wineacadamy_staging.loadbalancer.server.port: "1337"
-      traefik.http.routers.service_wineacadamy_staging.rule: "Host(`staging.wineacademy.de`) && PathPrefix(`/api`)"
+      traefik.http.routers.service_wineacadamy_staging.rule: "(Host(`staging.wineacademy.de`) || Host(`wineacademy.plan-p.de`)) && PathPrefix(`/api`)"
       traefik.http.routers.service_wineacadamy_staging.entrypoints: "websecure"
       traefik.http.routers.service_wineacadamy_staging.tls.certresolver: "http-resolver"
       # Admin/Plugin-APIs (JSON-Endpunkte für das Admin-Panel)
-      traefik.http.routers.service_wineacadamy_staging-adminapi.rule: "Host(`staging.wineacademy.de`) && (PathPrefix(`/content-manager`) || PathPrefix(`/content-type-builder`) || PathPrefix(`/i18n`) || PathPrefix(`/users-permissions`) || PathPrefix(`/email`) || PathPrefix(`/upload`) || PathPrefix(`/users`))"
+      traefik.http.routers.service_wineacadamy_staging-adminapi.rule: "(Host(`staging.wineacademy.de`) || Host(`wineacademy.plan-p.de`)) && (PathPrefix(`/content-manager`) || PathPrefix(`/content-type-builder`) || PathPrefix(`/i18n`) || PathPrefix(`/users-permissions`) || PathPrefix(`/email`) || PathPrefix(`/upload`) || PathPrefix(`/users`))"
       traefik.http.routers.service_wineacadamy_staging-adminapi.entrypoints: "websecure"
       traefik.http.routers.service_wineacadamy_staging-adminapi.tls.certresolver: "http-resolver"
       # Serve uploads without /api prefix for frontend asset URLs
-      traefik.http.routers.service_wineacadamy_staging-uploads.rule: "Host(`staging.wineacademy.de`) && PathPrefix(`/uploads`)"
+      traefik.http.routers.service_wineacadamy_staging-uploads.rule: "(Host(`staging.wineacademy.de`) || Host(`wineacademy.plan-p.de`)) && PathPrefix(`/uploads`)"
       traefik.http.routers.service_wineacadamy_staging-uploads.entrypoints: "websecure"
       traefik.http.routers.service_wineacadamy_staging-uploads.tls.certresolver: "http-resolver"
       # Serve Strapi Admin under /admin (no strip)
-      traefik.http.routers.service_wineacadamy_staging-admin.rule: "Host(`staging.wineacademy.de`) && PathPrefix(`/admin`)"
+      traefik.http.routers.service_wineacadamy_staging-admin.rule: "(Host(`staging.wineacademy.de`) || Host(`wineacademy.plan-p.de`)) && PathPrefix(`/admin`)"
       traefik.http.routers.service_wineacadamy_staging-admin.entrypoints: "websecure"
       traefik.http.routers.service_wineacadamy_staging-admin.tls.certresolver: "http-resolver"
       monitor.category: "website"
@@ -83,13 +94,22 @@ services:
       - .env.staging
     environment:
       - PORT=3000
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m
+      - /var/tmp:rw,noexec,nosuid,nodev,size=64m
+      - /app/.next/cache:rw,nosuid,nodev,size=64m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     networks:
       - proxy
     labels:
       traefik.enable: "true"
       traefik.docker.network: "proxy"
       traefik.http.services.web_wineacadamy_staging.loadbalancer.server.port: "3000"
-      traefik.http.routers.web_wineacadamy_staging.rule: "Host(`staging.wineacademy.de`)"
+      traefik.http.routers.web_wineacadamy_staging.rule: "Host(`staging.wineacademy.de`) || Host(`wineacademy.plan-p.de`)"
       traefik.http.routers.web_wineacadamy_staging.entrypoints: "websecure"
       traefik.http.routers.web_wineacadamy_staging.tls.certresolver: "http-resolver"
       monitor.category: "website"
