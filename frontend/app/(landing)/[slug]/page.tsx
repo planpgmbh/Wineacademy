@@ -35,6 +35,7 @@ export const revalidate = 120;
 
 const SLUG_PATTERN = /^[a-z0-9-]+$/i;
 const MAX_SLUG_LENGTH = 120;
+const BLOCKED_PHP_SLUG_PATTERN = /\.(?:php|phtml|phar)$/i;
 
 const ANCHOR_BASE: Record<LandingSection["type"], string | null> = {
   "hero-video": null,
@@ -60,7 +61,15 @@ const FALLBACK_METADATA = {
 };
 
 function isValidSlug(slug: string): boolean {
-  return slug.length > 0 && slug.length <= MAX_SLUG_LENGTH && SLUG_PATTERN.test(slug);
+  if (slug.length === 0 || slug.length > MAX_SLUG_LENGTH) {
+    return false;
+  }
+
+  if (BLOCKED_PHP_SLUG_PATTERN.test(slug)) {
+    return false;
+  }
+
+  return SLUG_PATTERN.test(slug);
 }
 
 async function resolveLanding(slug: string, status: "draft" | "published"): Promise<LandingPage | null> {

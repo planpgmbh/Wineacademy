@@ -18,22 +18,21 @@
   },
   "dependencies": {
     "@adentdk/strapi-tiptap-editor": "^0.0.12",
-    "@strapi/design-system": "2.0.0-rc.30",
-    "@strapi/icons": "2.0.0-rc.30",
-    "@strapi/plugin-cloud": "5.25.0",
-    "@strapi/plugin-users-permissions": "5.25.0",
-    "@strapi/strapi": "5.25.0",
+    "@strapi/admin": "^5.35.0",
+    "@strapi/design-system": "^2.1.2",
+    "@strapi/icons": "^2.1.2",
+    "@strapi/plugin-users-permissions": "^5.35.0",
+    "@strapi/strapi": "^5.35.0",
     "@tiptap/extension-image": "2.9.1",
     "@tiptap/extension-link": "2.9.1",
     "@tiptap/html": "2.9.1",
     "@tiptap/starter-kit": "2.9.1",
-    "better-sqlite3": "11.3.0",
     "nanoid": "^5.1.6",
     "nodemailer": "^7.0.10",
     "pg": "^8.16.3",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "react-router-dom": "^6.0.0",
+    "react-router-dom": "^6.30.3",
     "styled-components": "^6.0.0"
   },
   "devDependencies": {
@@ -50,5 +49,16 @@
   "strapi": {
     "uuid": "277e0a1c-99aa-441d-9a01-6f8d18f7d9f2",
     "installId": "21990ede3c1c907f6ec449dc91ea7d0362d578ece136d1a007fee38a2341dcdf"
+  },
+  "overrides": {
+    "@remix-run/router": "1.23.2",
+    "tar": "7.5.7",
+    "tar-fs": "3.1.1",
+    "grant": {
+      "jws": "4.0.1"
+    },
+    "jsonwebtoken": {
+      "jws": "3.2.3"
+    }
   }
 }

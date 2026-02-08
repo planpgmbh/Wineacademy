@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 const STAGING_HOSTS = new Set(["staging.wineacademy.de", "staging.wineacademy.com"]);
+const BLOCKED_PHP_PATH_PATTERN = /^\/.*\.(?:php|phtml|phar)$/i;
 
 function unauthorized(): NextResponse {
   return new NextResponse("Authentication required", {
@@ -13,6 +14,17 @@ function unauthorized(): NextResponse {
 }
 
 export function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  if (BLOCKED_PHP_PATH_PATTERN.test(pathname)) {
+    return new NextResponse("Not Found", {
+      status: 404,
+      headers: {
+        "Cache-Control": "no-store",
+        "X-Robots-Tag": "noindex, nofollow, noarchive"
+      }
+    });
+  }
+
   const headerHost = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
   const hostname = (headerHost ?? request.nextUrl.hostname).toLowerCase().split(":")[0];
 

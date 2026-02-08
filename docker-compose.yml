@@ -45,13 +45,16 @@ services:
         condition: service_healthy
     volumes:
       - uploads_data:/app/public/uploads
+    user: "1000:1000"
+    group_add:
+      - "0"
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,nodev,size=64m
       - /var/tmp:rw,noexec,nosuid,nodev,size=64m
       - /app/.cache:rw,nosuid,nodev,size=64m
       - /app/.tmp:rw,nosuid,nodev,size=64m
-      - /root/.config:rw,nosuid,nodev,size=16m
+      - /home/node/.config:rw,nosuid,nodev,size=16m
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -96,6 +99,7 @@ services:
       - .env
     environment:
       - PORT=3000
+    user: "1000:1000"
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,nodev,size=64m
@@ -111,7 +115,7 @@ services:
       traefik.enable: "true"
       traefik.docker.network: "proxy"
       traefik.http.services.web_wineacadamy.loadbalancer.server.port: "3000"
-      traefik.http.routers.web_wineacadamy.rule: "Host(`main.wineacademy.de`)"
+      traefik.http.routers.web_wineacadamy.rule: 'Host(`main.wineacademy.de`) && !PathRegexp(`(?i)^/.*\.(?:php|phtml|phar)$`)'
       traefik.http.routers.web_wineacadamy.entrypoints: "websecure"
       traefik.http.routers.web_wineacadamy.tls.certresolver: "http-resolver"
       traefik.http.routers.web_wineacadamy.priority: "1"

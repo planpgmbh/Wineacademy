@@ -45,13 +45,16 @@ services:
         condition: service_healthy
     volumes:
       - uploads_staging_data:/app/public/uploads
+    user: "1000:1000"
+    group_add:
+      - "0"
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,nodev,size=64m
       - /var/tmp:rw,noexec,nosuid,nodev,size=64m
       - /app/.cache:rw,nosuid,nodev,size=64m
       - /app/.tmp:rw,nosuid,nodev,size=64m
-      - /root/.config:rw,nosuid,nodev,size=16m
+      - /home/node/.config:rw,nosuid,nodev,size=16m
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -66,6 +69,7 @@ services:
       traefik.http.routers.service_wineacadamy_staging.rule: "(Host(`staging.wineacademy.de`) || Host(`wineacademy.plan-p.de`)) && PathPrefix(`/api`)"
       traefik.http.routers.service_wineacadamy_staging.entrypoints: "websecure"
       traefik.http.routers.service_wineacadamy_staging.tls.certresolver: "http-resolver"
+      traefik.http.routers.service_wineacadamy_staging.priority: "100"
       # Admin/Plugin-APIs (JSON-Endpunkte für das Admin-Panel)
       traefik.http.routers.service_wineacadamy_staging-adminapi.rule: "(Host(`staging.wineacademy.de`) || Host(`wineacademy.plan-p.de`)) && (PathPrefix(`/content-manager`) || PathPrefix(`/content-type-builder`) || PathPrefix(`/i18n`) || PathPrefix(`/users-permissions`) || PathPrefix(`/email`) || PathPrefix(`/upload`) || PathPrefix(`/users`))"
       traefik.http.routers.service_wineacadamy_staging-adminapi.entrypoints: "websecure"
@@ -94,6 +98,7 @@ services:
       - .env.staging
     environment:
       - PORT=3000
+    user: "1000:1000"
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,nodev,size=64m
@@ -109,8 +114,9 @@ services:
       traefik.enable: "true"
       traefik.docker.network: "proxy"
       traefik.http.services.web_wineacadamy_staging.loadbalancer.server.port: "3000"
-      traefik.http.routers.web_wineacadamy_staging.rule: "Host(`staging.wineacademy.de`) || Host(`wineacademy.plan-p.de`)"
+      traefik.http.routers.web_wineacadamy_staging.rule: '(Host(`staging.wineacademy.de`) || Host(`wineacademy.plan-p.de`)) && !PathRegexp(`(?i)^/.*\.(?:php|phtml|phar)$`)'
       traefik.http.routers.web_wineacadamy_staging.entrypoints: "websecure"
       traefik.http.routers.web_wineacadamy_staging.tls.certresolver: "http-resolver"
+      traefik.http.routers.web_wineacadamy_staging.priority: "1"
       monitor.category: "website"
       monitor.project: "wineacadamy_staging"
